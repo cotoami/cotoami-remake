@@ -8,7 +8,7 @@ import slinky.web.html._
 import marubinotto.components.{toolButton, Flipped, Flipper, ScrollArea}
 import cotoami.{Into, Msg => AppMsg}
 import cotoami.Context
-import cotoami.models.{Coto, Id, Ito, OrderContext}
+import cotoami.models.{Coto, Id, Ito, OrderContext, SiblingGroup, Siblings}
 
 object SectionCotoDetails {
 
@@ -40,7 +40,7 @@ object SectionCotoDetails {
           ),
           articleMainCoto(coto),
           div(className := "sub-cotos")(
-            olSubCotos(coto),
+            context.repo.childrenOf(coto.id).map(sectionSubCotos),
             divAddSubCoto(coto.id, None)
           )
         ).withKey(coto.id.uuid) // Reset the state when the coto is changed
@@ -85,23 +85,36 @@ object SectionCotoDetails {
       PartsCoto.articleFooter(coto)
     )
 
-  private def olSubCotos(coto: Coto)(implicit
-      context: Context,
-      dispatch: Into[AppMsg] => Unit
-  ): ReactElement = {
-    val subCotos = context.repo.childrenOf(coto.id)
-    Flipper(
-      element = "ol",
-      className = "sub-cotos",
-      flipKey = subCotos.fingerprint
-    )(
-      subCotos.eachWithOrderContext.map { case (ito, subCoto, order) =>
-        Flipped(key = ito.id.uuid, flipId = ito.id.uuid)(
-          liSubCoto(ito, subCoto, order)
-        ): ReactElement
-      }.toSeq: _*
+  private def sectionSubCotos(
+      subCotos: Siblings
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    section(className := "sub-cotos")(
+      ulSubCotoGroups(subCotos)
     )
-  }
+
+  private def ulSubCotoGroups(
+      subCotos: Siblings
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    ul(className := "sub-coto-groups")(
+      subCotos.groupsInOrder.map(liSubCotoGroup): _*
+    )
+
+  private def liSubCotoGroup(
+      group: SiblingGroup
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    li(className := "sub-coto-group")(
+      Flipper(
+        element = "ol",
+        className = "sub-cotos",
+        flipKey = group.fingerprint
+      )(
+        group.eachWithOrderContext.map { case (ito, subCoto, order) =>
+          Flipped(key = ito.id.uuid, flipId = ito.id.uuid)(
+            liSubCoto(ito, subCoto, order)
+          )
+        }
+      )
+    )
 
   private def liSubCoto(
       ito: Ito,

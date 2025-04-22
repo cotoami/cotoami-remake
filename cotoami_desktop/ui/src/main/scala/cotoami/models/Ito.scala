@@ -45,6 +45,30 @@ object Ito {
   }
 }
 
+case class Siblings(
+    parent: Coto,
+    selfNodeId: Id[Node],
+    groups: Map[Id[Node], SiblingGroup]
+) {
+  def mainGroup: Option[SiblingGroup] = groups.get(parent.nodeId)
+
+  def selfGroup: Option[SiblingGroup] =
+    groups.get(selfNodeId) match {
+      case Some(group) => Option.when(selfNodeId != parent.nodeId)(group)
+      case None        => None
+    }
+
+  def otherGroups: Seq[SiblingGroup] =
+    groups.filter { case (nodeId, _) =>
+      nodeId != parent.nodeId && nodeId != selfNodeId
+    }.map(_._2).toSeq
+
+  def groupsInOrder: Seq[SiblingGroup] =
+    (mainGroup +: otherGroups.map(Some.apply) :+ selfGroup).flatten
+
+  def fingerprint: String = groupsInOrder.map(_.fingerprint).mkString
+}
+
 // Sibling itos and their target cotos from the same source coto and
 // belonging to the same node.
 case class SiblingGroup(nodeId: Id[Node], siblings: Seq[(Ito, Coto)]) {

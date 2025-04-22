@@ -176,14 +176,21 @@ case class Root(
   // Itos
   /////////////////////////////////////////////////////////////////////////////
 
-  lazy val pins: Map[Id[Node], SiblingGroup] =
-    currentCotonoma.map(cotonoma => childrenOf(cotonoma.cotoId))
-      .getOrElse(Map.empty)
+  lazy val pins: Option[Siblings] =
+    currentCotonoma.flatMap(cotonoma => childrenOf(cotonoma.cotoId))
 
-  def childrenOf(cotoId: Id[Coto]): Map[Id[Node], SiblingGroup] =
-    itos.from(cotoId).map { case (nodeId, itos) =>
-      (nodeId, getSiblingGroup(nodeId, itos))
-    }.toMap
+  def childrenOf(parentId: Id[Coto]): Option[Siblings] =
+    (cotos.get(parentId), nodes.selfId) match {
+      case (Some(parent), Some(selfId)) =>
+        itos.from(parentId)
+          .map { case (nodeId, itos) =>
+            (nodeId, getSiblingGroup(nodeId, itos))
+          }
+          .pipe(Siblings(parent, selfId, _))
+          .pipe(Some.apply)
+
+      case _ => None
+    }
 
   private def getSiblingGroup(
       nodeId: Id[Node],

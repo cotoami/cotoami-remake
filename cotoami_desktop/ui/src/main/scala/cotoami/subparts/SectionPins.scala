@@ -26,6 +26,7 @@ import cotoami.models.{
   Ito,
   OrderContext,
   SiblingGroup,
+  Siblings,
   UiState
 }
 import cotoami.repository.Root
@@ -86,9 +87,11 @@ object SectionPins {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] = {
-    context.repo.currentCotonomaPair.map(
-      sectionPins(context.repo.pins, uiState, _)
-    )
+    (context.repo.pins, context.repo.currentCotonomaPair) match {
+      case (Some(pins), Some(cotonoma)) =>
+        Some(sectionPins(pins, uiState, cotonoma))
+      case _ => None
+    }
   }
 
   def sectionPins(
@@ -149,7 +152,7 @@ object SectionPins {
       )(
         ScrollArea(scrollableClassName = Some("scrollable-pins"))(
           if (inColumns)
-            olPins(pins, inColumns)
+            ulPinGroups(pins, true)
           else
             DocumentView(
               cotonomaCoto = cotonomaCoto,
@@ -175,6 +178,9 @@ object SectionPins {
     final val ActiveTocEntryClass = "active"
 
     val component = FunctionalComponent[Props] { props =>
+      implicit val _context: Context = props.context
+      implicit val _dispatch = props.dispatch
+
       val rootRef = useRef[html.Div](null)
       val tocRef = useRef[html.Div](null)
 
@@ -246,11 +252,8 @@ object SectionPins {
           )(_)
         ),
         div(className := "pins-with-toc")(
-          olPins(props.pins, false)(
-            props.context,
-            props.dispatch
-          ),
-          divToc(props.pins, tocRef)(props.context, props.dispatch)
+          ulPinGroups(props.pins, false),
+          divToc(props.pins, tocRef)
         )
       )
     }
@@ -259,16 +262,26 @@ object SectionPins {
       s"${viewportHeight - 16}px"
   }
 
-  private def olPinGroup(
-      pins: SiblingGroup,
+  private def ulPinGroups(
+      pins: Siblings,
       inColumns: Boolean
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    Flipper(element = "ol", className = "pins", flipKey = pins.fingerprint)(
-      pins.eachWithOrderContext.map(pin =>
-        Flipped(key = pin._1.id.uuid, flipId = pin._1.id.uuid)(
-          liPin(pin, inColumns)
-        ): ReactElement
-      ).toSeq: _*
+    ul(className := "pin-groups")(
+      pins.groupsInOrder.map(liPinGroup(_, inColumns)): _*
+    )
+
+  private def liPinGroup(
+      group: SiblingGroup,
+      inColumns: Boolean
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    li(className := "pin-group")(
+      Flipper(element = "ol", className = "pins", flipKey = group.fingerprint)(
+        group.eachWithOrderContext.map(pin =>
+          Flipped(key = pin._1.id.uuid, flipId = pin._1.id.uuid)(
+            liPin(pin, inColumns)
+          ): ReactElement
+        ).toSeq: _*
+      )
     )
 
   def elementIdOfPin(pin: Ito): String = s"pin-${pin.id.uuid}"
@@ -328,9 +341,7 @@ object SectionPins {
           }
         )
       } else {
-        Option.when(!subCotos.isEmpty) {
-          olSubCotos(coto, subCotos, inColumn)
-        }
+        subCotos.map(sectionSubCotos(_, inColumn))
       }
     )
   }
@@ -344,68 +355,84 @@ object SectionPins {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "toc", ref := tocRef)(
       ScrollArea()(
-        Flipper(element = "ol", className = "toc", flipKey = pins.fingerprint)(
-          pins.eachWithOrderContext.map { case (ito, coto, order) =>
-            Flipped(key = ito.id.uuid, flipId = ito.id.uuid)(
-              li(
-                id := elementIdOfTocEntry(ito),
-                // This className will be modified directly by DocumentView to highlight
-                // entries in the current viewport, so it must not be dynamic with the models.
-                className := "toc-entry",
-                onMouseEnter := (_ => dispatch(AppMsg.Highlight(coto.id))),
-                onMouseLeave := (_ => dispatch(AppMsg.Unhighlight))
-              )(
-                button(
-                  className := optionalClasses(
-                    Seq(
-                      ("default", true),
-                      ("highlighted", context.isHighlighting(coto.id))
-                    )
-                  ),
-                  onClick := (_ => dispatch(Msg.ScrollToPin(ito)))
-                )(
-                  if (coto.isCotonoma)
-                    span(className := "cotonoma")(
-                      context.repo.nodes.get(coto.nodeId)
-                        .map(PartsNode.imgNode(_)),
-                      coto.nameAsCotonoma
-                    )
-                  else
-                    coto.abbreviate
-                )
-              )
-            ): ReactElement
-          }.toSeq: _*
-        )
+        pins.groupsInOrder.map(divTocGroup): _*
       )
     )
 
-  private def olSubCotos(
-      coto: Coto,
+  private def divTocGroup(
+      group: SiblingGroup
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    div(className := "toc-group")(
+      Flipper(element = "ol", className = "toc", flipKey = group.fingerprint)(
+        group.eachWithOrderContext.map { case (ito, coto, order) =>
+          Flipped(key = ito.id.uuid, flipId = ito.id.uuid)(
+            li(
+              id := elementIdOfTocEntry(ito),
+              // This className will be modified directly by DocumentView to highlight
+              // entries in the current viewport, so it must not be dynamic with the models.
+              className := "toc-entry",
+              onMouseEnter := (_ => dispatch(AppMsg.Highlight(coto.id))),
+              onMouseLeave := (_ => dispatch(AppMsg.Unhighlight))
+            )(
+              button(
+                className := optionalClasses(
+                  Seq(
+                    ("default", true),
+                    ("highlighted", context.isHighlighting(coto.id))
+                  )
+                ),
+                onClick := (_ => dispatch(Msg.ScrollToPin(ito)))
+              )(
+                if (coto.isCotonoma)
+                  span(className := "cotonoma")(
+                    context.repo.nodes.get(coto.nodeId)
+                      .map(PartsNode.imgNode(_)),
+                    coto.nameAsCotonoma
+                  )
+                else
+                  coto.abbreviate
+              )
+            )
+          ): ReactElement
+        }.toSeq: _*
+      )
+    )
+
+  private def sectionSubCotos(
       subCotos: Siblings,
       inColumn: Boolean
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    Flipper(
-      element = "ol",
-      className = "sub-cotos",
-      flipKey = subCotos.fingerprint
-    )(
-      subCotos.eachWithOrderContext.map { case (ito, subCoto, order) =>
-        Flipped(key = ito.id.uuid, flipId = ito.id.uuid)(
-          liSubCoto(ito, subCoto, order)
-        )
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    section(className := "sub-cotos")(
+      if (inColumn) {
+        ScrollArea()(ulSubCotoGroups(subCotos))
+      } else {
+        ulSubCotoGroups(subCotos)
       }
-    ) match {
-      case olSubCotos =>
-        if (inColumn) {
-          div(className := "scrollable-sub-cotos")(
-            ScrollArea()(olSubCotos)
+    )
+
+  private def ulSubCotoGroups(
+      subCotos: Siblings
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    ul(className := "sub-coto-groups")(
+      subCotos.groupsInOrder.map(liSubCotoGroup): _*
+    )
+
+  private def liSubCotoGroup(
+      group: SiblingGroup
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    li(className := "sub-coto-group")(
+      Flipper(
+        element = "ol",
+        className = "sub-cotos",
+        flipKey = group.fingerprint
+      )(
+        group.eachWithOrderContext.map { case (ito, subCoto, order) =>
+          Flipped(key = ito.id.uuid, flipId = ito.id.uuid)(
+            liSubCoto(ito, subCoto, order)
           )
-        } else {
-          olSubCotos
         }
-    }
-  }
+      )
+    )
 
   private def liSubCoto(
       ito: Ito,

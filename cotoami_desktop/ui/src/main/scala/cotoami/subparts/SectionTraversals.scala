@@ -23,7 +23,7 @@ import marubinotto.components.{
 }
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, Id, Ito, OrderContext}
+import cotoami.models.{Coto, Id, Ito, OrderContext, SiblingGroup, Siblings}
 import cotoami.repository.Itos
 
 object SectionTraversals {
@@ -280,17 +280,7 @@ object SectionTraversals {
           PartsCoto.divAttributes(coto)
         )
       ),
-      Flipper(
-        element = "ol",
-        className = "sub-cotos",
-        flipKey = subCotos.fingerprint
-      )(
-        subCotos.eachWithOrderContext.map(sub =>
-          Flipped(key = sub._1.id.uuid, flipId = sub._1.id.uuid)(
-            liSubCoto(sub, stepIndex, traversal)
-          ): ReactElement
-        )
-      )
+      subCotos.map(ulSubCotoGroups(_, stepIndex, traversal))
     )
   }
 
@@ -300,6 +290,34 @@ object SectionTraversals {
   ): String =
     s"traversal-${traversalIndex}" +
       stepIndex.map(step => s"-step-${step}").getOrElse("-start")
+
+  private def ulSubCotoGroups(
+      subCotos: Siblings,
+      stepIndex: Option[Int],
+      traversal: (Traversal, Int)
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    ul(className := "sub-coto-groups")(
+      subCotos.groupsInOrder.map(liSubCotoGroup(_, stepIndex, traversal)): _*
+    )
+
+  private def liSubCotoGroup(
+      group: SiblingGroup,
+      stepIndex: Option[Int],
+      traversal: (Traversal, Int)
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    li(className := "sub-coto-group")(
+      Flipper(
+        element = "ol",
+        className = "sub-cotos",
+        flipKey = group.fingerprint
+      )(
+        group.eachWithOrderContext.map { sub =>
+          Flipped(key = sub._1.id.uuid, flipId = sub._1.id.uuid)(
+            liSubCoto(sub, stepIndex, traversal)
+          )
+        }
+      )
+    )
 
   private def liSubCoto(
       subCoto: (Ito, Coto, OrderContext),
