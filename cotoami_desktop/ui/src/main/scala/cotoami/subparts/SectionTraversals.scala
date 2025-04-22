@@ -14,16 +14,10 @@ import java.time.Instant
 
 import marubinotto.optionalClasses
 import marubinotto.fui.{Browser, Cmd}
-import marubinotto.components.{
-  materialSymbol,
-  toolButton,
-  Flipped,
-  Flipper,
-  ScrollArea
-}
+import marubinotto.components.{materialSymbol, toolButton, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, Id, Ito, OrderContext, SiblingGroup, Siblings}
+import cotoami.models.{Coto, Id, Ito, Siblings}
 import cotoami.repository.Itos
 
 object SectionTraversals {
@@ -280,7 +274,7 @@ object SectionTraversals {
           PartsCoto.divAttributes(coto)
         )
       ),
-      subCotos.map(ulSubCotoGroups(_, stepIndex, traversal))
+      subCotos.map(sectionSubCotos(_, stepIndex, traversal))
     )
   }
 
@@ -291,95 +285,67 @@ object SectionTraversals {
     s"traversal-${traversalIndex}" +
       stepIndex.map(step => s"-step-${step}").getOrElse("-start")
 
-  private def ulSubCotoGroups(
+  private def sectionSubCotos(
       subCotos: Siblings,
       stepIndex: Option[Int],
       traversal: (Traversal, Int)
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    ul(className := "sub-coto-groups")(
-      subCotos.groupsInOrder.map(liSubCotoGroup(_, stepIndex, traversal)): _*
-    )
-
-  private def liSubCotoGroup(
-      group: SiblingGroup,
-      stepIndex: Option[Int],
-      traversal: (Traversal, Int)
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    li(className := "sub-coto-group")(
-      Flipper(
-        element = "ol",
-        className = "sub-cotos",
-        flipKey = group.fingerprint
-      )(
-        group.eachWithOrderContext.map { sub =>
-          Flipped(key = sub._1.id.uuid, flipId = sub._1.id.uuid)(
-            liSubCoto(sub, stepIndex, traversal)
+    PartsIto.sectionSiblings(subCotos, "sub-cotos") { case (ito, coto, order) =>
+      val traversed = traversal._1.traversed(stepIndex, coto.id)
+      li(className := "sub")(
+        PartsCoto.ulParents(
+          context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
+          Msg.OpenTraversal(_)
+        ),
+        PartsCoto.article(
+          coto,
+          dispatch,
+          Seq(
+            ("sub-coto", true),
+            ("traversed", traversed)
           )
-        }
-      )
-    )
-
-  private def liSubCoto(
-      subCoto: (Ito, Coto, OrderContext),
-      stepIndex: Option[Int],
-      traversal: (Traversal, Int)
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val (ito, coto, order) = subCoto
-    val traversed = traversal._1.traversed(stepIndex, coto.id)
-    li(className := "sub")(
-      PartsCoto.ulParents(
-        context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
-        Msg.OpenTraversal(_)
-      ),
-      PartsCoto.article(
-        coto,
-        dispatch,
-        Seq(
-          ("sub-coto", true),
-          ("traversed", traversed)
-        )
-      )(
-        ToolbarCoto(coto),
-        ToolbarReorder(ito, order),
-        header()(
-          PartsIto.buttonSubcotoIto(ito)
-        ),
-        div(className := "body")(
-          // Coto content
-          if (traversed) {
-            div(className := "content")(
-              section(className := "abbreviated-content")(coto.abbreviate)
-            )
-          } else {
-            PartsCoto.divContent(coto)
-          },
-          // Traverse button
-          Option.when(
-            !traversed && context.repo.itos.anyFrom(coto.id)
-          ) {
-            val stepMsg = Msg.Step(
-              traversal._2,
-              stepIndex.map(_ + 1).getOrElse(0),
-              coto.id
-            )
-            div(className := "traverse")(
-              toolButton(
-                symbol = "arrow_downward",
-                tip = Some("Traverse"),
-                tipPlacement = "left",
-                classes = "traverse",
-                onClick = e => {
-                  e.stopPropagation()
-                  dispatch(stepMsg)
-                }
+        )(
+          ToolbarCoto(coto),
+          ToolbarReorder(ito, order),
+          header()(
+            PartsIto.buttonSubcotoIto(ito)
+          ),
+          div(className := "body")(
+            // Coto content
+            if (traversed) {
+              div(className := "content")(
+                section(className := "abbreviated-content")(coto.abbreviate)
               )
-            )
-          }
-        ),
-        footer()(
-          PartsCoto.divAttributes(coto)
+            } else {
+              PartsCoto.divContent(coto)
+            },
+            // Traverse button
+            Option.when(
+              !traversed && context.repo.itos.anyFrom(coto.id)
+            ) {
+              val stepMsg = Msg.Step(
+                traversal._2,
+                stepIndex.map(_ + 1).getOrElse(0),
+                coto.id
+              )
+              div(className := "traverse")(
+                toolButton(
+                  symbol = "arrow_downward",
+                  tip = Some("Traverse"),
+                  tipPlacement = "left",
+                  classes = "traverse",
+                  onClick = e => {
+                    e.stopPropagation()
+                    dispatch(stepMsg)
+                  }
+                )
+              )
+            }
+          ),
+          footer()(
+            PartsCoto.divAttributes(coto)
+          )
         )
       )
-    )
-  }
+    }
 }

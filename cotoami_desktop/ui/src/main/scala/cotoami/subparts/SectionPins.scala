@@ -16,19 +16,10 @@ import slinky.web.html._
 
 import marubinotto.optionalClasses
 import marubinotto.fui.Cmd
-import marubinotto.components.{toolButton, Flipped, Flipper, ScrollArea}
+import marubinotto.components.{toolButton, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{
-  Coto,
-  Cotonoma,
-  Id,
-  Ito,
-  OrderContext,
-  SiblingGroup,
-  Siblings,
-  UiState
-}
+import cotoami.models.{Coto, Cotonoma, Id, Ito, Siblings, UiState}
 import cotoami.repository.Root
 
 object SectionPins {
@@ -152,7 +143,7 @@ object SectionPins {
       )(
         ScrollArea(scrollableClassName = Some("scrollable-pins"))(
           if (inColumns)
-            ulPinGroups(pins, true)
+            sectionPinGroups(pins, true)
           else
             DocumentView(
               cotonomaCoto = cotonomaCoto,
@@ -252,7 +243,7 @@ object SectionPins {
           )(_)
         ),
         div(className := "pins-with-toc")(
-          ulPinGroups(props.pins, false),
+          sectionPinGroups(props.pins, false),
           divToc(props.pins, tocRef)
         )
       )
@@ -262,89 +253,67 @@ object SectionPins {
       s"${viewportHeight - 16}px"
   }
 
-  private def ulPinGroups(
+  private def sectionPinGroups(
       pins: Siblings,
       inColumns: Boolean
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    ul(className := "pin-groups")(
-      pins.groupsInOrder.map(liPinGroup(_, inColumns)): _*
-    )
-
-  private def liPinGroup(
-      group: SiblingGroup,
-      inColumns: Boolean
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    li(className := "pin-group")(
-      Flipper(element = "ol", className = "pins", flipKey = group.fingerprint)(
-        group.eachWithOrderContext.map(pin =>
-          Flipped(key = pin._1.id.uuid, flipId = pin._1.id.uuid)(
-            liPin(pin, inColumns)
-          ): ReactElement
-        ).toSeq: _*
+    PartsIto.sectionSiblings(pins, "pin-groups") { case (ito, coto, order) =>
+      val subCotos = context.repo.childrenOf(coto.id)
+      section(
+        className := optionalClasses(
+          Seq(
+            ("pin", true),
+            ("with-description", ito.description.isDefined)
+          )
+        ),
+        id := elementIdOfPin(ito)
+      )(
+        PartsCoto.ulParents(
+          context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
+          SectionTraversals.Msg.OpenTraversal(_).into
+        ),
+        PartsCoto.article(
+          coto,
+          dispatch,
+          Seq(
+            ("pinned-coto", true),
+            ("has-children", context.repo.itos.anyFrom(coto.id))
+          )
+        )(
+          PartsIto.buttonPin(ito),
+          ToolbarCoto(coto),
+          ToolbarReorder(ito, order),
+          div(className := "body")(
+            PartsCoto.divContent(coto)
+          ),
+          footer()(
+            PartsCoto.divAttributes(coto)
+          )
+        ),
+        if (coto.isCotonoma && !context.repo.alreadyLoadedGraphFrom(coto.id)) {
+          div(className := "itos-not-yet-loaded")(
+            if (context.repo.graphLoading.contains(coto.id)) {
+              div(
+                className := "loading",
+                aria - "busy" := "true"
+              )()
+            } else {
+              toolButton(
+                symbol = "more_horiz",
+                tip = Some(context.i18n.text.LoadItos),
+                tipPlacement = "bottom",
+                classes = "fetch-itos",
+                onClick = _ => dispatch(Root.Msg.FetchGraphFromCoto(coto.id))
+              )
+            }
+          )
+        } else {
+          subCotos.map(sectionSubCotos(_, inColumns))
+        }
       )
-    )
+    }
 
   def elementIdOfPin(pin: Ito): String = s"pin-${pin.id.uuid}"
-
-  private def liPin(
-      pin: (Ito, Coto, OrderContext),
-      inColumn: Boolean
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val (ito, coto, order) = pin
-    val subCotos = context.repo.childrenOf(coto.id)
-    li(
-      className := optionalClasses(
-        Seq(
-          ("pin", true),
-          ("with-description", ito.description.isDefined)
-        )
-      ),
-      id := elementIdOfPin(ito)
-    )(
-      PartsCoto.ulParents(
-        context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
-        SectionTraversals.Msg.OpenTraversal(_).into
-      ),
-      PartsCoto.article(
-        coto,
-        dispatch,
-        Seq(
-          ("pinned-coto", true),
-          ("has-children", context.repo.itos.anyFrom(coto.id))
-        )
-      )(
-        PartsIto.buttonPin(ito),
-        ToolbarCoto(coto),
-        ToolbarReorder(ito, order),
-        div(className := "body")(
-          PartsCoto.divContent(coto)
-        ),
-        footer()(
-          PartsCoto.divAttributes(coto)
-        )
-      ),
-      if (coto.isCotonoma && !context.repo.alreadyLoadedGraphFrom(coto.id)) {
-        div(className := "itos-not-yet-loaded")(
-          if (context.repo.graphLoading.contains(coto.id)) {
-            div(
-              className := "loading",
-              aria - "busy" := "true"
-            )()
-          } else {
-            toolButton(
-              symbol = "more_horiz",
-              tip = Some(context.i18n.text.LoadItos),
-              tipPlacement = "bottom",
-              classes = "fetch-itos",
-              onClick = _ => dispatch(Root.Msg.FetchGraphFromCoto(coto.id))
-            )
-          }
-        )
-      } else {
-        subCotos.map(sectionSubCotos(_, inColumn))
-      }
-    )
-  }
 
   private def elementIdOfTocEntry(pin: Ito): String =
     s"toc-${elementIdOfPin(pin)}"
@@ -355,46 +324,35 @@ object SectionPins {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "toc", ref := tocRef)(
       ScrollArea()(
-        pins.groupsInOrder.map(divTocGroup): _*
-      )
-    )
-
-  private def divTocGroup(
-      group: SiblingGroup
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    div(className := "toc-group")(
-      Flipper(element = "ol", className = "toc", flipKey = group.fingerprint)(
-        group.eachWithOrderContext.map { case (ito, coto, order) =>
-          Flipped(key = ito.id.uuid, flipId = ito.id.uuid)(
-            li(
-              id := elementIdOfTocEntry(ito),
-              // This className will be modified directly by DocumentView to highlight
-              // entries in the current viewport, so it must not be dynamic with the models.
-              className := "toc-entry",
-              onMouseEnter := (_ => dispatch(AppMsg.Highlight(coto.id))),
-              onMouseLeave := (_ => dispatch(AppMsg.Unhighlight))
+        PartsIto.sectionSiblings(pins) { case (ito, coto, order) =>
+          div(
+            id := elementIdOfTocEntry(ito),
+            // This className will be modified directly by DocumentView to highlight
+            // entries in the current viewport, so it must not be dynamic with the models.
+            className := "toc-entry",
+            onMouseEnter := (_ => dispatch(AppMsg.Highlight(coto.id))),
+            onMouseLeave := (_ => dispatch(AppMsg.Unhighlight))
+          )(
+            button(
+              className := optionalClasses(
+                Seq(
+                  ("default", true),
+                  ("highlighted", context.isHighlighting(coto.id))
+                )
+              ),
+              onClick := (_ => dispatch(Msg.ScrollToPin(ito)))
             )(
-              button(
-                className := optionalClasses(
-                  Seq(
-                    ("default", true),
-                    ("highlighted", context.isHighlighting(coto.id))
-                  )
-                ),
-                onClick := (_ => dispatch(Msg.ScrollToPin(ito)))
-              )(
-                if (coto.isCotonoma)
-                  span(className := "cotonoma")(
-                    context.repo.nodes.get(coto.nodeId)
-                      .map(PartsNode.imgNode(_)),
-                    coto.nameAsCotonoma
-                  )
-                else
-                  coto.abbreviate
-              )
+              if (coto.isCotonoma)
+                span(className := "cotonoma")(
+                  context.repo.nodes.get(coto.nodeId)
+                    .map(PartsNode.imgNode(_)),
+                  coto.nameAsCotonoma
+                )
+              else
+                coto.abbreviate
             )
-          ): ReactElement
-        }.toSeq: _*
+          )
+        }
       )
     )
 
@@ -402,61 +360,35 @@ object SectionPins {
       subCotos: Siblings,
       inColumn: Boolean
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    section(className := "sub-cotos")(
-      if (inColumn) {
-        ScrollArea()(ulSubCotoGroups(subCotos))
-      } else {
-        ulSubCotoGroups(subCotos)
-      }
-    )
+    if (inColumn) {
+      ScrollArea()(sectionSubCotos(subCotos))
+    } else {
+      sectionSubCotos(subCotos)
+    }
 
-  private def ulSubCotoGroups(
+  private def sectionSubCotos(
       subCotos: Siblings
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    ul(className := "sub-coto-groups")(
-      subCotos.groupsInOrder.map(liSubCotoGroup): _*
-    )
-
-  private def liSubCotoGroup(
-      group: SiblingGroup
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    li(className := "sub-coto-group")(
-      Flipper(
-        element = "ol",
-        className = "sub-cotos",
-        flipKey = group.fingerprint
-      )(
-        group.eachWithOrderContext.map { case (ito, subCoto, order) =>
-          Flipped(key = ito.id.uuid, flipId = ito.id.uuid)(
-            liSubCoto(ito, subCoto, order)
+    PartsIto.sectionSiblings(subCotos, "sub-cotos") { case (ito, coto, order) =>
+      div(className := "sub")(
+        PartsCoto.ulParents(
+          context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
+          SectionTraversals.Msg.OpenTraversal(_).into
+        ),
+        PartsCoto.article(coto, dispatch, Seq(("sub-coto", true)))(
+          ToolbarCoto(coto),
+          ToolbarReorder(ito, order),
+          header()(
+            PartsIto.buttonSubcotoIto(ito)
+          ),
+          div(className := "body")(
+            PartsCoto.divContent(coto),
+            PartsCoto.divItosTraversal(coto, "left")
+          ),
+          footer()(
+            PartsCoto.divAttributes(coto)
           )
-        }
-      )
-    )
-
-  private def liSubCoto(
-      ito: Ito,
-      coto: Coto,
-      order: OrderContext
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    li(className := "sub")(
-      PartsCoto.ulParents(
-        context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
-        SectionTraversals.Msg.OpenTraversal(_).into
-      ),
-      PartsCoto.article(coto, dispatch, Seq(("sub-coto", true)))(
-        ToolbarCoto(coto),
-        ToolbarReorder(ito, order),
-        header()(
-          PartsIto.buttonSubcotoIto(ito)
-        ),
-        div(className := "body")(
-          PartsCoto.divContent(coto),
-          PartsCoto.divItosTraversal(coto, "left")
-        ),
-        footer()(
-          PartsCoto.divAttributes(coto)
         )
       )
-    )
+    }
 }

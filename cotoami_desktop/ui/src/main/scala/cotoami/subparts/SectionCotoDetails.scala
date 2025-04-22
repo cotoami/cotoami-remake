@@ -5,10 +5,10 @@ import org.scalajs.dom
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import marubinotto.components.{toolButton, Flipped, Flipper, ScrollArea}
+import marubinotto.components.{toolButton, ScrollArea}
 import cotoami.{Into, Msg => AppMsg}
 import cotoami.Context
-import cotoami.models.{Coto, Id, Ito, OrderContext, SiblingGroup, Siblings}
+import cotoami.models.{Coto, Id, Siblings}
 
 object SectionCotoDetails {
 
@@ -88,64 +88,32 @@ object SectionCotoDetails {
   private def sectionSubCotos(
       subCotos: Siblings
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    section(className := "sub-cotos")(
-      ulSubCotoGroups(subCotos)
-    )
-
-  private def ulSubCotoGroups(
-      subCotos: Siblings
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    ul(className := "sub-coto-groups")(
-      subCotos.groupsInOrder.map(liSubCotoGroup): _*
-    )
-
-  private def liSubCotoGroup(
-      group: SiblingGroup
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    li(className := "sub-coto-group")(
-      Flipper(
-        element = "ol",
-        className = "sub-cotos",
-        flipKey = group.fingerprint
-      )(
-        group.eachWithOrderContext.map { case (ito, subCoto, order) =>
-          Flipped(key = ito.id.uuid, flipId = ito.id.uuid)(
-            liSubCoto(ito, subCoto, order)
-          )
-        }
-      )
-    )
-
-  private def liSubCoto(
-      ito: Ito,
-      coto: Coto,
-      order: OrderContext
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val repo = context.repo
-    li(key := ito.id.uuid, className := "sub")(
-      divAddSubCoto(ito.sourceCotoId, Some(ito.order)),
+    PartsIto.sectionSiblings(subCotos, "sub-cotos") { case (ito, coto, order) =>
+      val repo = context.repo
       div(className := "sub")(
-        PartsCoto.ulParents(
-          repo.parentsOf(coto.id).filter(_._2.id != ito.id),
-          AppMsg.FocusCoto(_)
-        ),
-        PartsCoto.article(coto, dispatch, Seq(("sub-coto", true)))(
-          ToolbarCoto(coto),
-          ToolbarReorder(ito, order),
-          header()(
-            PartsIto.buttonSubcotoIto(ito),
-            PartsCoto.divAttributes(coto),
-            Option.when(!repo.nodes.isSelf(coto.postedById)) {
-              PartsCoto.addressAuthor(coto, repo.nodes)
-            }
+        divAddSubCoto(ito.sourceCotoId, Some(ito.order)),
+        div(className := "sub")(
+          PartsCoto.ulParents(
+            repo.parentsOf(coto.id).filter(_._2.id != ito.id),
+            AppMsg.FocusCoto(_)
           ),
-          div(className := "body")(
-            PartsCoto.divContent(coto)
+          PartsCoto.article(coto, dispatch, Seq(("sub-coto", true)))(
+            ToolbarCoto(coto),
+            ToolbarReorder(ito, order),
+            header()(
+              PartsIto.buttonSubcotoIto(ito),
+              PartsCoto.divAttributes(coto),
+              Option.when(!repo.nodes.isSelf(coto.postedById)) {
+                PartsCoto.addressAuthor(coto, repo.nodes)
+              }
+            ),
+            div(className := "body")(
+              PartsCoto.divContent(coto)
+            ),
+            PartsCoto.articleFooter(coto)
           ),
-          PartsCoto.articleFooter(coto)
-        ),
-        PartsCoto.divItosTraversal(coto, "bottom")
+          PartsCoto.divItosTraversal(coto, "bottom")
+        )
       )
-    )
-  }
+    }
 }

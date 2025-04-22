@@ -5,10 +5,10 @@ import slinky.web.html._
 
 import marubinotto.optionalClasses
 import marubinotto.Validation
-import marubinotto.components.toolButton
+import marubinotto.components.{toolButton, Flipped, Flipper}
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.Ito
+import cotoami.models.{Coto, Ito, OrderContext, SiblingGroup, Siblings}
 
 object PartsIto {
 
@@ -119,5 +119,28 @@ object PartsIto {
         slinky.web.html.onChange := (e => onChange(e.target.value))
       ),
       Validation.sectionValidationError(validation)
+    )
+
+  def sectionSiblings(siblings: Siblings, classes: String = "")(
+      renderSibling: (Ito, Coto, OrderContext) => ReactElement
+  ): ReactElement =
+    section(className := s"sibling ${classes}")(
+      siblings.groupsInOrder.map(sectionSiblingGroup(_, renderSibling)): _*
+    )
+
+  def sectionSiblingGroup(
+      group: SiblingGroup,
+      renderSibling: (Ito, Coto, OrderContext) => ReactElement
+  ): ReactElement =
+    Flipper(
+      element = "section",
+      className = "sibling-group",
+      flipKey = group.fingerprint
+    )(
+      group.eachWithOrderContext.map { case (ito, coto, order) =>
+        Flipped(key = ito.id.uuid, flipId = ito.id.uuid)(
+          renderSibling(ito, coto, order)
+        )
+      }
     )
 }
