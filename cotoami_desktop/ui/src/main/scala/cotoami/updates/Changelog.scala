@@ -64,7 +64,7 @@ object Changelog {
           Cmd.Batch(
             Root.fetchGraphFromCoto(ito.targetCotoId),
             // Insertion: refresh sibling itos if there's an order duplication.
-            Root.fetchOutgoingItos(ito.sourceCotoId)
+            Root.fetchSiblingItoGroup(ito.sourceCotoId, ito.nodeId)
           )
         )
       else
@@ -96,7 +96,7 @@ object Changelog {
       return (
         model,
         model.repo.itos.get(itoId)
-          .map(ito => Root.fetchOutgoingItos(ito.sourceCotoId))
+          .map(ito => Root.fetchSiblingItoGroup(ito.sourceCotoId, ito.nodeId))
           .getOrElse(Cmd.none)
       )
     }

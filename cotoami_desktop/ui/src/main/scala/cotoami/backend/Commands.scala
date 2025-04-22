@@ -313,8 +313,10 @@ object Commands {
 
   def Ito(id: Id[Ito]) = jso(Ito = jso(id = id.uuid))
 
-  def OutgoingItos(cotoId: Id[Coto]) =
-    jso(OutgoingItos = jso(coto = cotoId.uuid))
+  def SiblingItos(cotoId: Id[Coto], nodeId: Option[Id[Node]]) =
+    jso(SiblingItos =
+      jso(coto = cotoId.uuid, node = nodeId.map(_.uuid).getOrElse(null))
+    )
 
   def CreateIto(
       sourceId: Id[Coto],

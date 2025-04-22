@@ -1,7 +1,7 @@
 package cotoami.repository
 
 import scala.util.chaining._
-import scala.collection.immutable.{HashSet, TreeMap}
+import scala.collection.immutable.HashSet
 import scala.scalajs.js
 
 import com.softwaremill.quicklens._
@@ -450,8 +450,9 @@ object Root {
         sourceCotoId: Id[Coto],
         result: Either[ErrorJson, Ito]
     ) extends Msg
-    case class OutgoingItosFetched(
+    case class SiblingItoGroupFetched(
         cotoId: Id[Coto],
+        nodeId: Id[Node],
         result: Either[ErrorJson, js.Array[Ito]]
     ) extends Msg
   }
@@ -571,14 +572,16 @@ object Root {
           cotoami.error("Couldn't change the ito order.", e)
         )
 
-      case Msg.OutgoingItosFetched(cotoId, Right(itos)) =>
+      case Msg.SiblingItoGroupFetched(cotoId, nodeId, Right(itos)) =>
         (
-          model.modify(_.itos).using(_.replaceOutgoingItos(cotoId, itos)),
+          model.modify(_.itos).using(
+            _.replaceSiblingGroup(cotoId, nodeId, itos)
+          ),
           Cmd.none
         )
 
-      case Msg.OutgoingItosFetched(cotoId, Left(e)) =>
-        (model, cotoami.error("Couldn't fetch outgoing itos.", e))
+      case Msg.SiblingItoGroupFetched(cotoId, nodeId, Left(e)) =>
+        (model, cotoami.error("Couldn't fetch a sibling ito group.", e))
     }
 
   def fetchNodeDetails(id: Id[Node]): Cmd.One[AppMsg] =
@@ -606,7 +609,10 @@ object Root {
     ItoBackend.changeOrder(ito.id, newOrder)
       .map(Msg.OrderChanged(ito.sourceCotoId, _).into)
 
-  def fetchOutgoingItos(cotoId: Id[Coto]): Cmd.One[AppMsg] =
-    ItoBackend.fetchOutgoingItos(cotoId)
-      .map(Msg.OutgoingItosFetched(cotoId, _).into)
+  def fetchSiblingItoGroup(
+      cotoId: Id[Coto],
+      nodeId: Id[Node]
+  ): Cmd.One[AppMsg] =
+    ItoBackend.fetchSiblings(cotoId, Some(nodeId))
+      .map(Msg.SiblingItoGroupFetched(cotoId, nodeId, _).into)
 }

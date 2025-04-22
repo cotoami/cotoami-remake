@@ -5,7 +5,7 @@ import scala.scalajs.js
 import marubinotto.fui.Cmd
 import marubinotto.facade.Nullable
 
-import cotoami.models.{Coto, Id, Ito}
+import cotoami.models.{Coto, Id, Ito, Node}
 
 @js.native
 trait ItoJson extends js.Object {
@@ -52,10 +52,11 @@ object ItoJson {
   def delete(id: Id[Ito]): Cmd.One[Either[ErrorJson, String]] =
     Commands.send(Commands.DeleteIto(id))
 
-  def fetchOutgoingItos(
-      cotoId: Id[Coto]
+  def fetchSiblings(
+      cotoId: Id[Coto],
+      nodeId: Option[Id[Node]]
   ): Cmd.One[Either[ErrorJson, js.Array[ItoJson]]] =
-    Commands.send(Commands.OutgoingItos(cotoId))
+    Commands.send(Commands.SiblingItos(cotoId, nodeId))
 
   def changeOrder(
       id: Id[Ito],
@@ -109,10 +110,11 @@ object ItoBackend {
   def delete(id: Id[Ito]): Cmd.One[Either[ErrorJson, Id[Ito]]] =
     ItoJson.delete(id).map(_.map(Id(_)))
 
-  def fetchOutgoingItos(
-      cotoId: Id[Coto]
+  def fetchSiblings(
+      cotoId: Id[Coto],
+      nodeId: Option[Id[Node]]
   ): Cmd.One[Either[ErrorJson, js.Array[Ito]]] =
-    ItoJson.fetchOutgoingItos(cotoId).map(_.map(_.map(toModel)))
+    ItoJson.fetchSiblings(cotoId, nodeId).map(_.map(_.map(toModel)))
 
   def changeOrder(
       id: Id[Ito],
