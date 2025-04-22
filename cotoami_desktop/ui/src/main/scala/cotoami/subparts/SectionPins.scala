@@ -222,7 +222,7 @@ object SectionPins {
               root = viewport
             }
           )
-          rootRef.current.querySelectorAll("li.pin")
+          rootRef.current.querySelectorAll("section.pin")
             .foreach(intersectionObserver.observe)
 
           () => {
