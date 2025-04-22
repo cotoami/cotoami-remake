@@ -106,7 +106,7 @@ object SectionPins {
       )(
         ScrollArea(scrollableClassName = Some("scrollable-pins"))(
           if (inColumns)
-            sectionPinGroups(pins, true)
+            sectionPinnedCotos(pins, true)
           else
             DocumentView(
               cotonomaCoto = cotonomaCoto,
@@ -250,7 +250,7 @@ object SectionPins {
           )(_)
         ),
         div(className := "pins-with-toc")(
-          sectionPinGroups(props.pins, false),
+          sectionPinnedCotos(props.pins, false),
           divToc(props.pins, tocRef)
         )
       )
@@ -260,11 +260,11 @@ object SectionPins {
       s"${viewportHeight - 16}px"
   }
 
-  private def sectionPinGroups(
+  private def sectionPinnedCotos(
       pins: Siblings,
       inColumns: Boolean
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    PartsIto.sectionSiblings(pins, "pin-groups") { case (ito, coto, order) =>
+    PartsIto.sectionSiblings(pins, "pinned-cotos") { case (ito, coto, order) =>
       val subCotos = context.repo.childrenOf(coto.id)
       section(
         className := optionalClasses(

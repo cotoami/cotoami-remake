@@ -74,7 +74,7 @@ section.pins {
     }
   }
 
-  section.pin-groups {
+  section.pinned-cotos {
     padding-top: 20px;
 
     section.pin {
@@ -230,7 +230,7 @@ section.pins {
 
         max-width: calc(var(--max-article-width) + var(--toc-width));
 
-        section.pin-groups {
+        section.pinned-cotos {
           flex: 1;
           min-width: 0; // let this item shrink below the content size
         }
@@ -275,10 +275,9 @@ section.pins {
       }
     }
 
-    section.pin-groups {
+    section.pinned-cotos {
       display: flex;
       flex-direction: row;
-
       height: 100%;
       padding-left: 16px;
 
