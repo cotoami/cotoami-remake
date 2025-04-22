@@ -19,7 +19,15 @@ import marubinotto.fui.Cmd
 import marubinotto.components.{toolButton, Flipped, Flipper, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, Cotonoma, Id, Ito, OrderContext, Siblings, UiState}
+import cotoami.models.{
+  Coto,
+  Cotonoma,
+  Id,
+  Ito,
+  OrderContext,
+  SiblingGroup,
+  UiState
+}
 import cotoami.repository.Root
 
 object SectionPins {
@@ -251,8 +259,8 @@ object SectionPins {
       s"${viewportHeight - 16}px"
   }
 
-  private def olPins(
-      pins: Siblings,
+  private def olPinGroup(
+      pins: SiblingGroup,
       inColumns: Boolean
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Flipper(element = "ol", className = "pins", flipKey = pins.fingerprint)(

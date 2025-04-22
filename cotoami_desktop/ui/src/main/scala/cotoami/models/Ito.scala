@@ -47,24 +47,24 @@ object Ito {
 
 // Sibling itos and their target cotos from the same source coto and
 // belonging to the same node.
-case class SiblingGroup(sorted: Seq[(Ito, Coto)]) {
-  def length = sorted.length
+case class SiblingGroup(nodeId: Id[Node], siblings: Seq[(Ito, Coto)]) {
+  def length = siblings.length
 
-  def isEmpty: Boolean = sorted.isEmpty
+  def isEmpty: Boolean = siblings.isEmpty
 
-  val minOrder = sorted.headOption.map(_._1.order).getOrElse(0)
-  val maxOrder = sorted.lastOption.map(_._1.order).getOrElse(0)
+  val minOrder = siblings.headOption.map(_._1.order).getOrElse(0)
+  val maxOrder = siblings.lastOption.map(_._1.order).getOrElse(0)
 
-  def itos: Iterable[Ito] = sorted.map(_._1)
+  def itos: Iterable[Ito] = siblings.map(_._1)
 
   // Returns each sibling with the previous and next ones.
   def eachWithNeighbors
       : Iterable[(Option[(Ito, Coto)], (Ito, Coto), Option[(Ito, Coto)])] =
-    sorted.zipWithIndex.map { case (sibling, index) =>
+    siblings.zipWithIndex.map { case (sibling, index) =>
       (
-        sorted.lift(index - 1),
+        siblings.lift(index - 1),
         sibling,
-        sorted.lift(index + 1)
+        siblings.lift(index + 1)
       )
     }
 
@@ -87,7 +87,7 @@ case class SiblingGroup(sorted: Seq[(Ito, Coto)]) {
 }
 
 object SiblingGroup {
-  def empty: SiblingGroup = SiblingGroup(Seq.empty)
+  def empty(nodeId: Id[Node]): SiblingGroup = SiblingGroup(nodeId, Seq.empty)
 }
 
 case class OrderContext(
