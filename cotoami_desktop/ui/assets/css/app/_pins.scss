@@ -181,11 +181,14 @@ section.pins {
       div.toc {
         display: none;
         height: 80vh;
-        padding-right: 10px;
 
         position: -webkit-sticky;
         position: sticky;
         top: 0;
+
+        .simplebar-content-wrapper {
+          padding-right: 10px;
+        }
 
         div.toc-entry {
           opacity: 0.6;
