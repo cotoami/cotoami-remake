@@ -344,10 +344,36 @@ section.pins {
       height: 100%;
       padding-left: 16px;
 
-      &>.sibling-group>.siblings-in-group {
-        display: flex;
-        flex-direction: row;
-        height: 100%;
+      &>.sibling-group {
+        &.in-other-nodes {
+          margin-left: 2rem;
+
+          display: flex;
+          flex-direction: column;
+
+          div.ito-node {
+            padding-bottom: 8px;
+
+            img.node-icon {
+              width: 16px;
+              height: 16px;
+              border-radius: 4px;
+              margin-right: 5px;
+            }
+
+            .name {
+              vertical-align: middle;
+              font-size: 15px;
+            }
+          }
+        }
+
+        &>.siblings-in-group {
+          display: flex;
+          flex-direction: row;
+          height: 100%;
+          min-height: 0; // let this item shrink below the content size
+        }
       }
     }
 
