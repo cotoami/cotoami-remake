@@ -173,13 +173,33 @@ section.pins {
       }
     }
 
+    section.pin {
+      margin-bottom: 3rem;
+    }
+
+    // Heading font size
+    article.coto.has-children {
+
+      section.text-content p:first-child,
+      span.summary {
+        font-size: 1.1rem;
+      }
+    }
+
+    // Disable card-background-color in document-view
+    article.coto,
+    div.itos-not-yet-loaded,
+    ul.parents {
+      background-color: var(--background-color);
+    }
+
     div.pins-with-toc {
       max-width: var(--max-article-width);
       margin-right: auto;
       margin-left: auto;
 
       div.toc {
-        display: none;
+        display: none; // hidden by default
         height: 80vh;
 
         position: -webkit-sticky;
@@ -221,8 +241,6 @@ section.pins {
       }
     }
 
-    // This warning will be fixed by the release of:
-    // https://github.com/microsoft/vscode-css-languageservice/issues/381
     @container (min-width: 50rem) {
       div.pins-with-toc {
         display: flex;
@@ -240,26 +258,6 @@ section.pins {
           width: var(--toc-width);
         }
       }
-    }
-
-    section.pin {
-      margin-bottom: 3rem;
-    }
-
-    // Heading font size
-    article.coto.has-children {
-
-      section.text-content p:first-child,
-      span.summary {
-        font-size: 1.1rem;
-      }
-    }
-
-    // Disable card-background-color in document-view
-    article.coto,
-    div.itos-not-yet-loaded,
-    ul.parents {
-      background-color: var(--background-color);
     }
   }
 

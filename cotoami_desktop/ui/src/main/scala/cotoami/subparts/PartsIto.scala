@@ -132,7 +132,14 @@ object PartsIto {
       group: SiblingGroup,
       renderSibling: (Ito, Coto, OrderContext) => ReactElement
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    section(className := "sibling-group")(
+    section(
+      className := optionalClasses(
+        Seq(
+          ("sibling-group", true),
+          ("in-other-nodes", !group.isMain)
+        )
+      )
+    )(
       Option.when(!group.isMain) {
         context.repo.nodes.get(group.nodeId).map(PartsNode.spanNode)
       },
