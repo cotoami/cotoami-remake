@@ -123,7 +123,7 @@ object PartsIto {
 
   def sectionSiblings(siblings: Siblings, classes: String = "")(
       renderSibling: (Ito, Coto, OrderContext) => ReactElement
-  ): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := s"siblings ${classes}")(
       siblings.groupsInOrder.map(sectionSiblingGroup(_, renderSibling)): _*
     )
@@ -131,16 +131,21 @@ object PartsIto {
   def sectionSiblingGroup(
       group: SiblingGroup,
       renderSibling: (Ito, Coto, OrderContext) => ReactElement
-  ): ReactElement =
-    Flipper(
-      element = "section",
-      className = "sibling-group",
-      flipKey = group.fingerprint
-    )(
-      group.eachWithOrderContext.map { case (ito, coto, order) =>
-        Flipped(key = ito.id.uuid, flipId = ito.id.uuid)(
-          renderSibling(ito, coto, order)
-        )
-      }
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    section(className := "sibling-group")(
+      Option.when(!group.isMain) {
+        context.repo.nodes.get(group.nodeId).map(PartsNode.spanNode)
+      },
+      Flipper(
+        element = "section",
+        className = "siblings-in-group",
+        flipKey = group.fingerprint
+      )(
+        group.eachWithOrderContext.map { case (ito, coto, order) =>
+          Flipped(key = ito.id.uuid, flipId = ito.id.uuid)(
+            renderSibling(ito, coto, order)
+          )
+        }
+      )
     )
 }

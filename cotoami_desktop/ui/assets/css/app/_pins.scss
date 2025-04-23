@@ -281,7 +281,7 @@ section.pins {
       height: 100%;
       padding-left: 16px;
 
-      &>section.sibling-group {
+      &>.sibling-group>.siblings-in-group {
         display: flex;
         flex-direction: row;
         height: 100%;
