@@ -92,7 +92,7 @@ object SectionCotoDetails {
       val repo = context.repo
       div(className := "sub")(
         divAddSubCoto(ito.sourceCotoId, Some(ito.order)),
-        div(className := "sub")(
+        div(className := "sub-coto")(
           PartsCoto.ulParents(
             repo.parentsOf(coto.id).filter(_._2.id != ito.id),
             AppMsg.FocusCoto(_)

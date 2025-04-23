@@ -292,7 +292,7 @@ object SectionTraversals {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     PartsIto.sectionSiblings(subCotos, "sub-cotos") { case (ito, coto, order) =>
       val traversed = traversal._1.traversed(stepIndex, coto.id)
-      li(className := "sub")(
+      div(className := "sub-coto")(
         PartsCoto.ulParents(
           context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
           Msg.OpenTraversal(_)

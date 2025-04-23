@@ -379,7 +379,7 @@ object SectionPins {
       subCotos: Siblings
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     PartsIto.sectionSiblings(subCotos, "sub-cotos") { case (ito, coto, order) =>
-      div(className := "sub")(
+      div(className := "sub-coto")(
         PartsCoto.ulParents(
           context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
           SectionTraversals.Msg.OpenTraversal(_).into
