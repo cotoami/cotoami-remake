@@ -141,7 +141,7 @@ object SectionTraversals {
               IO {
                 js.timers.setTimeout(10) {
                   dom.document.getElementById(
-                    elementIdOfTraversalStep(traversalIndex, Some(stepIndex))
+                    stepElementId(traversalIndex, Some(stepIndex))
                   ) match {
                     case element: HTMLElement =>
                       element.scrollIntoView(true)
@@ -252,7 +252,7 @@ object SectionTraversals {
           ("traversal-step", stepIndex.isDefined)
         )
       ),
-      id := elementIdOfTraversalStep(traversal._2, stepIndex)
+      id := stepElementId(traversal._2, stepIndex)
     )(
       Option.when(stepIndex.isDefined) {
         div(className := "arrow")(
@@ -279,7 +279,7 @@ object SectionTraversals {
     )
   }
 
-  private def elementIdOfTraversalStep(
+  private def stepElementId(
       traversalIndex: Int,
       stepIndex: Option[Int]
   ): String =
