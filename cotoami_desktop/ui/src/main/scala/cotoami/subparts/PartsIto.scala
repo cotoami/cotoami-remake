@@ -141,7 +141,9 @@ object PartsIto {
       )
     )(
       Option.when(!group.isMain) {
-        context.repo.nodes.get(group.nodeId).map(PartsNode.spanNode)
+        context.repo.nodes.get(group.nodeId).map { node =>
+          div(className := "ito-node")(PartsNode.spanNode(node))
+        }
       },
       Flipper(
         element = "section",

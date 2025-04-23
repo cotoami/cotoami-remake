@@ -206,7 +206,7 @@ section.pins {
           background-color: var(--embedded-cotobackground-color);
         }
 
-        span.node {
+        div.ito-node {
           position: absolute;
           top: 8px;
           right: 12px;
@@ -246,6 +246,33 @@ section.pins {
 
         .simplebar-content-wrapper {
           padding-right: 10px;
+        }
+
+        .sibling-group.in-other-nodes {
+          margin-top: 3rem;
+
+          div.ito-node {
+            margin-bottom: 4px;
+            padding: 8px 15px 10px 15px;
+            background-color: var(--embedded-cotobackground-color);
+            border-radius: 0 18px 18px 0;
+
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+
+            img.node-icon {
+              width: 15px;
+              height: 15px;
+              border-radius: 3px;
+            }
+
+            .name {
+              vertical-align: middle;
+              font-size: 14px;
+            }
+          }
         }
 
         div.toc-entry {
