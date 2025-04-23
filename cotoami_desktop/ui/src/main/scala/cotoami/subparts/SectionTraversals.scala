@@ -237,11 +237,17 @@ object SectionTraversals {
       // traversal start
       divTraversalStep(startCoto, None, traversal),
       // traversal steps
-      traversal._1.steps.zipWithIndex.map { case (step, index) =>
-        context.repo.cotos.get(step).map(
-          divTraversalStep(_, Some(index), traversal)
-        )
-      }
+      traversal._1.steps.zipWithIndex.foldLeft(
+        (Seq.empty[ReactElement], false)
+      ) { case ((divSteps, break), (step, index)) =>
+        if (break)
+          (divSteps, true)
+        else
+          context.repo.cotos.get(step)
+            .map(divTraversalStep(_, Some(index), traversal))
+            .map(divStep => (divSteps :+ divStep, false))
+            .getOrElse((divSteps, true)) // the step is missing
+      }._1
     )
 
   private def divTraversalStep(
