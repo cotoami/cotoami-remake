@@ -184,7 +184,7 @@ case class Root(
       case (Some(parent), Some(selfId)) =>
         itos.from(parentId)
           .map { case (nodeId, itos) =>
-            (nodeId, getSiblingGroup(nodeId, itos))
+            (nodeId, getSiblingGroup(parent, nodeId, itos))
           }
           .pipe(Siblings(parent, selfId, _))
           .pipe(Some.apply)
@@ -193,6 +193,7 @@ case class Root(
     }
 
   private def getSiblingGroup(
+      parent: Coto,
       nodeId: Id[Node],
       itos: Iterable[Ito]
   ): SiblingGroup =
@@ -200,7 +201,7 @@ case class Root(
       .map(ito => cotos.get(ito.targetCotoId).map(coto => (ito, coto)))
       .flatten
       .toSeq
-      .pipe(SiblingGroup(nodeId, _))
+      .pipe(SiblingGroup(parent, nodeId, _))
 
   def parentsOf(
       cotoId: Id[Coto],

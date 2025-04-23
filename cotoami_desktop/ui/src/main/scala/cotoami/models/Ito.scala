@@ -71,10 +71,16 @@ case class Siblings(
 
 // Sibling itos and their target cotos from the same source coto and
 // belonging to the same node.
-case class SiblingGroup(nodeId: Id[Node], siblings: Seq[(Ito, Coto)]) {
+case class SiblingGroup(
+    parent: Coto,
+    nodeId: Id[Node],
+    siblings: Seq[(Ito, Coto)]
+) {
   def length = siblings.length
 
   def isEmpty: Boolean = siblings.isEmpty
+
+  def isMain: Boolean = nodeId == parent.nodeId
 
   val minOrder = siblings.headOption.map(_._1.order).getOrElse(0)
   val maxOrder = siblings.lastOption.map(_._1.order).getOrElse(0)
@@ -108,10 +114,6 @@ case class SiblingGroup(nodeId: Id[Node], siblings: Seq[(Ito, Coto)]) {
     }
 
   def fingerprint: String = itos.map(_.id.uuid).mkString
-}
-
-object SiblingGroup {
-  def empty(nodeId: Id[Node]): SiblingGroup = SiblingGroup(nodeId, Seq.empty)
 }
 
 case class OrderContext(
