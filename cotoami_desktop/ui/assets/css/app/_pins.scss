@@ -173,10 +173,6 @@ section.pins {
       }
     }
 
-    section.pin {
-      margin-bottom: 3rem;
-    }
-
     // Heading font size
     article.coto.has-children {
 
@@ -191,6 +187,48 @@ section.pins {
     div.itos-not-yet-loaded,
     ul.parents {
       background-color: var(--background-color);
+    }
+
+    section.pinned-cotos {
+      padding-bottom: 20px;
+
+      &>.sibling-group.in-other-nodes {
+        position: relative;
+        margin-top: 6rem;
+        padding: 10px;
+        padding-top: 45px;
+
+        background-color: var(--embedded-cotobackground-color);
+
+        article.coto,
+        div.itos-not-yet-loaded,
+        ul.parents {
+          background-color: var(--embedded-cotobackground-color);
+        }
+
+        span.node {
+          position: absolute;
+          top: 8px;
+          right: 12px;
+          z-index: 10;
+
+          img.node-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            margin-right: 5px;
+          }
+
+          .name {
+            vertical-align: middle;
+            font-size: 15px;
+          }
+        }
+      }
+    }
+
+    section.pin {
+      margin-bottom: 3rem;
     }
 
     div.pins-with-toc {
