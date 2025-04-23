@@ -245,6 +245,7 @@ object SectionTraversals {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val subCotos = context.repo.childrenOf(coto.id)
     div(
+      key := s"${stepIndex}-${coto.id.uuid}",
       className := optionalClasses(
         Seq(
           ("traversal-start", stepIndex.isEmpty),
