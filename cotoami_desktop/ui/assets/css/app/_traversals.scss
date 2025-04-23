@@ -8,12 +8,12 @@ section.traversals {
     min-width: 500px;
     background-color: var(--traversal-background-color);
 
-    header.tools {
+    &>header.tools {
       // place the close button to the left because the right side could be hidden when overflowing
       flex-direction: row;
     }
 
-    section.body {
+    &>.body {
       div.scrollable-traversal {
         padding: 10px;
         padding-top: 40px;

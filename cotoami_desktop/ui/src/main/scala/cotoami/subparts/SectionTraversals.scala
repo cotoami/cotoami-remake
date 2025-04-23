@@ -191,25 +191,9 @@ object SectionTraversals {
           materialSymbol("close")
         )
       ),
-      section(className := "body")(
-        ScrollArea(
-          className = Some("traversal"),
-          scrollableClassName = Some("scrollable-traversal")
-        )(
-          divParents(
-            context.repo.parentsOf(traversal._1.start),
-            traversal._2
-          ),
-          // traversal start
-          context.repo.cotos.get(traversal._1.start).map(
-            divTraversalStep(_, None, traversal)
-          ),
-          // traversal steps
-          traversal._1.steps.zipWithIndex.map { case (step, index) =>
-            context.repo.cotos.get(step).map(
-              divTraversalStep(_, Some(index), traversal)
-            )
-          }
+      div(className := "body")(
+        context.repo.cotos.get(traversal._1.start).map(
+          divTraversalSteps(_, traversal)
         )
       )
     )
@@ -237,6 +221,28 @@ object SectionTraversals {
         )
       )
     }
+
+  private def divTraversalSteps(
+      startCoto: Coto,
+      traversal: (Traversal, Int)
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    ScrollArea(
+      className = Some("traversal-steps"),
+      scrollableClassName = Some("scrollable-traversal")
+    )(
+      divParents(
+        context.repo.parentsOf(traversal._1.start),
+        traversal._2
+      ),
+      // traversal start
+      divTraversalStep(startCoto, None, traversal),
+      // traversal steps
+      traversal._1.steps.zipWithIndex.map { case (step, index) =>
+        context.repo.cotos.get(step).map(
+          divTraversalStep(_, Some(index), traversal)
+        )
+      }
+    )
 
   private def divTraversalStep(
       coto: Coto,
