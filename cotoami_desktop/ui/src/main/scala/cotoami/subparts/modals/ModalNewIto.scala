@@ -175,7 +175,7 @@ object ModalNewIto {
           disabled := !model.readyToConnect,
           aria - "busy" := model.connecting.toString(),
           onClick := (_ => dispatch(Msg.Connect))
-        )("Connect"),
+        )(context.i18n.text.ModalNewIto_connect),
         label(className := "clear-selection", htmlFor := "clear-selection")(
           input(
             `type` := "checkbox",

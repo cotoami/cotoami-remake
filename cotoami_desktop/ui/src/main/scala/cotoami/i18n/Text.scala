@@ -75,6 +75,7 @@ trait Text {
   val ModalNewIto_title: String
   val ModalNewIto_reverse: String
   val ModalNewIto_clearSelection: String
+  val ModalNewIto_connect: String
 
   val ModalNodeProfile_title: String
   val ModalNodeProfile_selfNode: String
