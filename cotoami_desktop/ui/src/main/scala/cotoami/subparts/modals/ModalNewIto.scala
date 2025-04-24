@@ -184,7 +184,7 @@ object ModalNewIto {
             disabled := model.connecting,
             onChange := (_ => dispatch(Msg.ClearSelectionToggled))
           ),
-          "Clear selection"
+          context.i18n.text.ModalNewIto_clearSelection
         )
       )
     )

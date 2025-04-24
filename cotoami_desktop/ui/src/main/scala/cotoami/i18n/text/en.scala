@@ -98,6 +98,7 @@ object en extends Text {
 
   val ModalNewIto_title = "New Ito"
   val ModalNewIto_reverse = "Reverse"
+  val ModalNewIto_clearSelection = "Clear selection on connect"
 
   val ModalNodeProfile_title = "Node Profile"
   val ModalNodeProfile_selfNode = "You"
