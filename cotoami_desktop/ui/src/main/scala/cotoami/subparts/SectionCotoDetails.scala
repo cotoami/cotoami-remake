@@ -8,7 +8,7 @@ import slinky.web.html._
 import marubinotto.components.{toolButton, ScrollArea}
 import cotoami.{Into, Msg => AppMsg}
 import cotoami.Context
-import cotoami.models.{Coto, Id, Siblings}
+import cotoami.models.{Coto, Cotonoma, Id, Siblings}
 
 object SectionCotoDetails {
 
@@ -44,7 +44,11 @@ object SectionCotoDetails {
       )
     )
 
-  private def divAddSubCoto(sourceCotoId: Id[Coto], order: Option[Int])(implicit
+  private def divAddSubCoto(
+      sourceCotoId: Id[Coto],
+      order: Option[Int],
+      defaultCotonomaId: Option[Id[Cotonoma]] = None
+  )(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -57,7 +61,7 @@ object SectionCotoDetails {
         onClick = e =>
           dispatch(
             Modal.Msg.OpenModal(
-              Modal.Subcoto(sourceCotoId, order)
+              Modal.Subcoto(sourceCotoId, order, defaultCotonomaId)
             )
           )
       )

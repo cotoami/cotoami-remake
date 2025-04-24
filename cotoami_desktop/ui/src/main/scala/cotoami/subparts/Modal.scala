@@ -10,7 +10,7 @@ import marubinotto.fui.{Browser, Cmd}
 import marubinotto.components.materialSymbol
 
 import cotoami.{Context, Into, Model => AppModel, Msg => AppMsg}
-import cotoami.models.{Coto, Id, Ito, Node}
+import cotoami.models.{Coto, Cotonoma, Id, Ito, Node}
 import cotoami.repository.Root
 import cotoami.subparts.modals._
 
@@ -145,10 +145,14 @@ object Modal {
 
   case class Subcoto(model: ModalSubcoto.Model) extends Modal
   object Subcoto {
-    def apply(sourceCotoId: Id[Coto], order: Option[Int])(implicit
+    def apply(
+        sourceCotoId: Id[Coto],
+        order: Option[Int],
+        defaultCotonomaId: Option[Id[Cotonoma]] = None
+    )(implicit
         context: Context
     ): Subcoto =
-      Subcoto(ModalSubcoto.Model(sourceCotoId, order))
+      Subcoto(ModalSubcoto.Model(sourceCotoId, order, defaultCotonomaId))
   }
 
   case class Incorporate(

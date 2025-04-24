@@ -85,18 +85,22 @@ object ModalSubcoto {
   }
 
   object Model {
-    def apply(sourceCotoId: Id[Coto], order: Option[Int])(implicit
+    def apply(
+        sourceCotoId: Id[Coto],
+        order: Option[Int],
+        defaultCotonomaId: Option[Id[Cotonoma]]
+    )(implicit
         context: Context
     ): Model = {
       val repo = context.repo
       val postedInIds =
         repo.cotos.get(sourceCotoId).map(_.postedInIds).getOrElse(Seq.empty)
 
-      val targetCotonomaIds =
+      var targetCotonomaIds =
         repo.cotonomas.getByCotoId(sourceCotoId) match {
           // If the source coto is a cotonoma, it's the first candidate.
           case Some(sourceCotonoma) =>
-            ((sourceCotonoma.id +: postedInIds) ++ repo.currentCotonomaId).distinct
+            ((sourceCotonoma.id +: postedInIds) ++ repo.currentCotonomaId)
 
           // The cotonomas in which the source coto has been posted are
           // the default targets. If they contain the current cotonoma,
@@ -105,12 +109,14 @@ object ModalSubcoto {
             repo.currentCotonomaId match {
               case Some(current) =>
                 if (postedInIds.contains(current))
-                  current +: postedInIds.filterNot(_ == current)
+                  current +: postedInIds
                 else
                   postedInIds :+ current
               case None => postedInIds
             }
         }
+      targetCotonomaIds =
+        (defaultCotonomaId ++ targetCotonomaIds).toSeq.distinct
 
       val targetCotonomas =
         targetCotonomaIds.map(repo.cotonomas.get).flatten.map(cotonoma =>
