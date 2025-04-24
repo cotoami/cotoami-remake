@@ -495,11 +495,12 @@ object EditorCoto {
 
     private def divAttributeDelete(
         onClick: SyntheticMouseEvent[_] => Unit
-    ): ReactElement =
+    )(implicit context: Context): ReactElement =
       div(className := "attribute-delete")(
         toolButton(
           symbol = "close",
-          tip = Some("Delete"),
+          tip = Some(context.i18n.text.Delete),
+          tipPlacement = "left",
           classes = "delete",
           onClick = onClick
         )
