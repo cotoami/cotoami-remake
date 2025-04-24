@@ -16,7 +16,7 @@ import cotoami.repository.{Cotos, Itos, Root}
 import cotoami.backend.{ErrorJson, ItoBackend}
 import cotoami.subparts.{Modal, PartsCoto, PartsIto}
 
-object ModalConnect {
+object ModalNewIto {
 
   /////////////////////////////////////////////////////////////////////////////
   // Model
@@ -82,7 +82,7 @@ object ModalConnect {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.ConnectMsg(this).pipe(AppMsg.ModalMsg)
+    def into = Modal.Msg.NewItoMsg(this).pipe(AppMsg.ModalMsg)
   }
 
   object Msg {
@@ -120,7 +120,7 @@ object ModalConnect {
               context.repo.cotos.clearSelection
             else
               context.repo.cotos,
-          _3 = Modal.close(classOf[Modal.Connect])
+          _3 = Modal.close(classOf[Modal.NewIto])
         )
 
       case Msg.Connected(Left(e)) =>
@@ -142,7 +142,7 @@ object ModalConnect {
     val coto = context.repo.cotos.get(model.cotoId)
     Modal.view(
       dialogClasses = "connect",
-      closeButton = Some((classOf[Modal.Connect], dispatch)),
+      closeButton = Some((classOf[Modal.NewIto], dispatch)),
       error = model.error
     )(
       Modal.spanTitleIcon(Ito.NewIconName),

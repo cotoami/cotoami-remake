@@ -304,7 +304,7 @@ object Main {
             if (!model.repo.cotos.anySelected)
               Cmd.Batch(
                 Modal.close(classOf[Modal.Selection]),
-                Modal.close(classOf[Modal.Connect])
+                Modal.close(classOf[Modal.NewIto])
               )
             else
               Cmd.none

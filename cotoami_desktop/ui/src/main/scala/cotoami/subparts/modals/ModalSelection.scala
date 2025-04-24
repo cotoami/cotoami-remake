@@ -42,7 +42,7 @@ object ModalSelection {
           context.repo.cotos.clearSelection,
           Cmd.Batch(
             Modal.close(classOf[Modal.Selection]),
-            Modal.close(classOf[Modal.Connect])
+            Modal.close(classOf[Modal.NewIto])
           )
         )
     }

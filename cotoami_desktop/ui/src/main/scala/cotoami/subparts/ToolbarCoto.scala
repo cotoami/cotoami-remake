@@ -33,7 +33,7 @@ object ToolbarCoto {
           tipPlacement = "left",
           onClick = e => {
             e.stopPropagation()
-            dispatch(Modal.Msg.OpenModal(Modal.Connect(coto.id)))
+            dispatch(Modal.Msg.OpenModal(Modal.NewIto(coto.id)))
           }
         )
       },

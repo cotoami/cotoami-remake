@@ -138,9 +138,9 @@ object Modal {
       Selection(ModalSelection.Model(enableClear))
   }
 
-  case class Connect(model: ModalConnect.Model) extends Modal
-  object Connect {
-    def apply(cotoId: Id[Coto]): Connect = Connect(ModalConnect.Model(cotoId))
+  case class NewIto(model: ModalNewIto.Model) extends Modal
+  object NewIto {
+    def apply(cotoId: Id[Coto]): NewIto = NewIto(ModalNewIto.Model(cotoId))
   }
 
   case class Subcoto(model: ModalSubcoto.Model) extends Modal
@@ -217,7 +217,7 @@ object Modal {
     case class PromoteMsg(msg: ModalPromote.Msg) extends Msg
     case class EditItoMsg(msg: ModalEditIto.Msg) extends Msg
     case class SelectionMsg(msg: ModalSelection.Msg) extends Msg
-    case class ConnectMsg(msg: ModalConnect.Msg) extends Msg
+    case class NewItoMsg(msg: ModalNewIto.Msg) extends Msg
     case class SubcotoMsg(msg: ModalSubcoto.Msg) extends Msg
     case class IncorporateMsg(msg: ModalIncorporate.Msg) extends Msg
     case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
@@ -306,12 +306,12 @@ object Modal {
           }
         }
 
-      case Msg.ConnectMsg(modalMsg) =>
-        stack.get[Connect].map { case Connect(modal) =>
-          ModalConnect.update(modalMsg, modal).pipe {
+      case Msg.NewItoMsg(modalMsg) =>
+        stack.get[NewIto].map { case NewIto(modal) =>
+          ModalNewIto.update(modalMsg, modal).pipe {
             case (modal, cotos, cmds) =>
               (
-                updateModal(Connect(modal), model)
+                updateModal(NewIto(modal), model)
                   .modify(_.repo.cotos).setTo(cotos),
                 cmds
               )
@@ -474,7 +474,7 @@ object Modal {
 
       case Selection(modal) => Some(ModalSelection(modal))
 
-      case Connect(modal) => Some(ModalConnect(modal))
+      case NewIto(modal) => Some(ModalNewIto(modal))
 
       case Subcoto(modal) => Some(ModalSubcoto(modal))
 
