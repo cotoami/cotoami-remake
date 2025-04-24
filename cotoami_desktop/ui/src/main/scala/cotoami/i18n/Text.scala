@@ -60,6 +60,8 @@ trait Text {
   val SectionNodeTools_enableSync: String
   val SectionNodeTools_disableSync: String
 
+  val EditorCoto_date: String
+
   val ModalInputOwnerPassword_title: String
   val ModalInputOwnerPassword_message: String
 

@@ -418,7 +418,7 @@ object EditorCoto {
         li(className := "attribute time-range")(
           div(className := "attribute-name")(
             materialSymbol("calendar_month"),
-            "Date"
+            context.i18n.text.EditorCoto_date
           ),
           div(className := "attribute-value")(
             form.dateTimeRange.map(range =>
@@ -431,6 +431,7 @@ object EditorCoto {
                 classes = "from-image",
                 symbol = "image",
                 tip = Some("From Image"),
+                tipPlacement = "left",
                 onClick = (_ => dispatch(CotoForm.Msg.UseMediaDateTime))
               )
             }
@@ -475,6 +476,7 @@ object EditorCoto {
                 classes = "from-map",
                 symbol = "public",
                 tip = Some("From Map"),
+                tipPlacement = "left",
                 onClick = (_ => dispatch(CotoForm.Msg.UseGeomapLocation))
               )
             },
@@ -483,6 +485,7 @@ object EditorCoto {
                 classes = "from-image",
                 symbol = "image",
                 tip = Some("From Image"),
+                tipPlacement = "left",
                 onClick = (_ => dispatch(CotoForm.Msg.UseMediaLocation))
               )
             }
