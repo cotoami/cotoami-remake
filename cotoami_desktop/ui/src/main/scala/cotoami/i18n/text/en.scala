@@ -72,6 +72,7 @@ object en extends Text {
   val SectionNodeTools_disableSync = "Disable Sync"
 
   val EditorCoto_date = "Date"
+  val EditorCoto_location = "Location"
 
   val ModalInputOwnerPassword_title = "Owner Password Required"
   val ModalInputOwnerPassword_message =

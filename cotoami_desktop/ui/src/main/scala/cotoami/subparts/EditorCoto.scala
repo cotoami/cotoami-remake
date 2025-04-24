@@ -454,7 +454,7 @@ object EditorCoto {
         li(className := "attribute geolocation")(
           div(className := "attribute-name")(
             materialSymbol("location_on"),
-            "Location"
+            context.i18n.text.EditorCoto_location
           ),
           div(className := "attribute-value")(
             form.geolocation.map(location =>
