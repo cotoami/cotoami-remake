@@ -73,6 +73,7 @@ trait Text {
   val ModalNewClientPassword_message: String
 
   val ModalSelection_title: String
+  val ModalSelection_clear: String
 
   val ModalNewIto_title: String
   val ModalNewIto_reverse: String

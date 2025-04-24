@@ -97,6 +97,7 @@ object en extends Text {
     """
 
   val ModalSelection_title = "Selected Cotos"
+  val ModalSelection_clear = "Clear Selection"
 
   val ModalNewIto_title = "New Ito"
   val ModalNewIto_reverse = "Reverse"

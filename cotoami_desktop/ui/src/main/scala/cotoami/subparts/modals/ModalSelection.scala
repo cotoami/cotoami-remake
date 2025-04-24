@@ -82,7 +82,7 @@ object ModalSelection {
             `type` := "button",
             className := "cancel contrast outline",
             onClick := (_ => dispatch(Msg.Clear.into))
-          )("Clear selection")
+          )(context.i18n.text.ModalSelection_clear)
         )
       }
     )
