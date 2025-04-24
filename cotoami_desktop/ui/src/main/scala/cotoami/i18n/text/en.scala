@@ -96,6 +96,8 @@ object en extends Text {
     Send this password to the node owner using a secure method.
     """
 
+  val ModalSelection_title = "Selected Cotos"
+
   val ModalNewIto_title = "New Ito"
   val ModalNewIto_reverse = "Reverse"
   val ModalNewIto_clearSelection = "Clear selection on connect"

@@ -61,7 +61,7 @@ object ModalSelection {
       closeButton = Some((classOf[Modal.Selection], dispatch))
     )(
       Modal.spanTitleIcon("check_box"),
-      s"Selected cotos (${cotos.selectedIds.size})"
+      s"${context.i18n.text.ModalSelection_title} (${cotos.selectedIds.size})"
     )(
       ScrollArea(className = Some("selected-cotos"))(
         Flipper(
