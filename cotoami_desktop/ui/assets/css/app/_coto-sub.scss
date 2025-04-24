@@ -1,4 +1,36 @@
 section.sub-cotos {
+
+  &>.sibling-group.in-other-nodes {
+    padding: 10px;
+    padding-top: 8px;
+
+    background-color: var(--embedded-cotobackground-color);
+
+    article.coto,
+    div.itos-not-yet-loaded,
+    ul.parents {
+      background-color: var(--embedded-cotobackground-color);
+    }
+
+    div.ito-node {
+      text-align: right;
+      padding-right: 8px;
+      padding-bottom: 8px;
+
+      img.node-icon {
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
+        margin-right: 5px;
+      }
+
+      .name {
+        vertical-align: middle;
+        font-size: 14px;
+      }
+    }
+  }
+
   article.sub-coto {
     >header {
       button.edit-ito {
