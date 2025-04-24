@@ -174,11 +174,17 @@ section.pins {
     }
 
     // Heading font size
-    article.coto.has-children {
-
-      section.text-content p:first-child,
-      span.summary {
+    article.pinned-coto {
+      &>div.body section.cotonoma-label {
         font-size: 1.1rem;
+      }
+
+      &.has-children>div.body {
+
+        section.text-content p:first-child,
+        span.summary {
+          font-size: 1.1rem;
+        }
       }
     }
 
