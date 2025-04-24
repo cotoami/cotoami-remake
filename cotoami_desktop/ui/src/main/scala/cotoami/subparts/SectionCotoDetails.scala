@@ -39,10 +39,7 @@ object SectionCotoDetails {
             AppMsg.FocusCoto(_)
           ),
           articleMainCoto(coto),
-          div(className := "sub-cotos")(
-            context.repo.childrenOf(coto.id).map(sectionSubCotos),
-            divAddSubCoto(coto.id, None)
-          )
+          context.repo.childrenOf(coto.id).map(sectionSubCotos)
         ).withKey(coto.id.uuid) // Reset the state when the coto is changed
       )
     )

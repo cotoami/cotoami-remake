@@ -62,48 +62,46 @@ section.coto-details {
     }
   }
 
-  div.sub-cotos {
+  section.sub-cotos {
     margin-bottom: var(--block-spacing-vertical);
     margin-left: var(--block-spacing-horizontal);
 
-    section.sub-cotos {
-      div.sub {
-        div.sub-coto {
-          border-top: 1px solid var(--pane-border-color);
-          border-bottom: 1px solid var(--pane-border-color);
+    div.sub {
+      div.sub-coto {
+        border-top: 1px solid var(--pane-border-color);
+        border-bottom: 1px solid var(--pane-border-color);
 
-          article.sub-coto {
-            >header {
-              position: relative;
-              padding: 0 var(--block-spacing-horizontal);
+        article.sub-coto {
+          >header {
+            position: relative;
+            padding: 0 var(--block-spacing-horizontal);
 
-              div.ito-container {
-                position: absolute;
-                top: -10px;
-                left: 10px;
-                right: 10px;
-              }
+            div.ito-container {
+              position: absolute;
+              top: -10px;
+              left: 10px;
+              right: 10px;
+            }
 
-              div.attributes {
-                padding-top: 20px; // also as padding-top of the header
-              }
+            div.attributes {
+              padding-top: 20px; // also as padding-top of the header
             }
           }
+        }
 
-          div.itos {
-            padding-top: 3px;
-            background-color: var(--card-background-color);
-            text-align: center;
-          }
+        div.itos {
+          padding-top: 3px;
+          background-color: var(--card-background-color);
+          text-align: center;
         }
       }
+    }
 
-      &>.sibling-group.in-other-nodes {
-        margin-top: 6rem;
+    &>.sibling-group.in-other-nodes {
+      margin-top: 6rem;
 
-        div.sub div.sub-coto div.itos {
-          background-color: var(--embedded-cotobackground-color);
-        }
+      div.sub div.sub-coto div.itos {
+        background-color: var(--embedded-cotobackground-color);
       }
     }
 
