@@ -141,7 +141,7 @@ object ModalNewIto {
   ): ReactElement = {
     val coto = context.repo.cotos.get(model.cotoId)
     Modal.view(
-      dialogClasses = "connect",
+      dialogClasses = "new-ito",
       closeButton = Some((classOf[Modal.NewIto], dispatch)),
       error = model.error
     )(
