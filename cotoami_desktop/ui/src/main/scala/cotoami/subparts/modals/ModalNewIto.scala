@@ -153,7 +153,7 @@ object ModalNewIto {
           `type` := "button",
           className := "reverse contrast outline",
           onClick := (_ => dispatch(Msg.Reverse))
-        )("Reverse")
+        )(context.i18n.text.ModalNewIto_reverse)
       ),
       section(className := "source")(
         if (model.toSelection)

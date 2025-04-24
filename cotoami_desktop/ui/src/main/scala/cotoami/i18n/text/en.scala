@@ -97,6 +97,7 @@ object en extends Text {
     """
 
   val ModalNewIto_title = "New Ito"
+  val ModalNewIto_reverse = "Reverse"
 
   val ModalNodeProfile_title = "Node Profile"
   val ModalNodeProfile_selfNode = "You"

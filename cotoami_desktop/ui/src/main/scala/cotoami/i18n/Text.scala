@@ -73,6 +73,7 @@ trait Text {
   val ModalNewClientPassword_message: String
 
   val ModalNewIto_title: String
+  val ModalNewIto_reverse: String
 
   val ModalNodeProfile_title: String
   val ModalNodeProfile_selfNode: String
