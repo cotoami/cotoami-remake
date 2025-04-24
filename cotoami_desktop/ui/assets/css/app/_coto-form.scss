@@ -22,6 +22,11 @@ div.coto-form {
       display: flex;
       flex-direction: column;
     }
+
+    &.vertical .separator {
+      margin-left: 3px;
+      margin-right: 3px;
+    }
   }
 
   section.validation-error {
