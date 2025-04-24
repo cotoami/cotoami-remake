@@ -110,7 +110,10 @@ object SectionCotoDetails {
             PartsCoto.articleFooter(coto)
           ),
           PartsCoto.divItosTraversal(coto, "bottom")
-        )
+        ),
+        Option.when(order.isLast) {
+          divAddSubCoto(ito.sourceCotoId, None)
+        }
       )
     }
 }
