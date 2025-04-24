@@ -47,7 +47,7 @@ object SectionCotoDetails {
   private def divAddSubCoto(
       sourceCotoId: Id[Coto],
       order: Option[Int],
-      defaultCotonomaId: Option[Id[Cotonoma]] = None
+      defaultCotonomaId: Option[Id[Cotonoma]]
   )(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
@@ -91,8 +91,16 @@ object SectionCotoDetails {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     PartsIto.sectionSiblings(subCotos, "sub-cotos") { case (ito, coto, order) =>
       val repo = context.repo
+      val addSubCotoTo =
+        // In a sibling group that doesn't belong to the same node of the
+        // parent coto (non-main group), the default target cotonoma of a new
+        // sibling will be the same as that of the neighboring sibling coto.
+        if (ito.nodeId != subCotos.parent.nodeId)
+          coto.postedInId
+        else
+          None
       div(className := "sub")(
-        divAddSubCoto(ito.sourceCotoId, Some(ito.order)),
+        divAddSubCoto(ito.sourceCotoId, Some(ito.order), addSubCotoTo),
         div(className := "sub-coto")(
           PartsCoto.ulParents(
             repo.parentsOf(coto.id).filter(_._2.id != ito.id),
@@ -116,7 +124,7 @@ object SectionCotoDetails {
           PartsCoto.divItosTraversal(coto, "bottom")
         ),
         Option.when(order.isLast) {
-          divAddSubCoto(ito.sourceCotoId, None)
+          divAddSubCoto(ito.sourceCotoId, None, addSubCotoTo)
         }
       )
     }
