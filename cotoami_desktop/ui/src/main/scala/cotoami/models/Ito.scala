@@ -31,7 +31,7 @@ case class Ito(
 
 object Ito {
   final val IconName = "north_east"
-  final val ConnectIconName = "add_link"
+  final val NewIconName = "north_east"
   final val PinIconName = "push_pin"
 
   final val DescriptionMaxLength = 200

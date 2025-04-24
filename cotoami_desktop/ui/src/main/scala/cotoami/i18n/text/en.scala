@@ -24,7 +24,6 @@ object en extends Text {
   val Save = "Save"
   val Edit = "Edit"
   val Delete = "Delete"
-  val Connect = "Connect"
 
   val DeleteCotonoma = "Delete Cotonoma"
   val WriteSubcoto = "Write Sub-coto"

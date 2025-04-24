@@ -27,9 +27,9 @@ object ToolbarCoto {
           repo.canEditItos
       ) {
         toolButton(
-          classes = "connect",
-          symbol = Ito.ConnectIconName,
-          tip = Some(context.i18n.text.Connect),
+          classes = "new-ito",
+          symbol = Ito.NewIconName,
+          tip = Some(context.i18n.text.Ito),
           tipPlacement = "left",
           onClick = e => {
             e.stopPropagation()

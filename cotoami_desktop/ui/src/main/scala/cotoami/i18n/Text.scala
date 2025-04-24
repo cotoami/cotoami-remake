@@ -21,7 +21,6 @@ trait Text {
   val Save: String
   val Edit: String
   val Delete: String
-  val Connect: String
 
   val DeleteCotonoma: String
   val WriteSubcoto: String

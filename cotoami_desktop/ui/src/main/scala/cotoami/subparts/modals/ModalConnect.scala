@@ -145,7 +145,7 @@ object ModalConnect {
       closeButton = Some((classOf[Modal.Connect], dispatch)),
       error = model.error
     )(
-      Modal.spanTitleIcon(Ito.ConnectIconName),
+      Modal.spanTitleIcon(Ito.NewIconName),
       "Connect"
     )(
       div(className := "buttons reverse")(
