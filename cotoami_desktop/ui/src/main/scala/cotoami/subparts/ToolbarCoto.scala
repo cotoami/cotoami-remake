@@ -71,7 +71,7 @@ object ToolbarCoto {
           onClick = e => {
             e.stopPropagation()
             dispatch(
-              Modal.Msg.OpenModal(Modal.Subcoto(coto.id, None, repo))
+              Modal.Msg.OpenModal(Modal.Subcoto(coto.id, None))
             )
           }
         )

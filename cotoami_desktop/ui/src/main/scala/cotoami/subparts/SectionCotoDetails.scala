@@ -57,7 +57,7 @@ object SectionCotoDetails {
         onClick = e =>
           dispatch(
             Modal.Msg.OpenModal(
-              Modal.Subcoto(sourceCotoId, order, context.repo)
+              Modal.Subcoto(sourceCotoId, order)
             )
           )
       )
