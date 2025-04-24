@@ -146,7 +146,7 @@ object ModalNewIto {
       error = model.error
     )(
       Modal.spanTitleIcon(Ito.NewIconName),
-      "Connect"
+      context.i18n.text.ModalNewIto_title
     )(
       div(className := "buttons reverse")(
         button(

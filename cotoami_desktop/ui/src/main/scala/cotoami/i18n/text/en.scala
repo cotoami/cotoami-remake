@@ -96,6 +96,8 @@ object en extends Text {
     Send this password to the node owner using a secure method.
     """
 
+  val ModalNewIto_title = "New Ito"
+
   val ModalNodeProfile_title = "Node Profile"
   val ModalNodeProfile_selfNode = "You"
   val ModalNodeProfile_switched = "switched"
