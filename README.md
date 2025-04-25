@@ -1,6 +1,12 @@
 <p align="center"><img src="docs/logo.png" alt="Cotoami Remake" height="250px"></p>
 
-"Cotoami Remake" is a project that aims to remake [Cotoami](https://github.com/cotoami/cotoami) from the ground up to make it more accessible and scalable. It also aims to ensure the longevity of the program and database, allowing you to use it without fear of losing access to your data.
+Cotoami is a standalone, cross-platform note-taking application designed to help you organize scattered information into meaningful knowledge—entirely on your own device, with full offline support.
+
+Cotoami structures your input as “Cotos” (units of information) and connects them using “Itos” (links between Cotos). By building these connections, you transform isolated notes into an interconnected web of knowledge.
+
+One unique feature is the built-in world map, allowing you to associate any information with geographic locations—even when offline, since the map is fully included within the app.
+
+While Cotoami Remake is designed for private, offline use, it also offers a powerful collaboration option: you can connect to other users’ databases online and cooperatively edit knowledge as a team.
 
 ## Concept
 
