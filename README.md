@@ -8,6 +8,8 @@ One unique feature is the built-in world map, allowing you to associate any info
 
 While Cotoami Remake is designed for private, offline use, it also offers a powerful collaboration option: you can connect to other users’ databases online and cooperatively edit knowledge as a team.
 
+> Cotoami Remake is a complete reimagining of the original [Cotoami](https://github.com/cotoami/cotoami) web application, rebuilt from the ground up as a standalone desktop app for individual users who want a simple, private note-taking experience. While it retains the core concept of its predecessor, Cotoami Remake introduces entirely new features—such as integration with a built-in map and the ability to connect databases across users—making it a fundamentally different application.
+
 ## Concept
 
 <p align="center"><img src="docs/distributed-graph.png" alt="Distributed coto graph" height="600px"></p>
