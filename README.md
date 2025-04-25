@@ -4,7 +4,7 @@ Cotoami is a standalone, cross-platform note-taking application designed to help
 
 Cotoami structures your input as “Cotos” (units of information) and connects them using “Itos” (links between Cotos). By building these connections, you transform isolated notes into an interconnected web of knowledge.
 
-One unique feature is the built-in world map, allowing you to associate any information with geographic locations—even when offline, since the map is fully included within the app.
+One unique feature is the built-in world map, allowing you to associate any information with geographic locations—even when offline, since the map is fully included within the app (powered by [OpenStreetMap](https://openstreetmap.org) and [Protomaps](https://github.com/protomaps/basemaps)).
 
 While Cotoami Remake is designed for private, offline use, it also offers a powerful collaboration option: you can connect to other users’ databases online and cooperatively edit knowledge as a team.
 
