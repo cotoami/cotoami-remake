@@ -1,3 +1,5 @@
+@use "../mixins";
+
 section.flow-input {
   display: flex;
   flex-direction: column;
@@ -24,6 +26,8 @@ section.flow-input {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+
+      @include mixins.selectable;
 
       img.node-icon {
         width: 18px;

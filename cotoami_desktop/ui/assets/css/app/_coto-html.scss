@@ -1,4 +1,7 @@
+@use "../mixins";
+
 section.text-content {
+  @include mixins.selectable;
 
   p {
     overflow-wrap: anywhere;

@@ -1,3 +1,5 @@
+@use "../mixins";
+
 div.app>header {
   background-color: var(--card-sectionning-background-color);
 
@@ -9,32 +11,14 @@ div.app>header {
     margin-left: 70px;
   }
 
-  button.app-info {
-    display: inline-block;
-    position: absolute;
-    top: 2px;
-    left: 8px;
-    opacity: .8;
-    cursor: pointer;
-
-    &:hover {
-      opacity: 1;
-    }
-
-    img.app-icon {
-      width: 26px;
-      height: 26px;
-      margin-top: 2px;
-    }
-  }
-
-
   section.current-focus {
     margin-left: 10px;
     display: inline-flex;
     flex-direction: row;
     align-items: center;
     height: var(--header-height);
+
+    @include mixins.selectable;
 
     a.node-home {
       display: inline-flex;

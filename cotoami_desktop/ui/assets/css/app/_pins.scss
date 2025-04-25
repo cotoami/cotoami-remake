@@ -1,3 +1,5 @@
+@use "../mixins";
+
 section.pins {
   >header {
     --padding-horizontal: 100px;
@@ -21,6 +23,8 @@ section.pins {
       flex-direction: row;
       justify-content: center;
       align-items: end;
+
+      @include mixins.selectable;
 
       span.current-cotonoma-name {
         font-size: 18px;

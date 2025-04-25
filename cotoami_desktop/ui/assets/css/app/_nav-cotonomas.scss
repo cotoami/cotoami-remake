@@ -1,11 +1,7 @@
-@use "../mixins";
-
 nav.cotonomas {
   --item-padding-left: 12px;
   --item-font-size: 0.9rem;
   --item-indent-width: 13px;
-
-  @include mixins.unselectable;
 
   header {
     margin-top: 23px;
