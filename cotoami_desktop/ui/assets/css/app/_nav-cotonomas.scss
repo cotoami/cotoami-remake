@@ -5,6 +5,8 @@ nav.cotonomas {
   --item-font-size: 0.9rem;
   --item-indent-width: 13px;
 
+  @include mixins.unselectable;
+
   header {
     margin-top: 23px;
     padding-bottom: 6px;
@@ -97,8 +99,6 @@ nav.cotonomas {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-
-    @include mixins.force-unselectable;
   }
 
   a.cotonoma {
