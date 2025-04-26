@@ -235,11 +235,14 @@ object PartsCoto {
   def sectionTextContent(content: Option[String]): ReactElement =
     section(className := "text-content")(
       Markdown(
-        remarkPlugins = Seq(remarkPlugins.breaks),
+        remarkPlugins = Seq(
+          remarkPlugins.Breaks,
+          remarkPlugins.RemarkGfm
+        ),
         rehypePlugins = Seq(
-          js.Tuple2(rehypePlugins.externalLinks, jso(target = "_blank")),
+          js.Tuple2(rehypePlugins.ExternalLinks, jso(target = "_blank")),
           js.Tuple2(
-            rehypePlugins.highlight,
+            rehypePlugins.Highlight,
             jso(languages = lowlight.all, detect = false)
           )
         )

@@ -26,7 +26,8 @@
     "remark-breaks": "^4.0.0",
     "simplebar-react": "^3.3.0",
     "strip-markdown": "^6.0.0",
-    "react-flip-toolkit": "^7.2.4"
+    "react-flip-toolkit": "^7.2.4",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@scala-js/vite-plugin-scalajs": "^1.0.0",

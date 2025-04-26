@@ -7,10 +7,15 @@ object remarkPlugins {
   // https://github.com/remarkjs/remark-breaks
   @js.native
   @JSImport("remark-breaks", JSImport.Default)
-  object breaks extends js.Object
+  object Breaks extends js.Object
 
   // https://github.com/remarkjs/strip-markdown
   @js.native
   @JSImport("strip-markdown", JSImport.Default)
-  object StripMarkdown extends js.Any
+  object StripMarkdown extends js.Object
+
+  // https://github.com/remarkjs/remark-gfm
+  @js.native
+  @JSImport("remark-gfm", JSImport.Default)
+  object RemarkGfm extends js.Object
 }
