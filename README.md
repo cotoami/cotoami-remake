@@ -66,6 +66,12 @@ As illustrated above, the typical knowledge growth cycle in Cotoami works like t
 
 Not every Cotonoma needs to be created through this cycle—you can also create a new Cotonoma as a category right from the start if you already have something in mind. But if you only do that, your list of Cotonomas will be limited to what you already know or expect. By following the cycle above, you’ll discover new and unexpected Cotonomas as your knowledge grows. This process of “discovery” is what the knowledge growth cycle is all about.
 
+### Repost
+
+[screeshot]
+
+By default, each Coto belongs to the Cotonoma in which it was originally posted. But what if you realize that a Coto is also relevant to another Cotonoma? One way is to connect it with an Ito from that Cotonoma, indicating a direct relationship. However, if the connection isn’t strong enough to justify an Ito, you can use the Repost feature to post the Coto again on the timeline of a different Cotonoma. This allows a single Coto to belong to multiple Cotonomas through reposting. The Repost function becomes even more important when working with the networked database environment, which will be described later.
+
 ## Database Networking
 
 <p><img src="docs/images/distributed-graph.png" alt="Distributed coto graph" height="600px"></p>
