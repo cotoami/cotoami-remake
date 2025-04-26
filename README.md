@@ -47,6 +47,25 @@ In summary, a Cotonoma is a container for two types of information:
 
 This dual structure lets you both capture the stream of new information and organize key items for easy reference.
 
+## The Knowledge Growth Cycle
+
+One of the most important features of Cotoami is the ability to “promote” a Coto into a Cotonoma. This makes it possible to organically grow new Cotonomas as your knowledge develops, directly from existing information. Think of Cotonomas as entries in the catalog of your knowledge base.
+
+[Insert screenshot of the feature here]
+
+The following diagram was created when I first came up with the idea for Cotoami’s structure:
+
+![](docs/images/growth-cycle.png)
+
+As illustrated above, the typical knowledge growth cycle in Cotoami works like this:
+
+1. **Post Cotos to a Cotonoma**: Start by posting Cotos relevant to a certain Cotonoma.
+2. **Connect Cotos with Itos**: As you add more Cotos, you may find relationships between them. Use Itos to build structures and connections.
+3. **Promote a Coto to a Cotonoma**: When a particular Coto becomes central—often because it has many connections (Itos)—you can promote it to a Cotonoma. This allows you to dig deeper into that topic, giving it its own timeline and structure.
+4. **Repeat the Process**: Inside the new Cotonoma, you can start the cycle again from step 1.
+
+Not every Cotonoma needs to be created through this cycle—you can also create a new Cotonoma as a category right from the start if you already have something in mind. But if you only do that, your list of Cotonomas will be limited to what you already know or expect. By following the cycle above, you’ll discover new and unexpected Cotonomas as your knowledge grows. This process of “discovery” is what the knowledge growth cycle is all about.
+
 ## Database Networking
 
 <p><img src="docs/images/distributed-graph.png" alt="Distributed coto graph" height="600px"></p>
