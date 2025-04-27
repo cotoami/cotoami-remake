@@ -72,6 +72,20 @@ By default, each Coto belongs to the Cotonoma in which it was originally posted.
 
 [screeshot]
 
+## Geolocated Cotos
+
+Cotoami comes with a built-in world map. In fact, most of the application size (about 500MB) is taken up by this map data. The advantage is that Cotoami never needs to access online map services—you can use it completely offline, and you’ll never have to worry about losing access if an external service is discontinued.
+
+With this map, you can attach location information to any Coto or search for Cotos that already have geolocation. If you attach a photo with embedded GPS data (Exif info) to a Coto, the location will be registered automatically.
+
+[screeshot]
+
+Of course, you can also assign a location to a Cotonoma. When a Cotonoma has location information, selecting it will automatically show that place on the map. Even if the Cotonoma itself doesn’t have a location, Cotoami will automatically display the combined area covered by the locations of any geotagged Cotos it contains.
+
+[screeshot]
+
+Actually, this geolocation feature was the main inspiration for rebuilding Cotoami from scratch. I realized that the purpose of “The Knowledge Growth Cycle”—the discovery of new knowledge—could also be applied to discovering new destinations and places in the world.
+
 ## Database Networking
 
 <p><img src="docs/images/distributed-graph.png" alt="Distributed coto graph" height="600px"></p>
