@@ -102,4 +102,11 @@ As of its initial release in 2025, there are already countless note-taking apps 
     * Strictly speaking, the current version of Cotoami does depend on the WebView component included in each operating system, which could potentially cause compatibility issues in the future. 
 
 
+## Download and Install
+
+Download the latest version of Cotoami for your platform (Windows, Linux, or macOS) from the releases page.
+
+* For Windows and macOS users:
+    * Please note that the application is not digitally signed for now, so you may need to bypass your operating system's security warnings to install and run it for the first time.
+    * macOS - [Open a Mac app from an unknown developer](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unknown-developer-mh40616/mac)
 
