@@ -96,7 +96,7 @@ Actually, this geolocation feature was the main inspiration for rebuilding Cotoa
 As of its initial release in 2025, there are already countless note-taking apps available—both online services and standalone applications, with some clear industry standards among them. So, why go out of your way to use this one? Honestly, I created this program simply because it was something I personally wanted to use. I can't say for certain whether it will be the best choice for everyone. However, in developing Cotoami Remake, I've paid special attention to the following points, beyond just the features themselves:
 
 * **Privacy**: All data you create stays entirely on your own device.
-* **Data Compatibility**: Your data will remain accessible and usable, even as new versions of Cotoami are released.
+* **Data Portability**: Your data is always yours. Cotoami saves everything in a standard SQLite database file, so you can access, read, or edit your notes using any tool that works with SQLite—even without Cotoami itself. Future versions of Cotoami will continue to support your existing data.
 * **Offline Availability**: Cotoami does not rely on any online services—you can use it completely offline.
 * **All-in-One**: No additional runtimes or dependencies are required. You can use Cotoami right after downloading it, and it's designed to remain usable for as long as possible.
     * Strictly speaking, the current version of Cotoami does depend on the WebView component included in each operating system, which could potentially cause compatibility issues in the future. 
