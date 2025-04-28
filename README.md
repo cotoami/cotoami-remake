@@ -88,7 +88,7 @@ Actually, this geolocation feature was the main inspiration for rebuilding Cotoa
 
 ## Database Networking
 
-Although Cotoami is designed as a standalone, privacy-first app that works perfectly offline, it also features a powerful database networking capability. While there aren’t many real-world use cases to share yet, I believe this feature has a lot of potential—from connecting multiple personal databases for different purposes, to collaborating within a small team, or even supporting hierarchical cooperation across a larger organization.
+Although Cotoami is designed as a standalone, privacy-first app that works perfectly offline, it also features a powerful database networking capability. While there aren't many real-world use cases to share yet, I believe this feature has a lot of potential—from connecting multiple personal databases for different purposes, to collaborating within a small team, or even supporting hierarchical cooperation across a larger organization.
 
 Cotoami launches by opening a single database file, which is simply a local SQLite database. With Cotoami, you can connect databases over the network. These connections use WebSocket, allowing changes to be synchronized in real time (if WebSocket is not available in your environment, Cotoami automatically falls back to HTTP with Server-Sent Events (SSE) to maintain network connectivity). Each connected database is called a “Node.” The diagram below illustrates how these Nodes can be linked together.
 
@@ -100,11 +100,11 @@ Here are some key points about the database networking feature:
 
 * **Node as Account**: Each node acts like an account within the network, serving as your identity and the origin of any actions (such as posting or editing data) in other databases. In Cotoami, the node you operate from—acting as your account—is called the **Self Node**.
 * **Seamless Graph Manipulation**: Connected databases can be used almost seamlessly. For example, you can link Cotos from different databases using an Ito, or repost a remote Coto to a local Cotonoma (however, you cannot repost a local Coto to a remote database, because it leads to accidental data exposure).
-* **Offline Access**: All imported data is stored locally, so you can browse it even when offline—though you can’t edit it until you reconnect. You can enable or disable each database connection at any time.
+* **Offline Access**: All imported data is stored locally, so you can browse it even when offline—though you can't edit it until you reconnect. You can enable or disable each database connection at any time.
 * **Granular Permissions**: On the database being imported (the remote node), you can finely control what operations are allowed by those importing it. By default, only posting is permitted, but you can also allow creating Itos or new Cotonomas.
 * **Switch Node**: If your local node has “Owner” privileges on a remote node, you can use the Switch Node feature to operate as if the remote node were local. This is especially useful for administering a Cotoami Node Server.
 * **Attaching Private Notes on Remote Cotos**: You can create an Ito from a remote Coto to another Coto within the same remote Node, or from a remote Coto to your own local Coto. The first type of Ito stays within the remote Node, while the second type creates a cross-node connection. Since this cross-node connection is created on the local Node, it is only visible to the local user, making it useful for adding private notes or annotations to remote content.
-* **Permission Control by Hierarchy**: Posting to a remote node is only possible for directly connected nodes; you can browse deeper nodes (further down the connection chain), but you cannot post or edit content there. This makes it possible to build information networks such as: a main organizational node, with departmental nodes beneath it, and personal nodes beneath each department. In this structure, individuals can post to their department’s Cotonoma but only view the organization-wide Cotonoma.
+* **Permission Control by Hierarchy**: Posting to a remote node is only possible for directly connected nodes; you can browse deeper nodes (further down the connection chain), but you cannot post or edit content there. This makes it possible to build information networks such as: a main organizational node, with departmental nodes beneath it, and personal nodes beneath each department. In this structure, individuals can post to their department's Cotonoma but only view the organization-wide Cotonoma.
 
 
 ## Why Use This Application?
