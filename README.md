@@ -127,3 +127,17 @@ Download the latest version of Cotoami for your platform (Windows, Linux, or mac
     * macOS - [Open a Mac app from an unknown developer](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unknown-developer-mh40616/mac)
 
 Cotoami's source code is released under Apache 2 License. Check the [LICENSE](LICENSE) file for more information.
+
+
+## Special Thanks
+
+This program could not have been created without the help of the amazing people and projects listed below. I would like to express my sincere gratitude to them here. While this list is not exhaustive, Cotoami also relies on many other open source projects beyond those mentioned here.
+
+* [Tauri](https://tauri.app/)
+* [Rust Programming Language](https://www.rust-lang.org/)
+* [Scala.js](https://www.scala-js.org/)
+* [React](https://react.dev/)
+* [The Elm Architecture](https://guide.elm-lang.org/architecture/)
+* [OpenStreetMap](https://openstreetmap.org)
+* [Protomaps](https://github.com/protomaps/basemaps)
+* The beautiful logo is designed by [@reallinfo](https://github.com/reallinfo)
