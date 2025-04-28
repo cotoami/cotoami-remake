@@ -236,7 +236,7 @@ object ModalNewIto {
             dispatch(Modal.Msg.OpenModal(Modal.Selection(false)))
           )
         )(
-          s"Selected cotos (${count})"
+          s"${context.i18n.text.ModalSelection_title} (${count})"
         )
     )
   }
