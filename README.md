@@ -98,13 +98,13 @@ When you connect two databases, one database incorporates the contents of the ot
 
 Here are some key points about the database networking feature:
 
-* **Node as Account**: Each node acts like an account within the network, serving as your identity and the origin of any actions (such as posting or editing data) in other databases. In Cotoami, the Node you operate from—acting as your account—is called the **Self Node**.
-* **Seamless Graph Manipulation**: Connected databases can be used almost seamlessly. For example, you can link Cotos from different databases using an Ito, or repost a remote Coto to a local Cotonoma (however, you cannot repost a local Coto to a remote database).
+* **Node as Account**: Each node acts like an account within the network, serving as your identity and the origin of any actions (such as posting or editing data) in other databases. In Cotoami, the node you operate from—acting as your account—is called the **Self Node**.
+* **Seamless Graph Manipulation**: Connected databases can be used almost seamlessly. For example, you can link Cotos from different databases using an Ito, or repost a remote Coto to a local Cotonoma (however, you cannot repost a local Coto to a remote database, because it leads to accidental data exposure).
 * **Offline Access**: All imported data is stored locally, so you can browse it even when offline—though you can’t edit it until you reconnect. You can enable or disable each database connection at any time.
-* **Granular Permissions**: On the database being imported (the remote Node), you can finely control what operations are allowed by those importing it. By default, only posting is permitted, but you can also allow creating Itos or new Cotonomas.
-* **Switch Node**: If your local node has “Owner” privileges on a remote node, you can use the **Switch Node** feature to operate as if the remote node were local. This is especially useful for administering a Cotoami Node Server.
+* **Granular Permissions**: On the database being imported (the remote node), you can finely control what operations are allowed by those importing it. By default, only posting is permitted, but you can also allow creating Itos or new Cotonomas.
+* **Switch Node**: If your local node has “Owner” privileges on a remote node, you can use the Switch Node feature to operate as if the remote node were local. This is especially useful for administering a Cotoami Node Server.
 * **Attaching Private Notes on Remote Cotos**: You can connect both remote Cotos and local Cotos to a remote Coto with an Ito. Local Cotos connected in this way are only visible to you, allowing you to add private notes or annotations to shared remote knowledge.
-* **Permission Control by Hierarchy**: Posting to a remote node is only possible for directly connected Nodes; you can browse deeper nodes (further down the connection chain), but you cannot post or edit content there. This makes it possible to build information networks such as: a main organizational node, with departmental nodes beneath it, and personal nodes beneath each department. In this structure, individuals can post to their department’s Cotonoma but only view the organization-wide Cotonoma.
+* **Permission Control by Hierarchy**: Posting to a remote node is only possible for directly connected nodes; you can browse deeper nodes (further down the connection chain), but you cannot post or edit content there. This makes it possible to build information networks such as: a main organizational node, with departmental nodes beneath it, and personal nodes beneath each department. In this structure, individuals can post to their department’s Cotonoma but only view the organization-wide Cotonoma.
 
 
 ## Why Use This Application?
