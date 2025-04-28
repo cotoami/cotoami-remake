@@ -26,7 +26,7 @@ If you find certain Cotos especially important, you can “pin” them to the St
 
 By linking related Cotos together with Itos, you can build a hierarchical structure of content, starting from any pinned Coto.
 
-[screeshot 3]
+![](docs/images/connect.gif)
 
 Cotos in the Stock area can be freely reordered within the same level, letting you arrange your key information just the way you like.
 
