@@ -16,13 +16,13 @@ While Cotoami is designed for private, offline use, it also offers a powerful co
 
 In Cotoami, you can casually post anything you want to remember—just like sending a chat message or writing a microblog. Each Coto you post is saved to your timeline.
 
-[screeshot 1]
+![](docs/images/post-cotos.png)
 
 > You can write your Cotos using Markdown. Cotoami supports [GitHub Flavored Markdown](https://github.github.com/gfm/), allowing for familiar formatting options like tables, task lists, and more. In addition, code blocks support syntax highlighting for a wide range of programming languages.
 
 If you find certain Cotos especially important, you can “pin” them to the Stock area for quick access.
 
-[screeshot 2]
+![](docs/images/pin-coto.gif)
 
 By linking related Cotos together with Itos, you can build a hierarchical structure of content, starting from any pinned Coto.
 
