@@ -78,7 +78,7 @@ Cotoami comes with a built-in world map. In fact, most of the application size (
 
 With this map, you can attach location information to any Coto or search for Cotos that already have geolocation. If you attach a photo with embedded GPS data (Exif info) to a Coto, the location will be registered automatically.
 
-[screeshot]
+![](docs/images/geolocated-coto.gif)
 
 Of course, you can also assign a location to a Cotonoma. When a Cotonoma has location information, selecting it will automatically show that place on the map. Even if the Cotonoma itself doesn't have a location, Cotoami will automatically display the combined area covered by the locations of any geotagged Cotos it contains.
 
