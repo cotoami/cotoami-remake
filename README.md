@@ -30,7 +30,7 @@ By linking related Cotos together with Itos, you can build a hierarchical struct
 
 Cotos in the Stock area can be freely reordered within the same level, letting you arrange your key information just the way you like.
 
-[screeshot 4]
+![](docs/images/reorder.gif)
 
 ## Core Concept
 
