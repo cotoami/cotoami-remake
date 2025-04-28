@@ -88,7 +88,23 @@ Actually, this geolocation feature was the main inspiration for rebuilding Cotoa
 
 ## Database Networking
 
+Although Cotoami is designed as a standalone, privacy-first app that works perfectly offline, it also features a powerful database networking capability. While there aren’t many real-world use cases to share yet, I believe this feature has a lot of potential—from connecting multiple personal databases for different purposes, to collaborating within a small team, or even supporting hierarchical cooperation across a larger organization.
+
+Cotoami launches by opening a single database file, which is simply a local SQLite database. With Cotoami, you can connect databases over the network. These connections use WebSocket, allowing changes to be synchronized in real time (if WebSocket is not available in your environment, Cotoami automatically falls back to HTTP with Server-Sent Events (SSE) to maintain network connectivity). Each connected database is called a “Node.” The diagram below illustrates how these Nodes can be linked together.
+
 <p><img src="docs/images/distributed-graph.png" alt="Distributed coto graph" height="600px"></p>
+
+When you connect two databases, one database incorporates the contents of the other as a part of its own. Since knowledge in Cotoami is managed as a graph, connecting to another database merges their graphs, making the information appear seamlessly connected to the user. Furthermore, as shown in the diagram, any connected database can itself be connected to other databases, so behind a single unified graph, there could actually be many underlying databases. As long as the network connection is active, remote databases remain synchronized in real time.
+
+Here are some key points about the database networking feature:
+
+* **Node as Account**: Each node acts like an account within the network, serving as your identity and the origin of any actions (such as posting or editing data) in other databases. In Cotoami, the Node you operate from—acting as your account—is called the **Self Node**.
+* **Seamless Graph Manipulation**: Connected databases can be used almost seamlessly. For example, you can link Cotos from different databases using an Ito, or repost a remote Coto to a local Cotonoma (however, you cannot repost a local Coto to a remote database).
+* **Offline Access**: All imported data is stored locally, so you can browse it even when offline—though you can’t edit it until you reconnect. You can enable or disable each database connection at any time.
+* **Granular Permissions**: On the database being imported (the remote Node), you can finely control what operations are allowed by those importing it. By default, only posting is permitted, but you can also allow creating Itos or new Cotonomas.
+* **Switch Node**: If your local node has “Owner” privileges on a remote node, you can use the **Switch Node** feature to operate as if the remote node were local. This is especially useful for administering a Cotoami Node Server.
+* **Attaching Private Notes on Remote Cotos**: You can connect both remote Cotos and local Cotos to a remote Coto with an Ito. Local Cotos connected in this way are only visible to you, allowing you to add private notes or annotations to shared remote knowledge.
+* **Permission Control by Hierarchy**: Posting to a remote node is only possible for directly connected Nodes; you can browse deeper nodes (further down the connection chain), but you cannot post or edit content there. This makes it possible to build information networks such as: a main organizational node, with departmental nodes beneath it, and personal nodes beneath each department. In this structure, individuals can post to their department’s Cotonoma but only view the organization-wide Cotonoma.
 
 
 ## Why Use This Application?
