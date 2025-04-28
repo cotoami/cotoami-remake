@@ -51,7 +51,7 @@ This dual structure lets you both capture the stream of new information and orga
 
 One of the most important features of Cotoami is the ability to “promote” a Coto into a Cotonoma. This makes it possible to organically grow new Cotonomas as your knowledge develops, directly from existing information. Think of Cotonomas as entries in the catalog of your knowledge base.
 
-[Insert screenshot of the feature here]
+![](docs/images/promote.gif)
 
 The following diagram was created when I first came up with the idea for Cotoami's structure:
 
