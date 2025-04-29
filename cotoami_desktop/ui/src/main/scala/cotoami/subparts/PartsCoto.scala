@@ -61,19 +61,21 @@ object PartsCoto {
         )
       },
       Option.when(!context.repo.nodes.isSelf(coto.nodeId)) {
-        val connected = context.repo.nodes.parentConnected(coto.nodeId)
-        div(
-          className := optionalClasses(
-            Seq(
-              ("remote-node-icon", true),
-              ("connected", connected)
+        context.repo.nodes.get(coto.nodeId).map { node =>
+          div(
+            className := "remote-node-icon",
+            title := context.i18n.text.Coto_inRemoteNode(node.name),
+            onClick := (_ =>
+              dispatch(
+                (Modal.Msg.OpenModal.apply _).tupled(
+                  Modal.NodeProfile(node.id)
+                )
+              )
             )
-          ),
-          title := (if (connected) "Remote (connected)"
-                    else "Remote (disconnected)")
-        )(
-          context.repo.nodes.get(coto.nodeId).map(PartsNode.imgNode(_))
-        )
+          )(
+            PartsNode.imgNode(node)
+          )
+        }
       }
     )
 

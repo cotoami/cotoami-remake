@@ -153,16 +153,12 @@ article.coto {
     div.remote-node-icon {
       margin-left: 10px;
       padding-top: 1px;
+      cursor: pointer;
 
       img.node-icon {
-        opacity: 0.3;
         width: 15px;
         height: 15px;
         border-radius: 3px;
-      }
-
-      &.connected img.node-icon {
-        opacity: 1;
       }
     }
   }

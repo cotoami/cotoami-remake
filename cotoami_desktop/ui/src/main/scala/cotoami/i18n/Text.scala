@@ -26,6 +26,8 @@ trait Text {
   val WriteSubcoto: String
   val LoadItos: String
 
+  def Coto_inRemoteNode(nodeName: String): String
+
   val Node_notYetConnected: String
 
   val Ito_description_placeholder: String

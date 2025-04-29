@@ -29,6 +29,8 @@ object en extends Text {
   val WriteSubcoto = "Write Sub-coto"
   val LoadItos = "Load Itos"
 
+  def Coto_inRemoteNode(nodeName: String) = s"In ${nodeName} (remote)"
+
   val Node_notYetConnected = "Not yet connected"
 
   val Ito_description_placeholder = "Ito description (optional)"
