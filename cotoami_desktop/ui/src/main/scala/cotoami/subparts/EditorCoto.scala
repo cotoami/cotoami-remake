@@ -650,7 +650,8 @@ object EditorCoto {
       input(
         className := "cotonoma-name",
         `type` := "text",
-        placeholder := (if (model.isNew) "New cotonoma name"
+        placeholder := (if (model.isNew)
+                          context.i18n.text.EditorCoto_placeholder_newCotonomaName
                         else
                           context.i18n.text.EditorCoto_placeholder_cotonomaName),
         value := model.nameInput,

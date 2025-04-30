@@ -66,6 +66,7 @@ trait Text {
   val SectionNodeTools_disableSync: String
 
   val EditorCoto_placeholder_coto: String
+  val EditorCoto_placeholder_newCotonomaName: String
   val EditorCoto_placeholder_cotonomaName: String
   val EditorCoto_placeholder_cotonomaContent: String
   val EditorCoto_date: String
