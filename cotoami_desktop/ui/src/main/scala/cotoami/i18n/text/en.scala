@@ -77,6 +77,8 @@ object en extends Text {
   val SectionNodeTools_disableSync = "Disable Sync"
 
   val EditorCoto_placeholder_coto = "Write your coto in Markdown"
+  val EditorCoto_placeholder_cotonomaContent =
+    "Write a cotonoma description in Markdown"
   val EditorCoto_date = "Date"
   val EditorCoto_location = "Location"
 

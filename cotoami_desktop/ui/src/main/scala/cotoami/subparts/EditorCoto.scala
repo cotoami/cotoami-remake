@@ -317,7 +317,7 @@ object EditorCoto {
         },
         textarea(
           placeholder := (if (form.isCotonoma)
-                            "Write a cotonoma description in Markdown"
+                            context.i18n.text.EditorCoto_placeholder_cotonomaContent
                           else context.i18n.text.EditorCoto_placeholder_coto),
           value := form.contentInput,
           slinky.web.html.onFocus := onFocus,
