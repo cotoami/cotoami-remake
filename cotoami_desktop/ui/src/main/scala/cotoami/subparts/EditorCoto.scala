@@ -618,7 +618,9 @@ object EditorCoto {
               model.modify(_.validation).setTo(
                 Validation.Error(
                   "cotonoma-already-exists",
-                  s"The cotonoma \"${cotonoma.name}\" already exists in this node.",
+                  context.i18n.text.EditorCoto_cotonomaAlreadyExists(
+                    cotonoma.name
+                  ),
                   Map("name" -> cotonoma.name, "id" -> cotonoma.id.uuid)
                 ).toResult
               ),

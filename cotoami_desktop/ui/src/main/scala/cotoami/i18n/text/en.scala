@@ -84,6 +84,8 @@ object en extends Text {
   val EditorCoto_inputImage = "Drop an image file here, or click to select one"
   val EditorCoto_date = "Date"
   val EditorCoto_location = "Location"
+  def EditorCoto_cotonomaAlreadyExists(cotonomaName: String) =
+    s"The cotonoma \"${cotonomaName}\" already exists in this node."
 
   val ModalInputOwnerPassword_title = "Owner Password Required"
   val ModalInputOwnerPassword_message =

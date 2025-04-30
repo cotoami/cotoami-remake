@@ -72,6 +72,7 @@ trait Text {
   val EditorCoto_inputImage: String
   val EditorCoto_date: String
   val EditorCoto_location: String
+  def EditorCoto_cotonomaAlreadyExists(cotonomaName: String): String
 
   val ModalInputOwnerPassword_title: String
   val ModalInputOwnerPassword_message: String
