@@ -156,7 +156,10 @@ object ModalPromote {
         ),
         Validation.sectionValidationError(model.cotonomaForm.validation)
       ),
-      divCotoForm(model.cotoForm)(submsg => dispatch(Msg.CotoFormMsg(submsg))),
+      divCotoForm(model.cotoForm)(
+        context,
+        submsg => dispatch(Msg.CotoFormMsg(submsg))
+      ),
       div(className := "buttons")(
         CotoForm.buttonPreview(model.cotoForm)(submsg =>
           dispatch(Msg.CotoFormMsg(submsg))
@@ -180,6 +183,7 @@ object ModalPromote {
     )
 
   private def divCotoForm(form: CotoForm.Model)(implicit
+      context: Context,
       dispatch: CotoForm.Msg => Unit
   ): ReactElement = {
     val editor = Fragment(

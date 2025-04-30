@@ -288,7 +288,7 @@ object EditorCoto {
         onCtrlEnter: Option[() => Unit] = None,
         onFocus: Option[() => Unit] = None,
         enableImageInput: Boolean = true
-    )(implicit dispatch: Msg => Unit): ReactElement =
+    )(implicit context: Context, dispatch: Msg => Unit): ReactElement =
       if (form.inPreview)
         sectionPreview(form)
       else
@@ -299,7 +299,7 @@ object EditorCoto {
         onCtrlEnter: Option[() => Unit] = None,
         onFocus: Option[() => Unit] = None,
         enableImageInput: Boolean = true
-    )(implicit dispatch: Msg => Unit): ReactElement =
+    )(implicit context: Context, dispatch: Msg => Unit): ReactElement =
       section(className := "coto-editor fill")(
         Option.when(!form.isCotonoma) {
           input(
@@ -318,7 +318,7 @@ object EditorCoto {
         textarea(
           placeholder := (if (form.isCotonoma)
                             "Write a cotonoma description in Markdown"
-                          else "Write your coto in Markdown"),
+                          else context.i18n.text.EditorCoto_placeholder_coto),
           value := form.contentInput,
           slinky.web.html.onFocus := onFocus,
           onChange := (e => dispatch(Msg.ContentInput(e.target.value))),

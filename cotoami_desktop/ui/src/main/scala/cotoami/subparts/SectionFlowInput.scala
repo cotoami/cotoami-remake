@@ -426,7 +426,7 @@ object SectionFlowInput {
           form = form,
           onCtrlEnter = Some(() => dispatch(Msg.Post)),
           onFocus = Some(() => dispatch(Msg.SetFolded(false)))
-        )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
+        )(context, submsg => dispatch(Msg.CotoFormMsg(submsg)))
       ),
       secondary = SplitPane.Secondary.Props()(
         CotoForm.ulAttributes(form)(
