@@ -111,5 +111,8 @@ case class Cotos(
   def clearSelection: Cotos = copy(selectedIds = Seq.empty)
 
   lazy val geolocated: Seq[(Coto, Geolocation)] =
-    map.values.flatMap(coto => coto.geolocation.map(coto -> _)).toSeq
+    map.values
+      .filter(!_.isRepost)
+      .flatMap(coto => coto.geolocation.map(coto -> _))
+      .toSeq
 }
