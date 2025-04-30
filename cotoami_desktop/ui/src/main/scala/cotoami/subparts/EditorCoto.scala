@@ -305,7 +305,7 @@ object EditorCoto {
           input(
             className := "summary",
             `type` := "text",
-            placeholder := "Summary (optional)",
+            placeholder := context.i18n.text.EditorCoto_placeholder_summary,
             value := form.summaryInput,
             onChange := (e => dispatch(Msg.SummaryInput(e.target.value))),
             onKeyDown := (e =>
