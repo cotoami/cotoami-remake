@@ -646,12 +646,13 @@ object EditorCoto {
         onFocus: Option[() => Unit] = None,
         onBlur: Option[() => Unit] = None,
         onCtrlEnter: Option[() => Unit] = None
-    )(implicit dispatch: Msg => Unit): ReactElement =
+    )(implicit context: Context, dispatch: Msg => Unit): ReactElement =
       input(
         className := "cotonoma-name",
         `type` := "text",
         placeholder := (if (model.isNew) "New cotonoma name"
-                        else "Cotonoma name"),
+                        else
+                          context.i18n.text.EditorCoto_placeholder_cotonomaName),
         value := model.nameInput,
         Validation.ariaInvalid(model.validation),
         slinky.web.html.onFocus := onFocus,

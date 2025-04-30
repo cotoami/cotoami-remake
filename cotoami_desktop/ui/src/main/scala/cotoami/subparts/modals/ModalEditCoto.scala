@@ -219,7 +219,7 @@ object ModalEditCoto {
           CotonomaForm.inputName(
             model = model.cotonomaForm,
             onCtrlEnter = Some(() => dispatch(Msg.Save))
-          )(submsg => dispatch(Msg.CotonomaFormMsg(submsg))),
+          )(context, submsg => dispatch(Msg.CotonomaFormMsg(submsg))),
           Validation.sectionValidationError(model.cotonomaForm.validation)
         )
       },

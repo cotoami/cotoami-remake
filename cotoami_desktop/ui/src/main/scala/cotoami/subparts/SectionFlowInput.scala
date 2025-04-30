@@ -470,7 +470,7 @@ object SectionFlowInput {
           onFocus = Some(() => dispatch(Msg.SetFolded(false))),
           onBlur = Some(() => dispatch(Msg.SetFolded(!model.hasContents))),
           onCtrlEnter = Some(() => dispatch(Msg.Post))
-        )(submsg => dispatch(Msg.CotonomaFormMsg(submsg)))
+        )(context, submsg => dispatch(Msg.CotonomaFormMsg(submsg)))
       ),
       div(className := "post")(
         Validation.sectionValidationError(form.validation),

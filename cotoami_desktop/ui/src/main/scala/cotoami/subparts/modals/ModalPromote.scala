@@ -151,8 +151,9 @@ object ModalPromote {
       "Promote to Cotonoma"
     )(
       div(className := "cotonoma-form")(
-        CotonomaForm.inputName(model = model.cotonomaForm)(submsg =>
-          dispatch(Msg.CotonomaFormMsg(submsg))
+        CotonomaForm.inputName(model = model.cotonomaForm)(
+          context,
+          submsg => dispatch(Msg.CotonomaFormMsg(submsg))
         ),
         Validation.sectionValidationError(model.cotonomaForm.validation)
       ),
