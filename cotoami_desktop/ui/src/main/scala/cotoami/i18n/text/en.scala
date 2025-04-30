@@ -81,6 +81,7 @@ object en extends Text {
   val EditorCoto_placeholder_cotonomaName = "Cotonoma name"
   val EditorCoto_placeholder_cotonomaContent =
     "Write a cotonoma description in Markdown"
+  val EditorCoto_inputImage = "Drop an image file here, or click to select one"
   val EditorCoto_date = "Date"
   val EditorCoto_location = "Location"
 

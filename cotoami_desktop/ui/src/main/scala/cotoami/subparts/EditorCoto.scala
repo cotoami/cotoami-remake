@@ -332,7 +332,7 @@ object EditorCoto {
           div(className := "input-image")(
             InputFile(
               accept = js.Dictionary("image/*" -> js.Array[String]()),
-              message = "Drop an image file here, or click to select one",
+              message = context.i18n.text.EditorCoto_inputImage,
               onSelect = file => dispatch(Msg.FileInput(file))
             )
           )
