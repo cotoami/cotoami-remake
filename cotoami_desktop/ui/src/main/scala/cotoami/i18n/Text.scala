@@ -60,6 +60,7 @@ trait Text {
   val NavNodes_addNode: String
 
   val NavCotonomas_current: String
+  val NavCotonomas_recent: String
 
   val SectionNodeTools_enableSync: String
   val SectionNodeTools_disableSync: String

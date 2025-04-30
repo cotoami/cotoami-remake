@@ -225,7 +225,7 @@ object NavCotonomas {
       cotonomas: Seq[Cotonoma]
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "recent")(
-      h2()("Recent"),
+      h2()(context.i18n.text.NavCotonomas_recent),
       ul()(cotonomas.map(liCotonoma): _*)
     )
 
