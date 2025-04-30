@@ -70,6 +70,8 @@ object en extends Text {
   val NavNodes_allNodes = "All Nodes"
   val NavNodes_addNode = "Add Node"
 
+  val NavCotonomas_current = "Current"
+
   val SectionNodeTools_enableSync = "Enable Sync"
   val SectionNodeTools_disableSync = "Disable Sync"
 

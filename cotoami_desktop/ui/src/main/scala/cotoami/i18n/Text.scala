@@ -59,6 +59,8 @@ trait Text {
   val NavNodes_allNodes: String
   val NavNodes_addNode: String
 
+  val NavCotonomas_current: String
+
   val SectionNodeTools_enableSync: String
   val SectionNodeTools_disableSync: String
 

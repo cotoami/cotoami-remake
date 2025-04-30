@@ -178,7 +178,7 @@ object NavCotonomas {
     val repo = context.repo
     val superCotonomas = repo.superCotonomasWithoutRoot
     section(className := "current")(
-      h2()("Current"),
+      h2()(context.i18n.text.NavCotonomas_current),
       ul(
         className := optionalClasses(
           Seq(
