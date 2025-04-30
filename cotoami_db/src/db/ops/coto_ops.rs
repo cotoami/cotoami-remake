@@ -203,7 +203,7 @@ pub(crate) fn repost<'a>(
         let reposted_at = reposted_at.unwrap_or(crate::current_datetime());
 
         // Insert a repost
-        let mut new_repost = NewCoto::new_repost(&original.uuid, &dest, reposted_by);
+        let mut new_repost = NewCoto::new_repost(&original, &dest, reposted_by);
         new_repost.set_timestamp(reposted_at);
         let (repost, original) = insert(&new_repost).run(ctx)?;
         let original = original.unwrap_or_else(|| unreachable!());

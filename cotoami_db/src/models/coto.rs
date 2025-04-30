@@ -377,14 +377,19 @@ impl<'a> NewCoto<'a> {
         Ok(coto)
     }
 
-    pub fn new_repost(
-        original_id: &'a Id<Coto>,
-        dest: &'a Cotonoma,
-        reposted_by: &'a Id<Node>,
-    ) -> Self {
+    pub fn new_repost(original: &'a Coto, dest: &'a Cotonoma, reposted_by: &'a Id<Node>) -> Self {
         let mut coto = Self::new_base(&dest.node_id, reposted_by);
-        coto.repost_of_id = Some(original_id);
+        coto.repost_of_id = Some(&original.uuid);
         coto.posted_in_id = Some(&dest.uuid);
+
+        // Copy some fields from the original to give hints about the original content,
+        // which will be used when searching or browsing cotos.
+        coto.media_type = original.media_type.as_deref();
+        coto.is_cotonoma = original.is_cotonoma;
+        coto.longitude = original.longitude;
+        coto.latitude = original.latitude;
+        coto.updated_at = original.updated_at; // ref. cotonoma_ops::subs
+
         coto
     }
 

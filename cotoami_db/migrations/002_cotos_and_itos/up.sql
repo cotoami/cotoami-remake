@@ -76,9 +76,16 @@ CREATE INDEX cotos_repost_of_id ON cotos(repost_of_id);
 -- Some columns of a repost should be the same values as the original.
 CREATE TRIGGER cotos_reposts_sync AFTER UPDATE ON cotos BEGIN
   UPDATE cotos 
-    SET 
-      is_cotonoma = new.is_cotonoma, 
-      updated_at = new.updated_at -- ref. cotonoma_ops::subs
+    SET
+      media_type = new.media_type,
+      is_cotonoma = new.is_cotonoma,
+
+      -- to be found by coto_ops::geolocated
+      longitude = new.longitude,
+      latitude = new.latitude,
+
+      -- ref. cotonoma_ops::subs
+      updated_at = new.updated_at 
     WHERE repost_of_id = new.uuid;
 END;
 
