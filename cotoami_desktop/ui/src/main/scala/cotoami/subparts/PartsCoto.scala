@@ -360,8 +360,7 @@ object PartsCoto {
     coto.dateTimeRange.map(range =>
       button(
         className := "time-range default",
-        data - "tooltip" := context.time.formatDateTime(range.start),
-        data - "placement" := "bottom",
+        title := context.time.formatDateTime(range.start),
         onClick := (e => {
           e.stopPropagation()
         })
