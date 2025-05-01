@@ -84,7 +84,7 @@ With this map, you can attach location information to any Coto or search for Cot
 
 Of course, you can also assign a location to a Cotonoma. When a Cotonoma has location information, selecting it will automatically show that place on the map. Even if the Cotonoma itself doesn't have a location, Cotoami will automatically display the combined area covered by the locations of any geotagged Cotos it contains.
 
-[screeshot]
+![](docs/images/geolocated-cotonomas.gif)
 
 Actually, this geolocation feature was the main inspiration for rebuilding Cotoami from scratch. I realized that the purpose of “The Knowledge Growth Cycle”—the discovery of new knowledge—could also be applied to discovering new destinations and places in the world.
 
