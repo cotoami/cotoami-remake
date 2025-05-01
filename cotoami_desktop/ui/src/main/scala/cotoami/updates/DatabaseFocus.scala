@@ -24,7 +24,8 @@ object DatabaseFocus {
           model.copy(
             navCotonomas = navCotonomas,
             timeline = timeline,
-            geomap = geomap
+            geomap = geomap,
+            highlight = None
           ),
           Cmd.Batch(
             fetchRecentCotonomas,
@@ -57,7 +58,11 @@ object DatabaseFocus {
             (model.navCotonomas, Cmd.none)
         val (timeline, timelineCmd) = model.timeline.onFocusChange(model.repo)
         (
-          model.copy(navCotonomas = navCotonomas, timeline = timeline),
+          model.copy(
+            navCotonomas = navCotonomas,
+            timeline = timeline,
+            highlight = None
+          ),
           Cmd.Batch(
             CotonomaDetails.fetch(cotonomaId)
               .map(Msg.FocusedCotonomaDetailsFetched),
