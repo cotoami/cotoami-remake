@@ -166,10 +166,9 @@ case class Root(
     cotonomas.focusedId.map(CotonomaBackend.fetchSubs(_, pageIndex))
       .getOrElse(Cmd.none)
 
-  def fetchMoreSubCotonomas: Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
-    cotonomas.subIds.nextPageIndex
-      .map(fetchSubCotonomas)
-      .getOrElse(Cmd.none)
+  def fetchMoreSubCotonomas
+      : Option[Cmd.One[Either[ErrorJson, Page[Cotonoma]]]] =
+    cotonomas.subIds.nextPageIndex.map(fetchSubCotonomas)
 
   /////////////////////////////////////////////////////////////////////////////
   // Itos

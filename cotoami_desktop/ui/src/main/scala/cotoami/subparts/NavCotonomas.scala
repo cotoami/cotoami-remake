@@ -61,11 +61,14 @@ object NavCotonomas {
       if (loadingSubs)
         (this, Cmd.none)
       else
-        (
-          copy(loadingSubs = true),
-          context.repo.fetchMoreSubCotonomas
-            .map(Msg.SubsFetched(_).into)
-        )
+        context.repo.fetchMoreSubCotonomas
+          .map(cmd =>
+            (
+              copy(loadingSubs = true),
+              cmd.map(Msg.SubsFetched(_).into)
+            )
+          )
+          .getOrElse((this, Cmd.none))
   }
 
   /////////////////////////////////////////////////////////////////////////////
