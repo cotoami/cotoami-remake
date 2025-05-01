@@ -115,7 +115,6 @@ section.geomap {
     }
 
     &.coto-marker {
-      z-index: 1;
       border-radius: var(--circle-marker-border-radius);
 
       img {
@@ -124,7 +123,6 @@ section.geomap {
     }
 
     &.cotonoma-marker {
-      z-index: 2;
       border-radius: 4px;
 
       img {
@@ -176,12 +174,20 @@ section.geomap {
         opacity: 1;
       }
     }
+  }
 
-    &.in-focus.coto-marker {
+  .marker-root {
+    z-index: 1;
+
+    &:has(> .cotonoma-marker) {
+      z-index: 2;
+    }
+
+    &:has(> .coto-marker.in-focus) {
       z-index: 3;
     }
 
-    &.in-focus.cotonoma-marker {
+    &:has(> .cotonoma-marker.in-focus) {
       z-index: 4;
     }
   }

@@ -484,6 +484,7 @@ import marubinotto.libs.geomap.pmtiles
       // which will be registered below.
       val markerRootElement =
         createElement("div").asInstanceOf[dom.HTMLDivElement]
+      markerRootElement.setAttribute("class", "marker-root")
       markerRootElement.append(markerElement)
 
       val marker = new Marker(new MarkerOptions() {
