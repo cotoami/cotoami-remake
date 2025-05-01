@@ -54,7 +54,7 @@ object SectionTimeline {
       imeActive: Boolean = false,
       loading: Boolean = false
   ) {
-    def onFocusChange(repo: Root): (Model, Cmd.One[AppMsg]) =
+    def onFocusChange(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       copy(
         cotoIds = PaginatedIds(),
         waitingPosts = WaitingPosts(),
@@ -63,9 +63,10 @@ object SectionTimeline {
         fetchNumber = 0,
         loading = false,
         imeActive = false
-      ).fetchFirst(repo)
+      ).fetchFirst
 
-    def cotos(repo: Root): Seq[Coto] = {
+    def cotos(implicit context: Context): Seq[Coto] = {
+      val repo = context.repo
       val rootCotoId = repo.currentNodeRootCotonoma.map(_.cotoId)
       cotoIds.order.filter(Some(_) != rootCotoId).map(repo.cotos.get).flatten
     }
@@ -91,12 +92,12 @@ object SectionTimeline {
             cotoIds
         )
 
-    def fetchFirst(repo: Root): (Model, Cmd.One[AppMsg]) =
+    def fetchFirst(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       fetching.pipe { model =>
         (
           model,
           fetchInFocus(
-            repo,
+            context.repo,
             onlyCotonomas,
             Some(queryInput),
             0,
@@ -105,7 +106,7 @@ object SectionTimeline {
         )
       }
 
-    def fetchMore(repo: Root): (Model, Cmd.One[AppMsg]) =
+    def fetchMore(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       if (loading)
         (this, Cmd.none)
       else
@@ -114,7 +115,7 @@ object SectionTimeline {
             (
               model,
               fetchInFocus(
-                repo,
+                context.repo,
                 onlyCotonomas,
                 Some(queryInput),
                 i,
@@ -127,11 +128,13 @@ object SectionTimeline {
     private def fetching: Model =
       copy(fetchNumber = fetchNumber + 1, loading = true)
 
-    def inputQuery(query: String, repo: Root): (Model, Cmd[AppMsg]) =
+    def inputQuery(
+        query: String
+    )(implicit context: Context): (Model, Cmd[AppMsg]) =
       if (imeActive)
         (copy(queryInput = query), Cmd.none)
       else
-        copy(queryInput = query).fetchFirst(repo)
+        copy(queryInput = query).fetchFirst
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -164,18 +167,18 @@ object SectionTimeline {
         model
           .modify(_.cotoIds).setTo(PaginatedIds())
           .modify(_.onlyCotonomas).setTo(onlyCotonomas)
-          .fetchFirst(context.repo)
+          .fetchFirst
           .pipe { case (model, cmd) =>
             default.copy(_1 = model, _3 = cmd)
           }
 
       case Msg.QueryInput(query) =>
-        model.inputQuery(query, context.repo).pipe { case (model, cmd) =>
+        model.inputQuery(query).pipe { case (model, cmd) =>
           default.copy(_1 = model, _3 = cmd)
         }
 
       case Msg.ClearQuery =>
-        model.inputQuery("", context.repo).pipe { case (model, cmd) =>
+        model.inputQuery("").pipe { case (model, cmd) =>
           default.copy(_1 = model, _3 = cmd)
         }
 
@@ -183,7 +186,7 @@ object SectionTimeline {
         default.copy(_1 = model.copy(imeActive = true))
 
       case Msg.ImeCompositionEnd =>
-        model.fetchFirst(context.repo).pipe { case (model, cmd) =>
+        model.fetchFirst.pipe { case (model, cmd) =>
           default.copy(
             _1 = model.copy(imeActive = false),
             _3 = cmd
@@ -191,7 +194,7 @@ object SectionTimeline {
         }
 
       case Msg.FetchMore =>
-        model.fetchMore(context.repo).pipe { case (model, cmd) =>
+        model.fetchMore.pipe { case (model, cmd) =>
           default.copy(_1 = model, _3 = cmd)
         }
 
@@ -262,7 +265,7 @@ object SectionTimeline {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] = {
-    val cotos = model.cotos(context.repo)
+    val cotos = model.cotos
     context.repo.currentCotonomaId.flatMap(cotonomaId =>
       Option.when(
         !model.queryInput.isBlank || !cotos.isEmpty || !model.waitingPosts.isEmpty
