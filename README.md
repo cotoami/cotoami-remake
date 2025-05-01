@@ -142,4 +142,5 @@ This program could not have been created without the help of the amazing people 
 * [The Elm Architecture](https://guide.elm-lang.org/architecture/)
 * [OpenStreetMap](https://openstreetmap.org)
 * [Protomaps](https://github.com/protomaps/basemaps)
+* [MapLibre](https://maplibre.org/)
 * The beautiful logo is designed by [@reallinfo](https://github.com/reallinfo)
