@@ -39,11 +39,14 @@ object NavCotonomas {
       if (loadingRecent)
         (this, Cmd.none)
       else
-        (
-          copy(loadingRecent = true),
-          context.repo.fetchMoreRecentCotonomas
-            .map(Msg.RecentFetched(_).into)
-        )
+        context.repo.fetchMoreRecentCotonomas
+          .map(cmd =>
+            (
+              copy(loadingRecent = true),
+              cmd.map(Msg.RecentFetched(_).into)
+            )
+          )
+          .getOrElse((this, Cmd.none))
 
     def fetchSubs(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       (

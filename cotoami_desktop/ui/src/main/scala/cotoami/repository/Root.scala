@@ -156,10 +156,9 @@ case class Root(
   ): Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
     CotonomaBackend.fetchRecent(nodes.focusedId, pageIndex)
 
-  def fetchMoreRecentCotonomas: Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
-    cotonomas.recentIds.nextPageIndex
-      .map(fetchRecentCotonomas)
-      .getOrElse(Cmd.none)
+  def fetchMoreRecentCotonomas
+      : Option[Cmd.One[Either[ErrorJson, Page[Cotonoma]]]] =
+    cotonomas.recentIds.nextPageIndex.map(fetchRecentCotonomas)
 
   def fetchSubCotonomas(
       pageIndex: Double
