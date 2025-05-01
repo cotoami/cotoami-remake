@@ -12,7 +12,7 @@ While Cotoami is designed for private, offline use, it also offers a powerful co
 
 > Cotoami Remake is a complete reimagining of the original [Cotoami](https://github.com/cotoami/cotoami) web application, rebuilt from the ground up as a standalone desktop app for individual users who want a simple, private note-taking experience. While it retains the core concept of its predecessor, Cotoami Remake introduces entirely new features—such as integration with a built-in map and the ability to connect databases across users—making it a fundamentally different application.
 
-[main screeshot]
+<p align="center"><img src="docs/images/main.png" alt="Main screenshot"></p>
 
 ## Basic Usage
 
