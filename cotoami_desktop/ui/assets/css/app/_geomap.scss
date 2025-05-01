@@ -111,7 +111,7 @@ section.geomap {
     img.icon {
       width: 100%;
       height: 100%;
-      opacity: 0.5;
+      opacity: 0.3;
     }
 
     &.coto-marker {
@@ -149,7 +149,7 @@ section.geomap {
         -1px -1px 1px white,
         1px -1px 1px white;
       text-align: center;
-      opacity: 0.5;
+      opacity: 0.3;
       // border: 1px solid black;
     }
 
@@ -165,7 +165,7 @@ section.geomap {
       color: white;
       text-align: center;
       font-weight: 500;
-      opacity: 0.5;
+      opacity: 0.3;
     }
 
     &.in-focus {
