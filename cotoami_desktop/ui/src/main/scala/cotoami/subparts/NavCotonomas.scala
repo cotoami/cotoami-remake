@@ -26,14 +26,14 @@ object NavCotonomas {
       loadingRecent: Boolean = false,
       loadingSubs: Boolean = false
   ) {
-    def fetchRecent()(implicit context: Context): (Model, Cmd.One[AppMsg]) =
+    def fetchRecent(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       (
         copy(loadingRecent = true),
         context.repo.fetchRecentCotonomas(0)
           .map(Msg.RecentFetched(_).into)
       )
 
-    def fetchMoreRecent()(implicit
+    def fetchMoreRecent(implicit
         context: Context
     ): (Model, Cmd.One[AppMsg]) =
       if (loadingRecent)
@@ -45,14 +45,14 @@ object NavCotonomas {
             .map(Msg.RecentFetched(_).into)
         )
 
-    def fetchSubs()(implicit context: Context): (Model, Cmd.One[AppMsg]) =
+    def fetchSubs(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       (
         copy(loadingSubs = true),
         context.repo.fetchSubCotonomas(0)
           .map(Msg.SubsFetched(_).into)
       )
 
-    def fetchMoreSubs()(implicit
+    def fetchMoreSubs(implicit
         context: Context
     ): (Model, Cmd.One[AppMsg]) =
       if (loadingSubs)
@@ -88,7 +88,7 @@ object NavCotonomas {
     val default = (model, context.repo.cotonomas, Cmd.none)
     msg match {
       case Msg.FetchMoreRecent =>
-        model.fetchMoreRecent().pipe { case (model, cmd) =>
+        model.fetchMoreRecent.pipe { case (model, cmd) =>
           default.copy(_1 = model, _3 = cmd)
         }
 
@@ -105,7 +105,7 @@ object NavCotonomas {
         )
 
       case Msg.FetchMoreSubs =>
-        model.fetchMoreSubs().pipe { case (model, cmd) =>
+        model.fetchMoreSubs.pipe { case (model, cmd) =>
           default.copy(_1 = model, _3 = cmd)
         }
 
