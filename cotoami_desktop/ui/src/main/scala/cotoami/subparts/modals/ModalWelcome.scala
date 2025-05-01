@@ -8,7 +8,7 @@ import slinky.web.html._
 import marubinotto.fui._
 import marubinotto.libs.tauri
 import marubinotto.Validation
-import marubinotto.components.materialSymbol
+import marubinotto.components.{materialSymbol, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Node
@@ -308,12 +308,10 @@ object ModalWelcome {
       model: Model,
       databases: Seq[DatabaseOpenedJson]
   )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
-    if (databases.isEmpty) {
-      None
-    } else {
-      Some(
-        section(className := "recent-databases")(
-          h2()("Recent"),
+    Option.when(!databases.isEmpty) {
+      section(className := "recent-databases")(
+        h2()("Recent"),
+        ScrollArea()(
           ul()(
             databases.map(db =>
               li(key := db.folder)(

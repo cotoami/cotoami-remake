@@ -19,9 +19,12 @@ dialog.welcome {
     flex-direction: row;
 
     section.recent-databases {
-      // display: none;
+      flex: 1;
       margin-right: 16px;
-      max-width: 20rem;
+
+      div.scroll-area {
+        height: 480px;
+      }
     }
 
     div.create-or-open {
