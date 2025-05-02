@@ -12,6 +12,20 @@ FROM rust:${RUST_VERSION}-slim-bookworm AS build
 ARG APP_NAME
 WORKDIR /app
 
+# Copy the source files needed to build cotoami_node.
+#
+# Bind mount, which is used in the original example, won't work in some
+# environments (such as Podman: https://github.com/containers/podman/issues/15423).
+COPY Cargo.toml Cargo.lock ./
+COPY cotoami_db ./cotoami_db
+COPY cotoami_node ./cotoami_node
+# cotoami_desktop is not needed, but it cannot be simply excluded from the workspace
+# (Option to ignore missing workspace members when building: 
+# https://github.com/rust-lang/cargo/issues/14566)
+# so let's include minimal files required to build.
+COPY cotoami_desktop/tauri/Cargo.toml ./cotoami_desktop/tauri/
+COPY cotoami_desktop/tauri/src/main.rs ./cotoami_desktop/tauri/src/
+
 # Build the application.
 #
 # Leverage a cache mount to /usr/local/cargo/registry/
@@ -21,11 +35,7 @@ WORKDIR /app
 # Leverage a bind mount to the src directory to avoid having to copy the
 # source code into the container. Once built, copy the executable to an
 # output directory before the cache mounted /app/target is unmounted.
-RUN --mount=type=bind,source=cotoami_node,target=cotoami_node \
-    --mount=type=bind,source=cotoami_db,target=cotoami_db \
-    --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
-    --mount=type=bind,source=Cargo.lock,target=Cargo.lock \
-    --mount=type=cache,target=/app/target/ \
+RUN --mount=type=cache,target=/app/target/ \
     --mount=type=cache,target=/usr/local/cargo/registry/ \
     <<EOF
 set -e
