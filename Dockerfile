@@ -1,11 +1,13 @@
 # Dockerfile for Cotoami Node Server (cotoami_node) 
 
 ARG RUST_VERSION=1.85.0
-ARG TARGETARCH=arm64
+
 
 ################################################################################
 # Stage to build an application binary
 FROM clux/muslrust:${TARGETARCH}-${RUST_VERSION}-stable-2025-03-18 AS build
+
+ARG TARGETARCH
 
 WORKDIR /app
 
@@ -31,16 +33,19 @@ COPY cotoami_desktop/tauri/src/main.rs ./cotoami_desktop/tauri/src/
 RUN --mount=type=cache,target=/app/target/ \
     --mount=type=cache,target=/usr/local/cargo/registry/ \
     <<EOF
-set -e
+set -ex
 cargo build --package cotoami_node --locked --release
-ls ./target/
-cp ./target/aarch64-unknown-linux-musl/release/cotoami_node /cotoami_node
+case ${TARGETARCH} in 
+    "arm64")  MUSL_DIR=aarch64-unknown-linux-musl   ;; 
+    "amd64")  MUSL_DIR=x86_64-unknown-linux-musl    ;;
+esac
+cp ./target/${MUSL_DIR}/release/cotoami_node /cotoami_node
 EOF
 
 
 ################################################################################
 # Stage to build a docker image
-FROM gcr.io/distroless/static
+FROM --platform=$BUILDPLATFORM gcr.io/distroless/static
 
 # Copy the executable from the "build" stage.
 COPY --from=build /cotoami_node /
