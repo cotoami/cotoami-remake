@@ -30,8 +30,12 @@ COPY cotoami_desktop/tauri/src/main.rs ./cotoami_desktop/tauri/src/
 # Leverage a cache mount to /usr/local/cargo/registry/
 # for downloaded dependencies and a cache mount to /app/target/ for
 # compiled dependencies which will speed up subsequent builds.
-RUN --mount=type=cache,target=/app/target/ \
-    --mount=type=cache,target=/usr/local/cargo/registry/ \
+#
+# Separate caches for each arch by specifying the id option:
+# https://github.com/docker/buildx/issues/549#issuecomment-1788297892
+# https://github.com/moby/buildkit/issues/2598
+RUN --mount=type=cache,id=target-${TARGETARCH},sharing=locked,target=/app/target/ \
+    --mount=type=cache,id=registry-${TARGETARCH},sharing=locked,target=/usr/local/cargo/registry/ \
     <<EOF
 set -ex
 cargo build --package cotoami_node --locked --release
