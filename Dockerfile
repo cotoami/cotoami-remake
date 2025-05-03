@@ -39,7 +39,7 @@ case ${TARGETARCH} in
     "arm64")  MUSL_DIR=aarch64-unknown-linux-musl   ;; 
     "amd64")  MUSL_DIR=x86_64-unknown-linux-musl    ;;
 esac
-cp ./target/${MUSL_DIR}/release/cotoami_node /cotoami_node
+cp ./target/${MUSL_DIR}/release/cotoami_node /
 EOF
 
 
