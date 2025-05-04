@@ -4,23 +4,38 @@ ARG RUST_VERSION=1.85.0
 
 
 ################################################################################
-# Stage to build an application binary
-FROM clux/muslrust:${TARGETARCH}-${RUST_VERSION}-stable-2025-03-18 AS build
+# Build an application binary
+FROM --platform=$BUILDPLATFORM rust:${RUST_VERSION}-bookworm AS build
 
 ARG TARGETARCH
+ARG TARGETPLATFORM
+
+RUN case "${TARGETPLATFORM}" in \
+    "linux/amd64") echo x86_64-unknown-linux-gnu > /target_triple ;; \
+    "linux/arm64") echo aarch64-unknown-linux-gnu > /target_triple ;; \
+    *) exit 1 ;; \
+    esac
+RUN case "${TARGETARCH}" in \
+    "amd64") echo x86_64 > /arch ;; \
+    "arm64") echo aarch64 > /arch ;; \
+    *) exit 1 ;; \
+    esac
+
+# Install Zig needed by cargo-zigbuild
+# https://zig.guide/getting-started/installation/
+RUN mkdir -p /opt/zig && \
+    curl -L https://ziglang.org/download/0.14.0/zig-linux-$(cat /arch)-0.14.0.tar.xz \
+    | tar -xJf - --strip-components=1 -C /opt/zig
+ENV PATH="/opt/zig:$PATH"
 
 WORKDIR /app
 
 # Copy the source files needed to build cotoami_node.
-#
-# Bind mount, which is used in the original example, won't work in some
-# environments (such as Podman: https://github.com/containers/podman/issues/15423).
 COPY Cargo.toml Cargo.lock ./
 COPY cotoami_db ./cotoami_db
 COPY cotoami_node ./cotoami_node
-# cotoami_desktop is not needed, but it cannot be simply excluded from the workspace
-# (Option to ignore missing workspace members when building: 
-# https://github.com/rust-lang/cargo/issues/14566)
+# cotoami_desktop is not needed, but it cannot be simply excluded from the workspace:
+# https://github.com/rust-lang/cargo/issues/14566
 # so let's include minimal files required to build.
 COPY cotoami_desktop/tauri/Cargo.toml ./cotoami_desktop/tauri/
 COPY cotoami_desktop/tauri/src/main.rs ./cotoami_desktop/tauri/src/
@@ -38,24 +53,35 @@ RUN --mount=type=cache,id=target-${TARGETARCH},sharing=locked,target=/app/target
     --mount=type=cache,id=registry-${TARGETARCH},sharing=locked,target=/usr/local/cargo/registry/ \
     <<EOF
 set -ex
-cargo build --package cotoami_node --locked --release
-case ${TARGETARCH} in 
-    "arm64")  MUSL_DIR=aarch64-unknown-linux-musl   ;; 
-    "amd64")  MUSL_DIR=x86_64-unknown-linux-musl    ;;
-esac
-cp ./target/${MUSL_DIR}/release/cotoami_node /
+cargo install --locked cargo-zigbuild
+rustup target add $(cat /target_triple)
+cargo zigbuild --package cotoami_node --locked --release --target $(cat /target_triple)
+cp ./target/$(cat /target_triple)/release/cotoami_node /
 EOF
 
 
 ################################################################################
-# Stage to build a docker image
-FROM --platform=$BUILDPLATFORM gcr.io/distroless/static
+# Build a production image
+FROM --platform=$TARGETPLATFORM debian:bookworm-slim
+
+# Create a non-privileged user that the app will run under.
+# See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/
+ARG UID=10001
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/nonexistent" \
+    --shell "/sbin/nologin" \
+    --no-create-home \
+    --uid "${UID}" \
+    appuser
+USER appuser
 
 # Copy the executable from the "build" stage.
 COPY --from=build /cotoami_node /
 
 # Expose the port that the application listens on.
-# 5103 is the default number, which can be change via COTOAMI_SERVER_PORT
+# 5103 is the default number, which can be change via COTOAMI_SERVER_PORT.
 EXPOSE 5103
 
 # What the container should run when it is started.
