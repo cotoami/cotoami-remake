@@ -1,4 +1,4 @@
-# Dockerfile for Cotoami Node Server (cotoami_node) 
+# Dockerfile to build a multi-arch image of Cotoami Node Server (cotoami_node) 
 
 ARG RUST_VERSION=1.85.0
 
@@ -10,18 +10,24 @@ FROM --platform=$BUILDPLATFORM rust:${RUST_VERSION}-bookworm AS build
 ARG TARGETPLATFORM
 ARG BUILDARCH
 
+# Determine the target triple according to TARGETPLATFORM.
+#
+# We don't use musl because there seems to be a performance issue:
+# https://andygrove.io/2020/05/why-musl-extremely-slow/
 RUN case "${TARGETPLATFORM}" in \
     "linux/amd64") echo x86_64-unknown-linux-gnu > /target_triple ;; \
     "linux/arm64") echo aarch64-unknown-linux-gnu > /target_triple ;; \
     *) exit 1 ;; \
     esac
+
+# Convert BUILDARCH into the other format.
 RUN case "${BUILDARCH}" in \
     "amd64") echo x86_64 > /build_arch ;; \
     "arm64") echo aarch64 > /build_arch ;; \
     *) exit 1 ;; \
     esac
 
-# Install Zig needed by cargo-zigbuild
+# Install Zig needed by cargo-zigbuild.
 # https://zig.guide/getting-started/installation/
 RUN mkdir -p /opt/zig && \
     curl -L https://ziglang.org/download/0.14.0/zig-linux-$(cat /build_arch)-0.14.0.tar.xz \
