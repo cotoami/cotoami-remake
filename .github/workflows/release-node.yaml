@@ -39,13 +39,13 @@ jobs:
     # https://github.com/reproducible-containers/buildkit-cache-dance
 
     - name: Cache
-        uses: actions/cache@v3
-        id: cache
-        with:
-          path: |
-            usr-local-cargo-registry
-            app-target
-          key: cache-${{ hashFiles('Dockerfile') }}
+      uses: actions/cache@v3
+      id: cache
+      with:
+        path: |
+          usr-local-cargo-registry
+          app-target
+        key: cache-${{ hashFiles('Dockerfile') }}
 
     - name: Inject cache into docker
       uses: reproducible-containers/buildkit-cache-dance@v3.1.0
