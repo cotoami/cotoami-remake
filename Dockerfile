@@ -7,24 +7,24 @@ ARG RUST_VERSION=1.85.0
 # Build an application binary
 FROM --platform=$BUILDPLATFORM rust:${RUST_VERSION}-bookworm AS build
 
-ARG TARGETARCH
 ARG TARGETPLATFORM
+ARG BUILDARCH
 
 RUN case "${TARGETPLATFORM}" in \
     "linux/amd64") echo x86_64-unknown-linux-gnu > /target_triple ;; \
     "linux/arm64") echo aarch64-unknown-linux-gnu > /target_triple ;; \
     *) exit 1 ;; \
     esac
-RUN case "${TARGETARCH}" in \
-    "amd64") echo x86_64 > /arch ;; \
-    "arm64") echo aarch64 > /arch ;; \
+RUN case "${BUILDARCH}" in \
+    "amd64") echo x86_64 > /build_arch ;; \
+    "arm64") echo aarch64 > /build_arch ;; \
     *) exit 1 ;; \
     esac
 
 # Install Zig needed by cargo-zigbuild
 # https://zig.guide/getting-started/installation/
 RUN mkdir -p /opt/zig && \
-    curl -L https://ziglang.org/download/0.14.0/zig-linux-$(cat /arch)-0.14.0.tar.xz \
+    curl -L https://ziglang.org/download/0.14.0/zig-linux-$(cat /build_arch)-0.14.0.tar.xz \
     | tar -xJf - --strip-components=1 -C /opt/zig
 ENV PATH="/opt/zig:$PATH"
 
@@ -45,12 +45,9 @@ COPY cotoami_desktop/tauri/src/main.rs ./cotoami_desktop/tauri/src/
 # Leverage a cache mount to /usr/local/cargo/registry/
 # for downloaded dependencies and a cache mount to /app/target/ for
 # compiled dependencies which will speed up subsequent builds.
-#
-# Separate caches for each arch by specifying the id option:
-# https://github.com/docker/buildx/issues/549#issuecomment-1788297892
-# https://github.com/moby/buildkit/issues/2598
-RUN --mount=type=cache,id=target-${TARGETARCH},sharing=locked,target=/app/target/ \
-    --mount=type=cache,id=registry-${TARGETARCH},sharing=locked,target=/usr/local/cargo/registry/ \
+# https://github.com/moby/buildkit/blob/v0.21.1/frontend/dockerfile/docs/reference.md#run---mounttypecache
+RUN --mount=type=cache,sharing=locked,target=/usr/local/cargo/registry/ \
+    --mount=type=cache,sharing=locked,target=/app/target/ \
     <<EOF
 set -ex
 cargo install --locked cargo-zigbuild
