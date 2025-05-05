@@ -12,6 +12,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 2  # to detect version change in detect_version
 
     - name: Install Rust stable
       uses: dtolnay/rust-toolchain@stable
