@@ -4,10 +4,18 @@ Cotoami Node Server provides a Cotoami database that is intended to be accessed 
 
 <p align="center"><img src="../docs/images/distributed-graph.png" alt="Distributed coto graph" height="600px"></p>
 
-## Node Roles
+### Node Roles
 
 A unique aspect of the Cotoami Node network is the separation between the roles defined at the network level (**client/server**) and those defined at the database level (**child/parent**). In terms of connection, the initiator of a connection is referred to as the *client*, and the recipient is the *server*. Meanwhile, in terms of database relationships, the node that pulls in data is called the *child*, and the one whose data is being pulled is the *parent*. These roles are independent, which allows configurations where the Server acts as a child, rather than always as a parent.
 
 <p align="center"><img src="docs/images/node-roles.png" alt="Node roles"></p>
 
 > Note: While this separation of roles is already implemented internally, the current version only supports configurations where the server takes on the parent role. Future versions will support role reversal to enable more flexible configurations.
+
+
+## Launch Server
+
+## Administer Server
+
+## Connect Nodes
+
