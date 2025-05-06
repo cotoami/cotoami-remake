@@ -88,6 +88,8 @@ object en extends Text {
   def EditorCoto_cotonomaAlreadyExists(cotonomaName: String) =
     s"The cotonoma \"${cotonomaName}\" already exists in this node."
 
+  val ModalWelcome_title = "Welcome to Cotoami"
+
   val ModalInputOwnerPassword_title = "Owner Password Required"
   val ModalInputOwnerPassword_message =
     "You need to input the owner password to open this database."

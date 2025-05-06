@@ -285,7 +285,7 @@ object ModalWelcome {
   def apply(
       model: Model,
       recentDatabases: Seq[DatabaseOpenedJson]
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Modal.view(
       dialogClasses = "welcome",
       error = model.error
@@ -295,7 +295,7 @@ object ModalWelcome {
         alt := "Cotoami",
         src := "/images/logo/logomark.svg"
       ),
-      "Welcome to Cotoami"
+      context.i18n.text.ModalWelcome_title
     )(
       sectionRecent(model, recentDatabases),
       div(className := "create-or-open")(

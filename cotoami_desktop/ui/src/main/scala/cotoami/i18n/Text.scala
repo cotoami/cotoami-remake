@@ -75,6 +75,8 @@ trait Text {
   val EditorCoto_location: String
   def EditorCoto_cotonomaAlreadyExists(cotonomaName: String): String
 
+  val ModalWelcome_title: String
+
   val ModalInputOwnerPassword_title: String
   val ModalInputOwnerPassword_message: String
 
