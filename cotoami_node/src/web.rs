@@ -29,7 +29,7 @@ use tokio::{
     task::{spawn_blocking, JoinHandle},
 };
 use tower_http::{timeout::TimeoutLayer, trace::TraceLayer};
-use tracing::{debug, error};
+use tracing::{debug, error, info};
 
 use crate::{config::ServerConfig, service::ServiceError, state::NodeState};
 
@@ -45,7 +45,7 @@ pub async fn launch_server(
     config: ServerConfig,
     node_state: NodeState,
 ) -> Result<(JoinHandle<Result<()>>, Sender<()>)> {
-    debug!("Launching a node server (v{})...", node_state.version());
+    info!("Launching a node server (v{})...", node_state.version());
     let config = Arc::new(config);
 
     // Create an API application
