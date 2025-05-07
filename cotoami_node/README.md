@@ -15,6 +15,45 @@ A unique aspect of the Cotoami Node network is the separation between the roles 
 
 ## Launch Server
 
+Cotoami Node Server is provided as a Docker image: [cotoami/cotoami-node](https://hub.docker.com/r/cotoami/cotoami-node).
+
+You can configure the container using the following environment variables:
+
+* `COTOAMI_DB_DIR`
+    * Path to the Cotoami database directory.
+* `COTOAMI_NODE_NAME`
+    * The name used when creating a new node. If no existing database is found at the path specified by `COTOAMI_DB_DIR`, a new database will be created on startup, and this value will be used as the node name.
+    * If a database already exists at the specified path, this value will be ignored.
+* `COTOAMI_OWNER_PASSWORD`
+    * The owner password of the target node will be set to this value if the node does not yet have one.
+    * If the node already has an owner password, the server will only start if this value matches the existing password.
+* The following settings allow you to grant owner privileges to a specific remote node, enabling remote management of this node:
+    * `COTOAMI_OWNER_REMOTE_NODE_ID`
+        * Registers the specified node as a *client/child* and grants it owner privileges.
+        * If you want to manage the Node Server from Cotoami Desktop using the "Switch Node" feature, set this to the node ID of the database used by your desktop app.
+    * `COTOAMI_OWNER_REMOTE_NODE_PASSWORD`
+        * Specifies the password that the remote node (defined in COTOAMI_OWNER_REMOTE_NODE_ID) must use to connect to this node.
+        * This is ignored if the node has already been registered (i.e., it is not used to update an existing password).
+* `COTOAMI_SESSION_MINUTES`
+    * The session duration (in minutes) for connected client nodes (default: `1440` minutes = `24` hours).
+    * Clients will automatically reconnect after session expiration.
+* `COTOAMI_CHANGES_CHUNK_SIZE`
+    * The number of changes sent at once when pushing database update logs to each child node (default: `100`).
+* `COTOAMI_SERVER_PORT`
+    * Port number on which the server will run (default: `5103`).
+* The following variables configure the external URL of this server as seen from other nodes. These settings are used for displaying URLs in the UI and for CSRF protection:
+    * `COTOAMI_SERVER_URL_SCHEME`
+        * URL scheme (`http` or `https`) used by client nodes to connect to this server (default: `http`).
+    * `COTOAMI_SERVER_URL_HOST`
+        * Host name used by client nodes to connect (default: `localhost`).
+    * `COTOAMI_SERVER_URL_PORT`
+        * Port number to be included in the server URL.
+* `COTOAMI_SERVER_ENABLE_WEBSOCKET`
+    * Whether to allow WebSocket connections to this node (`true` or `false`; default: `true`).
+    * If set to false, communication with client nodes will use HTTP(S)/Server-Sent Events instead.
+
+Below is an example Docker Compose configuration (`compose.yaml`):
+
 ## Administer Server
 
 ## Connect Nodes
