@@ -6,6 +6,7 @@ on:
     - release-desktop
 
 jobs:
+  # https://github.com/tauri-apps/tauri-action
   publish-tauri:
     permissions:
       contents: write
