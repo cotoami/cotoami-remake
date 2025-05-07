@@ -135,12 +135,17 @@ Cotoami's source code is released under Apache 2 License. Check the [LICENSE](LI
 
 ## Updates and Feedback
 
-Updates about Cotoami are shared on the following platforms. In particular, the Patreon page will feature various posts about development progress, insights gained through this project, and more. You're very welcome to follow—even without making a donation.
+Updates about Cotoami are shared on the following platforms. In particular, the Patreon page will feature various posts about development progress, insights gained through this project, and more. You're very welcome to follow—even without making a donation 😉
 
 * https://x.com/cotoami
-* https://www.patreon.com/c/cotoami
+* https://www.patreon.com/cotoami
 
 Feedback and bug reports are welcome on GitHub Discussions.
+
+
+## Planned Features
+
+- [ ] Inline cotoami link support in Markdown
 
 
 ## Special Thanks
