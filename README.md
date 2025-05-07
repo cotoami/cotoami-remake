@@ -145,8 +145,12 @@ Feedback and bug reports are welcome on GitHub Discussions.
 
 ## Planned Features
 
-- [ ] Inline cotoami link support in Markdown
-
+- [ ] Inline cotonoma link syntax in Markdown
+- [ ] Terminal Node (converting to a lightweight node by deleting changelog)
+- [ ] Unread Notification
+- [ ] Graph View
+- [ ] Browsing cotos by date
+- [ ] Map in another window
 
 ## Special Thanks
 
