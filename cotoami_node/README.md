@@ -117,3 +117,13 @@ To begin, switch to the server node using **Switch Node**, then open the **Node 
 
 <p><img src="docs/images/server-profile.png" alt="Server Profile" height="500px"></p>
 
+A modal window will appear. Click the "**Add Client**" button to bring up the form for adding a new client node. Enter the Node ID of the node you wish to authorize, assign its permission level, and click "**Register**" to complete the process:
+
+![](docs/images/new-client.gif)
+
+Once registered, a password will be generated. Share this password and the server node’s URL with the client node owner using a secure method.
+
+On the client side, the server/parent node can be added using the same "**Add Node**" procedure described in the *Administer Server* section. The password is required only for the initial connection—it does not need to be stored permanently.
+After the first connection, a new password is generated and stored securely in the database in encrypted form.
+
+
