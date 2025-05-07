@@ -66,7 +66,6 @@ jobs:
         version-command: cd cotoami_desktop/tauri && cargo read-manifest | jq -r .version
 
     - name: Build and release desktop app
-      if: ${{ steps.detect_version.outputs.previous-version != steps.detect_version.outputs.current-version }}
       uses: tauri-apps/tauri-action@v0
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
