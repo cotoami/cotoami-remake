@@ -28,6 +28,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
+        lfs: true
         fetch-depth: 2  # to detect version change in detect_version
 
     - name: Setup Node.js
