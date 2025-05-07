@@ -106,3 +106,16 @@ You can now operate the Node Server as if it were a local database. Through the 
 
 ## Connect Nodes
 
+Once you’ve set up remote management for your Node Server as described above, you can start registering other nodes as client/child nodes.
+
+The general process is as follows:
+
+1. The owner of the client node shares their Node ID with the administrator of the server node.
+2. The server node administrator registers that Node ID as a client/child node.
+3. A password is generated and shared with the client node owner.
+4. The client node owner adds the server node using the "Add Node" button.
+
+To begin, switch to the server node using **Switch Node**, then open the **Node Profile**. In the "**As Server**" section, click the edit button in the "**Client Nodes**" field:
+
+<p><img src="docs/images/server-profile.png" alt="Server Profile" height="500px"></p>
+
