@@ -80,6 +80,7 @@ volumes:
   sun-storage:
 ```
 
+
 ## Administer Server
 
 You can manage a Cotoami Node Server remotely using Cotoami Desktop.
@@ -90,6 +91,17 @@ To get started, open the database you want to assign owner privileges to in Coto
 
 <p><img src="docs/images/node-profile.png" alt="Node Profile" height="500px"></p>
 
+Next, set this Node ID as the value of the `COTOAMI_OWNER_REMOTE_NODE_ID` environment variable on the Node Server. Then, choose a password and assign it to the `COTOAMI_OWNER_REMOTE_NODE_PASSWORD` variable. Start the server with these values set.
+
+In Cotoami Desktop, click the "Add Node" button to register the Node Server. Enter the Node Server’s URL and the password you configured in `COTOAMI_OWNER_REMOTE_NODE_PASSWORD`:
+
+![](docs/images/add-node.gif)
+
+Once the node has been added, select it from the list and click the "Switch Node" button to switch the active node:
+
+![](docs/images/switch-node.gif)
+
+You can now operate the Node Server as if it were a local database. Through the Node Profile, you can also manage connected client nodes and other server-side settings.
 
 
 ## Connect Nodes
