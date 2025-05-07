@@ -123,7 +123,6 @@ A modal window will appear. Click the "**Add Client**" button to bring up the fo
 
 Once registered, a password will be generated. Share this password and the server node’s URL with the client node owner using a secure method.
 
-On the client side, the server/parent node can be added using the same "**Add Node**" procedure described in the *Administer Server* section. The password is required only for the initial connection—it does not need to be stored permanently.
-After the first connection, a new password is generated and stored securely in the database in encrypted form.
-
+On the client side, the server/parent node can be added using the same "**Add Node**" procedure described in the *Administer Server* section. The password is required only for the initial connection, so you don’t need to store it yourself.
+After the first connection, a new password is generated and securely stored in the database in encrypted form.
 
