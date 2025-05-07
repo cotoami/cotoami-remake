@@ -54,6 +54,32 @@ You can configure the container using the following environment variables:
 
 Below is an example Docker Compose configuration (`compose.yaml`):
 
+```yaml
+services:
+  # Sun: http://localhost:5103
+  cotoami-node-sun:
+    image: cotoami/cotoami-node:latest
+    ports:
+      - 5103:5103
+    volumes:
+      - sun-storage:/data
+    environment:
+      RUST_LOG: info
+      COTOAMI_DB_DIR: /data
+      COTOAMI_NODE_NAME: Sun
+      COTOAMI_OWNER_PASSWORD: sun-password
+      COTOAMI_OWNER_REMOTE_NODE_ID: 0196a8d8-6d6f-7132-ac61-06b20652a7c3
+      COTOAMI_OWNER_REMOTE_NODE_PASSWORD: earth-password
+      COTOAMI_SERVER_PORT: 5103
+      COTOAMI_SERVER_URL_SCHEME: http
+      COTOAMI_SERVER_URL_HOST: localhost
+      COTOAMI_SERVER_URL_PORT: 5103
+      COTOAMI_SERVER_ENABLE_WEBSOCKET: "true"
+
+volumes:
+  sun-storage:
+```
+
 ## Administer Server
 
 ## Connect Nodes
