@@ -133,6 +133,16 @@ Download the latest version of Cotoami for your platform (Windows, Linux, or mac
 Cotoami's source code is released under Apache 2 License. Check the [LICENSE](LICENSE) file for more information.
 
 
+## Updates and Feedback
+
+Updates about Cotoami are shared on the following platforms. In particular, the Patreon page will feature various posts about development progress, insights gained through this project, and more. You're very welcome to follow—even without making a donation.
+
+* https://x.com/cotoami
+* https://www.patreon.com/c/cotoami
+
+Feedback and bug reports are welcome on GitHub Discussions.
+
+
 ## Special Thanks
 
 This program could not have been created without the help of the amazing people and projects listed below. I would like to express my sincere gratitude to them here. While this list is not exhaustive, Cotoami also relies on many other open source projects beyond those mentioned here.
