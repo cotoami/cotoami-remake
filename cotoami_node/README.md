@@ -6,7 +6,7 @@ Cotoami Node Server provides a Cotoami database that is intended to be accessed 
 
 ### Node Roles
 
-A unique aspect of the Cotoami Node network is the separation between the roles defined at the network level (**client/server**) and those defined at the database level (**child/parent**). In terms of connection, the initiator of a connection is referred to as the *client*, and the recipient is the *server*. Meanwhile, in terms of database relationships, the node that pulls in data is called the *child*, and the one whose data is being pulled is the *parent*. These roles are independent, which allows configurations where the Server acts as a child, rather than always as a parent.
+A unique aspect of the Cotoami Node network is the separation between the roles defined at the network level (**client/server**) and those defined at the database level (**child/parent**). In terms of connection, the initiator of a connection is referred to as the *client*, and the recipient is the *server*. Meanwhile, in terms of database relationships, the node that pulls in data is called the *child*, and the one whose data is being pulled is the *parent*. These roles are independent, which allows configurations where the server acts as a child, rather than always as a parent.
 
 <p align="center"><img src="docs/images/node-roles.png" alt="Node roles"></p>
 
@@ -83,9 +83,7 @@ volumes:
 
 ## Administer Server
 
-You can manage a Cotoami Node Server remotely using Cotoami Desktop.
-To do this, you’ll need a separate Cotoami database (node) aside from the Node Server itself.
-By registering this database as the **owner** of the target node, you’ll be able to use the **Switch Node** feature in Cotoami Desktop. This allows you to operate the remote database as if it were your local one.
+You can manage a Cotoami Node Server remotely using Cotoami Desktop. To do this, you’ll need a separate Cotoami database (node) aside from the Node Server itself. By registering this database as the **owner** of the target node, you’ll be able to use the **Switch Node** feature in Cotoami Desktop. This allows you to operate the remote database as if it were your local one.
 
 To get started, open the database you want to assign owner privileges to in Cotoami Desktop and check its Node ID in the **Node Profile** modal which can be opened by clicking on the icon at the top-right corner of the main screen:
 
@@ -93,7 +91,7 @@ To get started, open the database you want to assign owner privileges to in Coto
 
 Next, set this Node ID as the value of the `COTOAMI_OWNER_REMOTE_NODE_ID` environment variable on the Node Server. Then, choose a password and assign it to the `COTOAMI_OWNER_REMOTE_NODE_PASSWORD` variable. Start the server with these values set.
 
-In Cotoami Desktop, click the "Add Node" button to register the Node Server. Enter the Node Server’s URL and the password you configured in `COTOAMI_OWNER_REMOTE_NODE_PASSWORD`:
+In Cotoami Desktop, click the "Add Node" button to register the server node. Enter the Node Server’s URL and the password you configured in `COTOAMI_OWNER_REMOTE_NODE_PASSWORD`:
 
 ![](docs/images/add-node.gif)
 
@@ -101,7 +99,7 @@ Once the node has been added, select it from the list and click the "Switch Node
 
 ![](docs/images/switch-node.gif)
 
-You can now operate the Node Server as if it were a local database. Through the Node Profile, you can also manage connected client nodes and other server-side settings.
+You can now operate the server node as if it were a local database. Through the Node Profile, you can also manage connected client nodes and other server-side settings.
 
 
 ## Connect Nodes
