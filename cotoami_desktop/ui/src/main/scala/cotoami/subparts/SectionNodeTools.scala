@@ -102,7 +102,7 @@ object SectionNodeTools {
               )
             )
         ),
-        PartsNode.buttonOperateAs(node)
+        PartsNode.buttonSwitchNode(node)
       )
     )
   }

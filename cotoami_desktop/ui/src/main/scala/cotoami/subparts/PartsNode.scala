@@ -55,7 +55,7 @@ object PartsNode {
       status.message.map(p(className := "message")(_))
     )
 
-  def buttonOperateAs(switchTo: Node, tipPlacement: String = "bottom")(implicit
+  def buttonSwitchNode(switchTo: Node, tipPlacement: String = "bottom")(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] = {
@@ -67,13 +67,13 @@ object PartsNode {
     ) {
       toolButton(
         symbol = Node.SwitchIconName,
-        tip = Some("Operate as"),
+        tip = Some(context.i18n.text.ModalSwitchNode_title),
         tipPlacement = tipPlacement,
-        classes = "operate",
+        classes = "switch-node",
         onClick = _ =>
           dispatch(
             Modal.Msg.OpenModal(
-              Modal.OperateAs(repo.nodes.self.get, switchTo)
+              Modal.SwitchNode(repo.nodes.self.get, switchTo)
             )
           )
       )

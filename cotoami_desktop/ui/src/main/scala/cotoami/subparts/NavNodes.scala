@@ -88,7 +88,7 @@ object NavNodes {
               onClick := (_ =>
                 dispatch(
                   Modal.Msg.OpenModal(
-                    Modal.OperateAs(selfNode, localNode)
+                    Modal.SwitchNode(selfNode, localNode)
                   )
                 )
               )

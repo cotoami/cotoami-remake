@@ -234,8 +234,7 @@ object ModalNodeProfile {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     section(className := "tool-buttons")(
-      // Operate as
-      PartsNode.buttonOperateAs(node, "left")
+      PartsNode.buttonSwitchNode(node, "left")
     )
 
   private def fieldId(node: Node)(implicit

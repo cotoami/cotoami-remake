@@ -163,7 +163,7 @@ object Modal {
       extends Modal
 
   case class SwitchNode(model: ModalSwitchNode.Model) extends Modal
-  object OperateAs {
+  object SwitchNode {
     def apply(current: Node, switchingTo: Node): SwitchNode =
       SwitchNode(ModalSwitchNode.Model(current, switchingTo))
   }
