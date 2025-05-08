@@ -118,18 +118,12 @@ object Main {
 
       case Msg.SystemInfoFetched(Left(_)) => (model, Cmd.none)
 
-      case Msg.UiStateRestored(Right(uiState)) =>
+      case Msg.UiStateRestored(uiState) =>
         (
           model.modify(_.uiState).setTo(Some(uiState.getOrElse(UiState()))),
           Browser.setHtmlTheme(
             uiState.map(_.theme).getOrElse(UiState.DefaultTheme)
           )
-        )
-
-      case Msg.UiStateRestored(Left(e)) =>
-        (
-          model.error(s"Invalid UI state in localStorage.", Some(e)),
-          Cmd.none
         )
 
       case Msg.DatabaseOpened(Right(info)) =>

@@ -28,8 +28,7 @@ object Msg {
 
   // App init
   case class SystemInfoFetched(result: Either[Unit, SystemInfoJson]) extends Msg
-  case class UiStateRestored(result: Either[String, Option[UiState]])
-      extends Msg
+  case class UiStateRestored(uiState: Option[UiState]) extends Msg
   case class DatabaseOpened(result: Either[ErrorJson, DatabaseInfo]) extends Msg
   case class SetDatabaseInfo(info: DatabaseInfo) extends Msg
   case class ServerConnectionsInitialized(result: Either[ErrorJson, Null])

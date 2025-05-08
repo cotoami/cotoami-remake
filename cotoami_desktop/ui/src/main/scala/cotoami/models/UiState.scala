@@ -76,16 +76,20 @@ object UiState {
   implicit val encoder: Encoder[UiState] = deriveEncoder
   implicit val decoder: Decoder[UiState] = deriveDecoder
 
-  def restore: Cmd.One[Either[String, Option[UiState]]] =
+  def restore: Cmd.One[Option[UiState]] =
     Cmd(IO {
       val value = dom.window.localStorage.getItem(StorageKey)
       if (value != null) {
         decode[UiState](value) match {
-          case Right(uiState) => Some(Right(Some(uiState)))
-          case Left(error)    => Some(Left(error.toString()))
+          case Right(uiState) => Some(Some(uiState))
+          case Left(error) => {
+            println(s"Invalid UI state in localStorage: ${error.toString()}")
+            dom.window.localStorage.removeItem(StorageKey)
+            Some(None)
+          }
         }
       } else {
-        Some(Right(None))
+        Some(None)
       }
     })
 }
