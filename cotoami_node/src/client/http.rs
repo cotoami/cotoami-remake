@@ -5,7 +5,7 @@
 
 use std::{borrow::Cow, sync::Arc};
 
-use anyhow::{ensure, Result};
+use anyhow::{anyhow, ensure, Context, Result};
 use const_format::concatcp;
 use cotoami_db::models::Bytes;
 use futures::future::FutureExt;
@@ -304,7 +304,16 @@ impl HttpClient {
             http_req
         };
 
-        Self::convert_response(request_id, http_req.send().await?).await
+        match http_req.send().await {
+            Ok(response) => Self::convert_response(request_id, response).await,
+            Err(e) => {
+                // Replace the default message with a more detailed one
+                // https://github.com/seanmonstar/reqwest/discussions/2342
+                let anyhow_error = anyhow!(e);
+                let message = format!("Error connecting to the URL: {}", anyhow_error.root_cause());
+                Err(anyhow_error).context(message)
+            }
+        }
     }
 
     async fn convert_response(id: Uuid, http_response: reqwest::Response) -> Result<Response> {
