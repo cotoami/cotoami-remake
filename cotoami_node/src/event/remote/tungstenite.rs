@@ -5,7 +5,10 @@ use cotoami_db::{Id, Node, Operator};
 use futures::{Sink, SinkExt, Stream, StreamExt};
 use parking_lot::Mutex;
 use tokio::{
-    sync::{mpsc, mpsc::Sender},
+    sync::{
+        mpsc,
+        mpsc::{error::SendError, Sender},
+    },
     task::{AbortHandle, JoinSet},
     time,
 };
@@ -235,10 +238,10 @@ fn task_sending_pings(
 
 fn as_event_sink(
     sender: Sender<Message>,
-) -> impl Sink<NodeSentEvent, Error = anyhow::Error> + 'static {
+) -> impl Sink<NodeSentEvent, Error = SendError<Message>> + 'static {
     futures::sink::unfold((), move |(), event: NodeSentEvent| {
         let sender = sender.clone();
-        async move { sender.send(event.into()).await.map_err(anyhow::Error::from) }
+        async move { sender.send(event.into()).await }
     })
 }
 
