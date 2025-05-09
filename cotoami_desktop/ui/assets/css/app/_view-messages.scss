@@ -1,4 +1,5 @@
 @use "../pico-customized" as pico;
+@use "../mixins";
 
 section.system-messages {
   display: flex;
@@ -22,6 +23,8 @@ section.system-messages {
   }
 
   section.entries {
+    @include mixins.selectable;
+
     flex: 1;
 
     margin: 5px;
