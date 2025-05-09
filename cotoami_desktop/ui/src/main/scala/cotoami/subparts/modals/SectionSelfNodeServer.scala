@@ -18,7 +18,7 @@ import cotoami.backend.{
 }
 import cotoami.subparts.{sectionClientNodesCount, Modal}
 
-object SectionSelfServer {
+object SectionSelfNodeServer {
 
   /////////////////////////////////////////////////////////////////////////////
   // Model
@@ -27,7 +27,7 @@ object SectionSelfServer {
   case class Model(
       nodeId: Id[Node],
       loading: Boolean = false,
-      localServer: Option[LocalServer] = None,
+      selfNodeServer: Option[LocalServer] = None,
       clientCount: Double = 0,
       enablingAnonymousRead: Boolean = false
   )
@@ -41,7 +41,7 @@ object SectionSelfServer {
           Model(nodeId, loading = true),
           Cmd.Batch(
             fetchClientCount,
-            LocalServer.fetch.map(Msg.LocalServerFetched(_).into)
+            LocalServer.fetch.map(Msg.SelfNodeServerFetched(_).into)
           )
         )
       else
@@ -54,13 +54,13 @@ object SectionSelfServer {
 
   sealed trait Msg extends Into[AppMsg] {
     def into =
-      ModalNodeProfile.Msg.SectionSelfServerMsg(this)
+      ModalNodeProfile.Msg.SectionSelfNodeServerMsg(this)
         .pipe(Modal.Msg.NodeProfileMsg)
         .pipe(AppMsg.ModalMsg)
   }
 
   object Msg {
-    case class LocalServerFetched(result: Either[ErrorJson, LocalServer])
+    case class SelfNodeServerFetched(result: Either[ErrorJson, LocalServer])
         extends Msg
     case class ClientCountFetched(result: Either[ErrorJson, Double]) extends Msg
     case class EnableAnonymousRead(enable: Boolean) extends Msg
@@ -73,15 +73,15 @@ object SectionSelfServer {
   ): (Model, Nodes, Cmd[AppMsg]) = {
     val default = (model, context.repo.nodes, Cmd.none)
     msg match {
-      case Msg.LocalServerFetched(Right(server)) =>
+      case Msg.SelfNodeServerFetched(Right(server)) =>
         default.copy(_1 =
-          model.copy(localServer = Some(server), loading = false)
+          model.copy(selfNodeServer = Some(server), loading = false)
         )
 
-      case Msg.LocalServerFetched(Left(e)) =>
+      case Msg.SelfNodeServerFetched(Left(e)) =>
         default.copy(
           _1 = model.copy(loading = false),
-          _3 = cotoami.error("Couldn't fetch the local server.", e)
+          _3 = cotoami.error("Couldn't fetch the self node server.", e)
         )
 
       case Msg.ClientCountFetched(Right(count)) =>
@@ -101,7 +101,7 @@ object SectionSelfServer {
         default.copy(
           _1 = model
             .modify(_.enablingAnonymousRead).setTo(false)
-            .modify(_.localServer.each.anonymousConnections).setTo(0),
+            .modify(_.selfNodeServer.each.anonymousConnections).setTo(0),
           _2 = context.repo.nodes.modify(_.selfSettings).setTo(Some(local))
         )
 
@@ -128,35 +128,35 @@ object SectionSelfServer {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     Option.when(context.repo.nodes.isSelf(model.nodeId)) {
-      model.localServer.flatMap(_.activeConfig)
-        .map(sectionLocalServer(_, model))
+      model.selfNodeServer.flatMap(_.activeConfig)
+        .map(sectionSelfNodeServer(_, model))
         .getOrElse(
           Option.when(model.loading) {
             section(
-              className := "field-group self-server",
+              className := "field-group self-node-server",
               aria - "busy" := model.loading.toString()
             )()
           }: ReactElement
         )
     }
 
-  private def sectionLocalServer(config: ServerConfig, model: Model)(implicit
+  private def sectionSelfNodeServer(config: ServerConfig, model: Model)(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
-    section(className := "field-group self-server")(
-      h2()(context.i18n.text.AsServer_title),
-      fieldLocalServerUrl(config),
+    section(className := "field-group self-node-server")(
+      h2()(context.i18n.text.SelfNodeServer_title),
+      fieldServerUrl(config),
       fieldClientNodes(model),
       fieldAnonymousRead(model)
     )
 
-  private def fieldLocalServerUrl(config: ServerConfig)(implicit
+  private def fieldServerUrl(config: ServerConfig)(implicit
       context: Context
   ): ReactElement =
     fieldInput(
-      name = context.i18n.text.AsServer_url,
-      classes = "self-server-url",
+      name = context.i18n.text.SelfNodeServer_url,
+      classes = "self-node-server-url",
       inputValue = config.url,
       readOnly = true
     )
@@ -166,7 +166,7 @@ object SectionSelfServer {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     field(
-      name = context.i18n.text.AsServer_clientNodes,
+      name = context.i18n.text.SelfNodeServer_clientNodes,
       classes = "client-nodes"
     )(
       sectionClientNodesCount(model.clientCount, context.repo.nodes),
@@ -185,7 +185,7 @@ object SectionSelfServer {
         .map(_.anonymousReadEnabled)
         .getOrElse(false)
     field(
-      name = context.i18n.text.AsServer_anonymousRead,
+      name = context.i18n.text.SelfNodeServer_anonymousRead,
       classes = "anonymous-read"
     )(
       input(
@@ -200,7 +200,7 @@ object SectionSelfServer {
             dispatch(
               Modal.Msg.OpenModal(
                 Modal.Confirm(
-                  context.i18n.text.AsServer_confirmEnableAnonymousRead,
+                  context.i18n.text.SelfNodeServer_confirmEnableAnonymousRead,
                   Msg.EnableAnonymousRead(true) // enable
                 )
               )
@@ -211,7 +211,7 @@ object SectionSelfServer {
         span(className := "processing", aria - "busy" := "true")()
       },
       Option.when(anonymousReadEnabled) {
-        model.localServer.map(_.anonymousConnections).map(count =>
+        model.selfNodeServer.map(_.anonymousConnections).map(count =>
           span(className := "anonymous-connections")(
             s"(Active connections: ${count})"
           )

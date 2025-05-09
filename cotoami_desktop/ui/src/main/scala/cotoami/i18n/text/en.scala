@@ -132,16 +132,19 @@ object en extends Text {
 
   val FieldOwnerPassword = "Owner Password"
 
-  val AsServer_title = "As Server"
-  val AsServer_url = "URL"
-  val AsServer_connection = "Connection"
-  val AsServer_clientNodes = "Client Nodes"
-  val AsServer_anonymousRead = "Accept Anonymous Read"
-  val AsServer_confirmEnableAnonymousRead =
+  val SelfNodeServer_title = "Node Server"
+  val SelfNodeServer_url = "URL"
+  val SelfNodeServer_clientNodes = "Client Nodes"
+  val SelfNodeServer_anonymousRead = "Accept Anonymous Read"
+  val SelfNodeServer_confirmEnableAnonymousRead =
     """
     Are you sure you want to allow anonymous read-only access
     (anyone who knows this node's URL can view your content)?
     """
+
+  val AsServer_title = "As Server"
+  val AsServer_url = "URL"
+  val AsServer_connection = "Connection"
 
   val AsClient_title = "As Client"
   val AsClient_password = "Password"

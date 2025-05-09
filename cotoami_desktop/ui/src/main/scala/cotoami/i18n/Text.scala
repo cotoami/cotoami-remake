@@ -106,12 +106,15 @@ trait Text {
 
   val FieldOwnerPassword: String
 
+  val SelfNodeServer_title: String
+  val SelfNodeServer_url: String
+  val SelfNodeServer_clientNodes: String
+  val SelfNodeServer_anonymousRead: String
+  val SelfNodeServer_confirmEnableAnonymousRead: String
+
   val AsServer_title: String
   val AsServer_url: String
   val AsServer_connection: String
-  val AsServer_clientNodes: String
-  val AsServer_anonymousRead: String
-  val AsServer_confirmEnableAnonymousRead: String
 
   val AsClient_title: String
   val AsClient_password: String

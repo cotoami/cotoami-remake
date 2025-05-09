@@ -26,7 +26,7 @@ object ModalNodeProfile {
       // Fields
       imageMaxSize: FieldImageMaxSize.Model,
       ownerPassword: FieldOwnerPassword.Model,
-      selfServer: SectionSelfServer.Model,
+      selfNodeServer: SectionSelfNodeServer.Model,
       asClient: SectionAsClient.Model,
       asChild: SectionAsChild.Model
   ) {
@@ -57,7 +57,8 @@ object ModalNodeProfile {
     def apply(
         nodeId: Id[Node]
     )(implicit context: Context): (Model, Cmd[AppMsg]) = {
-      val (selfServer, selfServerCmd) = SectionSelfServer.Model(nodeId)
+      val (selfNodeServer, selfNodeServerCmd) =
+        SectionSelfNodeServer.Model(nodeId)
       val (asClient, asClientCmd) = SectionAsClient.Model(nodeId)
       val (asChild, asChildCmd) = SectionAsChild.Model(nodeId)
       (
@@ -65,12 +66,12 @@ object ModalNodeProfile {
           nodeId = nodeId,
           imageMaxSize = FieldImageMaxSize.Model(nodeId),
           ownerPassword = FieldOwnerPassword.Model(nodeId),
-          selfServer = selfServer,
+          selfNodeServer = selfNodeServer,
           asClient = asClient,
           asChild = asChild
         ),
         Root.fetchNodeDetails(nodeId) ++
-          selfServerCmd ++
+          selfNodeServerCmd ++
           asClientCmd ++
           asChildCmd
       )
@@ -88,7 +89,8 @@ object ModalNodeProfile {
   object Msg {
     case class FieldImageMaxSizeMsg(submsg: FieldImageMaxSize.Msg) extends Msg
     case class FieldOwnerPasswordMsg(submsg: FieldOwnerPassword.Msg) extends Msg
-    case class SectionSelfServerMsg(submsg: SectionSelfServer.Msg) extends Msg
+    case class SectionSelfNodeServerMsg(submsg: SectionSelfNodeServer.Msg)
+        extends Msg
     case class SectionAsClientMsg(submsg: SectionAsClient.Msg) extends Msg
     case class SectionAsChildMsg(submsg: SectionAsChild.Msg) extends Msg
   }
@@ -109,10 +111,10 @@ object ModalNodeProfile {
         (model.copy(ownerPassword = ownerPassword), context.repo.nodes, cmd)
       }
 
-      case Msg.SectionSelfServerMsg(submsg) => {
-        val (selfServer, nodes, cmd) =
-          SectionSelfServer.update(submsg, model.selfServer)
-        (model.copy(selfServer = selfServer), nodes, cmd)
+      case Msg.SectionSelfNodeServerMsg(submsg) => {
+        val (selfNodeServer, nodes, cmd) =
+          SectionSelfNodeServer.update(submsg, model.selfNodeServer)
+        (model.copy(selfNodeServer = selfNodeServer), nodes, cmd)
       }
 
       case Msg.SectionAsClientMsg(submsg) => {
@@ -163,7 +165,7 @@ object ModalNodeProfile {
             rootCoto.map(fieldDescription(_, model)),
             FieldImageMaxSize(model.imageMaxSize),
             FieldOwnerPassword(model.ownerPassword),
-            SectionSelfServer(model.selfServer),
+            SectionSelfNodeServer(model.selfNodeServer),
             model.asServer.map(SectionAsServer(_)),
             SectionAsClient(model.asClient),
             SectionAsChild(model.asChild)
