@@ -31,17 +31,24 @@ object LocalNodeEvent {
       val childPrivileges =
         Nullable.toOption(change.child_privileges)
           .map(ChildNodeBackend.toModel(_))
-      return (
-        // Model
-        model.modify(_.repo.nodes.servers).using(
-          _.setState(nodeId, notConnected, childPrivileges)
-        ),
-        // Cmd[Msg]
-        if (
-          model.repo.nodes.isSelfRemote &&
+
+      val disconnectedFromRemoteSelf =
+        model.repo.nodes.isSelfRemote &&
           model.repo.nodes.isSelf(nodeId) &&
           notConnected.isDefined
-        ) {
+
+      return (
+        model
+          .modify(_.repo.nodes.servers).using(
+            _.setState(nodeId, notConnected, childPrivileges)
+          )
+          .modify(_.modalStack).using { stack =>
+            if (disconnectedFromRemoteSelf)
+              stack.clear
+            else
+              stack
+          },
+        if (disconnectedFromRemoteSelf) {
           // Switch back to the local node when disconnected from the
           // remote node on which the app is currently operating.
           InitialDataset.switchSelfNodeTo(None).flatMap(_ match {

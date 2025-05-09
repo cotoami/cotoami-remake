@@ -50,6 +50,8 @@ object Modal {
 
     def close[M <: Modal](modalType: Class[M]): Stack =
       this.modify(_.modals).using(_.filterNot(modalType.isInstance(_)))
+
+    def clear: Stack = Stack()
   }
 
   /////////////////////////////////////////////////////////////////////////////
