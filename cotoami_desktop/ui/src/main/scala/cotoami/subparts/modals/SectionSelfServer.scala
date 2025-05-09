@@ -18,7 +18,7 @@ import cotoami.backend.{
 }
 import cotoami.subparts.{sectionClientNodesCount, Modal}
 
-object SectionLocalServer {
+object SectionSelfServer {
 
   /////////////////////////////////////////////////////////////////////////////
   // Model
@@ -54,7 +54,7 @@ object SectionLocalServer {
 
   sealed trait Msg extends Into[AppMsg] {
     def into =
-      ModalNodeProfile.Msg.SectionLocalServerMsg(this)
+      ModalNodeProfile.Msg.SectionSelfServerMsg(this)
         .pipe(Modal.Msg.NodeProfileMsg)
         .pipe(AppMsg.ModalMsg)
   }
@@ -133,7 +133,7 @@ object SectionLocalServer {
         .getOrElse(
           Option.when(model.loading) {
             section(
-              className := "field-group local-server",
+              className := "field-group self-server",
               aria - "busy" := model.loading.toString()
             )()
           }: ReactElement
@@ -144,7 +144,7 @@ object SectionLocalServer {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
-    section(className := "field-group local-server")(
+    section(className := "field-group self-server")(
       h2()(context.i18n.text.AsServer_title),
       fieldLocalServerUrl(config),
       fieldClientNodes(model),
@@ -156,7 +156,7 @@ object SectionLocalServer {
   ): ReactElement =
     fieldInput(
       name = context.i18n.text.AsServer_url,
-      classes = "local-server-url",
+      classes = "self-server-url",
       inputValue = config.url,
       readOnly = true
     )
