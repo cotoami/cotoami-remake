@@ -4,9 +4,11 @@ use bytes::Bytes;
 use cotoami_db::{Id, Node, Operator};
 use futures::{Sink, SinkExt, Stream, StreamExt};
 use parking_lot::Mutex;
-use tokio::{sync::mpsc, task::JoinSet};
+use tokio::{
+    sync::{mpsc, mpsc::Sender},
+    task::{AbortHandle, JoinSet},
+};
 use tokio_tungstenite::tungstenite::protocol::Message;
-use tokio_util::sync::PollSender;
 use tracing::debug;
 
 use crate::{
@@ -21,7 +23,7 @@ pub(crate) async fn communicate_with_parent<MsgSink, MsgSinkErr, MsgStream, MsgS
     node_state: NodeState,
     parent_id: Id<Node>,
     description: String,
-    mut msg_sink: MsgSink,
+    msg_sink: MsgSink,
     msg_stream: MsgStream,
     mut on_abort: OnAbort,
     abortables: Abortables,
@@ -38,18 +40,22 @@ pub(crate) async fn communicate_with_parent<MsgSink, MsgSinkErr, MsgStream, MsgS
     // Create a parent service.
     let parent_service = PubsubService::new(description, node_state.pubsub().responses().clone());
 
+    // A task sending messages received from the other tasks
+    let (msg_sender, handle) = task_sending_messages(&mut tasks, msg_sink, task_error.clone());
+    abortables.add(handle);
+
     // A task sending request events.
     abortables.add(tasks.spawn({
+        let msg_sender = msg_sender.clone();
         let mut requests = parent_service.requests().subscribe(None::<()>);
-        let task_error = task_error.clone();
         async move {
             while let Some(request) = requests.next().await {
-                let event = NodeSentEvent::Request(request);
-                if let Err(e) = send_event(&mut msg_sink, event).await {
-                    task_error
-                        .lock()
-                        .replace(CommunicationError::Connection(e.into()));
-                    break;
+                if msg_sender
+                    .send(NodeSentEvent::Request(request).into())
+                    .await
+                    .is_err()
+                {
+                    break; // task_sending_messages has been terminated
                 }
             }
         }
@@ -89,7 +95,7 @@ pub(crate) async fn communicate_with_operator<
 >(
     node_state: NodeState,
     opr: Arc<Operator>,
-    mut msg_sink: MsgSink,
+    msg_sink: MsgSink,
     msg_stream: MsgStream,
     mut on_abort: OnAbort,
     abortables: Abortables,
@@ -102,34 +108,25 @@ pub(crate) async fn communicate_with_operator<
 {
     let node_id = opr.node_id();
 
-    let (sender, mut receiver) = mpsc::channel::<NodeSentEvent>(SEND_BUFFER_SIZE);
     let mut tasks = JoinSet::new();
     let task_error = Arc::new(Mutex::new(None::<CommunicationError>));
 
-    // A task sending events received from the other tasks
-    abortables.add(tasks.spawn({
-        let task_error = task_error.clone();
-        async move {
-            while let Some(event) = receiver.recv().await {
-                if let Err(e) = send_event(&mut msg_sink, event).await {
-                    task_error
-                        .lock()
-                        .replace(CommunicationError::Connection(e.into()));
-                    break;
-                }
-            }
-        }
-    }));
+    // A task sending messages received from the other tasks
+    let (msg_sender, handle) = task_sending_messages(&mut tasks, msg_sink, task_error.clone());
+    abortables.add(handle);
 
     // A task publishing change events to the operator
     abortables.add(tasks.spawn({
-        let sender = sender.clone();
+        let msg_sender = msg_sender.clone();
         let mut changes = node_state.pubsub().changes().subscribe(None::<()>);
         async move {
             while let Some(change) = changes.next().await {
-                if sender.send(NodeSentEvent::Change(change)).await.is_err() {
-                    // The receiver task has been terminated
-                    break;
+                if msg_sender
+                    .send(NodeSentEvent::Change(change).into())
+                    .await
+                    .is_err()
+                {
+                    break; // task_sending_messages has been terminated
                 }
             }
         }
@@ -138,17 +135,16 @@ pub(crate) async fn communicate_with_operator<
     // A task publishing local events to the operator who has owner privilege
     if opr.has_owner_permission() {
         abortables.add(tasks.spawn({
-            let sender = sender.clone();
+            let msg_sender = msg_sender.clone();
             let mut events = node_state.pubsub().events().subscribe(None::<()>);
             async move {
                 while let Some(event) = events.next().await {
-                    if sender
-                        .send(NodeSentEvent::RemoteLocal(event))
+                    if msg_sender
+                        .send(NodeSentEvent::RemoteLocal(event).into())
                         .await
                         .is_err()
                     {
-                        // The receiver task has been terminated
-                        break;
+                        break; // task_sending_messages has been terminated
                     }
                 }
             }
@@ -157,13 +153,15 @@ pub(crate) async fn communicate_with_operator<
 
     // A task receiving events from the child
     abortables.add(tasks.spawn({
-        handle_message_stream(msg_stream, node_id, task_error.clone(), move |event| {
-            super::handle_event_from_operator(
-                event,
-                opr.clone(),
-                node_state.clone(),
-                PollSender::new(sender.clone()),
-            )
+        handle_message_stream(msg_stream, node_id, task_error.clone(), {
+            move |event| {
+                super::handle_event_from_operator(
+                    event,
+                    opr.clone(),
+                    node_state.clone(),
+                    Box::pin(as_event_sink(msg_sender.clone())),
+                )
+            }
         })
     }));
 
@@ -177,23 +175,50 @@ pub(crate) async fn communicate_with_operator<
     }
 }
 
-/// The size of the buffer used to send events in in [communicate_with_operator].
-///
-/// The events to be sent in [communicate_with_operator]:
-/// * local changes (which contains the changes from the parents of the local node)
-/// * responses
 const SEND_BUFFER_SIZE: usize = 16;
 
-/// Send a [NodeSentEvent] to a peer (passed as a [Sink]) by converting it
-/// to a tungstenite's [Message].
-async fn send_event<S, E>(mut message_sink: S, event: NodeSentEvent) -> Result<(), E>
+fn task_sending_messages<MsgSink, MsgSinkErr>(
+    tasks: &mut JoinSet<()>,
+    mut msg_sink: MsgSink,
+    task_error: Arc<Mutex<Option<CommunicationError>>>,
+) -> (Sender<Message>, AbortHandle)
 where
-    S: Sink<Message, Error = E> + Unpin,
+    MsgSink: Sink<Message, Error = MsgSinkErr> + Unpin + Send + 'static,
+    MsgSinkErr: Into<anyhow::Error>,
 {
-    let bytes = rmp_serde::to_vec(&event)
-        .map(Bytes::from)
-        .expect("A NodeSentEvent should be serializable into MessagePack");
-    message_sink.send(Message::Binary(bytes.into())).await
+    let (sender, mut receiver) = mpsc::channel::<Message>(SEND_BUFFER_SIZE);
+    let handle = tasks.spawn({
+        let task_error = task_error.clone();
+        async move {
+            while let Some(message) = receiver.recv().await {
+                if let Err(e) = msg_sink.send(message).await {
+                    task_error
+                        .lock()
+                        .replace(CommunicationError::Connection(e.into()));
+                    break;
+                }
+            }
+        }
+    });
+    (sender, handle)
+}
+
+fn as_event_sink(
+    sender: Sender<Message>,
+) -> impl Sink<NodeSentEvent, Error = anyhow::Error> + 'static {
+    futures::sink::unfold((), move |(), event: NodeSentEvent| {
+        let sender = sender.clone();
+        async move { sender.send(event.into()).await.map_err(anyhow::Error::from) }
+    })
+}
+
+impl From<NodeSentEvent> for Message {
+    fn from(event: NodeSentEvent) -> Self {
+        let bytes = rmp_serde::to_vec(&event)
+            .map(Bytes::from)
+            .expect("A NodeSentEvent should be serializable into MessagePack");
+        Message::Binary(bytes.into())
+    }
 }
 
 /// Read WebSocket messages as [NodeSentEvent]s and handle them with the given `handler`.
