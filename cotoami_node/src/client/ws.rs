@@ -1,6 +1,6 @@
 //! WebSocket client of Node API Service.
 
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use anyhow::{anyhow, bail, ensure, Result};
 use cotoami_db::ChildNode;
@@ -35,6 +35,8 @@ pub struct WebSocketClient {
 }
 
 impl WebSocketClient {
+    const PING_INTERVAL: Duration = Duration::from_secs(30);
+
     pub async fn new(state: ClientState, http_client: HttpClient) -> Result<Self> {
         let ws_request = http_client.ws_request()?;
         Ok(Self {
@@ -111,6 +113,7 @@ impl WebSocketClient {
                 sink,
                 stream,
                 on_abort,
+                Some(Self::PING_INTERVAL),
                 self.state.abortables.clone(),
             ));
         } else {
@@ -121,6 +124,7 @@ impl WebSocketClient {
                 sink,
                 stream,
                 on_abort,
+                Some(Self::PING_INTERVAL),
                 self.state.abortables.clone(),
             ));
         }

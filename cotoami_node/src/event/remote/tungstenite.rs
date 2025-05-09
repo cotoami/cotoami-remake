@@ -1,4 +1,4 @@
-use std::{future::Future, marker::Unpin, ops::ControlFlow, sync::Arc};
+use std::{future::Future, marker::Unpin, ops::ControlFlow, sync::Arc, time::Duration};
 
 use bytes::Bytes;
 use cotoami_db::{Id, Node, Operator};
@@ -7,6 +7,7 @@ use parking_lot::Mutex;
 use tokio::{
     sync::{mpsc, mpsc::Sender},
     task::{AbortHandle, JoinSet},
+    time,
 };
 use tokio_tungstenite::tungstenite::protocol::Message;
 use tracing::debug;
@@ -26,6 +27,7 @@ pub(crate) async fn communicate_with_parent<MsgSink, MsgSinkErr, MsgStream, MsgS
     msg_sink: MsgSink,
     msg_stream: MsgStream,
     mut on_abort: OnAbort,
+    ping_interval: Option<Duration>,
     abortables: Abortables,
 ) where
     MsgSink: Sink<Message, Error = MsgSinkErr> + Unpin + Send + 'static,
@@ -41,8 +43,13 @@ pub(crate) async fn communicate_with_parent<MsgSink, MsgSinkErr, MsgStream, MsgS
     let parent_service = PubsubService::new(description, node_state.pubsub().responses().clone());
 
     // A task sending messages received from the other tasks
-    let (msg_sender, handle) = task_sending_messages(&mut tasks, msg_sink, task_error.clone());
+    let (handle, msg_sender) = task_sending_messages(&mut tasks, msg_sink, task_error.clone());
     abortables.add(handle);
+
+    // A task sending pings.
+    if let Some(interval) = ping_interval {
+        abortables.add(task_sending_pings(&mut tasks, msg_sender.clone(), interval));
+    }
 
     // A task sending request events.
     abortables.add(tasks.spawn({
@@ -98,6 +105,7 @@ pub(crate) async fn communicate_with_operator<
     msg_sink: MsgSink,
     msg_stream: MsgStream,
     mut on_abort: OnAbort,
+    ping_interval: Option<Duration>,
     abortables: Abortables,
 ) where
     MsgSink: Sink<Message, Error = MsgSinkErr> + Unpin + Send + 'static,
@@ -112,8 +120,13 @@ pub(crate) async fn communicate_with_operator<
     let task_error = Arc::new(Mutex::new(None::<CommunicationError>));
 
     // A task sending messages received from the other tasks
-    let (msg_sender, handle) = task_sending_messages(&mut tasks, msg_sink, task_error.clone());
+    let (handle, msg_sender) = task_sending_messages(&mut tasks, msg_sink, task_error.clone());
     abortables.add(handle);
+
+    // A task sending pings.
+    if let Some(interval) = ping_interval {
+        abortables.add(task_sending_pings(&mut tasks, msg_sender.clone(), interval));
+    }
 
     // A task publishing change events to the operator
     abortables.add(tasks.spawn({
@@ -177,11 +190,12 @@ pub(crate) async fn communicate_with_operator<
 
 const SEND_BUFFER_SIZE: usize = 16;
 
+/// Start a task sending tungstenite [Message]s which are received via [mpsc::channel].
 fn task_sending_messages<MsgSink, MsgSinkErr>(
     tasks: &mut JoinSet<()>,
     mut msg_sink: MsgSink,
     task_error: Arc<Mutex<Option<CommunicationError>>>,
-) -> (Sender<Message>, AbortHandle)
+) -> (AbortHandle, Sender<Message>)
 where
     MsgSink: Sink<Message, Error = MsgSinkErr> + Unpin + Send + 'static,
     MsgSinkErr: Into<anyhow::Error>,
@@ -200,7 +214,23 @@ where
             }
         }
     });
-    (sender, handle)
+    (handle, sender)
+}
+
+/// Start a task sending WebSocket pings at the specified interval.
+fn task_sending_pings(
+    tasks: &mut JoinSet<()>,
+    msg_sender: Sender<Message>,
+    interval: Duration,
+) -> AbortHandle {
+    tasks.spawn(async move {
+        let mut interval = time::interval(interval);
+        loop {
+            interval.tick().await;
+            debug!("Sending a ping...");
+            msg_sender.send(Message::Ping(Bytes::new())).await.ok();
+        }
+    })
 }
 
 fn as_event_sink(

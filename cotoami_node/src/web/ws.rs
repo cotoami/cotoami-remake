@@ -122,6 +122,7 @@ async fn handle_authenticated(
                 sink,
                 stream,
                 on_disconnect,
+                None, // No pings
                 communication_tasks,
             )
             .await;
@@ -134,6 +135,7 @@ async fn handle_authenticated(
                 sink,
                 stream,
                 on_disconnect,
+                None, // No pings
                 communication_tasks,
             )
             .await;
@@ -190,6 +192,7 @@ async fn handle_anonymous(socket: WebSocket, remote_addr: SocketAddr, state: Nod
         sink,
         stream,
         on_disconnect,
+        None, // No pings
         communication_tasks,
     )
     .await;
