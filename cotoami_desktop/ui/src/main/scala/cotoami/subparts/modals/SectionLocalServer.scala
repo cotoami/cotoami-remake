@@ -127,20 +127,28 @@ object SectionLocalServer {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
-    model.localServer.flatMap(_.activeConfig).map { config =>
-      section(className := "field-group local-server")(
-        h2()(context.i18n.text.AsServer_title),
-        fieldLocalServerUrl(config),
-        fieldClientNodes(model),
-        fieldAnonymousRead(model)
-      )
-    }.getOrElse(
-      Option.when(model.loading) {
-        section(
-          className := "field-group local-server",
-          aria - "busy" := model.loading.toString()
-        )()
-      }
+    Option.when(context.repo.nodes.isSelf(model.nodeId)) {
+      model.localServer.flatMap(_.activeConfig)
+        .map(sectionLocalServer(_, model))
+        .getOrElse(
+          Option.when(model.loading) {
+            section(
+              className := "field-group local-server",
+              aria - "busy" := model.loading.toString()
+            )()
+          }: ReactElement
+        )
+    }
+
+  private def sectionLocalServer(config: ServerConfig, model: Model)(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
+    section(className := "field-group local-server")(
+      h2()(context.i18n.text.AsServer_title),
+      fieldLocalServerUrl(config),
+      fieldClientNodes(model),
+      fieldAnonymousRead(model)
     )
 
   private def fieldLocalServerUrl(config: ServerConfig)(implicit
