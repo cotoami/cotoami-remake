@@ -170,7 +170,10 @@ object AppHeader {
       toolButton(
         classes = "toggle-dark-mode",
         symbol = if (uiState.isDarkMode) "light_mode" else "dark_mode",
-        tip = Some(if (uiState.isDarkMode) "Light Mode" else "Dark Mode"),
+        tip = Some(
+          if (uiState.isDarkMode) context.i18n.text.LightMode
+          else context.i18n.text.DarkMode
+        ),
         onClick = (_ => {
           val theme =
             if (uiState.isDarkMode) UiState.LightMode

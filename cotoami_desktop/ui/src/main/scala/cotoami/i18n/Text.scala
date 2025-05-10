@@ -28,6 +28,8 @@ trait Text {
   val OpenMap: String
   val CloseMap: String
   val SwapPane: String
+  val LightMode: String
+  val DarkMode: String
 
   def Coto_inRemoteNode(nodeName: String): String
 
