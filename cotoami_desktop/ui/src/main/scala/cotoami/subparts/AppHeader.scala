@@ -164,7 +164,7 @@ object AppHeader {
       toolButton(
         classes = "swap-pane",
         symbol = "swap_horiz",
-        tip = Some("Swap Pane"),
+        tip = Some(context.i18n.text.SwapPane),
         onClick = _ => dispatch(AppMsg.SwapPane)
       ),
       toolButton(

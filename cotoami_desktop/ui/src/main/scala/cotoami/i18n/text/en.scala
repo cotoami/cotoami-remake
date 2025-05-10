@@ -30,6 +30,7 @@ object en extends Text {
   val LoadItos = "Load Itos"
   val OpenMap = "Open Map"
   val CloseMap = "Close Map"
+  val SwapPane = "Swap Pane"
 
   def Coto_inRemoteNode(nodeName: String) = s"In ${nodeName} (remote)"
 

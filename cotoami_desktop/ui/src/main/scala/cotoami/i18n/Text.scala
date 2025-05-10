@@ -27,6 +27,7 @@ trait Text {
   val LoadItos: String
   val OpenMap: String
   val CloseMap: String
+  val SwapPane: String
 
   def Coto_inRemoteNode(nodeName: String): String
 
