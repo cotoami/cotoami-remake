@@ -188,7 +188,7 @@ object AppHeader {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     button(
       className := "node-profile, default",
-      title := "Node profile",
+      title := context.i18n.text.ModalNodeProfile_title,
       onClick := (_ =>
         dispatch(
           (Modal.Msg.OpenModal.apply _).tupled(
