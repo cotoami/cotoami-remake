@@ -28,6 +28,8 @@ object en extends Text {
   val DeleteCotonoma = "Delete Cotonoma"
   val WriteSubcoto = "Write Sub-coto"
   val LoadItos = "Load Itos"
+  val OpenMap = "Open Map"
+  val CloseMap = "Close Map"
 
   def Coto_inRemoteNode(nodeName: String) = s"In ${nodeName} (remote)"
 

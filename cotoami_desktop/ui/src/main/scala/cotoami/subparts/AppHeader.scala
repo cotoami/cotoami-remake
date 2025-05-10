@@ -134,7 +134,7 @@ object AppHeader {
       Option.when(!context.repo.cotos.selectedIds.isEmpty) {
         button(
           className := "selected-cotos default tool",
-          data - "tooltip" := "Selected cotos",
+          data - "tooltip" := context.i18n.text.ModalSelection_title,
           data - "placement" := "bottom",
           onClick := (_ => dispatch(Modal.Msg.OpenModal(Modal.Selection())))
         )(
@@ -150,7 +150,10 @@ object AppHeader {
           )
         ),
         symbol = "public",
-        tip = Some(if (uiState.geomapOpened) "Close Map" else "Open Map"),
+        tip = Some(
+          if (uiState.geomapOpened) context.i18n.text.CloseMap
+          else context.i18n.text.OpenMap
+        ),
         onClick = (_ => {
           if (uiState.geomapOpened)
             dispatch(PaneStock.Msg.CloseMap)

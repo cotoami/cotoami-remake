@@ -25,6 +25,8 @@ trait Text {
   val DeleteCotonoma: String
   val WriteSubcoto: String
   val LoadItos: String
+  val OpenMap: String
+  val CloseMap: String
 
   def Coto_inRemoteNode(nodeName: String): String
 
