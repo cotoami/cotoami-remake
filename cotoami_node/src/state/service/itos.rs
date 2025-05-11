@@ -44,7 +44,7 @@ impl NodeState {
         .await
     }
 
-    async fn determine_ito_node<'a>(
+    async fn determine_ito_node(
         &self,
         source: Id<Coto>,
         target: Id<Coto>,
