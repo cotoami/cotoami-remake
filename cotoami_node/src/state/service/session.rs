@@ -19,6 +19,9 @@ impl NodeState {
         mut input: CreateClientNodeSession,
     ) -> Result<ClientNodeSession, ServiceError> {
         let (local, local_node) = self.local_node_pair().await?;
+
+        // https://github.com/rust-lang/rust-clippy/issues/10390
+        #[allow(clippy::needless_return)]
         match (input.password.take(), local.anonymous_read_enabled) {
             (Some(password), _) => self.do_create_session(input, password, local_node).await,
             (None, true) => self.handle_anonymous(input, local_node).await,
@@ -41,12 +44,13 @@ impl NodeState {
             // Check database role
             let client_role = input.client_role();
             let db_role = ds.database_role_of(&input.client.uuid)?;
+
+            // https://github.com/rust-lang/rust-clippy/issues/10390
+            #[allow(clippy::needless_return)]
             match (client_role, &db_role) {
                 (NodeRole::Parent, Some(DatabaseRole::Parent(_))) => (),
                 (NodeRole::Child, Some(DatabaseRole::Child(_))) => (),
-                (_, None) => {
-                    return Err(ServiceError::Unauthorized);
-                }
+                (_, None) => return Err(ServiceError::Unauthorized),
                 _ => {
                     return Err(ServiceError::request(
                         "invalid-requested-role",
@@ -55,7 +59,7 @@ impl NodeState {
                             match to the actual role of the client node ({}).",
                             input.client.name
                         ),
-                    ));
+                    ))
                 }
             }
 

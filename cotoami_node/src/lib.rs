@@ -48,11 +48,5 @@ impl Abortables {
         join_handle
     }
 
-    pub fn has_running_tasks(&self) -> bool {
-        self.0
-            .lock()
-            .iter()
-            .find(|task| !task.is_finished())
-            .is_some()
-    }
+    pub fn has_running_tasks(&self) -> bool { self.0.lock().iter().any(|task| !task.is_finished()) }
 }
