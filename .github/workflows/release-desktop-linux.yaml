@@ -37,6 +37,7 @@ jobs:
           git \
           git-lfs \
           unzip \
+          jq \
           build-essential \
           wget \
           file \
