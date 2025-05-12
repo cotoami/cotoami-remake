@@ -17,8 +17,8 @@ jobs:
         # for Universal macOS builds (arm64 and x86_64)
         - platform: 'macos-latest'
           args: '--target universal-apple-darwin'
-        - platform: 'ubuntu-22.04' 
-          args: ''
+        # - platform: 'ubuntu-22.04' 
+        #   args: ''
         - platform: 'windows-latest'
           args: ''
 
