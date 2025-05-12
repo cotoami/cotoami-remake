@@ -53,7 +53,6 @@ jobs:
       uses: actions/checkout@v4
       with:
         lfs: true
-        fetch-depth: 2  # to detect version change in detect_version
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -75,11 +74,11 @@ jobs:
       uses: sbt/setup-sbt@v1
 
     - name: Detect app version
-      uses: salsify/action-detect-and-tag-new-version@v2
       id: detect_version
-      with:
-        create-tag: false
-        version-command: cd cotoami_desktop/tauri && cargo read-manifest | jq -r .version
+      run: |
+        VERSION=$(cd cotoami_desktop/tauri && cargo read-manifest | jq -r .version)
+        echo $VERSION
+        echo "current-version=$VERSION" >> "$GITHUB_OUTPUT"
 
     - name: Build and release desktop app
       uses: tauri-apps/tauri-action@v0
