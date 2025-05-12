@@ -21,17 +21,22 @@ jobs:
       # "version `GLIBC_2.28' not found". So ended up using 20.04 instead.
       image: ubuntu:20.04
     steps:
+    # Tauri dependencies
     # https://tauri.app/v1/guides/getting-started/prerequisites#setting-up-linux
     # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
     # Unable to locate package libwebkit2gtk-4.1-dev on ubuntu:20.04
+    #
+    # git-lfs installation
+    # https://github.com/git-lfs/git-lfs/wiki/Installation#docker-recipes
     - name: Install dependencies
       run: |
         apt-get update
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends curl ca-certificates
+        curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
         DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
           git \
           git-lfs \
           build-essential \
-          curl \
           wget \
           file \
           libssl-dev \
