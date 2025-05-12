@@ -25,8 +25,8 @@ jobs:
     # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
     - name: Install dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y \
+        apt-get update
+        apt-get install -y \
           git \
           build-essential \
           curl \
