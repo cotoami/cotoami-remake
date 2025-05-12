@@ -1,0 +1,72 @@
+name: release-desktop-linux
+
+on:
+  push:
+    branches:
+    - release-desktop-linux
+
+jobs:
+  # https://github.com/tauri-apps/tauri-action
+  publish-tauri:
+    permissions:
+      contents: write
+
+    runs-on: ubuntu-latest
+    container:
+      # A relatively old system such as Ubuntu 18.04 is more suited than Ubuntu 22.04, 
+      # as the binary compiled on Ubuntu 22.04 will have a higher requirement of the glibc version.
+      # https://v1.tauri.app/v1/guides/building/linux
+      image: ubuntu:18.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        lfs: true
+        fetch-depth: 2  # to detect version change in detect_version
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Install Rust stable
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install dependencies (ubuntu only)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
+
+    - name: Setup JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: corretto
+        java-version: 23
+        cache: sbt
+
+    # https://eed3si9n.com/setup-sbt/
+    - name: Install sbt
+      uses: sbt/setup-sbt@v1
+
+    - name: Detect app version
+      uses: salsify/action-detect-and-tag-new-version@v2
+      id: detect_version
+      with:
+        create-tag: false
+        version-command: cd cotoami_desktop/tauri && cargo read-manifest | jq -r .version
+
+    - name: Build and release desktop app
+      uses: tauri-apps/tauri-action@v0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        APP_VERSION: ${{ steps.detect_version.outputs.current-version }}
+      with:
+        projectPath: cotoami_desktop/tauri
+        appVersion: ${{ env.APP_VERSION }}
+        tagName: desktop-v${{ env.APP_VERSION }}
+        releaseName: Cotoami Desktop v${{ env.APP_VERSION }}
+        releaseDraft: false
+        prerelease: false
+        includeDebug: false
+        includeRelease: true
