@@ -27,8 +27,9 @@ jobs:
     - name: Install dependencies
       run: |
         apt-get update
-        DEBIAN_FRONTEND=noninteractive apt-get install -y \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
           git \
+          git-lfs \
           build-essential \
           curl \
           wget \
@@ -39,6 +40,7 @@ jobs:
           libappindicator3-dev \
           librsvg2-dev \
           patchelf
+        git lfs install
 
     - name: Checkout
       uses: actions/checkout@v4
