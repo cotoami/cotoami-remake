@@ -151,6 +151,17 @@ As of its initial release in 2025, there are already countless note-taking apps 
 
 Download the latest version of Cotoami for your platform (Windows, Linux, or macOS) from the releases page.
 
+* File names of downloadable packages by platform:
+    * Windows
+        * `Cotoami_<version>_x64_en-US.msi`
+        * `Cotoami_<version>_x64_ja-JP.msi`
+        * `Cotoami_<version>_x64-setup.exe`
+    * macOS
+        * `Cotoami_<version>_universal.dmg`
+            * for both Apple silicon and Intel-based Mac computers
+    * Linux
+        * `cotoami_<version>_amd64.AppImage`
+        * Debian-based distributions: `cotoami_<version>_amd64.deb`
 * For Windows and macOS users:
     * Please note that the application is not digitally signed for now, so you may need to bypass your operating system's security warnings to install and run it for the first time.
     * macOS - [Open a Mac app from an unknown developer](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unknown-developer-mh40616/mac)
