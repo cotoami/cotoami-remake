@@ -21,6 +21,25 @@ jobs:
       # "version `GLIBC_2.28' not found". So ended up using 20.04 instead.
       image: ubuntu:20.04
     steps:
+    # https://tauri.app/v1/guides/getting-started/prerequisites#setting-up-linux
+    # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          git \
+          build-essential \
+          curl \
+          wget \
+          file \
+          libssl-dev \
+          libgtk-3-dev \
+          libwebkit2gtk-4.0-dev \
+          libwebkit2gtk-4.1-dev \
+          libappindicator3-dev \
+          librsvg2-dev \
+          patchelf
+
     - name: Checkout
       uses: actions/checkout@v4
       with:
@@ -34,12 +53,6 @@ jobs:
 
     - name: Install Rust stable
       uses: dtolnay/rust-toolchain@stable
-
-    - name: Install dependencies (ubuntu only)
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-      # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
 
     - name: Setup JDK
       uses: actions/setup-java@v4
