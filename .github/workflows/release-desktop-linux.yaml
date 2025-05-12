@@ -27,7 +27,7 @@ jobs:
     - name: Install dependencies
       run: |
         apt-get update
-        apt-get install -y \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y \
           git \
           build-essential \
           curl \
