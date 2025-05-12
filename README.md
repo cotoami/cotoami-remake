@@ -170,6 +170,7 @@ Feedback and bug reports are welcome on GitHub Discussions.
 
 ## Planned Features
 
+- [ ] I18n
 - [ ] Inline cotonoma link syntax in Markdown
 - [ ] Terminal Node (converting to a lightweight node by deleting changelog)
 - [ ] Unread Notification
