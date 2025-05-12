@@ -59,6 +59,10 @@ jobs:
       with:
         node-version: 20
 
+    # https://github.com/actions/setup-node/issues/182
+    - name: Install yarn
+      run: npm install -g yarn
+
     - name: Install Rust stable
       uses: dtolnay/rust-toolchain@stable
 
