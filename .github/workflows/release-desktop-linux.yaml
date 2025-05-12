@@ -23,6 +23,7 @@ jobs:
     steps:
     # https://tauri.app/v1/guides/getting-started/prerequisites#setting-up-linux
     # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
+    # Unable to locate package libwebkit2gtk-4.1-dev on ubuntu:20.04
     - name: Install dependencies
       run: |
         apt-get update
