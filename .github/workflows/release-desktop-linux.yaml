@@ -16,7 +16,10 @@ jobs:
       # A relatively old system such as Ubuntu 18.04 is more suited than Ubuntu 22.04, 
       # as the binary compiled on Ubuntu 22.04 will have a higher requirement of the glibc version.
       # https://v1.tauri.app/v1/guides/building/linux
-      image: ubuntu:18.04
+      #
+      # However, Node v20 cannot be installed on 18.04 with the error: 
+      # "version `GLIBC_2.28' not found". So ended up using 20.04 instead.
+      image: ubuntu:20.04
     steps:
     - name: Checkout
       uses: actions/checkout@v4
