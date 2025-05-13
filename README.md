@@ -161,7 +161,7 @@ As of its initial release in 2025, there are already countless note-taking apps 
 
 ## Download and Install
 
-Download the latest version of Cotoami for your platform (Windows, Linux, or macOS) from the releases page.
+Download the latest version of Cotoami for your platform (Windows, Linux, or macOS) from the [releases page](https://github.com/cotoami/cotoami-remake/releases).
 
 * File names of downloadable packages by platform:
     * Windows
@@ -188,7 +188,7 @@ Updates about Cotoami are shared on the following platforms. In particular, the 
 * https://x.com/cotoami
 * https://www.patreon.com/cotoami
 
-Feedback and bug reports are welcome on GitHub Discussions.
+Feedback and bug reports are welcome on [GitHub Discussions](https://github.com/cotoami/cotoami-remake/discussions).
 
 
 ## Planned Features
