@@ -136,6 +136,18 @@ Here are some key points about the database networking feature:
 To learn how to build a network of Cotoami databases using the Node Server, see [cotoami_node](cotoami_node).
 
 
+## Official Cotoami Node
+
+The quickest way to understand what Cotoami is all about is to explore an actual database. For that purpose, we’ve set up an official Cotoami Node. It’s regularly updated with documentation about Cotoami, messages from the developer, and more. Launch Cotoami Desktop and add the following node:
+
+* **Node URL**: https://node.cotoa.me
+* **Password**: Leave it blank (you can link to it in read-only mode)
+
+By default, only the timeline is visible. Make sure to open the *stock* area as shown below to access the full set of documents.
+
+![](docs/images/official-node.gif)
+
+
 ## Why Use This Application?
 
 As of its initial release in 2025, there are already countless note-taking apps available—both online services and standalone applications, with some clear industry standards among them. So, why go out of your way to use this one? Honestly, I created this program simply because it was something I personally wanted to use. I can't say for certain whether it will be the best choice for everyone. However, in developing Cotoami Remake, I've paid special attention to the following points, beyond just the features themselves:
