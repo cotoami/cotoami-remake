@@ -177,6 +177,7 @@ Download the latest version of Cotoami for your platform (Windows, Linux, or mac
 * For Windows and macOS users:
     * Please note that the application is not digitally signed for now, so you may need to bypass your operating system's security warnings to install and run it for the first time.
     * macOS - [Open a Mac app from an unknown developer](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unknown-developer-mh40616/mac)
+* Currently, **Ubuntu 24.04 is not supported** due to a [WebKitGTK incompatibility](https://github.com/tauri-apps/tauri/issues/9662).
 
 Cotoami's source code is released under Apache 2 License. Check the [LICENSE](LICENSE) file for more information.
 
