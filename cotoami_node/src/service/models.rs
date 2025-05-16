@@ -308,14 +308,13 @@ impl PaginatedCotos {
         let coto_ids: Vec<Id<Coto>> = page
             .rows
             .iter()
-            .map(|coto| {
+            .filter_map(|coto| {
                 if coto.is_repost() {
                     None
                 } else {
                     Some(coto.uuid)
                 }
             })
-            .flatten()
             .chain(related_data.originals.iter().map(|coto| coto.uuid))
             .unique()
             .collect();
