@@ -62,6 +62,8 @@ impl NodeState {
         .await?
     }
 
+    // https://github.com/Amanieu/parking_lot/issues/197
+    #[allow(clippy::await_holding_lock)]
     async fn register_owner_remote_node(&self) -> Result<()> {
         match (
             self.read_config().owner_remote_node_id,
