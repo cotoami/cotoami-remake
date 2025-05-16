@@ -139,11 +139,15 @@ impl ServerConnection {
         Ok(())
     }
 
+    // https://github.com/Amanieu/parking_lot/issues/197
+    #[allow(clippy::await_holding_lock)]
     pub async fn disable(&self) {
         self.conn_state.write().disconnect().await;
         self.set_conn_state(ConnectionState::Disabled, true);
     }
 
+    // https://github.com/Amanieu/parking_lot/issues/197
+    #[allow(clippy::await_holding_lock)]
     pub async fn disconnect(&self, reason: Option<&str>) {
         if self.conn_state.write().disconnect().await {
             self.set_conn_state(
@@ -271,6 +275,8 @@ impl ServerConnections {
         }
     }
 
+    // https://github.com/Amanieu/parking_lot/issues/197
+    #[allow(clippy::await_holding_lock)]
     pub async fn disconnect_all(&self) {
         for conn in self.0.read().values() {
             conn.disconnect(None).await;
