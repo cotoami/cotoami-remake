@@ -23,6 +23,7 @@ use crate::{
 };
 
 /// Spawn and join tasks to handle a WebSocket connection to a parent node.
+#[allow(clippy::too_many_arguments)]
 pub(crate) async fn communicate_with_parent<MsgSink, MsgSinkErr, MsgStream, MsgStreamErr, OnAbort>(
     node_state: NodeState,
     parent_id: Id<Node>,
@@ -250,7 +251,7 @@ impl From<NodeSentEvent> for Message {
         let bytes = rmp_serde::to_vec(&event)
             .map(Bytes::from)
             .expect("A NodeSentEvent should be serializable into MessagePack");
-        Message::Binary(bytes.into())
+        Message::Binary(bytes)
     }
 }
 
