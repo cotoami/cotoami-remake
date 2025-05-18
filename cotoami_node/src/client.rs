@@ -52,7 +52,7 @@ impl ClientState {
     }
 
     pub fn child_privileges(&self) -> Option<ChildNode> {
-        self.child_privileges.as_deref().map(|node| node.clone())
+        self.child_privileges.as_deref().cloned()
     }
 
     fn is_server_parent(&self) -> bool { self.node_state.is_parent(&self.server_id) }
