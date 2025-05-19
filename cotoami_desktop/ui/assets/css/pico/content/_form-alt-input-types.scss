@@ -1,3 +1,5 @@
+@use "../variables";
+
 /**
  * Form elements
  * Alternatives input types (Not Checkboxes & Radios)
@@ -72,7 +74,7 @@ input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]) {
 }
 
 // Calendar icons are hidden in Firefox
-@if $enable-important {
+@if variables.$enable-important {
   @-moz-document url-prefix() {
     [type="date"],
     [type="datetime-local"],
@@ -115,7 +117,7 @@ input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]) {
     text-align: center;
     cursor: pointer;
 
-    @if $enable-transitions {
+    @if variables.$enable-transitions {
       transition: background-color var(--transition),
         border-color var(--transition), color var(--transition),
         box-shadow var(--transition);
@@ -162,7 +164,7 @@ input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]) {
     border-radius: var(--border-radius);
     background-color: var(--range-border-color);
 
-    @if $enable-transitions {
+    @if variables.$enable-transitions {
       transition: background-color var(--transition),
         box-shadow var(--transition);
     }
@@ -191,7 +193,7 @@ input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]) {
     background-color: var(--range-thumb-color);
     cursor: pointer;
 
-    @if $enable-transitions {
+    @if variables.$enable-transitions {
       transition: background-color var(--transition),
         transform var(--transition);
     }
@@ -244,7 +246,7 @@ input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]) {
     background-repeat: no-repeat;
     
     &[aria-invalid] {
-      @if $enable-important {
+      @if variables.$enable-important {
         padding-inline-start: calc(var(--form-element-spacing-horizontal) + 1.75rem) !important;
       } 
       @else {

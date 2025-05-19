@@ -1,3 +1,6 @@
+@use "sass:map";
+@use "../variables";
+
 /**
  * Modal (<dialog>)
  */
@@ -28,19 +31,19 @@ dialog {
 
   // Content
   article {
-    $close-selector: if($enable-classes, ".close", "a[rel='prev']");
+    $close-selector: if(variables.$enable-classes, ".close", "a[rel='prev']");
     max-height: calc(100vh - var(--spacing) * 2);
     overflow: auto;
 
-    @if map-get($breakpoints, "sm") {
-      @media (min-width: map-get($breakpoints, "sm")) {
-        max-width: map-get($viewports, "sm");
+    @if map.get(variables.$breakpoints, "sm") {
+      @media (min-width: map.get(variables.$breakpoints, "sm")) {
+        max-width: map.get(variables.$viewports, "sm");
       }
     }
 
-    @if map-get($breakpoints, "md") {
-      @media (min-width: map-get($breakpoints, "md")) {
-        max-width: map-get($viewports, "md");
+    @if map.get(variables.$breakpoints, "md") {
+      @media (min-width: map.get(variables.$breakpoints, "md")) {
+        max-width: map.get(variables.$viewports, "md");
       }
     }
 
@@ -90,7 +93,7 @@ dialog {
       background-repeat: no-repeat;
       opacity: 0.5;
 
-      @if $enable-transitions {
+      @if variables.$enable-transitions {
         transition: opacity var(--transition);
       }
 
@@ -108,7 +111,7 @@ dialog {
 }
 
 // Utilities
-@if $enable-classes {
+@if variables.$enable-classes {
   .modal-is-open {
     padding-right: var(--scrollbar-width, 0px);
     overflow: hidden;
@@ -122,7 +125,7 @@ dialog {
 }
 
 // Animations
-@if ($enable-classes and $enable-transitions) {
+@if (variables.$enable-classes and variables.$enable-transitions) {
   $animation-duration: 0.2s;
 
   :where(.modal-is-opening, .modal-is-closing) {

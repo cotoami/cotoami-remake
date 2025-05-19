@@ -3,40 +3,40 @@
  */
 
 // Config
-@import "pico/variables";
+@forward "pico/variables" with ($enable-responsive-typography: false);
 
 // Theming
-@import "pico/themes/default";
+@forward "pico/themes/default";
 
 // Layout
-@import "pico/layout/document";
-@import "pico/layout/sectioning";
-@import "pico/layout/container";
-@import "pico/layout/section";
-@import "pico/layout/grid";
-@import "pico/layout/scroller";
+@forward "pico/layout/document";
+@forward "pico/layout/sectioning";
+@forward "pico/layout/container";
+@forward "pico/layout/section";
+@forward "pico/layout/grid";
+@forward "pico/layout/scroller";
 
 // Content
-@import "pico/content/typography";
-@import "pico/content/embedded";
-@import "pico/content/button";
-@import "pico/content/form";
-@import "pico/content/form-checkbox-radio";
-@import "pico/content/form-alt-input-types";
-@import "pico/content/table";
-@import "pico/content/code";
-@import "pico/content/miscs";
+@forward "pico/content/typography";
+@forward "pico/content/embedded";
+@forward "pico/content/button";
+@forward "pico/content/form";
+@forward "pico/content/form-checkbox-radio";
+@forward "pico/content/form-alt-input-types";
+@forward "pico/content/table";
+@forward "pico/content/code";
+@forward "pico/content/miscs";
 
 // Components
-@import "pico/components/accordion";
-@import "pico/components/card";
-@import "pico/components/modal";
+@forward "pico/components/accordion";
+@forward "pico/components/card";
+@forward "pico/components/modal";
 // @import "pico/components/nav";
-@import "pico/components/progress";
-@import "pico/components/dropdown";
+@forward "pico/components/progress";
+@forward "pico/components/dropdown";
 
 // Utilities
-@import "pico/utilities/loading";
-@import "pico/utilities/tooltip";
-@import "pico/utilities/accessibility";
-@import "pico/utilities/reduce-motion";
+@forward "pico/utilities/loading";
+@forward "pico/utilities/tooltip";
+@forward "pico/utilities/accessibility";
+@forward "pico/utilities/reduce-motion";

@@ -1,3 +1,5 @@
+@use "../variables";
+
 /**
  * Dropdown ([role="list"])
  */
@@ -102,7 +104,7 @@ details[role="list"] {
       line-height: inherit;
       cursor: pointer;
 
-      @if $enable-transitions {
+      @if variables.$enable-transitions {
         transition: background-color var(--transition),
           border-color var(--transition), color var(--transition),
           box-shadow var(--transition);

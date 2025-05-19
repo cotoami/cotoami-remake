@@ -1,3 +1,5 @@
+@use "../variables";
+
 /**
  * Form elements
  * Checkboxes & Radios
@@ -105,7 +107,7 @@
     background-color: var(--color);
     content: "";
 
-    @if $enable-transitions {
+    @if variables.$enable-transitions {
       transition: margin $switch-transition;
     }
   }

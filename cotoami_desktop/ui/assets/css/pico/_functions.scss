@@ -1,4 +1,6 @@
+@use "sass:color";
+@use "sass:string";
 // Output color in RGB format
 @function to-rgb($color) {
-  @return unquote("rgb(#{red($color)}, #{green($color)}, #{blue($color)})");
+  @return string.unquote("rgb(#{color.red($color)}, #{color.green($color)}, #{color.blue($color)})");
 }
