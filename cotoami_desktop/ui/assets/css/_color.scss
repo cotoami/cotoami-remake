@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use "./pico-customized" as pico;
 
 @mixin light-colors {
@@ -25,11 +26,11 @@
   --focused-border-color: #{pico.$grey-200};
   --hover-background-color: #{pico.$grey-800};
   --input-background-color: #{pico.$grey-900};
-  --traversal-background-color: #{mix(pico.$grey-900, pico.$grey-800, 75%)};
+  --traversal-background-color: #{color.mix(pico.$grey-900, pico.$grey-800, 75%)};
   --traversed-border-color: #{pico.$grey-500};
   --scrollbar-color: #{pico.$grey-600};
   --pinned-background-color: #{pico.$grey-900};
-  --parent-button-color: #{mix(pico.$grey-900, pico.$grey-800, 75%)};
+  --parent-button-color: #{color.mix(pico.$grey-900, pico.$grey-800, 75%)};
   --ok-color: #{pico.$green-700};
   --error-color: #{pico.$red-700};
   --color-in-light-background: #{pico.$grey-700};
