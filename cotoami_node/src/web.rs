@@ -241,17 +241,15 @@ async fn require_session(
 
     let token = if let Some(token) = cookie_value.or(header_value) {
         token.to_string() // create an owned string to be used in spawn_blocking
+    } else if state
+        .db()
+        .globals()
+        .try_read_local_node()?
+        .anonymous_read_enabled
+    {
+        "".into() // dummy token as an anonymous client
     } else {
-        if state
-            .db()
-            .globals()
-            .try_read_local_node()?
-            .anonymous_read_enabled
-        {
-            "".into() // dummy token as an anonymous client
-        } else {
-            return Err(ServiceError::Unauthorized); // missing session token
-        }
+        return Err(ServiceError::Unauthorized); // missing session token
     };
 
     let session = spawn_blocking(move || {
