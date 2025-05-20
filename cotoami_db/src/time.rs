@@ -5,7 +5,7 @@ use std::cell::RefCell;
 use chrono::{offset::Utc, NaiveDateTime};
 
 thread_local! {
-    static MOCK_TIME: RefCell<Option<NaiveDateTime>> = RefCell::new(None);
+    static MOCK_TIME: RefCell<Option<NaiveDateTime>> = const { RefCell::new(None) };
 }
 
 pub fn current_datetime() -> NaiveDateTime {
