@@ -5,7 +5,7 @@ use crate::{
     models::prelude::*,
 };
 
-impl<'a> DatabaseSession<'a> {
+impl DatabaseSession<'_> {
     pub fn import_change(
         &self,
         log: &ChangelogEntry,

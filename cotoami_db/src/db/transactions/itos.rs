@@ -10,7 +10,7 @@ use crate::{
     models::prelude::*,
 };
 
-impl<'a> DatabaseSession<'a> {
+impl DatabaseSession<'_> {
     pub fn ito(&mut self, id: &Id<Ito>) -> Result<Option<Ito>> {
         self.read_transaction(ito_ops::get(id))
     }

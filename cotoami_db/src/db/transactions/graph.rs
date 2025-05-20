@@ -5,7 +5,7 @@ use crate::{
     models::prelude::*,
 };
 
-impl<'a> DatabaseSession<'a> {
+impl DatabaseSession<'_> {
     pub fn graph(&mut self, root: Coto, until_cotonoma: bool) -> Result<Graph> {
         self.read_transaction(graph_ops::traverse_by_level_queries(root, until_cotonoma))
     }

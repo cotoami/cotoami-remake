@@ -10,7 +10,7 @@ use crate::{
     models::prelude::*,
 };
 
-impl<'a> DatabaseSession<'a> {
+impl DatabaseSession<'_> {
     pub fn server_node(
         &mut self,
         id: &Id<Node>,

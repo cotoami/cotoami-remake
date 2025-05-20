@@ -15,7 +15,7 @@ use crate::{
     models::prelude::*,
 };
 
-impl<'a> DatabaseSession<'a> {
+impl DatabaseSession<'_> {
     /// Creates initial data that represents a local node and its root cotonoma.
     ///
     /// Majority of the database operations require this operation to be called in advance

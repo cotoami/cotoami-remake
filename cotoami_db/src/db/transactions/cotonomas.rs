@@ -13,7 +13,7 @@ use crate::{
     models::prelude::*,
 };
 
-impl<'a> DatabaseSession<'a> {
+impl DatabaseSession<'_> {
     pub fn local_node_root(&mut self) -> Result<Option<(Cotonoma, Coto)>> {
         if let Some(id) = self.globals.root_cotonoma_id() {
             self.cotonoma_pair(&id)

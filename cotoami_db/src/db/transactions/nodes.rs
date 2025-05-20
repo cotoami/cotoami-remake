@@ -17,7 +17,7 @@ pub mod local;
 pub mod parents;
 pub mod servers;
 
-impl<'a> DatabaseSession<'a> {
+impl DatabaseSession<'_> {
     pub fn node(&mut self, node_id: &Id<Node>) -> Result<Option<Node>> {
         self.read_transaction(node_ops::get(node_id))
     }

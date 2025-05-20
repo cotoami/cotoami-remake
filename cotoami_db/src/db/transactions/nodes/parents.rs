@@ -2,14 +2,14 @@ use anyhow::Result;
 
 use crate::{
     db::{
-        DatabaseSession,
         op::*,
         ops::{changelog_ops, graph_ops, node_role_ops},
+        DatabaseSession,
     },
     models::prelude::*,
 };
 
-impl<'a> DatabaseSession<'a> {
+impl DatabaseSession<'_> {
     pub fn parent_node(&self, id: &Id<Node>, operator: &Operator) -> Result<Option<ParentNode>> {
         operator.requires_to_be_owner()?;
         Ok(self.globals.parent_node(id))

@@ -15,7 +15,7 @@ use crate::{
     models::prelude::*,
 };
 
-impl<'a> DatabaseSession<'a> {
+impl DatabaseSession<'_> {
     pub fn all_client_nodes(&mut self, operator: &Operator) -> Result<Vec<(ClientNode, Node)>> {
         operator.requires_to_be_owner()?;
         self.read_transaction(client_ops::all_pairs())
