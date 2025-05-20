@@ -38,13 +38,11 @@ impl NodeState {
                         .context(NodeError::OwnerAuthenticationFailed)?;
 
                 // or configure the owner password by [NodeConfig::owner_password].
+                } else if let Some(ref new_password) = config.owner_password {
+                    ds.set_owner_password_if_none(new_password)?;
+                    debug!("The owner password has been initialized.");
                 } else {
-                    if let Some(ref new_password) = config.owner_password {
-                        ds.set_owner_password_if_none(new_password)?;
-                        debug!("The owner password has been initialized.");
-                    } else {
-                        debug!("Skipping authentication.");
-                    }
+                    debug!("Skipping authentication.");
                 }
                 Ok(local_node)
             } else {
