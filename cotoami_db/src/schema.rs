@@ -81,6 +81,7 @@ diesel::table! {
         created_at -> Timestamp,
         changes_received -> BigInt,
         last_change_received_at -> Nullable<Timestamp>,
+        last_read_at -> Nullable<Timestamp>,
         forked -> Bool,
     }
 }
