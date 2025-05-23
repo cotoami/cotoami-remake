@@ -18,7 +18,7 @@ impl DatabaseSession<'_> {
         Ok(self.globals.parent_node(id))
     }
 
-    pub fn last_posted_at_by_others_map(
+    pub fn last_posted_at_by_others_per_parent(
         &mut self,
         local_node_id: &Id<Node>,
     ) -> Result<HashMap<Id<Node>, NaiveDateTime>> {
