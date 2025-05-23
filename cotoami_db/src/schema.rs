@@ -86,6 +86,7 @@ diesel::table! {
     }
 }
 diesel::joinable!(parent_nodes -> nodes (node_id));
+diesel::joinable!(parent_nodes -> cotos (node_id));
 
 diesel::table! {
     child_nodes (node_id) {

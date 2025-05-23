@@ -1,10 +1,10 @@
 //! ParentNode related operations
 
-use std::ops::DerefMut;
+use std::{collections::HashMap, ops::DerefMut};
 
 use anyhow::Context;
 use chrono::NaiveDateTime;
-use diesel::prelude::*;
+use diesel::{dsl::max, prelude::*};
 use validator::Validate;
 
 use crate::{
@@ -16,7 +16,7 @@ use crate::{
         },
         Id,
     },
-    schema::parent_nodes,
+    schema::{cotos, parent_nodes},
 };
 
 /// Returns a [ParentNode] by its ID.
@@ -49,6 +49,27 @@ pub(crate) fn get_by_node_ids<Conn: AsReadableConn>(
             .filter(parent_nodes::node_id.eq_any(node_ids))
             .load::<ParentNode>(conn)
             .map_err(anyhow::Error::from)
+    })
+}
+
+/// Returns a map from parent node ID to the timestamp of the most recent post
+/// made by other nodes (excluding the local node).
+pub(crate) fn last_posted_at_by_others_map<Conn: AsReadableConn>(
+    local_node_id: &Id<Node>,
+) -> impl Operation<Conn, HashMap<Id<Node>, NaiveDateTime>> + '_ {
+    read_op(move |conn| {
+        parent_nodes::table
+            .inner_join(cotos::table)
+            .group_by(parent_nodes::node_id)
+            .filter(cotos::posted_by_id.ne(local_node_id))
+            .select((parent_nodes::node_id, max(cotos::created_at)))
+            .load::<(Id<Node>, Option<NaiveDateTime>)>(conn)
+            .map_err(anyhow::Error::from)
+            .map(|rows| {
+                rows.into_iter()
+                    .filter_map(|(id, time)| time.map(|time| (id, time)))
+                    .collect()
+            })
     })
 }
 
