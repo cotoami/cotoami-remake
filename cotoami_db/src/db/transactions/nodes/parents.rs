@@ -1,9 +1,12 @@
+use std::collections::HashMap;
+
 use anyhow::Result;
+use chrono::NaiveDateTime;
 
 use crate::{
     db::{
         op::*,
-        ops::{changelog_ops, graph_ops, node_role_ops},
+        ops::{changelog_ops, graph_ops, node_role_ops, node_role_ops::parent_ops},
         DatabaseSession,
     },
     models::prelude::*,
@@ -15,6 +18,15 @@ impl DatabaseSession<'_> {
         Ok(self.globals.parent_node(id))
     }
 
+    pub fn last_posted_at_by_others_map(
+        &mut self,
+        local_node_id: &Id<Node>,
+    ) -> Result<HashMap<Id<Node>, NaiveDateTime>> {
+        self.read_transaction(parent_ops::last_posted_at_by_others_map(local_node_id))
+    }
+
+    /// Forks the local node from the specified parent node.
+    ///
     /// In Cotoami, `fork` means disconnecting from a parent node and taking the ownership of
     /// entities (cotos/cotonomas/itos) owned by the parent until then. It also means that
     /// update requests to those entities won't be relayed to the parent anymore, instead
