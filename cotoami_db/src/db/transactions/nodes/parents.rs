@@ -21,7 +21,7 @@ impl DatabaseSession<'_> {
     pub fn last_posted_at_by_others_per_parent(
         &mut self,
         local_node_id: &Id<Node>,
-    ) -> Result<HashMap<Id<Node>, NaiveDateTime>> {
+    ) -> Result<HashMap<Id<Node>, Option<NaiveDateTime>>> {
         self.read_transaction(parent_ops::last_posted_at_by_others_map(local_node_id))
     }
 
