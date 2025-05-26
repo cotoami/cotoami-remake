@@ -25,9 +25,11 @@ impl DatabaseSession<'_> {
 
     pub fn last_posted_at_by_others_per_parent(
         &mut self,
-        local_node_id: &Id<Node>,
+        operator: &Operator,
     ) -> Result<HashMap<Id<Node>, Option<NaiveDateTime>>> {
-        self.read_transaction(parent_ops::last_posted_at_by_others_map(local_node_id))
+        operator.requires_to_be_owner()?;
+        let local_node_id = self.globals.try_get_local_node_id()?;
+        self.read_transaction(parent_ops::last_posted_at_by_others_map(&local_node_id))
     }
 
     /// Forks the local node from the specified parent node.
