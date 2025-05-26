@@ -13,6 +13,11 @@ use crate::{
 };
 
 impl DatabaseSession<'_> {
+    pub fn parent_nodes(&mut self, operator: &Operator) -> Result<Vec<ParentNode>> {
+        operator.requires_to_be_owner()?;
+        self.read_transaction(parent_ops::all())
+    }
+
     pub fn parent_node(&self, id: &Id<Node>, operator: &Operator) -> Result<Option<ParentNode>> {
         operator.requires_to_be_owner()?;
         Ok(self.globals.parent_node(id))

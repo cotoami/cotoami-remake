@@ -32,10 +32,14 @@ pub(crate) fn get<Conn: AsReadableConn>(
     })
 }
 
-/// Returns all [ParentNode]s in arbitrary order.
+/// Returns all [ParentNode]s sorted by last_change_received_at and created_at.
 pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<ParentNode>> {
     read_op(move |conn| {
         parent_nodes::table
+            .order((
+                parent_nodes::last_change_received_at.desc(),
+                parent_nodes::created_at.desc(),
+            ))
             .load::<ParentNode>(conn)
             .map_err(anyhow::Error::from)
     })
