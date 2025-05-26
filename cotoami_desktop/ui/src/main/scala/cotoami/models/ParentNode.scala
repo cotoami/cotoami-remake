@@ -8,11 +8,14 @@ case class ParentNode(
     changesReceived: Double,
     lastChangeReceivedAtUtcIso: Option[String],
     lastReadAtUtcIso: Option[String],
-    forked: Boolean
+    forked: Boolean,
+    lastPostedAtByOthersUtcIso: Option[String] = None
 ) {
   lazy val createdAt: Instant = parseUtcIso(createdAtUtcIso)
   lazy val lastChangeReceivedAt: Option[Instant] =
     lastChangeReceivedAtUtcIso.map(parseUtcIso)
   lazy val lastReadAt: Option[Instant] =
     lastReadAtUtcIso.map(parseUtcIso)
+  lazy val lastPostedAtByOthers: Option[Instant] =
+    lastPostedAtByOthersUtcIso.map(parseUtcIso)
 }
