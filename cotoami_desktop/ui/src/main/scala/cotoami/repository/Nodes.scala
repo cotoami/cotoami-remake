@@ -76,8 +76,6 @@ case class Nodes(
       case _                         => false
     }
 
-  def parentNodes: Seq[Node] = parents.map(_.nodeId).map(get).flatten
-
   def focus(id: Option[Id[Node]]): Nodes =
     id.map(id =>
       if (contains(id))
@@ -93,11 +91,6 @@ case class Nodes(
   def focused: Option[Node] = focusedId.flatMap(get)
 
   def current: Option[Node] = focused.orElse(self)
-
-  def prependParent(parent: ParentNode): Nodes =
-    this.modify(_.parents).using(parents =>
-      parent +: parents.filterNot(_.nodeId == parent.nodeId)
-    )
 
   def setIcon(id: Id[Node], icon: String): Nodes =
     this.modify(_.map.index(id)).using(_.setIcon(icon))
@@ -121,7 +114,16 @@ case class Nodes(
       Client(_, clientNode, activeClients.get(clientNode.nodeId))
     )
 
+  def parentNodes: Seq[Node] = parents.map(_.nodeId).map(get).flatten
+
+  def prependParent(parent: ParentNode): Nodes =
+    this.modify(_.parents).using(parents =>
+      parent +: parents.filterNot(_.nodeId == parent.nodeId)
+    )
+
   def isParent(id: Id[Node]): Boolean = parents.exists(_.nodeId == id)
+
+  def anyUnreadPosts: Boolean = parents.exists(_.anyUnreadPosts)
 
   def parentStatus(parentId: Id[Node]): Option[ParentStatus] = {
     if (!isParent(parentId)) return None
