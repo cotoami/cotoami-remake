@@ -1,6 +1,5 @@
 package cotoami.repository
 
-import scala.util.chaining._
 import com.softwaremill.quicklens._
 
 import cotoami.models.{
@@ -14,7 +13,6 @@ import cotoami.models.{
   Ito,
   LocalNode,
   Node,
-  ParentNode,
   ParentStatus,
   Server
 }
@@ -35,7 +33,7 @@ case class Nodes(
 
     // Remote nodes
     servers: Servers = Servers(),
-    parents: Seq[ParentNode] = Seq.empty,
+    parents: Parents = Parents(),
     activeClients: ActiveClients = ActiveClients()
 ) {
   def onNodeChange: Nodes = unfocus
@@ -99,31 +97,23 @@ case class Nodes(
     this.modify(_.map.index(id)).using(_.rename(name))
 
   def addServer(server: Server): Nodes =
-    this.modify(_.servers).using(_.put(server)).pipe { nodes =>
-      server.role.map {
-        case DatabaseRole.Parent(parent) => nodes.prependParent(parent)
-        case DatabaseRole.Child(child)   => nodes
-      }.getOrElse(nodes)
-    }
-
-  def addServers(servers: Iterable[Server]): Nodes =
-    servers.foldLeft(this)(_ addServer _)
+    this
+      .modify(_.servers).using(_.put(server))
+      .modify(_.parents).using(parents =>
+        server.role match {
+          case Some(DatabaseRole.Parent(parent)) => parents.prepend(parent)
+          case _                                 => parents
+        }
+      )
 
   def clientInfo(clientNode: ClientNode): Option[Client] =
     get(clientNode.nodeId).map(
       Client(_, clientNode, activeClients.get(clientNode.nodeId))
     )
 
-  def parentNodes: Seq[Node] = parents.map(_.nodeId).map(get).flatten
+  def parentNodes: Seq[Node] = parents.nodeIds.map(get).flatten
 
-  def prependParent(parent: ParentNode): Nodes =
-    this.modify(_.parents).using(parents =>
-      parent +: parents.filterNot(_.nodeId == parent.nodeId)
-    )
-
-  def isParent(id: Id[Node]): Boolean = parents.exists(_.nodeId == id)
-
-  def anyUnreadPosts: Boolean = parents.exists(_.anyUnreadPosts)
+  def isParent(id: Id[Node]): Boolean = parents.contains(id)
 
   def parentStatus(parentId: Id[Node]): Option[ParentStatus] = {
     if (!isParent(parentId)) return None
@@ -197,8 +187,8 @@ object Nodes {
       map = dataset.nodes,
       localId = Some(localId),
       selfSettings = Some(dataset.localSettings),
-      parents = dataset.parents.toSeq
+      servers = Servers().putAll(dataset.servers),
+      parents = Parents().appendAll(dataset.parents),
+      activeClients = ActiveClients().putAll(dataset.activeClients)
     )
-      .addServers(dataset.servers)
-      .modify(_.activeClients).using(_.putAll(dataset.activeClients))
 }
