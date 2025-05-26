@@ -14,6 +14,7 @@ import cotoami.models.{
   Ito,
   LocalNode,
   Node,
+  ParentNode,
   ParentStatus,
   Server
 }
@@ -34,8 +35,8 @@ case class Nodes(
 
     // Remote nodes
     servers: Servers = Servers(),
-    activeClients: ActiveClients = ActiveClients(),
-    parentIds: Seq[Id[Node]] = Seq.empty
+    parents: Seq[ParentNode] = Seq.empty,
+    activeClients: ActiveClients = ActiveClients()
 ) {
   def onNodeChange: Nodes = unfocus
 
@@ -75,7 +76,7 @@ case class Nodes(
       case _                         => false
     }
 
-  def parents: Seq[Node] = parentIds.map(get).flatten
+  def parentNodes: Seq[Node] = parents.map(_.nodeId).map(get).flatten
 
   def focus(id: Option[Id[Node]]): Nodes =
     id.map(id =>
@@ -93,10 +94,10 @@ case class Nodes(
 
   def current: Option[Node] = focused.orElse(self)
 
-  def prependParentId(id: Id[Node]): Nodes =
-    if (parentIds.contains(id)) this
-    else
-      this.modify(_.parentIds).using(id +: _)
+  def prependParent(parent: ParentNode): Nodes =
+    this.modify(_.parents).using(parents =>
+      parent +: parents.filterNot(_.nodeId == parent.nodeId)
+    )
 
   def setIcon(id: Id[Node], icon: String): Nodes =
     this.modify(_.map.index(id)).using(_.setIcon(icon))
@@ -107,7 +108,7 @@ case class Nodes(
   def addServer(server: Server): Nodes =
     this.modify(_.servers).using(_.put(server)).pipe { nodes =>
       server.role.map {
-        case DatabaseRole.Parent(parent) => nodes.prependParentId(parent.nodeId)
+        case DatabaseRole.Parent(parent) => nodes.prependParent(parent)
         case DatabaseRole.Child(child)   => nodes
       }.getOrElse(nodes)
     }
@@ -120,7 +121,7 @@ case class Nodes(
       Client(_, clientNode, activeClients.get(clientNode.nodeId))
     )
 
-  def isParent(id: Id[Node]): Boolean = parentIds.contains(id)
+  def isParent(id: Id[Node]): Boolean = parents.exists(_.nodeId == id)
 
   def parentStatus(parentId: Id[Node]): Option[ParentStatus] = {
     if (!isParent(parentId)) return None
@@ -194,7 +195,7 @@ object Nodes {
       map = dataset.nodes,
       localId = Some(localId),
       selfSettings = Some(dataset.localSettings),
-      parentIds = dataset.parentNodeIds.toSeq
+      parents = dataset.parents.toSeq
     )
       .addServers(dataset.servers)
       .modify(_.activeClients).using(_.putAll(dataset.activeClients))

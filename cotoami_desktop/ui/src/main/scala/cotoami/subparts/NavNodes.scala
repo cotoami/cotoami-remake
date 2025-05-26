@@ -65,7 +65,7 @@ object NavNodes {
             buttonNode(node, nodes)
           )
         ),
-        nodes.parents.map(node =>
+        nodes.parentNodes.map(node =>
           li(className := "parent", key := node.id.uuid)(
             buttonNode(node, nodes)
           )

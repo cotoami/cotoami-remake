@@ -132,7 +132,7 @@ pub struct InitialDataset {
     pub last_change_number: i64,
     pub nodes: Vec<Node>,
     pub local_settings: LocalNode,
-    pub parent_node_ids: Vec<Id<Node>>,
+    pub parents: Vec<ParentNode>,
     pub servers: Vec<Server>,
     pub active_clients: Vec<ActiveClient>,
 }
