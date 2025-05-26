@@ -58,7 +58,7 @@ pub(crate) fn get_by_node_ids<Conn: AsReadableConn>(
 
 /// Returns a map from parent node ID to the timestamp of the most recent post
 /// made by other nodes (excluding the local node).
-pub(crate) fn last_posted_at_by_others_map<Conn: AsReadableConn>(
+pub(crate) fn others_last_posted_at<Conn: AsReadableConn>(
     local_node_id: &Id<Node>,
 ) -> impl Operation<Conn, HashMap<Id<Node>, Option<NaiveDateTime>>> + '_ {
     read_op(move |conn| {
