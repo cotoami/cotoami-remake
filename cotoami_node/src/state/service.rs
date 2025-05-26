@@ -143,6 +143,7 @@ impl NodeState {
             Command::ChangeItoOrder { id, new_order } => {
                 format.serialize(self.change_ito_order(id, new_order, opr?).await)
             }
+            Command::OthersLastPostedAt => format.serialize(self.others_last_posted_at(opr?).await),
         }
     }
 }

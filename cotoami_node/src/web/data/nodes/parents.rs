@@ -1,9 +1,12 @@
+use std::{collections::HashMap, sync::Arc};
+
 use axum::{
     extract::{Extension, Path, State},
-    routing::put,
+    routing::{get, put},
     Router,
 };
 use axum_extra::TypedHeader;
+use chrono::NaiveDateTime;
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 
@@ -14,7 +17,24 @@ use crate::{
 };
 
 pub(super) fn routes() -> Router<NodeState> {
-    Router::new().route("/{node_id}/fork", put(fork_from_parent))
+    Router::new()
+        .route("/others-last-posted-at", get(others_last_posted_at))
+        .route("/{node_id}/fork", put(fork_from_parent))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/data/nodes/parents/others-last-posted-at
+/////////////////////////////////////////////////////////////////////////////
+
+async fn others_last_posted_at(
+    State(state): State<NodeState>,
+    Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
+) -> Result<Content<HashMap<Id<Node>, Option<NaiveDateTime>>>, ServiceError> {
+    state
+        .others_last_posted_at(Arc::new(operator))
+        .await
+        .map(|map| Content(map, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////
