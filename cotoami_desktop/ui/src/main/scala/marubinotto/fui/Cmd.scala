@@ -22,6 +22,7 @@ object Cmd {
     override def map[OtherMsg](f: Msg => OtherMsg): One[OtherMsg] =
       One(io.map(_.map(f)), debounce)
 
+    // This cmd must return some msg, otherwise the chained cmd will not execute.
     def flatMap[OtherMsg](f: Msg => One[OtherMsg]): One[OtherMsg] =
       One(io.flatMap(_.map(f(_).io).getOrElse(IO.none)), debounce)
 
