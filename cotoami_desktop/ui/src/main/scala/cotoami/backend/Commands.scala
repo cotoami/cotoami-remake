@@ -361,6 +361,8 @@ object Commands {
   def ChangeItoOrder(id: Id[Ito], newOrder: Int) =
     jso(ChangeItoOrder = jso(id = id.uuid, new_order = newOrder))
 
+  val OthersLastPostedAt = jso(OthersLastPostedAt = null)
+
   private def geolocationJson(location: Geolocation) =
     jso(longitude = location.longitude, latitude = location.latitude)
 
