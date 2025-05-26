@@ -16,6 +16,9 @@ case class Parents(
 
   def anyUnreadPosts: Boolean = map.values.exists(_.anyUnreadPosts)
 
+  def anyUnreadPostsIn(id: Id[Node]): Boolean =
+    map.get(id).exists(_.anyUnreadPosts)
+
   def prepend(parent: ParentNode): Parents =
     this
       .modify(_.map).using(_ + (parent.nodeId -> parent))
