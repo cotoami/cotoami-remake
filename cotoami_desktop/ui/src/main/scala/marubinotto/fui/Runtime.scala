@@ -39,7 +39,7 @@ class Runtime[Model, Msg](
         debounceTimers.put(key, timer)
       }
       case cmd: Cmd.One[Msg]          => runOne(cmd)
-      case Cmd.Batch(cmds @ _*)       => for (cmd <- cmds) runOne(cmd)
+      case Cmd.Batch(cmds @ _*)       => for (cmd <- cmds) run(cmd)
       case Cmd.Sequence(batches @ _*) => runSequence(batches.toList)
     }
 
