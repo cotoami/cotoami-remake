@@ -18,4 +18,11 @@ case class ParentNode(
     lastReadAtUtcIso.map(parseUtcIso)
   lazy val lastPostedAtByOthers: Option[Instant] =
     lastPostedAtByOthersUtcIso.map(parseUtcIso)
+
+  def anyUnreadPosts: Boolean =
+    (lastPostedAtByOthers, lastReadAt) match {
+      case (Some(posted), Some(read)) => posted.isAfter(read)
+      case (Some(_), None)            => true
+      case _                          => false
+    }
 }
