@@ -12,6 +12,7 @@ trait LocalNodeJson extends js.Object {
   val node_id: String = js.native
   val image_max_size: Nullable[Int] = js.native
   val anonymous_read_enabled: Boolean = js.native
+  val last_read_at: Nullable[String] = js.native
 }
 
 object LocalNodeJson {
@@ -31,7 +32,8 @@ object LocalNodeBackend {
     LocalNode(
       nodeId = Id(json.node_id),
       imageMaxSize = Nullable.toOption(json.image_max_size),
-      anonymousReadEnabled = json.anonymous_read_enabled
+      anonymousReadEnabled = json.anonymous_read_enabled,
+      lastReadAtUtcIso = Nullable.toOption(json.last_read_at)
     )
 
   def setImageMaxSize(

@@ -3,5 +3,7 @@ package cotoami.models
 case class LocalNode(
     nodeId: Id[Node],
     imageMaxSize: Option[Int],
-    anonymousReadEnabled: Boolean
-)
+    anonymousReadEnabled: Boolean,
+    lastReadAtUtcIso: Option[String],
+    othersLastPostedAtUtcIso: Option[String] = None
+) extends ReadTrackableNode

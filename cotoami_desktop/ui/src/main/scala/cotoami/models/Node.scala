@@ -65,3 +65,20 @@ object Node {
     "The self node cannot be a remote node."
   )
 }
+
+trait ReadTrackableNode {
+  def lastReadAtUtcIso: Option[String]
+  def othersLastPostedAtUtcIso: Option[String]
+
+  lazy val lastReadAt: Option[Instant] =
+    lastReadAtUtcIso.map(parseUtcIso)
+  lazy val othersLastPostedAt: Option[Instant] =
+    othersLastPostedAtUtcIso.map(parseUtcIso)
+
+  def anyUnreadPosts: Boolean =
+    (othersLastPostedAt, lastReadAt) match {
+      case (Some(posted), Some(read)) => posted.isAfter(read)
+      case (Some(_), None)            => true
+      case _                          => false
+    }
+}
