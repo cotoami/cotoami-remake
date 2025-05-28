@@ -9,6 +9,12 @@ package object components {
   def materialSymbol(name: String, classNames: String = ""): ReactElement =
     span(className := s"material-symbols ${classNames}")(name)
 
+  def materialSymbolFilled(
+      name: String,
+      classNames: String = ""
+  ): ReactElement =
+    span(className := s"material-symbols font-fill ${classNames}")(name)
+
   def toolButton(
       symbol: String,
       tip: Option[String] = None,
