@@ -196,7 +196,8 @@ pub enum Command {
     /// return the updated [Ito] if suceeded.
     ChangeItoOrder { id: Id<Ito>, new_order: i32 },
 
-    /// Request a map from parent node ID to the timestamp of the most recent post
+    /// Request a map from node ID to the timestamp of the most recent post
     /// made by other nodes (excluding the local node).
+    /// The target nodes contain all parent nodes and the local node.
     OthersLastPostedAt,
 }
