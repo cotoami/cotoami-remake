@@ -465,7 +465,7 @@ object Root {
         result: Either[ErrorJson, js.Array[Ito]]
     ) extends Msg
     case class OthersLastPostedAtFetched(
-        result: Either[ErrorJson, Map[Id[Node], Option[String]]]
+        result: Either[ErrorJson, Map[Id[Node], String]]
     ) extends Msg
   }
 
@@ -599,16 +599,17 @@ object Root {
         (
           model
             .modify(_.nodes.selfSettings.each.othersLastPostedAtUtcIso).setTo(
-              model.nodes.selfId.flatMap(map.get(_)).flatten
+              model.nodes.selfId.flatMap(map.get(_))
             )
             .modify(_.nodes.parents).using(parents =>
-              map.foldLeft(parents) {
-                case (parents, (nodeId, Some(utcIso))) =>
-                  parents.updateOthersLastPostedAt(nodeId, utcIso)
-                case _ => parents
+              parents.order.foldLeft(parents) { case (parents, parentId) =>
+                parents.updateOthersLastPostedAt(parentId, map.get(parentId))
               }
             ),
-          Cmd.none
+          cotoami.info(
+            "The last post timestamps by others fetched",
+            Some(map.toString())
+          )
         )
 
       case Msg.OthersLastPostedAtFetched(Left(e)) =>

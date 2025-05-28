@@ -36,6 +36,6 @@ case class Parents(
   def appendAll(parents: Iterable[ParentNode]): Parents =
     parents.foldLeft(this)(_ append _)
 
-  def updateOthersLastPostedAt(id: Id[Node], utcIso: String): Parents =
-    this.modify(_.map.index(id).othersLastPostedAtUtcIso).setTo(Some(utcIso))
+  def updateOthersLastPostedAt(id: Id[Node], utcIso: Option[String]): Parents =
+    this.modify(_.map.index(id).othersLastPostedAtUtcIso).setTo(utcIso)
 }

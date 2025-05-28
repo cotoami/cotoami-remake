@@ -41,7 +41,7 @@ impl NodeState {
     pub async fn others_last_posted_at(
         &self,
         operator: Arc<Operator>,
-    ) -> Result<HashMap<Id<Node>, Option<NaiveDateTime>>, ServiceError> {
+    ) -> Result<HashMap<Id<Node>, NaiveDateTime>, ServiceError> {
         self.get(move |ds| ds.others_last_posted_at(&operator))
             .await
     }

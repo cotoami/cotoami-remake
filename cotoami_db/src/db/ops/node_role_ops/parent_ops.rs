@@ -60,17 +60,20 @@ pub(crate) fn get_by_node_ids<Conn: AsReadableConn>(
 /// made by other nodes (excluding the local node).
 pub(crate) fn others_last_posted_at<Conn: AsReadableConn>(
     local_node_id: &Id<Node>,
-) -> impl Operation<Conn, HashMap<Id<Node>, Option<NaiveDateTime>>> + '_ {
+) -> impl Operation<Conn, HashMap<Id<Node>, NaiveDateTime>> + '_ {
     read_op(move |conn| {
         parent_nodes::table
-            .left_outer_join(cotos::table)
-            .group_by(parent_nodes::node_id)
+            .inner_join(cotos::table.on(cotos::node_id.eq(parent_nodes::node_id)))
             .filter(cotos::posted_by_id.ne(local_node_id))
-            // https://stackoverflow.com/questions/75907409/left-join-in-rust-diesel
-            .select((parent_nodes::node_id, max(cotos::created_at.nullable())))
+            .group_by(parent_nodes::node_id)
+            .select((parent_nodes::node_id, max(cotos::created_at)))
             .load::<(Id<Node>, Option<NaiveDateTime>)>(conn)
             .map_err(anyhow::Error::from)
-            .map(|rows| rows.into_iter().collect())
+            .map(|rows| {
+                rows.into_iter()
+                    .filter_map(|(node_id, time)| time.map(|time| (node_id, time)))
+                    .collect()
+            })
     })
 }
 

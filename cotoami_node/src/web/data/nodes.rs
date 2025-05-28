@@ -44,7 +44,7 @@ async fn others_last_posted_at(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
-) -> Result<Content<HashMap<Id<Node>, Option<NaiveDateTime>>>, ServiceError> {
+) -> Result<Content<HashMap<Id<Node>, NaiveDateTime>>, ServiceError> {
     state
         .others_last_posted_at(Arc::new(operator))
         .await

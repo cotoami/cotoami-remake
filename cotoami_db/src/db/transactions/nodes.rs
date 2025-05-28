@@ -91,17 +91,20 @@ impl DatabaseSession<'_> {
 
     /// Returns a map from node ID to the timestamp of the most recent post
     /// made by other nodes (excluding the local node).
-    /// The target nodes contain all parent nodes and the local node.
+    /// The target nodes are all parent nodes and the local node.
     pub fn others_last_posted_at(
         &mut self,
         operator: &Operator,
-    ) -> Result<HashMap<Id<Node>, Option<NaiveDateTime>>> {
+    ) -> Result<HashMap<Id<Node>, NaiveDateTime>> {
         operator.requires_to_be_owner()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.read_transaction(|ctx: &mut Context<'_, SqliteConnection>| {
             let mut map = parent_ops::others_last_posted_at(&local_node_id).run(ctx)?;
-            let local = coto_ops::others_last_posted_at_in_local(&local_node_id).run(ctx)?;
-            map.insert(local_node_id, local);
+            if let Some(in_local) =
+                coto_ops::others_last_posted_at_in_local(&local_node_id).run(ctx)?
+            {
+                map.insert(local_node_id, in_local);
+            }
             Ok(map)
         })
     }

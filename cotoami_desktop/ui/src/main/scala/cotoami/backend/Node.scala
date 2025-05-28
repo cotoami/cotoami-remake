@@ -21,7 +21,7 @@ object NodeJson {
     Commands.send(Commands.SetLocalNodeIcon(icon))
 
   def fetchOthersLastPostedAt
-      : Cmd.One[Either[ErrorJson, js.Dictionary[Nullable[String]]]] =
+      : Cmd.One[Either[ErrorJson, js.Dictionary[String]]] =
     Commands.send(Commands.OthersLastPostedAt)
 }
 
@@ -37,11 +37,9 @@ object NodeBackend {
     )
 
   def fetchOthersLastPostedAt
-      : Cmd.One[Either[ErrorJson, Map[Id[Node], Option[String]]]] =
+      : Cmd.One[Either[ErrorJson, Map[Id[Node], String]]] =
     NodeJson.fetchOthersLastPostedAt.map(_.map {
-      _.map { case (nodeId, utcIso) =>
-        Id[Node](nodeId) -> Nullable.toOption(utcIso)
-      }.toMap
+      _.map { case (nodeId, utcIso) => Id[Node](nodeId) -> utcIso }.toMap
     })
 
   def setLocalNodeIcon(icon: String): Cmd.One[Either[ErrorJson, Node]] =
