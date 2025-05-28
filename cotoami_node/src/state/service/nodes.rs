@@ -1,4 +1,7 @@
+use std::{collections::HashMap, sync::Arc};
+
 use anyhow::Result;
+use chrono::NaiveDateTime;
 use cotoami_db::prelude::*;
 
 use crate::{
@@ -33,5 +36,13 @@ impl NodeState {
     pub async fn disconnect_from(&self, node_id: &Id<Node>) {
         self.client_conns().disconnect(node_id);
         self.server_conns().disconnect(node_id).await;
+    }
+
+    pub async fn others_last_posted_at(
+        &self,
+        operator: Arc<Operator>,
+    ) -> Result<HashMap<Id<Node>, Option<NaiveDateTime>>, ServiceError> {
+        self.get(move |ds| ds.others_last_posted_at(&operator))
+            .await
     }
 }

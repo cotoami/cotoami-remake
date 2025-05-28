@@ -281,7 +281,7 @@ impl HttpClient {
                 .put(&format!("{API_PATH_ITOS}/{id}/order"))
                 .json(&new_order),
             Command::OthersLastPostedAt => {
-                self.get(&format!("{API_PATH_PARENTS}/others-last-posted-at"))
+                self.get(&format!("{API_PATH_NODES}/others-last-posted-at"))
             }
         };
 
@@ -353,7 +353,6 @@ const API_PATH_NODES: &str = concatcp!(API_PATH_DATA, "/nodes");
 const API_PATH_LOCAL: &str = concatcp!(API_PATH_NODES, "/local");
 const API_PATH_SERVERS: &str = concatcp!(API_PATH_NODES, "/servers");
 const API_PATH_CLIENTS: &str = concatcp!(API_PATH_NODES, "/clients");
-const API_PATH_PARENTS: &str = concatcp!(API_PATH_NODES, "/parents");
 const API_PATH_CHILDREN: &str = concatcp!(API_PATH_NODES, "/children");
 const API_PATH_COTONOMAS: &str = concatcp!(API_PATH_DATA, "/cotonomas");
 const API_PATH_COTOS: &str = concatcp!(API_PATH_DATA, "/cotos");
