@@ -144,6 +144,7 @@ object Main {
               Cmd.Batch(
                 DatabaseFolder.save(info.folder),
                 connectToServers(),
+                Root.fetchOthersLastPostedAt,
                 info.newOwnerPassword
                   .map(password =>
                     Modal.open(Modal.NewPassword.forOwner(password))
@@ -170,7 +171,10 @@ object Main {
             .modify(_.repo).setTo(
               Root(dataset, model.repo.nodes.localId.get)
             ),
-          Browser.pushUrl(Route.index.url(()))
+          Cmd.Batch(
+            Browser.pushUrl(Route.index.url(())),
+            Root.fetchOthersLastPostedAt
+          )
         )
 
       case Msg.SetTheme(theme) =>
