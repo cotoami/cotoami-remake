@@ -597,13 +597,17 @@ object Root {
 
       case Msg.OthersLastPostedAtFetched(Right(map)) =>
         (
-          model.modify(_.nodes.parents).using(parents =>
-            map.foldLeft(parents) {
-              case (parents, (nodeId, Some(utcIso))) =>
-                parents.updateOthersLastPostedAt(nodeId, utcIso)
-              case _ => parents
-            }
-          ),
+          model
+            .modify(_.nodes.selfSettings.each.othersLastPostedAtUtcIso).setTo(
+              model.nodes.selfId.flatMap(map.get(_)).flatten
+            )
+            .modify(_.nodes.parents).using(parents =>
+              map.foldLeft(parents) {
+                case (parents, (nodeId, Some(utcIso))) =>
+                  parents.updateOthersLastPostedAt(nodeId, utcIso)
+                case _ => parents
+              }
+            ),
           Cmd.none
         )
 
