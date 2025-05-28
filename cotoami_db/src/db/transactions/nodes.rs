@@ -1,11 +1,16 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
+use chrono::NaiveDateTime;
+use diesel::sqlite::SqliteConnection;
 
 use crate::{
     db::{
         op::*,
-        ops::{changelog_ops, node_ops, node_role_ops, node_role_ops::child_ops},
+        ops::{
+            changelog_ops, coto_ops, node_ops, node_role_ops,
+            node_role_ops::{child_ops, parent_ops},
+        },
         DatabaseSession,
     },
     models::prelude::*,
@@ -82,5 +87,19 @@ impl DatabaseSession<'_> {
             return Ok(Some(Operator::ChildNode(child)));
         }
         Ok(None)
+    }
+
+    pub fn others_last_posted_at(
+        &mut self,
+        operator: &Operator,
+    ) -> Result<HashMap<Id<Node>, Option<NaiveDateTime>>> {
+        operator.requires_to_be_owner()?;
+        let local_node_id = self.globals.try_get_local_node_id()?;
+        self.read_transaction(|ctx: &mut Context<'_, SqliteConnection>| {
+            let mut map = parent_ops::others_last_posted_at(&local_node_id).run(ctx)?;
+            let local = coto_ops::others_last_posted_at_in_local(&local_node_id).run(ctx)?;
+            map.insert(local_node_id, local);
+            Ok(map)
+        })
     }
 }

@@ -1,7 +1,4 @@
-use std::collections::HashMap;
-
 use anyhow::Result;
-use chrono::NaiveDateTime;
 
 use crate::{
     db::{
@@ -21,15 +18,6 @@ impl DatabaseSession<'_> {
     pub fn parent_node(&self, id: &Id<Node>, operator: &Operator) -> Result<Option<ParentNode>> {
         operator.requires_to_be_owner()?;
         Ok(self.globals.parent_node(id))
-    }
-
-    pub fn others_last_posted_at(
-        &mut self,
-        operator: &Operator,
-    ) -> Result<HashMap<Id<Node>, Option<NaiveDateTime>>> {
-        operator.requires_to_be_owner()?;
-        let local_node_id = self.globals.try_get_local_node_id()?;
-        self.read_transaction(parent_ops::others_last_posted_at(&local_node_id))
     }
 
     /// Forks the local node from the specified parent node.
