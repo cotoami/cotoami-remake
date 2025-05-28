@@ -644,6 +644,6 @@ object Root {
       .map(Msg.SiblingItoGroupFetched(cotoId, nodeId, _).into)
 
   def fetchOthersLastPostedAt: Cmd.One[AppMsg] =
-    ParentNodeBackend.fetchOthersLastPostedAt
+    NodeBackend.fetchOthersLastPostedAt
       .map(Msg.OthersLastPostedAtFetched(_).into)
 }
