@@ -198,6 +198,6 @@ pub enum Command {
 
     /// Request a map from node ID to the timestamp of the most recent post
     /// made by other nodes (excluding the local node).
-    /// The target nodes contain all parent nodes and the local node.
+    /// The target nodes are all parent nodes and the local node.
     OthersLastPostedAt,
 }
