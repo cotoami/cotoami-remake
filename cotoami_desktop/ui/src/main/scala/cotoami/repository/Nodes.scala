@@ -74,6 +74,8 @@ case class Nodes(
       case _                         => false
     }
 
+  def anyUnreadPostsInSelf: Boolean = selfSettings.exists(_.anyUnreadPosts)
+
   def focus(id: Option[Id[Node]]): Nodes =
     id.map(id =>
       if (contains(id))
