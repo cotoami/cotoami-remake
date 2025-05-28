@@ -464,6 +464,9 @@ object Root {
         nodeId: Id[Node],
         result: Either[ErrorJson, js.Array[Ito]]
     ) extends Msg
+    case class OthersLastPostedAtFetched(
+        result: Either[ErrorJson, Map[Id[Node], Option[String]]]
+    ) extends Msg
   }
 
   def update(msg: Msg, model: Root): (Root, Cmd[AppMsg]) =
@@ -591,6 +594,21 @@ object Root {
 
       case Msg.SiblingItoGroupFetched(cotoId, nodeId, Left(e)) =>
         (model, cotoami.error("Couldn't fetch a sibling ito group.", e))
+
+      case Msg.OthersLastPostedAtFetched(Right(map)) =>
+        (
+          model.modify(_.nodes.parents).using(parents =>
+            map.foldLeft(parents) {
+              case (parents, (nodeId, Some(utcIso))) =>
+                parents.updateOthersLastPostedAt(nodeId, utcIso)
+              case _ => parents
+            }
+          ),
+          Cmd.none
+        )
+
+      case Msg.OthersLastPostedAtFetched(Left(e)) =>
+        (model, cotoami.error("Couldn't fetch others' last posted at.", e))
     }
 
   def fetchNodeDetails(id: Id[Node]): Cmd.One[AppMsg] =
