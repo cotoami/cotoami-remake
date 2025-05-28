@@ -89,6 +89,9 @@ impl DatabaseSession<'_> {
         Ok(None)
     }
 
+    /// Returns a map from node ID to the timestamp of the most recent post
+    /// made by other nodes (excluding the local node).
+    /// The target nodes contain all parent nodes and the local node.
     pub fn others_last_posted_at(
         &mut self,
         operator: &Operator,
