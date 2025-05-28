@@ -52,6 +52,9 @@ pub struct LocalNode {
 
     /// TRUE if this node allows anonymous clients to read the cotos and itos.
     pub anonymous_read_enabled: bool,
+
+    /// Timestamp of the latest coto the user has read in the local_node.
+    pub last_read_at: Option<NaiveDateTime>,
 }
 
 impl LocalNode {
@@ -163,6 +166,9 @@ pub(crate) struct UpdateLocalNode<'a> {
 
     #[new(default)]
     pub anonymous_read_enabled: Option<bool>,
+
+    #[new(default)]
+    pub last_read_at: Option<Option<NaiveDateTime>>,
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -188,6 +194,7 @@ mod tests {
             owner_session_expires_at: None,
             image_max_size: None,
             anonymous_read_enabled: false,
+            last_read_at: None,
         };
         let mut owner = local_node.as_principal();
 
