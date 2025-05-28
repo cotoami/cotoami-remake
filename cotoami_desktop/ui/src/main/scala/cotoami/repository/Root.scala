@@ -642,4 +642,8 @@ object Root {
   ): Cmd.One[AppMsg] =
     ItoBackend.fetchSiblings(cotoId, Some(nodeId))
       .map(Msg.SiblingItoGroupFetched(cotoId, nodeId, _).into)
+
+  def fetchOthersLastPostedAt: Cmd.One[AppMsg] =
+    ParentNodeBackend.fetchOthersLastPostedAt
+      .map(Msg.OthersLastPostedAtFetched(_).into)
 }
