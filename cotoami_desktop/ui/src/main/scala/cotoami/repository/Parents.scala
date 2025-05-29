@@ -2,7 +2,7 @@ package cotoami.repository
 
 import com.softwaremill.quicklens._
 
-import cotoami.models.{Id, Node, ParentNode}
+import cotoami.models.{Coto, Id, Node, ParentNode}
 
 case class Parents(
     map: Map[Id[Node], ParentNode] = Map.empty,
@@ -18,6 +18,9 @@ case class Parents(
 
   def anyUnreadPostsIn(id: Id[Node]): Boolean =
     map.get(id).exists(_.anyUnreadPosts)
+
+  def unread(coto: Coto): Boolean =
+    get(coto.nodeId).map(_.unread(coto)).getOrElse(false)
 
   def prepend(parent: ParentNode): Parents =
     this

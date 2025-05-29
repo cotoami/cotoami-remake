@@ -80,6 +80,13 @@ case class Nodes(
   lazy val anyUnreadPostsInSelf: Boolean =
     selfSettings.exists(_.anyUnreadPosts)
 
+  def unread(coto: Coto): Boolean =
+    !isSelf(coto.postedById) &&
+      (
+        selfSettings.map(_.unread(coto)).getOrElse(false) ||
+          parents.unread(coto)
+      )
+
   def focus(id: Option[Id[Node]]): Nodes =
     id.map(id =>
       if (contains(id))

@@ -67,6 +67,7 @@ object Node {
 }
 
 trait ReadTrackableNode {
+  def nodeId: Id[Node]
   def lastReadAtUtcIso: Option[String]
   def othersLastPostedAtUtcIso: Option[String]
 
@@ -81,4 +82,8 @@ trait ReadTrackableNode {
       case (Some(_), None)            => true
       case _                          => false
     }
+
+  def unread(coto: Coto): Boolean =
+    coto.nodeId == nodeId &&
+      lastReadAt.map(coto.createdAt.isAfter).getOrElse(true)
 }
