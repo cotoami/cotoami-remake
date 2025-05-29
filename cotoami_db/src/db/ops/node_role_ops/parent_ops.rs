@@ -111,6 +111,18 @@ pub(crate) fn mark_all_as_read(read_at: NaiveDateTime) -> impl Operation<Writabl
     })
 }
 
+pub(crate) fn mark_as_read(
+    id: &Id<Node>,
+    read_at: NaiveDateTime,
+) -> impl Operation<WritableConn, ParentNode> + '_ {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let mut update_parent = UpdateParentNode::new(id);
+        update_parent.last_read_at = Some(Some(read_at));
+        let parent = update(&update_parent).run(ctx)?;
+        Ok(parent)
+    })
+}
+
 pub(super) fn set_forked(id: &Id<Node>) -> impl Operation<WritableConn, ParentNode> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let mut update_parent = UpdateParentNode::new(id);
