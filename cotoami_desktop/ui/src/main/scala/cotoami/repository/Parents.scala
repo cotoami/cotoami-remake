@@ -14,7 +14,7 @@ case class Parents(
 
   def get(id: Id[Node]): Option[ParentNode] = map.get(id)
 
-  def anyUnreadPosts: Boolean = map.values.exists(_.anyUnreadPosts)
+  lazy val anyUnreadPosts: Boolean = map.values.exists(_.anyUnreadPosts)
 
   def anyUnreadPostsIn(id: Id[Node]): Boolean =
     map.get(id).exists(_.anyUnreadPosts)

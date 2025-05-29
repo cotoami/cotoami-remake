@@ -74,7 +74,11 @@ case class Nodes(
       case _                         => false
     }
 
-  def anyUnreadPostsInSelf: Boolean = selfSettings.exists(_.anyUnreadPosts)
+  lazy val anyUnreadPosts: Boolean =
+    anyUnreadPostsInSelf || parents.anyUnreadPosts
+
+  lazy val anyUnreadPostsInSelf: Boolean =
+    selfSettings.exists(_.anyUnreadPosts)
 
   def focus(id: Option[Id[Node]]): Nodes =
     id.map(id =>

@@ -4,7 +4,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import marubinotto.optionalClasses
-import marubinotto.components.{materialSymbol, toolButton}
+import marubinotto.components.{materialSymbol, materialSymbolFilled, toolButton}
 
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Node, UiState}
@@ -49,7 +49,10 @@ object NavNodes {
         disabled := nodes.focused.isEmpty,
         onClick := (_ => dispatch(AppMsg.UnfocusNode))
       )(
-        materialSymbol("stacks")
+        materialSymbol("stacks"),
+        Option.when(nodes.anyUnreadPosts)(
+          materialSymbolFilled("brightness_1", "unread-mark")
+        )
       ),
       div(className := "separator")(),
       toolButton(
@@ -62,12 +65,12 @@ object NavNodes {
       ul(className := "nodes")(
         nodes.self.map(node =>
           li(className := "self", key := node.id.uuid)(
-            buttonNode(node, nodes)
+            buttonNode(node, nodes.anyUnreadPostsInSelf, nodes)
           )
         ),
         nodes.parentNodes.map(node =>
           li(className := "parent", key := node.id.uuid)(
-            buttonNode(node, nodes)
+            buttonNode(node, nodes.parents.anyUnreadPostsIn(node.id), nodes)
           )
         )
       )
@@ -104,6 +107,7 @@ object NavNodes {
 
   private def buttonNode(
       node: Node,
+      anyUnreadPosts: Boolean,
       nodes: Nodes
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val status = nodes.parentStatus(node.id)
@@ -126,7 +130,10 @@ object NavNodes {
       onClick := (_ => dispatch(AppMsg.FocusNode(node.id)))
     )(
       PartsNode.imgNode(node),
-      status.map(s => span(className := s"status ${s.className}")(s.icon))
+      status.map(s => span(className := s"status ${s.className}")(s.icon)),
+      Option.when(anyUnreadPosts)(
+        materialSymbolFilled("brightness_1", "unread-mark")
+      )
     )
   }
 }
