@@ -108,4 +108,12 @@ impl DatabaseSession<'_> {
             Ok(map)
         })
     }
+
+    pub fn mark_all_as_read(&mut self, operator: &Operator) -> Result<NaiveDateTime> {
+        operator.requires_to_be_owner()?;
+        let read_at = crate::current_datetime();
+        self.mark_local_node_as_read(read_at, operator)?;
+        self.write_transaction(parent_ops::mark_all_as_read(read_at))?;
+        Ok(read_at)
+    }
 }
