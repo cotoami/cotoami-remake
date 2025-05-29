@@ -35,21 +35,31 @@ object NavNodes {
     )(
       paneToggle(PaneName),
       buttonSwitchBack(nodes),
-      button(
+      div(
         className := optionalClasses(
           Seq(
-            ("all", true),
-            ("default", true),
-            ("focusable", true),
+            ("button-all", true),
+            ("read-trackable", true),
             ("focused", nodes.focused.isEmpty)
           )
-        ),
-        data - "tooltip" := context.i18n.text.NavNodes_allNodes,
-        data - "placement" := "right",
-        disabled := nodes.focused.isEmpty,
-        onClick := (_ => dispatch(AppMsg.UnfocusNode))
+        )
       )(
-        materialSymbol("stacks"),
+        button(
+          className := optionalClasses(
+            Seq(
+              ("all", true),
+              ("default", true),
+              ("focusable", true),
+              ("focused", nodes.focused.isEmpty)
+            )
+          ),
+          data - "tooltip" := context.i18n.text.NavNodes_allNodes,
+          data - "placement" := "right",
+          disabled := nodes.focused.isEmpty,
+          onClick := (_ => dispatch(AppMsg.UnfocusNode))
+        )(
+          materialSymbol("stacks")
+        ),
         Option.when(nodes.anyUnreadPosts)(
           materialSymbolFilled("brightness_1", "unread-mark")
         )
@@ -114,23 +124,33 @@ object NavNodes {
       .flatMap(ViewConnectionStatus(_).onlyIfNotConnected)
     val tooltip =
       status.map(s => s"${node.name} (${s.title})").getOrElse(node.name)
-    button(
+    val focused = nodes.isFocusing(node.id)
+    div(
       className := optionalClasses(
         Seq(
-          ("node", true),
-          ("default", true),
-          ("focusable", true),
-          ("focused", nodes.isFocusing(node.id))
+          ("button-node", true),
+          ("read-trackable", true),
+          ("focused", focused)
         )
-      ),
-      disabled := nodes.isFocusing(node.id),
-      data - "tooltip" := tooltip,
-      data - "placement" := "right",
-      disabled := nodes.isFocusing(node.id),
-      onClick := (_ => dispatch(AppMsg.FocusNode(node.id)))
+      )
     )(
-      PartsNode.imgNode(node),
-      status.map(s => span(className := s"status ${s.className}")(s.icon)),
+      button(
+        className := optionalClasses(
+          Seq(
+            ("node", true),
+            ("default", true),
+            ("focusable", true),
+            ("focused", focused)
+          )
+        ),
+        disabled := focused,
+        data - "tooltip" := tooltip,
+        data - "placement" := "right",
+        onClick := (_ => dispatch(AppMsg.FocusNode(node.id)))
+      )(
+        PartsNode.imgNode(node),
+        status.map(s => span(className := s"status ${s.className}")(s.icon))
+      ),
       Option.when(anyUnreadPosts)(
         materialSymbolFilled("brightness_1", "unread-mark")
       )

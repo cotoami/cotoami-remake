@@ -129,4 +129,27 @@ nav.nodes {
       padding-top: 6px;
     }
   }
+
+  div.read-trackable {
+    position: relative;
+    width: 100%;
+
+    span.unread-mark {
+      position: absolute;
+      top: -3px;
+      right: 4px;
+      font-size: 14px;
+      line-height: 14px;
+      color: rgba(142, 43, 46);
+    }
+
+    &:hover span.unread-mark,
+    &.focused span.unread-mark {
+      color: rgba(255, 51, 51);
+    }
+
+    &.button-all span.unread-mark {
+      top: 0;
+    }
+  }
 }
