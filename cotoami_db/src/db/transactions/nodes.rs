@@ -116,4 +116,19 @@ impl DatabaseSession<'_> {
         self.write_transaction(parent_ops::mark_all_as_read(read_at))?;
         Ok(read_at)
     }
+
+    pub fn mark_as_read(
+        &mut self,
+        node_id: &Id<Node>,
+        operator: &Operator,
+    ) -> Result<NaiveDateTime> {
+        operator.requires_to_be_owner()?;
+        let read_at = crate::current_datetime();
+        if self.globals.is_local_node(node_id) {
+            self.mark_local_node_as_read(read_at, operator)?;
+        } else {
+            self.write_transaction(parent_ops::mark_as_read(node_id, read_at))?;
+        }
+        Ok(read_at)
+    }
 }
