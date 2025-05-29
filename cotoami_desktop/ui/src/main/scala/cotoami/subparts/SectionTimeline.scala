@@ -9,6 +9,7 @@ import com.softwaremill.quicklens._
 import marubinotto.fui._
 import marubinotto.components.{
   materialSymbol,
+  materialSymbolFilled,
   toolButton,
   Flipped,
   Flipper,
@@ -379,7 +380,10 @@ object SectionTimeline {
       div(className := "body")(
         PartsCoto.divContent(coto)
       ),
-      PartsCoto.articleFooter(coto)
+      PartsCoto.articleFooter(coto),
+      Option.when(context.repo.nodes.unread(coto))(
+        materialSymbolFilled("brightness_1", "unread-mark")
+      )
     )
   }
 

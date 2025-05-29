@@ -111,4 +111,16 @@ section.timeline {
       height: 24px;
     }
   }
+
+  article.coto {
+    position: relative;
+
+    span.unread-mark {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      font-size: 10px;
+      line-height: 10px;
+    }
+  }
 }
