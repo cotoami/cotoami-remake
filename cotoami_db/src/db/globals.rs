@@ -129,9 +129,7 @@ impl Globals {
     }
 
     pub(crate) fn cache_parent_node(&self, parent: ParentNode) {
-        self.parent_nodes
-            .write()
-            .insert(parent.node_id, parent.clone());
+        self.parent_nodes.write().insert(parent.node_id, parent);
     }
 
     pub(crate) fn try_write_parent_node(

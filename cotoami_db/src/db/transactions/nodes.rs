@@ -113,7 +113,7 @@ impl DatabaseSession<'_> {
         operator.requires_to_be_owner()?;
         let read_at = crate::current_datetime();
         self.mark_local_node_as_read(read_at, operator)?;
-        self.write_transaction(parent_ops::mark_all_as_read(read_at))?;
+        self.mark_all_parent_nodes_as_read(read_at, operator)?;
         Ok(read_at)
     }
 
@@ -127,7 +127,7 @@ impl DatabaseSession<'_> {
         if self.globals.is_local_node(node_id) {
             self.mark_local_node_as_read(read_at, operator)?;
         } else {
-            self.write_transaction(parent_ops::mark_as_read(node_id, read_at))?;
+            self.mark_parent_node_as_read(node_id, read_at, operator)?;
         }
         Ok(read_at)
     }
