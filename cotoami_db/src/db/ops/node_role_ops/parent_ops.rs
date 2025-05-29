@@ -102,6 +102,15 @@ pub(crate) fn update<'a>(
     })
 }
 
+pub(crate) fn mark_all_as_read(read_at: NaiveDateTime) -> impl Operation<WritableConn, usize> {
+    write_op(move |conn| {
+        diesel::update(parent_nodes::table)
+            .set(parent_nodes::last_read_at.eq(Some(read_at)))
+            .execute(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}
+
 pub(super) fn set_forked(id: &Id<Node>) -> impl Operation<WritableConn, ParentNode> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let mut update_parent = UpdateParentNode::new(id);
