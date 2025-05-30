@@ -80,6 +80,14 @@ case class Nodes(
   lazy val anyUnreadPostsInSelf: Boolean =
     selfSettings.exists(_.anyUnreadPosts)
 
+  lazy val anyUnreadPostsInFocus: Boolean =
+    focusedId match {
+      case Some(focusedId) =>
+        if (isSelf(focusedId)) anyUnreadPostsInSelf
+        else parents.anyUnreadPostsIn(focusedId)
+      case None => anyUnreadPosts
+    }
+
   def unread(coto: Coto): Boolean =
     !isSelf(coto.postedById) &&
       (
