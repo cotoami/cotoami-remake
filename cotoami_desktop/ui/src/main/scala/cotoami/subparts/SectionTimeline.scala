@@ -286,7 +286,7 @@ object SectionTimeline {
         Option.when(context.repo.nodes.anyUnreadPostsInFocus)(
           button(
             className := "mark-as-read contrast outline"
-          )("Mark All as Read")
+          )(context.i18n.text.MarkAllAsRead)
         ),
         div(className := "search")(
           input(

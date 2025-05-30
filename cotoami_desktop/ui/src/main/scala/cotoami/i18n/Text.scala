@@ -30,6 +30,7 @@ trait Text {
   val SwapPane: String
   val LightMode: String
   val DarkMode: String
+  val MarkAllAsRead: String
 
   def Coto_inRemoteNode(nodeName: String): String
 

@@ -33,6 +33,7 @@ object en extends Text {
   val SwapPane = "Swap Pane"
   val LightMode = "Light Mode"
   val DarkMode = "Dark Mode"
+  val MarkAllAsRead = "Mark All as Read"
 
   def Coto_inRemoteNode(nodeName: String) = s"In ${nodeName} (remote)"
 
