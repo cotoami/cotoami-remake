@@ -322,10 +322,12 @@ object SectionTimeline {
               dispatch(
                 Modal.Msg.OpenModal(
                   Modal.Confirm(
-                    if (context.repo.nodes.focusedId.isDefined)
-                      context.i18n.text.ConfirmMarkNodeAsRead
-                    else
-                      context.i18n.text.ConfirmMarkAllAsRead,
+                    context.repo.nodes.focused match {
+                      case Some(node) =>
+                        context.i18n.text.ConfirmMarkNodeAsRead(node.name)
+                      case None =>
+                        context.i18n.text.ConfirmMarkAllAsRead
+                    },
                     Msg.MarkAsRead
                   )
                 )
