@@ -283,6 +283,9 @@ object SectionTimeline {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "timeline header-and-body")(
       header(className := "tools")(
+        button(
+          className := "mark-as-read contrast outline"
+        )("Mark All as Read"),
         div(className := "search")(
           input(
             `type` := "search",
