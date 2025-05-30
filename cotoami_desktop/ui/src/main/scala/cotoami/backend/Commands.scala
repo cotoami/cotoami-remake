@@ -363,6 +363,9 @@ object Commands {
 
   val OthersLastPostedAt = jso(OthersLastPostedAt = null)
 
+  def MarkAsRead(nodeId: Option[Id[Node]]) =
+    jso(MarkAsRead = jso(node = nodeId.map(_.uuid).getOrElse(null)))
+
   private def geolocationJson(location: Geolocation) =
     jso(longitude = location.longitude, latitude = location.latitude)
 
