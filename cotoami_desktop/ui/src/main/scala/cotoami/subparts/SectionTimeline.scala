@@ -314,7 +314,10 @@ object SectionTimeline {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "timeline header-and-body")(
       header(className := "tools")(
-        Option.when(context.repo.nodes.anyUnreadPostsInFocus)(
+        Option.when(
+          context.repo.cotonomas.focusedId.isEmpty &&
+            context.repo.nodes.anyUnreadPostsInFocus
+        )(
           button(
             className := "mark-as-read contrast outline",
             disabled := model.markingAsRead,
