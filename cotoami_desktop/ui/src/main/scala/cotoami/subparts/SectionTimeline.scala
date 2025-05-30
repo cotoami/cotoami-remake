@@ -317,7 +317,20 @@ object SectionTimeline {
           button(
             className := "mark-as-read contrast outline",
             disabled := model.markingAsRead,
-            aria - "busy" := model.markingAsRead.toString()
+            aria - "busy" := model.markingAsRead.toString(),
+            onClick := (_ =>
+              dispatch(
+                Modal.Msg.OpenModal(
+                  Modal.Confirm(
+                    if (context.repo.nodes.focusedId.isDefined)
+                      context.i18n.text.ConfirmMarkNodeAsRead
+                    else
+                      context.i18n.text.ConfirmMarkAllAsRead,
+                    Msg.MarkAsRead
+                  )
+                )
+              )
+            )
           )(context.i18n.text.MarkAllAsRead)
         ),
         div(className := "search")(

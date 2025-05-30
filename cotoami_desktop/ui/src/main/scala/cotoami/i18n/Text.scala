@@ -61,6 +61,8 @@ trait Text {
   val ConfirmDeleteCoto: String
   def ConfirmDeleteOthersCoto(someoneElse: ReactElement): ReactElement
   val ConfirmDeleteCotonoma: String
+  val ConfirmMarkAllAsRead: String
+  val ConfirmMarkNodeAsRead: String
 
   val NavNodes_allNodes: String
   val NavNodes_addNode: String
