@@ -42,6 +42,9 @@ object NodeBackend {
       _.map { case (nodeId, utcIso) => Id[Node](nodeId) -> utcIso }.toMap
     })
 
+  def markAsRead(nodeId: Option[Id[Node]]): Cmd.One[Either[ErrorJson, String]] =
+    Commands.send(Commands.MarkAsRead(nodeId))
+
   def setLocalNodeIcon(icon: String): Cmd.One[Either[ErrorJson, Node]] =
     NodeJson.setLocalNodeIcon(icon).map(_.map(toModel))
 }
