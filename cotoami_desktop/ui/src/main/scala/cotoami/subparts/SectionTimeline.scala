@@ -158,6 +158,10 @@ object SectionTimeline {
         extends Msg
     case class ScrollAreaUnmounted(cotonomaId: Id[Cotonoma], scrollPos: Double)
         extends Msg
+    case class MarkedAsRead(
+        nodeId: Option[Id[Node]],
+        result: Either[ErrorJson, String]
+    ) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -217,6 +221,21 @@ object SectionTimeline {
 
       case Msg.ScrollAreaUnmounted(cotonomaId, scrollPos) =>
         default.copy(_1 = model.saveScrollPos(cotonomaId, scrollPos))
+
+      case Msg.MarkedAsRead(nodeId, Right(utcIso)) =>
+        default.copy(
+          _1 = model.copy(markingAsRead = false),
+          _2 = context.repo.modify(_.nodes).using { nodes =>
+            nodeId.map(nodes.markAsRead(_, utcIso))
+              .getOrElse(nodes.markAllAsRead(utcIso))
+          }
+        )
+
+      case Msg.MarkedAsRead(nodeId, Left(e)) =>
+        default.copy(
+          _1 = model.copy(markingAsRead = false),
+          _3 = cotoami.error("Couldn't mark as read.", e)
+        )
     }
   }
 
