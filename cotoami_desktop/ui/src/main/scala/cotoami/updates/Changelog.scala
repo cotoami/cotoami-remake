@@ -218,6 +218,9 @@ object Changelog {
       model
         .modify(_.repo.cotos).setTo(cotos)
         .modify(_.repo.cotonomas).setTo(cotonomas)
+        .modify(_.repo.nodes).using(
+          _.updateOthersLastPostedAt(coto)
+        )
         .modify(_.timeline).setTo(timeline),
       Cmd.Batch(
         fetchCotonoma,
