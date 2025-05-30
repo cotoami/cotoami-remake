@@ -144,6 +144,13 @@ impl NodeState {
                 format.serialize(self.change_ito_order(id, new_order, opr?).await)
             }
             Command::OthersLastPostedAt => format.serialize(self.others_last_posted_at(opr?).await),
+            Command::MarkAsRead { node } => {
+                if let Some(node) = node {
+                    format.serialize(self.mark_as_read(node, opr?).await)
+                } else {
+                    format.serialize(self.mark_all_as_read(opr?).await)
+                }
+            }
         }
     }
 }

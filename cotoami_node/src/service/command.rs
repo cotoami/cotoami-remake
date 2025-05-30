@@ -200,4 +200,8 @@ pub enum Command {
     /// made by other nodes (excluding the local node).
     /// The target nodes are all parent nodes and the local node.
     OthersLastPostedAt,
+
+    /// Request to mark the given node as read and
+    /// return the saved timestamp (UTC ISO string) if suceeded.
+    MarkAsRead { node: Option<Id<Node>> },
 }

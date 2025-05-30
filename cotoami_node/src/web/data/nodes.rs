@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use axum::{
     extract::{Extension, Path, State},
-    routing::get,
+    routing::{get, put},
     Router,
 };
 use axum_extra::TypedHeader;
@@ -26,7 +26,9 @@ mod servers;
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/others-last-posted-at", get(others_last_posted_at))
+        .route("/mark-as-read", put(mark_all_as_read))
         .route("/{node_id}/details", get(node_details))
+        .route("/{node_id}/mark-as-read", put(mark_as_read))
         .nest("/{node_id}/cotonomas", cotonomas::routes())
         .nest("/{node_id}/cotos", cotos::routes())
         .nest("/local", local::routes())
@@ -52,6 +54,21 @@ async fn others_last_posted_at(
 }
 
 /////////////////////////////////////////////////////////////////////////////
+// PUT /api/data/nodes/mark-as-read
+/////////////////////////////////////////////////////////////////////////////
+
+async fn mark_all_as_read(
+    State(state): State<NodeState>,
+    Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
+) -> Result<Content<NaiveDateTime>, ServiceError> {
+    state
+        .mark_all_as_read(Arc::new(operator))
+        .await
+        .map(|time| Content(time, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // GET /api/data/nodes/:node_id/details
 /////////////////////////////////////////////////////////////////////////////
 
@@ -64,4 +81,20 @@ async fn node_details(
         .node_details(node_id)
         .await
         .map(|details| Content(details, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/data/nodes/:node_id/mark-as-read
+/////////////////////////////////////////////////////////////////////////////
+
+async fn mark_as_read(
+    State(state): State<NodeState>,
+    Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(node_id): Path<Id<Node>>,
+) -> Result<Content<NaiveDateTime>, ServiceError> {
+    state
+        .mark_as_read(node_id, Arc::new(operator))
+        .await
+        .map(|time| Content(time, accept))
 }

@@ -3,6 +3,7 @@ use std::{collections::HashMap, sync::Arc};
 use anyhow::Result;
 use chrono::NaiveDateTime;
 use cotoami_db::prelude::*;
+use tokio::task::spawn_blocking;
 
 use crate::{
     service::{models::NodeDetails, ServiceError},
@@ -44,5 +45,32 @@ impl NodeState {
     ) -> Result<HashMap<Id<Node>, NaiveDateTime>, ServiceError> {
         self.get(move |ds| ds.others_last_posted_at(&operator))
             .await
+    }
+
+    pub async fn mark_all_as_read(
+        &self,
+        operator: Arc<Operator>,
+    ) -> Result<NaiveDateTime, ServiceError> {
+        let db = self.db().clone();
+        spawn_blocking(move || {
+            db.new_session()?
+                .mark_all_as_read(None, &operator)
+                .map_err(ServiceError::from)
+        })
+        .await?
+    }
+
+    pub async fn mark_as_read(
+        &self,
+        node_id: Id<Node>,
+        operator: Arc<Operator>,
+    ) -> Result<NaiveDateTime, ServiceError> {
+        let db = self.db().clone();
+        spawn_blocking(move || {
+            db.new_session()?
+                .mark_as_read(&node_id, None, &operator)
+                .map_err(ServiceError::from)
+        })
+        .await?
     }
 }
