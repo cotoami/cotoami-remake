@@ -98,7 +98,11 @@ impl Database {
     /// Try to read a database node info from the given directory.
     pub fn try_read_node_info<P: AsRef<Path>>(root_dir: P) -> Result<Option<(Node, bool)>> {
         let db_file = ensure_dir(root_dir)?.join(Self::DATABASE_FILE_NAME);
-        let mut conn = new_ro_conn(&to_file_uri(db_file)?)?;
+
+        // Open a read-write connection and run migrations against it.
+        let mut conn = new_rw_conn(&to_file_uri(db_file)?)?;
+        conn.run_pending_migrations(Self::MIGRATIONS).unwrap();
+
         if let Some((local_node, node)) = op::run_read(&mut conn, local_ops::get_pair())? {
             Ok(Some((
                 node,
