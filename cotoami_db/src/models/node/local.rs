@@ -53,7 +53,7 @@ pub struct LocalNode {
     /// TRUE if this node allows anonymous clients to read the cotos and itos.
     pub anonymous_read_enabled: bool,
 
-    /// Timestamp of the latest coto the user has read in the local_node.
+    /// Last time the local node was marked as read.
     pub last_read_at: Option<NaiveDateTime>,
 }
 

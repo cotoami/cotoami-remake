@@ -37,7 +37,7 @@ pub struct ParentNode {
     /// Date when received the last change from this parent node.
     pub last_change_received_at: Option<NaiveDateTime>,
 
-    /// Timestamp of the latest coto the user has read in this parent.
+    /// Last time the parent node was marked as read.
     pub last_read_at: Option<NaiveDateTime>,
 
     /// TRUE if the local node has been forked from this parent node.
