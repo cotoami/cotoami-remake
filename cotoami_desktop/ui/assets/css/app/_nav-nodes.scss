@@ -129,4 +129,21 @@ nav.nodes {
       padding-top: 6px;
     }
   }
+
+  div.read-trackable {
+    position: relative;
+    width: 100%;
+
+    span.unread-mark {
+      position: absolute;
+      top: -3px;
+      right: 4px;
+      font-size: 12px;
+      line-height: 12px;
+    }
+
+    &.button-all span.unread-mark {
+      top: 0;
+    }
+  }
 }

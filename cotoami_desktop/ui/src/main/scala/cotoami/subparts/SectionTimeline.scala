@@ -9,6 +9,7 @@ import com.softwaremill.quicklens._
 import marubinotto.fui._
 import marubinotto.components.{
   materialSymbol,
+  materialSymbolFilled,
   toolButton,
   Flipped,
   Flipper,
@@ -26,7 +27,7 @@ import cotoami.models.{
   WaitingPosts
 }
 import cotoami.repository._
-import cotoami.backend.{ErrorJson, PaginatedCotos}
+import cotoami.backend.{ErrorJson, NodeBackend, PaginatedCotos}
 
 object SectionTimeline {
 
@@ -52,7 +53,8 @@ object SectionTimeline {
 
       // State
       imeActive: Boolean = false,
-      loading: Boolean = false
+      loading: Boolean = false,
+      markingAsRead: Boolean = false
   ) {
     def onFocusChange(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       copy(
@@ -156,6 +158,11 @@ object SectionTimeline {
         extends Msg
     case class ScrollAreaUnmounted(cotonomaId: Id[Cotonoma], scrollPos: Double)
         extends Msg
+    case object MarkAsRead extends Msg
+    case class MarkedAsRead(
+        nodeId: Option[Id[Node]],
+        result: Either[ErrorJson, String]
+    ) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -215,6 +222,30 @@ object SectionTimeline {
 
       case Msg.ScrollAreaUnmounted(cotonomaId, scrollPos) =>
         default.copy(_1 = model.saveScrollPos(cotonomaId, scrollPos))
+
+      case Msg.MarkAsRead => {
+        val focusedNodeId = context.repo.nodes.focusedId
+        default.copy(
+          _1 = model.copy(markingAsRead = true),
+          _3 = NodeBackend.markAsRead(focusedNodeId)
+            .map(Msg.MarkedAsRead(focusedNodeId, _).into)
+        )
+      }
+
+      case Msg.MarkedAsRead(nodeId, Right(utcIso)) =>
+        default.copy(
+          _1 = model.copy(markingAsRead = false),
+          _2 = context.repo.modify(_.nodes).using { nodes =>
+            nodeId.map(nodes.markAsRead(_, utcIso))
+              .getOrElse(nodes.markAllAsRead(utcIso))
+          }
+        )
+
+      case Msg.MarkedAsRead(nodeId, Left(e)) =>
+        default.copy(
+          _1 = model.copy(markingAsRead = false),
+          _3 = cotoami.error("Couldn't mark as read.", e)
+        )
     }
   }
 
@@ -282,6 +313,28 @@ object SectionTimeline {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "timeline header-and-body")(
       header(className := "tools")(
+        Option.when(context.repo.nodes.anyUnreadPostsInFocus)(
+          button(
+            className := "mark-as-read contrast outline",
+            disabled := model.markingAsRead,
+            aria - "busy" := model.markingAsRead.toString(),
+            onClick := (_ =>
+              dispatch(
+                Modal.Msg.OpenModal(
+                  Modal.Confirm(
+                    context.repo.nodes.focused match {
+                      case Some(node) =>
+                        context.i18n.text.ConfirmMarkNodeAsRead(node.name)
+                      case None =>
+                        context.i18n.text.ConfirmMarkAllAsRead
+                    },
+                    Msg.MarkAsRead
+                  )
+                )
+              )
+            )
+          )(context.i18n.text.MarkAllAsRead)
+        ),
         div(className := "search")(
           input(
             `type` := "search",
@@ -379,7 +432,10 @@ object SectionTimeline {
       div(className := "body")(
         PartsCoto.divContent(coto)
       ),
-      PartsCoto.articleFooter(coto)
+      PartsCoto.articleFooter(coto),
+      Option.when(context.repo.nodes.unread(coto))(
+        materialSymbolFilled("brightness_1", "unread-mark")
+      )
     )
   }
 

@@ -2,8 +2,16 @@ section.timeline {
   margin-top: 20px;
 
   >header.tools {
+    position: relative;
     align-items: center;
     padding: 5px;
+
+    button.mark-as-read {
+      position: absolute;
+      top: 5px;
+      left: 8px;
+      font-size: 13px;
+    }
 
     div.search {
       position: relative;
@@ -109,6 +117,18 @@ section.timeline {
       margin: auto;
       width: 24px;
       height: 24px;
+    }
+  }
+
+  article.coto {
+    position: relative;
+
+    span.unread-mark {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      font-size: 10px;
+      line-height: 10px;
     }
   }
 }

@@ -1,6 +1,7 @@
 use std::{borrow::Cow, sync::Arc, time::Instant};
 
 use anyhow::{anyhow, Result};
+use chrono::NaiveDateTime;
 use cotoami_db::prelude::*;
 use cotoami_node::prelude::*;
 use futures::{stream::StreamExt, Stream};
@@ -424,6 +425,22 @@ where
 
     assert_that!(cotonoma2, eq(&cotonoma));
     assert_that!(coto2, eq(&coto));
+
+    /////////////////////////////////////////////////////////////////////////////
+    // Command: MarkAsRead
+    /////////////////////////////////////////////////////////////////////////////
+
+    let request = Command::MarkAsRead { node: None }.into_request();
+    let read_at = service.call(request).await?.content::<NaiveDateTime>()?;
+
+    assert_that!(
+        backend_state
+            .db()
+            .globals()
+            .try_get_local_node()?
+            .last_read_at,
+        some(eq(read_at))
+    );
 
     Ok(())
 }

@@ -24,6 +24,10 @@
   @include mixins.force-unselectable;
 }
 
+.font-fill {
+  font-variation-settings: 'FILL' 1;
+}
+
 //
 // Fill in the container
 //

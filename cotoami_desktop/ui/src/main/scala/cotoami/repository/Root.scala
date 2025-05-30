@@ -90,6 +90,9 @@ case class Root(
   def isNodeRoot(cotoId: Id[Coto]): Boolean =
     cotonomas.getByCotoId(cotoId).map(nodes.isNodeRoot(_)).getOrElse(false)
 
+  def postedBySelf(cotoId: Id[Coto]): Boolean =
+    cotos.get(cotoId).map(nodes.postedBySelf).getOrElse(false)
+
   def deleteCoto(id: Id[Coto]): Root =
     // Delete the reposts first if they exist
     cotos.repostsOf(id).foldLeft(this)(_ deleteCoto _.id)
@@ -464,6 +467,9 @@ object Root {
         nodeId: Id[Node],
         result: Either[ErrorJson, js.Array[Ito]]
     ) extends Msg
+    case class OthersLastPostedAtFetched(
+        result: Either[ErrorJson, Map[Id[Node], String]]
+    ) extends Msg
   }
 
   def update(msg: Msg, model: Root): (Root, Cmd[AppMsg]) =
@@ -591,6 +597,26 @@ object Root {
 
       case Msg.SiblingItoGroupFetched(cotoId, nodeId, Left(e)) =>
         (model, cotoami.error("Couldn't fetch a sibling ito group.", e))
+
+      case Msg.OthersLastPostedAtFetched(Right(map)) =>
+        (
+          model
+            .modify(_.nodes.selfSettings.each.othersLastPostedAtUtcIso).setTo(
+              model.nodes.selfId.flatMap(map.get(_))
+            )
+            .modify(_.nodes.parents).using(parents =>
+              parents.order.foldLeft(parents) { case (parents, parentId) =>
+                parents.updateOthersLastPostedAt(parentId, map.get(parentId))
+              }
+            ),
+          cotoami.info(
+            "The last post timestamps by others fetched",
+            Some(map.toString())
+          )
+        )
+
+      case Msg.OthersLastPostedAtFetched(Left(e)) =>
+        (model, cotoami.error("Couldn't fetch others' last posted at.", e))
     }
 
   def fetchNodeDetails(id: Id[Node]): Cmd.One[AppMsg] =
@@ -624,4 +650,8 @@ object Root {
   ): Cmd.One[AppMsg] =
     ItoBackend.fetchSiblings(cotoId, Some(nodeId))
       .map(Msg.SiblingItoGroupFetched(cotoId, nodeId, _).into)
+
+  def fetchOthersLastPostedAt: Cmd.One[AppMsg] =
+    NodeBackend.fetchOthersLastPostedAt
+      .map(Msg.OthersLastPostedAtFetched(_).into)
 }

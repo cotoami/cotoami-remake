@@ -11,6 +11,7 @@ trait ParentNodeJson extends js.Object {
   val created_at: String = js.native
   val changes_received: Double = js.native
   val last_change_received_at: Nullable[String] = js.native
+  val last_read_at: Nullable[String] = js.native
   val forked: Boolean = js.native
 }
 
@@ -22,6 +23,7 @@ object ParentNodeBackend {
       changesReceived = json.changes_received,
       lastChangeReceivedAtUtcIso =
         Nullable.toOption(json.last_change_received_at),
+      lastReadAtUtcIso = Nullable.toOption(json.last_read_at),
       forked = json.forked
     )
 }

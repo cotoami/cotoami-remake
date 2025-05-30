@@ -1,10 +1,10 @@
 //! ParentNode related operations
 
-use std::ops::DerefMut;
+use std::{collections::HashMap, ops::DerefMut};
 
 use anyhow::Context;
 use chrono::NaiveDateTime;
-use diesel::prelude::*;
+use diesel::{dsl::max, prelude::*};
 use validator::Validate;
 
 use crate::{
@@ -16,7 +16,7 @@ use crate::{
         },
         Id,
     },
-    schema::parent_nodes,
+    schema::{cotos, parent_nodes},
 };
 
 /// Returns a [ParentNode] by its ID.
@@ -32,10 +32,14 @@ pub(crate) fn get<Conn: AsReadableConn>(
     })
 }
 
-/// Returns all [ParentNode]s in arbitrary order.
+/// Returns all [ParentNode]s sorted by last_change_received_at and created_at.
 pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<ParentNode>> {
     read_op(move |conn| {
         parent_nodes::table
+            .order((
+                parent_nodes::last_change_received_at.desc(),
+                parent_nodes::created_at.desc(),
+            ))
             .load::<ParentNode>(conn)
             .map_err(anyhow::Error::from)
     })
@@ -49,6 +53,27 @@ pub(crate) fn get_by_node_ids<Conn: AsReadableConn>(
             .filter(parent_nodes::node_id.eq_any(node_ids))
             .load::<ParentNode>(conn)
             .map_err(anyhow::Error::from)
+    })
+}
+
+/// Returns a map from parent node ID to the timestamp of the most recent post
+/// made by other nodes (excluding the local node).
+pub(crate) fn others_last_posted_at<Conn: AsReadableConn>(
+    local_node_id: &Id<Node>,
+) -> impl Operation<Conn, HashMap<Id<Node>, NaiveDateTime>> + '_ {
+    read_op(move |conn| {
+        parent_nodes::table
+            .inner_join(cotos::table.on(cotos::node_id.eq(parent_nodes::node_id)))
+            .filter(cotos::posted_by_id.ne(local_node_id))
+            .group_by(parent_nodes::node_id)
+            .select((parent_nodes::node_id, max(cotos::created_at)))
+            .load::<(Id<Node>, Option<NaiveDateTime>)>(conn)
+            .map_err(anyhow::Error::from)
+            .map(|rows| {
+                rows.into_iter()
+                    .filter_map(|(node_id, time)| time.map(|time| (node_id, time)))
+                    .collect()
+            })
     })
 }
 
@@ -74,6 +99,29 @@ pub(crate) fn update<'a>(
             .set(update_parent)
             .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
+    })
+}
+
+pub(crate) fn mark_all_as_read(
+    read_at: NaiveDateTime,
+) -> impl Operation<WritableConn, Vec<ParentNode>> {
+    write_op(move |conn| {
+        diesel::update(parent_nodes::table)
+            .set(parent_nodes::last_read_at.eq(Some(read_at)))
+            .get_results(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub(crate) fn mark_as_read(
+    id: &Id<Node>,
+    read_at: NaiveDateTime,
+) -> impl Operation<WritableConn, ParentNode> + '_ {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let mut update_parent = UpdateParentNode::new(id);
+        update_parent.last_read_at = Some(Some(read_at));
+        let parent = update(&update_parent).run(ctx)?;
+        Ok(parent)
     })
 }
 

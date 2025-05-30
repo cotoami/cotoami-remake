@@ -30,6 +30,7 @@ trait Text {
   val SwapPane: String
   val LightMode: String
   val DarkMode: String
+  val MarkAllAsRead: String
 
   def Coto_inRemoteNode(nodeName: String): String
 
@@ -60,6 +61,8 @@ trait Text {
   val ConfirmDeleteCoto: String
   def ConfirmDeleteOthersCoto(someoneElse: ReactElement): ReactElement
   val ConfirmDeleteCotonoma: String
+  val ConfirmMarkAllAsRead: String
+  def ConfirmMarkNodeAsRead(nodeName: String): String
 
   val NavNodes_allNodes: String
   val NavNodes_addNode: String

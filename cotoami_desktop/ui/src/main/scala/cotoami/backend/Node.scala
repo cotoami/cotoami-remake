@@ -19,6 +19,10 @@ trait NodeJson extends js.Object {
 object NodeJson {
   def setLocalNodeIcon(icon: String): Cmd.One[Either[ErrorJson, NodeJson]] =
     Commands.send(Commands.SetLocalNodeIcon(icon))
+
+  def fetchOthersLastPostedAt
+      : Cmd.One[Either[ErrorJson, js.Dictionary[String]]] =
+    Commands.send(Commands.OthersLastPostedAt)
 }
 
 object NodeBackend {
@@ -31,6 +35,15 @@ object NodeBackend {
       version = json.version,
       createdAtUtcIso = json.created_at
     )
+
+  def fetchOthersLastPostedAt
+      : Cmd.One[Either[ErrorJson, Map[Id[Node], String]]] =
+    NodeJson.fetchOthersLastPostedAt.map(_.map {
+      _.map { case (nodeId, utcIso) => Id[Node](nodeId) -> utcIso }.toMap
+    })
+
+  def markAsRead(nodeId: Option[Id[Node]]): Cmd.One[Either[ErrorJson, String]] =
+    Commands.send(Commands.MarkAsRead(nodeId))
 
   def setLocalNodeIcon(icon: String): Cmd.One[Either[ErrorJson, Node]] =
     NodeJson.setLocalNodeIcon(icon).map(_.map(toModel))

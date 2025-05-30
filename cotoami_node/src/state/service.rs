@@ -143,6 +143,14 @@ impl NodeState {
             Command::ChangeItoOrder { id, new_order } => {
                 format.serialize(self.change_ito_order(id, new_order, opr?).await)
             }
+            Command::OthersLastPostedAt => format.serialize(self.others_last_posted_at(opr?).await),
+            Command::MarkAsRead { node } => {
+                if let Some(node) = node {
+                    format.serialize(self.mark_as_read(node, opr?).await)
+                } else {
+                    format.serialize(self.mark_all_as_read(opr?).await)
+                }
+            }
         }
     }
 }
@@ -324,7 +332,7 @@ impl NodeState {
             last_change_number,
             nodes: self.all_nodes().await?,
             local_settings: self.db().globals().try_get_local_node()?,
-            parent_node_ids: self.db().globals().parent_node_ids(),
+            parents: self.parent_nodes(operator.clone()).await?,
             servers: self.all_servers(operator).await?,
             active_clients: self.active_clients(),
         })

@@ -1,11 +1,16 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
+use chrono::NaiveDateTime;
+use diesel::sqlite::SqliteConnection;
 
 use crate::{
     db::{
         op::*,
-        ops::{changelog_ops, node_ops, node_role_ops, node_role_ops::child_ops},
+        ops::{
+            changelog_ops, coto_ops, node_ops, node_role_ops,
+            node_role_ops::{child_ops, parent_ops},
+        },
         DatabaseSession,
     },
     models::prelude::*,
@@ -82,5 +87,57 @@ impl DatabaseSession<'_> {
             return Ok(Some(Operator::ChildNode(child)));
         }
         Ok(None)
+    }
+
+    /// Returns a map from node ID to the timestamp of the most recent post
+    /// made by other nodes (excluding the local node).
+    /// The target nodes are all parent nodes and the local node.
+    pub fn others_last_posted_at(
+        &mut self,
+        operator: &Operator,
+    ) -> Result<HashMap<Id<Node>, NaiveDateTime>> {
+        operator.requires_to_be_owner()?;
+        let local_node_id = self.globals.try_get_local_node_id()?;
+        self.read_transaction(|ctx: &mut Context<'_, SqliteConnection>| {
+            let mut map = parent_ops::others_last_posted_at(&local_node_id).run(ctx)?;
+            if let Some(in_local) =
+                coto_ops::others_last_posted_at_in_local(&local_node_id).run(ctx)?
+            {
+                map.insert(local_node_id, in_local);
+            }
+            Ok(map)
+        })
+    }
+
+    /// Marks the local node and all the parents as read at the given timestamp.
+    /// If `read_at` is `None`, the current timestamp will be used.
+    pub fn mark_all_as_read(
+        &mut self,
+        read_at: Option<NaiveDateTime>,
+        operator: &Operator,
+    ) -> Result<NaiveDateTime> {
+        operator.requires_to_be_owner()?;
+        let read_at = read_at.unwrap_or_else(crate::current_datetime);
+        self.mark_local_as_read(read_at, operator)?;
+        self.mark_all_parents_as_read(read_at, operator)?;
+        Ok(read_at)
+    }
+
+    /// Marks the specified node as read at the given timestamp.
+    /// If `read_at` is `None`, the current timestamp will be used.
+    pub fn mark_as_read(
+        &mut self,
+        node_id: &Id<Node>,
+        read_at: Option<NaiveDateTime>,
+        operator: &Operator,
+    ) -> Result<NaiveDateTime> {
+        operator.requires_to_be_owner()?;
+        let read_at = read_at.unwrap_or_else(crate::current_datetime);
+        if self.globals.is_local_node(node_id) {
+            self.mark_local_as_read(read_at, operator)?;
+        } else {
+            self.mark_parent_as_read(node_id, read_at, operator)?;
+        }
+        Ok(read_at)
     }
 }

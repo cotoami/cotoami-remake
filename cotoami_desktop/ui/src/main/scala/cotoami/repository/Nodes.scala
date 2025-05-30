@@ -1,6 +1,5 @@
 package cotoami.repository
 
-import scala.util.chaining._
 import com.softwaremill.quicklens._
 
 import cotoami.models.{
@@ -34,8 +33,8 @@ case class Nodes(
 
     // Remote nodes
     servers: Servers = Servers(),
-    activeClients: ActiveClients = ActiveClients(),
-    parentIds: Seq[Id[Node]] = Seq.empty
+    parents: Parents = Parents(),
+    activeClients: ActiveClients = ActiveClients()
 ) {
   def onNodeChange: Nodes = unfocus
 
@@ -75,7 +74,53 @@ case class Nodes(
       case _                         => false
     }
 
-  def parents: Seq[Node] = parentIds.map(get).flatten
+  def postedBySelf(coto: Coto): Boolean = isSelf(coto.postedById)
+
+  def updateOthersLastPostedAt(coto: Coto): Nodes =
+    if (postedBySelf(coto))
+      this
+    else {
+      if (isSelf(coto.nodeId)) {
+        // Update the last posted time in self settings
+        this.modify(_.selfSettings.each.othersLastPostedAtUtcIso)
+          .setTo(Some(coto.createdAtUtcIso))
+      } else {
+        // Update the last posted time in parent nodes
+        this.modify(_.parents).using(_.updateOthersLastPostedAt(coto))
+      }
+    }
+
+  lazy val anyUnreadPosts: Boolean =
+    anyUnreadPostsInSelf || parents.anyUnreadPosts
+
+  lazy val anyUnreadPostsInSelf: Boolean =
+    selfSettings.exists(_.anyUnreadPosts)
+
+  lazy val anyUnreadPostsInFocus: Boolean =
+    focusedId match {
+      case Some(focusedId) =>
+        if (isSelf(focusedId)) anyUnreadPostsInSelf
+        else parents.anyUnreadPostsIn(focusedId)
+      case None => anyUnreadPosts
+    }
+
+  def unread(coto: Coto): Boolean =
+    !isSelf(coto.postedById) &&
+      (
+        selfSettings.map(_.unread(coto)).getOrElse(false) ||
+          parents.unread(coto)
+      )
+
+  def markAllAsRead(utcIso: String): Nodes =
+    this
+      .modify(_.selfSettings.each.lastReadAtUtcIso).setTo(Some(utcIso))
+      .modify(_.parents).using(_.markAllAsRead(utcIso))
+
+  def markAsRead(nodeId: Id[Node], utcIso: String): Nodes =
+    if (isSelf(nodeId))
+      this.modify(_.selfSettings.each.lastReadAtUtcIso).setTo(Some(utcIso))
+    else
+      this.modify(_.parents).using(_.markAsRead(nodeId, utcIso))
 
   def focus(id: Option[Id[Node]]): Nodes =
     id.map(id =>
@@ -93,11 +138,6 @@ case class Nodes(
 
   def current: Option[Node] = focused.orElse(self)
 
-  def prependParentId(id: Id[Node]): Nodes =
-    if (parentIds.contains(id)) this
-    else
-      this.modify(_.parentIds).using(id +: _)
-
   def setIcon(id: Id[Node], icon: String): Nodes =
     this.modify(_.map.index(id)).using(_.setIcon(icon))
 
@@ -105,22 +145,23 @@ case class Nodes(
     this.modify(_.map.index(id)).using(_.rename(name))
 
   def addServer(server: Server): Nodes =
-    this.modify(_.servers).using(_.put(server)).pipe { nodes =>
-      server.role.map {
-        case DatabaseRole.Parent(parent) => nodes.prependParentId(parent.nodeId)
-        case DatabaseRole.Child(child)   => nodes
-      }.getOrElse(nodes)
-    }
-
-  def addServers(servers: Iterable[Server]): Nodes =
-    servers.foldLeft(this)(_ addServer _)
+    this
+      .modify(_.servers).using(_.put(server))
+      .modify(_.parents).using(parents =>
+        server.role match {
+          case Some(DatabaseRole.Parent(parent)) => parents.prepend(parent)
+          case _                                 => parents
+        }
+      )
 
   def clientInfo(clientNode: ClientNode): Option[Client] =
     get(clientNode.nodeId).map(
       Client(_, clientNode, activeClients.get(clientNode.nodeId))
     )
 
-  def isParent(id: Id[Node]): Boolean = parentIds.contains(id)
+  def parentNodes: Seq[Node] = parents.nodeIds.map(get).flatten
+
+  def isParent(id: Id[Node]): Boolean = parents.contains(id)
 
   def parentStatus(parentId: Id[Node]): Option[ParentStatus] = {
     if (!isParent(parentId)) return None
@@ -194,8 +235,8 @@ object Nodes {
       map = dataset.nodes,
       localId = Some(localId),
       selfSettings = Some(dataset.localSettings),
-      parentIds = dataset.parentNodeIds.toSeq
+      servers = Servers().putAll(dataset.servers),
+      parents = Parents().appendAll(dataset.parents),
+      activeClients = ActiveClients().putAll(dataset.activeClients)
     )
-      .addServers(dataset.servers)
-      .modify(_.activeClients).using(_.putAll(dataset.activeClients))
 }

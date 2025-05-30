@@ -37,6 +37,9 @@ pub struct ParentNode {
     /// Date when received the last change from this parent node.
     pub last_change_received_at: Option<NaiveDateTime>,
 
+    /// Last time the parent node was marked as read.
+    pub last_read_at: Option<NaiveDateTime>,
+
     /// TRUE if the local node has been forked from this parent node.
     ///
     /// A forked child can never connect to or accept changes
@@ -81,6 +84,9 @@ pub(crate) struct UpdateParentNode<'a> {
 
     #[new(default)]
     pub last_change_received_at: Option<Option<NaiveDateTime>>,
+
+    #[new(default)]
+    pub last_read_at: Option<Option<NaiveDateTime>>,
 
     #[new(default)]
     pub forked: Option<bool>,

@@ -36,7 +36,7 @@ impl NodeState {
     }
 
     pub async fn set_image_max_size(
-        self,
+        &self,
         size: i32,
         operator: Arc<Operator>,
     ) -> Result<LocalNode, ServiceError> {
@@ -51,7 +51,7 @@ impl NodeState {
     }
 
     pub async fn enable_anonymous_read(
-        self,
+        &self,
         enable: bool,
         operator: Arc<Operator>,
     ) -> Result<LocalNode, ServiceError> {

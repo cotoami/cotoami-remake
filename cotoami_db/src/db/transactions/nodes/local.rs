@@ -1,6 +1,7 @@
 use core::time::Duration;
 
 use anyhow::{bail, ensure, Result};
+use chrono::NaiveDateTime;
 
 use crate::{
     db::{
@@ -165,6 +166,19 @@ impl DatabaseSession<'_> {
         self.update_local_node(|local_node| {
             let mut update = local_node.to_update();
             update.anonymous_read_enabled = Some(enable);
+            self.write_transaction(local_ops::update(&update))
+        })
+    }
+
+    pub fn mark_local_as_read(
+        &self,
+        read_at: NaiveDateTime,
+        operator: &Operator,
+    ) -> Result<LocalNode> {
+        operator.requires_to_be_owner()?;
+        self.update_local_node(|local_node| {
+            let mut update = local_node.to_update();
+            update.last_read_at = Some(Some(read_at));
             self.write_transaction(local_ops::update(&update))
         })
     }

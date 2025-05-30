@@ -4,7 +4,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import marubinotto.optionalClasses
-import marubinotto.components.{materialSymbol, toolButton}
+import marubinotto.components.{materialSymbol, materialSymbolFilled, toolButton}
 
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Node, UiState}
@@ -35,21 +35,34 @@ object NavNodes {
     )(
       paneToggle(PaneName),
       buttonSwitchBack(nodes),
-      button(
+      div(
         className := optionalClasses(
           Seq(
-            ("all", true),
-            ("default", true),
-            ("focusable", true),
+            ("button-all", true),
+            ("read-trackable", true),
             ("focused", nodes.focused.isEmpty)
           )
-        ),
-        data - "tooltip" := context.i18n.text.NavNodes_allNodes,
-        data - "placement" := "right",
-        disabled := nodes.focused.isEmpty,
-        onClick := (_ => dispatch(AppMsg.UnfocusNode))
+        )
       )(
-        materialSymbol("stacks")
+        button(
+          className := optionalClasses(
+            Seq(
+              ("all", true),
+              ("default", true),
+              ("focusable", true),
+              ("focused", nodes.focused.isEmpty)
+            )
+          ),
+          data - "tooltip" := context.i18n.text.NavNodes_allNodes,
+          data - "placement" := "right",
+          disabled := nodes.focused.isEmpty,
+          onClick := (_ => dispatch(AppMsg.UnfocusNode))
+        )(
+          materialSymbol("stacks")
+        ),
+        Option.when(nodes.anyUnreadPosts)(
+          materialSymbolFilled("brightness_1", "unread-mark")
+        )
       ),
       div(className := "separator")(),
       toolButton(
@@ -62,12 +75,12 @@ object NavNodes {
       ul(className := "nodes")(
         nodes.self.map(node =>
           li(className := "self", key := node.id.uuid)(
-            buttonNode(node, nodes)
+            buttonNode(node, nodes.anyUnreadPostsInSelf, nodes)
           )
         ),
-        nodes.parents.map(node =>
+        nodes.parentNodes.map(node =>
           li(className := "parent", key := node.id.uuid)(
-            buttonNode(node, nodes)
+            buttonNode(node, nodes.parents.anyUnreadPostsIn(node.id), nodes)
           )
         )
       )
@@ -104,29 +117,43 @@ object NavNodes {
 
   private def buttonNode(
       node: Node,
+      anyUnreadPosts: Boolean,
       nodes: Nodes
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val status = nodes.parentStatus(node.id)
       .flatMap(ViewConnectionStatus(_).onlyIfNotConnected)
     val tooltip =
       status.map(s => s"${node.name} (${s.title})").getOrElse(node.name)
-    button(
+    val focused = nodes.isFocusing(node.id)
+    div(
       className := optionalClasses(
         Seq(
-          ("node", true),
-          ("default", true),
-          ("focusable", true),
-          ("focused", nodes.isFocusing(node.id))
+          ("button-node", true),
+          ("read-trackable", true),
+          ("focused", focused)
         )
-      ),
-      disabled := nodes.isFocusing(node.id),
-      data - "tooltip" := tooltip,
-      data - "placement" := "right",
-      disabled := nodes.isFocusing(node.id),
-      onClick := (_ => dispatch(AppMsg.FocusNode(node.id)))
+      )
     )(
-      PartsNode.imgNode(node),
-      status.map(s => span(className := s"status ${s.className}")(s.icon))
+      button(
+        className := optionalClasses(
+          Seq(
+            ("node", true),
+            ("default", true),
+            ("focusable", true),
+            ("focused", focused)
+          )
+        ),
+        disabled := focused,
+        data - "tooltip" := tooltip,
+        data - "placement" := "right",
+        onClick := (_ => dispatch(AppMsg.FocusNode(node.id)))
+      )(
+        PartsNode.imgNode(node),
+        status.map(s => span(className := s"status ${s.className}")(s.icon))
+      ),
+      Option.when(anyUnreadPosts)(
+        materialSymbolFilled("brightness_1", "unread-mark")
+      )
     )
   }
 }

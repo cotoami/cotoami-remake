@@ -195,4 +195,13 @@ pub enum Command {
     /// Request to change the order of the specified ito to `new_order` and
     /// return the updated [Ito] if suceeded.
     ChangeItoOrder { id: Id<Ito>, new_order: i32 },
+
+    /// Request a map from node ID to the timestamp of the most recent post
+    /// made by other nodes (excluding the local node).
+    /// The target nodes are all parent nodes and the local node.
+    OthersLastPostedAt,
+
+    /// Request to mark the given node as read and
+    /// return the saved timestamp (UTC ISO string) if suceeded.
+    MarkAsRead { node: Option<Id<Node>> },
 }

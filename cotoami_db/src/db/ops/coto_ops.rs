@@ -4,7 +4,7 @@ use std::{borrow::Cow, collections::HashMap, ops::DerefMut};
 
 use anyhow::{ensure, Context, Result};
 use chrono::NaiveDateTime;
-use diesel::prelude::*;
+use diesel::{dsl::max, prelude::*};
 use validator::Validate;
 
 use crate::{
@@ -157,6 +157,19 @@ pub(crate) fn in_geo_bounds<'a, Conn: AsReadableConn>(
             .order(cotos::created_at.desc())
             .limit(limit)
             .load::<Coto>(conn)
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub(crate) fn others_last_posted_at_in_local<Conn: AsReadableConn>(
+    local_node_id: &Id<Node>,
+) -> impl Operation<Conn, Option<NaiveDateTime>> + '_ {
+    read_op(move |conn| {
+        cotos::table
+            .filter(cotos::node_id.eq(local_node_id))
+            .filter(cotos::posted_by_id.ne(local_node_id))
+            .select(max(cotos::created_at))
+            .first(conn)
             .map_err(anyhow::Error::from)
     })
 }

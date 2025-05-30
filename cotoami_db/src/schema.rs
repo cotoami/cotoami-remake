@@ -47,6 +47,7 @@ diesel::table! {
         owner_session_expires_at -> Nullable<Timestamp>,
         image_max_size -> Nullable<Integer>,
         anonymous_read_enabled -> Bool,
+        last_read_at -> Nullable<Timestamp>,
     }
 }
 diesel::joinable!(local_node -> nodes (node_id));
@@ -81,6 +82,7 @@ diesel::table! {
         created_at -> Timestamp,
         changes_received -> BigInt,
         last_change_received_at -> Nullable<Timestamp>,
+        last_read_at -> Nullable<Timestamp>,
         forked -> Bool,
     }
 }

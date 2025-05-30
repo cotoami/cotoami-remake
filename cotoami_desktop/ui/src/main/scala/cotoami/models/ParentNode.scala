@@ -7,8 +7,10 @@ case class ParentNode(
     createdAtUtcIso: String,
     changesReceived: Double,
     lastChangeReceivedAtUtcIso: Option[String],
-    forked: Boolean
-) {
+    lastReadAtUtcIso: Option[String],
+    forked: Boolean,
+    othersLastPostedAtUtcIso: Option[String] = None
+) extends ReadTrackableNode {
   lazy val createdAt: Instant = parseUtcIso(createdAtUtcIso)
   lazy val lastChangeReceivedAt: Option[Instant] =
     lastChangeReceivedAtUtcIso.map(parseUtcIso)

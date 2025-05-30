@@ -280,6 +280,17 @@ impl HttpClient {
             Command::ChangeItoOrder { id, new_order } => self
                 .put(&format!("{API_PATH_ITOS}/{id}/order"))
                 .json(&new_order),
+            Command::OthersLastPostedAt => {
+                self.get(&format!("{API_PATH_NODES}/others-last-posted-at"))
+            }
+            Command::MarkAsRead { node } => {
+                let url = if let Some(node_id) = node {
+                    format!("{API_PATH_NODES}/{node_id}/mark-as-read")
+                } else {
+                    format!("{API_PATH_NODES}/mark-as-read")
+                };
+                self.put(&url)
+            }
         };
 
         // Set the "Accept" header from Request::accept()

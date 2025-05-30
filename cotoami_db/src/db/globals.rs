@@ -38,10 +38,7 @@ impl Globals {
         }
 
         // parent_nodes
-        *self.parent_nodes.write() = op::run_read(conn, parent_ops::all())?
-            .into_iter()
-            .map(|parent| (parent.node_id, parent))
-            .collect::<HashMap<_, _>>();
+        self.replace_parent_nodes(op::run_read(conn, parent_ops::all())?);
 
         Ok(())
     }
@@ -119,22 +116,20 @@ impl Globals {
 
     pub fn is_parent(&self, id: &Id<Node>) -> bool { self.parent_nodes.read().contains_key(id) }
 
-    /// Returns the parent IDs in order of recently updated.
-    pub fn parent_node_ids(&self) -> Vec<Id<Node>> {
-        let parent_map = self.parent_nodes.read();
-        let mut parents: Vec<&ParentNode> = parent_map.values().collect();
-        parents.sort_by(|a, b| b.last_change_received_at.cmp(&a.last_change_received_at));
-        parents.into_iter().map(|p| p.node_id).collect()
-    }
-
     pub fn parent_node(&self, id: &Id<Node>) -> Option<ParentNode> {
         self.parent_nodes.read().get(id).cloned()
     }
 
+    pub(crate) fn replace_parent_nodes(&self, parent_nodes: Vec<ParentNode>) {
+        let mut map = self.parent_nodes.write();
+        map.clear();
+        for parent in parent_nodes {
+            map.insert(parent.node_id, parent);
+        }
+    }
+
     pub(crate) fn cache_parent_node(&self, parent: ParentNode) {
-        self.parent_nodes
-            .write()
-            .insert(parent.node_id, parent.clone());
+        self.parent_nodes.write().insert(parent.node_id, parent);
     }
 
     pub(crate) fn try_write_parent_node(
