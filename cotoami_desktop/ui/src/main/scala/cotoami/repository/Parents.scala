@@ -42,6 +42,9 @@ case class Parents(
   def updateOthersLastPostedAt(id: Id[Node], utcIso: Option[String]): Parents =
     this.modify(_.map.index(id).othersLastPostedAtUtcIso).setTo(utcIso)
 
+  def updateOthersLastPostedAt(coto: Coto): Parents =
+    updateOthersLastPostedAt(coto.nodeId, Some(coto.createdAtUtcIso))
+
   def markAllAsRead(utcIso: String): Parents =
     this.modify(_.map.each.lastReadAtUtcIso).setTo(Some(utcIso))
 

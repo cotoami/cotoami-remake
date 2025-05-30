@@ -76,6 +76,20 @@ case class Nodes(
 
   def postedBySelf(coto: Coto): Boolean = isSelf(coto.postedById)
 
+  def updateOthersLastPostedAt(coto: Coto): Nodes =
+    if (postedBySelf(coto))
+      this
+    else {
+      if (isSelf(coto.nodeId)) {
+        // Update the last posted time in self settings
+        this.modify(_.selfSettings.each.othersLastPostedAtUtcIso)
+          .setTo(Some(coto.createdAtUtcIso))
+      } else {
+        // Update the last posted time in parent nodes
+        this.modify(_.parents).using(_.updateOthersLastPostedAt(coto))
+      }
+    }
+
   lazy val anyUnreadPosts: Boolean =
     anyUnreadPostsInSelf || parents.anyUnreadPosts
 
