@@ -6,6 +6,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 import com.softwaremill.quicklens._
 
+import marubinotto.optionalClasses
 import marubinotto.fui._
 import marubinotto.components.{
   materialSymbol,
@@ -368,11 +369,11 @@ object SectionTimeline {
             flipKey = cotos.length.toString()
           )(
             (model.waitingPosts.posts.map(sectionWaitingPost) ++
-              cotos.map(coto =>
+              cotos.zipWithIndex.map { case (coto, index) =>
                 Flipped(key = coto.id.uuid, flipId = coto.id.uuid)(
-                  sectionPost(coto, model)
+                  sectionPost((cotos.lift(index - 1), coto), model)
                 ): ReactElement
-              ) :+
+              } :+
               div(
                 className := "more",
                 aria - "busy" := model.loading.toString()
@@ -399,10 +400,21 @@ object SectionTimeline {
     )
 
   private def sectionPost(
-      coto: Coto,
+      post: (Option[Coto], Coto),
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    section(className := "post flow-entry")(
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+    val (previous, coto) = post
+    val posterChange =
+      previous.map(_.postedById != coto.postedById).getOrElse(false)
+    section(
+      className := optionalClasses(
+        Seq(
+          ("post", true),
+          ("flow-entry", true),
+          ("poster-change", posterChange)
+        )
+      )
+    )(
       repostHeader(coto),
       context.repo.cotos.getOriginal(coto).map(coto =>
         Fragment(
@@ -415,6 +427,7 @@ object SectionTimeline {
         )
       )
     )
+  }
 
   private def articleCoto(coto: Coto)(implicit
       context: Context,
