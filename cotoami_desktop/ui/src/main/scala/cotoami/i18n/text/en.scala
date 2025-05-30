@@ -72,8 +72,9 @@ object en extends Text {
       someoneElse
     )
   val ConfirmDeleteCotonoma = "Are you sure you want to delete the cotonoma?"
-  val ConfirmMarkAllAsRead = "Mark all cotos as read?"
-  val ConfirmMarkNodeAsRead = "Mark all cotos in this node as read?"
+  val ConfirmMarkAllAsRead = "Are you sure you want to mark all cotos as read?"
+  val ConfirmMarkNodeAsRead =
+    "Are you sure you want to mark all cotos in this node as read?"
 
   val NavNodes_allNodes = "All Nodes"
   val NavNodes_addNode = "Add Node"
