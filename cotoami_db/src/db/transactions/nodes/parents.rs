@@ -21,7 +21,7 @@ impl DatabaseSession<'_> {
         Ok(self.globals.parent_node(id))
     }
 
-    pub fn mark_all_parent_nodes_as_read(
+    pub fn mark_all_parents_as_read(
         &self,
         read_at: NaiveDateTime,
         operator: &Operator,
@@ -32,7 +32,7 @@ impl DatabaseSession<'_> {
         Ok(())
     }
 
-    pub fn mark_parent_node_as_read(
+    pub fn mark_parent_as_read(
         &self,
         id: &Id<Node>,
         read_at: NaiveDateTime,

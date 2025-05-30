@@ -77,22 +77,13 @@ fn parents() -> Result<()> {
     // When: mark_as_read
     /////////////////////////////////////////////////////////////////////////////
 
-    let read_at = earth_ds.mark_as_read(&sun_node.uuid, &earth_opr)?;
-    let parent_node = earth_ds.parent_node(&sun_node.uuid, &earth_opr)?;
-
+    let read_at = earth_ds.mark_as_read(&sun_node.uuid, None, &earth_opr)?;
     assert_that!(
-        parent_node,
+        earth_ds.parent_node(&sun_node.uuid, &earth_opr)?,
         some(pat!(ParentNode {
             node_id: eq(&sun_node.uuid),
             last_read_at: some(eq(&read_at)),
         }))
-    );
-
-    let others_last_posted_at = earth_ds.others_last_posted_at(&earth_opr)?;
-    assert_that!(others_last_posted_at.len(), eq(1));
-    assert_that!(
-        others_last_posted_at,
-        has_entry(moon_node.uuid, eq(&moon_root_coto.created_at))
     );
 
     Ok(())

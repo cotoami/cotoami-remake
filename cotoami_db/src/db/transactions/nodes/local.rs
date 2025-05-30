@@ -170,7 +170,7 @@ impl DatabaseSession<'_> {
         })
     }
 
-    pub fn mark_local_node_as_read(
+    pub fn mark_local_as_read(
         &self,
         read_at: NaiveDateTime,
         operator: &Operator,

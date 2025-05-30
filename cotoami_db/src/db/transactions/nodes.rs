@@ -109,25 +109,30 @@ impl DatabaseSession<'_> {
         })
     }
 
-    pub fn mark_all_as_read(&mut self, operator: &Operator) -> Result<NaiveDateTime> {
+    pub fn mark_all_as_read(
+        &mut self,
+        read_at: Option<NaiveDateTime>,
+        operator: &Operator,
+    ) -> Result<NaiveDateTime> {
         operator.requires_to_be_owner()?;
-        let read_at = crate::current_datetime();
-        self.mark_local_node_as_read(read_at, operator)?;
-        self.mark_all_parent_nodes_as_read(read_at, operator)?;
+        let read_at = read_at.unwrap_or_else(crate::current_datetime);
+        self.mark_local_as_read(read_at, operator)?;
+        self.mark_all_parents_as_read(read_at, operator)?;
         Ok(read_at)
     }
 
     pub fn mark_as_read(
         &mut self,
         node_id: &Id<Node>,
+        read_at: Option<NaiveDateTime>,
         operator: &Operator,
     ) -> Result<NaiveDateTime> {
         operator.requires_to_be_owner()?;
-        let read_at = crate::current_datetime();
+        let read_at = read_at.unwrap_or_else(crate::current_datetime);
         if self.globals.is_local_node(node_id) {
-            self.mark_local_node_as_read(read_at, operator)?;
+            self.mark_local_as_read(read_at, operator)?;
         } else {
-            self.mark_parent_node_as_read(node_id, read_at, operator)?;
+            self.mark_parent_as_read(node_id, read_at, operator)?;
         }
         Ok(read_at)
     }
