@@ -1,4 +1,7 @@
 .coto-flow {
+  padding-left: 4px;
+  padding-right: 4px;
+  background-color: var(--coto-flow-background-color);
 
   .simplebar-content {
     // override the default padding to make a space for
@@ -7,7 +10,7 @@
   }
 
   .flow-entry {
-    border-bottom: 1px solid var(--pane-border-color);
+    margin-bottom: 10px;
 
     article.coto {
       padding: 1rem 0;
