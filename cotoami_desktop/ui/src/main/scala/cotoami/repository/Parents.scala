@@ -14,14 +14,6 @@ case class Parents(
 
   def get(id: Id[Node]): Option[ParentNode] = map.get(id)
 
-  lazy val anyUnreadPosts: Boolean = map.values.exists(_.anyUnreadPosts)
-
-  def anyUnreadPostsIn(id: Id[Node]): Boolean =
-    map.get(id).exists(_.anyUnreadPosts)
-
-  def unread(coto: Coto): Boolean =
-    get(coto.nodeId).map(_.unread(coto)).getOrElse(false)
-
   def prepend(parent: ParentNode): Parents =
     this
       .modify(_.map).using(_ + (parent.nodeId -> parent))
@@ -39,6 +31,22 @@ case class Parents(
   def appendAll(parents: Iterable[ParentNode]): Parents =
     parents.foldLeft(this)(_ append _)
 
+  lazy val anyUnreadPosts: Boolean = map.values.exists(_.anyUnreadPosts)
+
+  def anyUnreadPostsIn(id: Id[Node]): Boolean =
+    map.get(id).exists(_.anyUnreadPosts)
+
+  def unread(coto: Coto): Boolean =
+    get(coto.nodeId).map(_.unread(coto)).getOrElse(false)
+
   def updateOthersLastPostedAt(id: Id[Node], utcIso: Option[String]): Parents =
     this.modify(_.map.index(id).othersLastPostedAtUtcIso).setTo(utcIso)
+
+  def markAsRead(nodeId: Option[Id[Node]], utcIso: String): Parents =
+    nodeId match {
+      case Some(nodeId) =>
+        this.modify(_.map.index(nodeId).lastReadAtUtcIso).setTo(Some(utcIso))
+      case _ =>
+        this.modify(_.map.each.lastReadAtUtcIso).setTo(Some(utcIso))
+    }
 }
