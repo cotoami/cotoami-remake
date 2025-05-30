@@ -95,6 +95,17 @@ case class Nodes(
           parents.unread(coto)
       )
 
+  def markAllAsRead(utcIso: String): Nodes =
+    this
+      .modify(_.selfSettings.each.lastReadAtUtcIso).setTo(Some(utcIso))
+      .modify(_.parents).using(_.markAllAsRead(utcIso))
+
+  def markAsRead(nodeId: Id[Node], utcIso: String): Nodes =
+    if (isSelf(nodeId))
+      this.modify(_.selfSettings.each.lastReadAtUtcIso).setTo(Some(utcIso))
+    else
+      this.modify(_.parents).using(_.markAsRead(nodeId, utcIso))
+
   def focus(id: Option[Id[Node]]): Nodes =
     id.map(id =>
       if (contains(id))

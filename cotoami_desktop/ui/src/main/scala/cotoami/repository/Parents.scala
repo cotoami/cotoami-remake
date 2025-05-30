@@ -42,11 +42,9 @@ case class Parents(
   def updateOthersLastPostedAt(id: Id[Node], utcIso: Option[String]): Parents =
     this.modify(_.map.index(id).othersLastPostedAtUtcIso).setTo(utcIso)
 
-  def markAsRead(nodeId: Option[Id[Node]], utcIso: String): Parents =
-    nodeId match {
-      case Some(nodeId) =>
-        this.modify(_.map.index(nodeId).lastReadAtUtcIso).setTo(Some(utcIso))
-      case _ =>
-        this.modify(_.map.each.lastReadAtUtcIso).setTo(Some(utcIso))
-    }
+  def markAllAsRead(utcIso: String): Parents =
+    this.modify(_.map.each.lastReadAtUtcIso).setTo(Some(utcIso))
+
+  def markAsRead(nodeId: Id[Node], utcIso: String): Parents =
+    this.modify(_.map.index(nodeId).lastReadAtUtcIso).setTo(Some(utcIso))
 }
