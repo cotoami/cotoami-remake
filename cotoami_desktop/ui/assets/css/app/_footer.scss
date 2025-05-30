@@ -1,9 +1,12 @@
 @use "../pico-customized" as pico;
+@use "../mixins";
 
 div.app>footer {
   position: relative;
 
   div.browser-nav {
+    @include mixins.selectable;
+
     display: flex;
     flex-direction: row;
 
