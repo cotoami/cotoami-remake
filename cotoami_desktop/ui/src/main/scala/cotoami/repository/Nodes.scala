@@ -74,6 +74,8 @@ case class Nodes(
       case _                         => false
     }
 
+  def postedBySelf(coto: Coto): Boolean = isSelf(coto.postedById)
+
   lazy val anyUnreadPosts: Boolean =
     anyUnreadPostsInSelf || parents.anyUnreadPosts
 

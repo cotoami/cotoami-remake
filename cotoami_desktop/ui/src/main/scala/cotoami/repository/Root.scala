@@ -90,6 +90,9 @@ case class Root(
   def isNodeRoot(cotoId: Id[Coto]): Boolean =
     cotonomas.getByCotoId(cotoId).map(nodes.isNodeRoot(_)).getOrElse(false)
 
+  def postedBySelf(cotoId: Id[Coto]): Boolean =
+    cotos.get(cotoId).map(nodes.postedBySelf).getOrElse(false)
+
   def deleteCoto(id: Id[Coto]): Root =
     // Delete the reposts first if they exist
     cotos.repostsOf(id).foldLeft(this)(_ deleteCoto _.id)
