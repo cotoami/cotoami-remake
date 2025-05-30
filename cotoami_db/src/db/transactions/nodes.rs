@@ -109,6 +109,8 @@ impl DatabaseSession<'_> {
         })
     }
 
+    /// Marks the local node and all the parents as read at the given timestamp.
+    /// If `read_at` is `None`, the current timestamp will be used.
     pub fn mark_all_as_read(
         &mut self,
         read_at: Option<NaiveDateTime>,
@@ -121,6 +123,8 @@ impl DatabaseSession<'_> {
         Ok(read_at)
     }
 
+    /// Marks the specified node as read at the given timestamp.
+    /// If `read_at` is `None`, the current timestamp will be used.
     pub fn mark_as_read(
         &mut self,
         node_id: &Id<Node>,
