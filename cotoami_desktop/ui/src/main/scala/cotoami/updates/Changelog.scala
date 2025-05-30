@@ -278,6 +278,12 @@ object Changelog {
         if (model.repo.isCurrentCotonoma(cotoId))
           Browser.send(Msg.UnfocusCotonoma)
         else
+          Cmd.none,
+
+        // If the coto was posted by others, update othersLastPostedAt
+        if (!model.repo.postedBySelf(cotoId))
+          Root.fetchOthersLastPostedAt
+        else
           Cmd.none
       )
     )
