@@ -53,7 +53,8 @@ object SectionTimeline {
 
       // State
       imeActive: Boolean = false,
-      loading: Boolean = false
+      loading: Boolean = false,
+      markingAsRead: Boolean = false
   ) {
     def onFocusChange(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       copy(
@@ -285,7 +286,9 @@ object SectionTimeline {
       header(className := "tools")(
         Option.when(context.repo.nodes.anyUnreadPostsInFocus)(
           button(
-            className := "mark-as-read contrast outline"
+            className := "mark-as-read contrast outline",
+            disabled := model.markingAsRead,
+            aria - "busy" := model.markingAsRead.toString()
           )(context.i18n.text.MarkAllAsRead)
         ),
         div(className := "search")(
