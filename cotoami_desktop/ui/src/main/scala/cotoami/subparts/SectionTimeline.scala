@@ -27,7 +27,7 @@ import cotoami.models.{
   WaitingPosts
 }
 import cotoami.repository._
-import cotoami.backend.{ErrorJson, PaginatedCotos}
+import cotoami.backend.{ErrorJson, NodeBackend, PaginatedCotos}
 
 object SectionTimeline {
 
@@ -158,6 +158,7 @@ object SectionTimeline {
         extends Msg
     case class ScrollAreaUnmounted(cotonomaId: Id[Cotonoma], scrollPos: Double)
         extends Msg
+    case object MarkAsRead extends Msg
     case class MarkedAsRead(
         nodeId: Option[Id[Node]],
         result: Either[ErrorJson, String]
@@ -221,6 +222,15 @@ object SectionTimeline {
 
       case Msg.ScrollAreaUnmounted(cotonomaId, scrollPos) =>
         default.copy(_1 = model.saveScrollPos(cotonomaId, scrollPos))
+
+      case Msg.MarkAsRead => {
+        val focusedNodeId = context.repo.nodes.focusedId
+        default.copy(
+          _1 = model.copy(markingAsRead = true),
+          _3 = NodeBackend.markAsRead(focusedNodeId)
+            .map(Msg.MarkedAsRead(focusedNodeId, _).into)
+        )
+      }
 
       case Msg.MarkedAsRead(nodeId, Right(utcIso)) =>
         default.copy(
