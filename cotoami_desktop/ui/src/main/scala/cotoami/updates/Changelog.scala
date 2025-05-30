@@ -108,22 +108,7 @@ object Changelog {
 
     // DeleteCoto
     for (json <- change.DeleteCoto.toOption) {
-      val cotoId: Id[Coto] = Id(json.coto_id)
-      return (
-        model.modify(_.repo).using(_.deleteCoto(cotoId)),
-        Cmd.Batch(
-          // Update the original coto if it's a repost
-          model.repo.cotos.get(cotoId).flatMap(_.repostOfId)
-            .map(updateCoto)
-            .getOrElse(Cmd.none),
-
-          // UnfocusCotonoma if the deleted coto is the current cotonoma
-          if (model.repo.isCurrentCotonoma(cotoId))
-            Browser.send(Msg.UnfocusCotonoma)
-          else
-            Cmd.none
-        )
-      )
+      return deleteCoto(Id(json.coto_id), model)
     }
 
     // EditIto
@@ -276,4 +261,24 @@ object Changelog {
 
   private def promote(id: Id[Coto]): Cmd.One[Msg] =
     CotonomaBackend.fetchByCotoId(id).map(Msg.Promoted(_))
+
+  private def deleteCoto(
+      cotoId: Id[Coto],
+      model: Model
+  ): (Model, Cmd.Batch[Msg]) =
+    (
+      model.modify(_.repo).using(_.deleteCoto(cotoId)),
+      Cmd.Batch(
+        // Update the original coto if it's a repost
+        model.repo.cotos.get(cotoId).flatMap(_.repostOfId)
+          .map(updateCoto)
+          .getOrElse(Cmd.none),
+
+        // UnfocusCotonoma if the deleted coto is the current cotonoma
+        if (model.repo.isCurrentCotonoma(cotoId))
+          Browser.send(Msg.UnfocusCotonoma)
+        else
+          Cmd.none
+      )
+    )
 }
