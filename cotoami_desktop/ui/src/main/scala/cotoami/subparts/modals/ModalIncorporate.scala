@@ -10,7 +10,7 @@ import marubinotto.Validation
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Node, Server, ServerNode}
 import cotoami.backend.{ClientNodeSession, ErrorJson, ServerBackend}
-import cotoami.repository.Nodes
+import cotoami.repository.{Nodes, Root}
 import cotoami.subparts.{Modal, PartsCoto, PartsNode}
 
 object ModalIncorporate {
@@ -147,7 +147,10 @@ object ModalIncorporate {
         default.copy(
           _1 = model.copy(incorporating = false, error = None),
           _2 = nodes.addServer(server),
-          _3 = Modal.close(classOf[Modal.Incorporate])
+          _3 = Cmd.Batch(
+            Root.fetchOthersLastPostedAt, // Ensure unread to be notified
+            Modal.close(classOf[Modal.Incorporate])
+          )
         )
 
       case Msg.Incorporated(Left(e)) =>
