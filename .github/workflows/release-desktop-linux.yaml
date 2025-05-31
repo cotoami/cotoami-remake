@@ -94,7 +94,7 @@ jobs:
         appVersion: ${{ env.APP_VERSION }}
         tagName: desktop-v${{ env.APP_VERSION }}
         releaseName: Cotoami Desktop v${{ env.APP_VERSION }}
-        releaseDraft: false
+        releaseDraft: true
         prerelease: false
         includeDebug: false
         includeRelease: true
