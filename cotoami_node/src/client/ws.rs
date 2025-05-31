@@ -138,12 +138,22 @@ impl WebSocketClient {
                 if let Some(e) = receiver.recv().await {
                     info!("Event loop aborted: {e:?}");
                     this.state.abortables.abort_all();
+
+                    // If the error is a connection error, we may try to reconnect.
                     if let Some(CommunicationError::Connection(e)) = e {
-                        debug!("Start reconnecting...");
-                        this.reconnecting.lock().replace(RetryState::default());
-                        this.state
-                            .change_conn_state(ConnectionState::Connecting(Some(e)));
-                        this.next_attempt_to_reconnect();
+                        if let Some(tungstenite::error::Error::Capacity(_)) =
+                            e.downcast_ref::<tungstenite::error::Error>()
+                        {
+                            // ex. The message is bigger than the maximum allowed size.
+                            this.state
+                                .change_conn_state(ConnectionState::connection_error(e));
+                        } else {
+                            debug!("Start reconnecting...");
+                            this.reconnecting.lock().replace(RetryState::default());
+                            this.state
+                                .change_conn_state(ConnectionState::Connecting(Some(e)));
+                            this.next_attempt_to_reconnect();
+                        }
                     } else {
                         this.state
                             .change_conn_state(ConnectionState::Disconnected(e));
