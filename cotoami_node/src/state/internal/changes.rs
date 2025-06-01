@@ -133,12 +133,9 @@ impl NodeState {
                 from = last_number_of_chunk + 1;
 
                 // Sleep to prevent the frontend from freezing or crashing due to too many events
-                // being emitted in a short period of time. A developer wrote in the issue that
-                // "15 milliseconds, or probably lower, is good enough," but it still froze in my
-                // environment. From my testing, 50 milliseconds seems to be the minimum needed to
-                // prevent freezing.
+                // being emitted in a short period of time.
                 // https://github.com/tauri-apps/tauri/issues/8177
-                tokio::time::sleep(Duration::from_millis(50)).await;
+                tokio::time::sleep(Duration::from_millis(100)).await;
             }
         }
     }
