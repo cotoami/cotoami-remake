@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
@@ -131,6 +131,14 @@ impl NodeState {
                 return Ok(Some((import_from, last_number_of_chunk)));
             } else {
                 from = last_number_of_chunk + 1;
+
+                // Sleep to prevent the frontend from freezing or crashing due to too many events
+                // being emitted in a short period of time. A developer wrote in the issue that
+                // "15 milliseconds, or probably lower, is good enough," but it still froze in my
+                // environment. From my testing, 50 milliseconds seems to be the minimum needed to
+                // prevent freezing.
+                // https://github.com/tauri-apps/tauri/issues/8177
+                tokio::time::sleep(Duration::from_millis(50)).await;
             }
         }
     }
