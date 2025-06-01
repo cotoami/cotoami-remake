@@ -90,13 +90,17 @@ mod tests {
                 db_dir = "/path/to/db1"
                 node_name = "Hello"
                 session_minutes = 1440
-                changes_chunk_size = 100
+                changes_chunk_size = 30
+                max_message_size_as_client = 1073741824
+                max_message_size_as_server = 67108864
 
                 [00000000-0000-0000-0000-000000000002]
                 db_dir = "/path/to/db2"
                 node_name = "Bye"
                 session_minutes = 1440
-                changes_chunk_size = 100
+                changes_chunk_size = 30
+                max_message_size_as_client = 1073741824
+                max_message_size_as_server = 67108864
             "#})
         );
         Ok(())
