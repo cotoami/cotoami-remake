@@ -9,8 +9,10 @@ use parking_lot::Mutex;
 use reqwest::StatusCode;
 use tokio::sync::{mpsc, mpsc::Receiver};
 use tokio_tungstenite::{
-    connect_async, tungstenite,
-    tungstenite::{client::IntoClientRequest, handshake::client::Request},
+    connect_async_with_config, tungstenite,
+    tungstenite::{
+        client::IntoClientRequest, handshake::client::Request, protocol::WebSocketConfig,
+    },
 };
 use tokio_util::sync::PollSender;
 use tracing::{debug, info};
@@ -45,6 +47,13 @@ impl WebSocketClient {
             ws_request,
             reconnecting: Arc::new(Mutex::new(None)),
         })
+    }
+
+    fn config(&self) -> WebSocketConfig {
+        let node_config = self.state.node_state.read_config();
+        WebSocketConfig::default()
+            .max_message_size(node_config.max_message_size_as_client)
+            .max_frame_size(node_config.max_message_size_as_client)
     }
 
     pub fn child_privileges(&self) -> Option<ChildNode> { self.state.child_privileges() }
@@ -95,7 +104,8 @@ impl WebSocketClient {
     where
         S: Sink<Option<CommunicationError>> + Unpin + Clone + Send + 'static,
     {
-        let (ws_stream, _) = connect_async(self.ws_request.clone()).await?;
+        let (ws_stream, _) =
+            connect_async_with_config(self.ws_request.clone(), Some(self.config()), false).await?;
         self.state.change_conn_state(ConnectionState::Connected);
 
         if self.reconnecting.lock().is_some() {

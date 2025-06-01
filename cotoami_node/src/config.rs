@@ -55,6 +55,14 @@ pub struct NodeConfig {
     /// `COTOAMI_CHANGES_CHUNK_SIZE`
     #[serde(default = "NodeConfig::default_changes_chunk_size")]
     pub changes_chunk_size: i64,
+
+    /// `COTOAMI_MAX_MESSAGE_SIZE_AS_CLIENT`
+    #[serde(default = "NodeConfig::default_max_message_size_as_client")]
+    pub max_message_size_as_client: Option<usize>,
+
+    /// `COTOAMI_MAX_MESSAGE_SIZE_AS_SERVER`
+    #[serde(default = "NodeConfig::default_max_message_size_as_server")]
+    pub max_message_size_as_server: Option<usize>,
 }
 
 impl NodeConfig {
@@ -75,6 +83,8 @@ impl NodeConfig {
             owner_remote_node_password: None,
             session_minutes: Self::default_session_minutes(),
             changes_chunk_size: Self::default_changes_chunk_size(),
+            max_message_size_as_client: Self::default_max_message_size_as_client(),
+            max_message_size_as_server: Self::default_max_message_size_as_server(),
         }
     }
 
@@ -82,6 +92,12 @@ impl NodeConfig {
     // https://github.com/serde-rs/serde/issues/368
     fn default_session_minutes() -> u64 { 60 * 24 }
     fn default_changes_chunk_size() -> i64 { 30 }
+    fn default_max_message_size_as_client() -> Option<usize> {
+        Some(1 << 30) // 1 GiB
+    }
+    fn default_max_message_size_as_server() -> Option<usize> {
+        Some(64 << 20) // 64 MiB
+    }
 
     pub fn db_dir(&self) -> PathBuf {
         self.db_dir.as_ref().map(PathBuf::from).unwrap_or_else(|| {
