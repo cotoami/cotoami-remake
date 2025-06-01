@@ -40,11 +40,18 @@ pub(super) fn routes() -> Router<NodeState> {
 /// of websocket negotiation). After this completes, the actual switching from HTTP to
 /// websocket protocol will occur.
 async fn ws_handler(
-    ws: WebSocketUpgrade,
+    mut ws: WebSocketUpgrade,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     State(state): State<NodeState>,
     Extension(session): Extension<ClientSession>,
 ) -> impl IntoResponse {
+    ws = if let Some(max_message_size) = state.read_config().max_message_size_as_server {
+        ws.max_message_size(max_message_size)
+            .max_frame_size(max_message_size)
+    } else {
+        ws
+    };
+
     ws.on_upgrade(move |socket| match session.client_node_id() {
         Some(client_id) => handle_authenticated(socket, addr, state, session, client_id).boxed(),
         None => handle_anonymous(socket, addr, state).boxed(),
