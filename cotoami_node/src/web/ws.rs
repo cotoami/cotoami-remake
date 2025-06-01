@@ -46,6 +46,9 @@ async fn ws_handler(
     Extension(session): Extension<ClientSession>,
 ) -> impl IntoResponse {
     ws = if let Some(max_message_size) = state.read_config().max_message_size_as_server {
+        // tungstenite's high-level API doesn't seem to fragment messages,
+        // so the size of a frame roughly matches that of the message.
+        // cf. https://github.com/snapview/tungstenite-rs/issues/303#issuecomment-1245805810
         ws.max_message_size(max_message_size)
             .max_frame_size(max_message_size)
     } else {

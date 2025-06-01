@@ -53,14 +53,25 @@ pub struct NodeConfig {
     pub session_minutes: u64,
 
     /// `COTOAMI_CHANGES_CHUNK_SIZE`
+    ///
+    /// The number of changes to be fetched at once when the node is asked to.
+    /// The larger this value is, the less websocket messages will be sent when synchronizing
+    /// changes, but the more memory will be used to store the changes and you have to configure
+    /// the `max_message_size_as_client` and `max_message_size_as_server` accordingly.
     #[serde(default = "NodeConfig::default_changes_chunk_size")]
     pub changes_chunk_size: i64,
 
     /// `COTOAMI_MAX_MESSAGE_SIZE_AS_CLIENT`
+    ///
+    /// The maximum size of an incoming message when the node acts as a client.
+    /// cf. https://docs.rs/tungstenite/latest/tungstenite/protocol/struct.WebSocketConfig.html#structfield.max_message_size
     #[serde(default = "NodeConfig::default_max_message_size_as_client")]
     pub max_message_size_as_client: Option<usize>,
 
     /// `COTOAMI_MAX_MESSAGE_SIZE_AS_SERVER`
+    ///
+    /// The maximum size of an incoming message when the node acts as a server.
+    /// cf. https://docs.rs/tungstenite/latest/tungstenite/protocol/struct.WebSocketConfig.html#structfield.max_message_size
     #[serde(default = "NodeConfig::default_max_message_size_as_server")]
     pub max_message_size_as_server: Option<usize>,
 }

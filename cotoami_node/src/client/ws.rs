@@ -51,6 +51,9 @@ impl WebSocketClient {
 
     fn config(&self) -> WebSocketConfig {
         let node_config = self.state.node_state.read_config();
+        // tungstenite's high-level API doesn't seem to fragment messages,
+        // so the size of a frame roughly matches that of the message.
+        // cf. https://github.com/snapview/tungstenite-rs/issues/303#issuecomment-1245805810
         WebSocketConfig::default()
             .max_message_size(node_config.max_message_size_as_client)
             .max_frame_size(node_config.max_message_size_as_client)
