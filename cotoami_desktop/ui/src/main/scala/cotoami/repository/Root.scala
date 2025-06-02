@@ -154,6 +154,28 @@ case class Root(
     cotonomas.supers.filter(c => Some(c.id) != nodes.currentNodeRootCotonomaId)
   }
 
+  def touchCotonoma(
+      id: Id[Cotonoma],
+      updatedAtUtcIso: String
+  ): (Root, Cmd.One[AppMsg]) = {
+    val repo = this.modify(_.cotonomas).using(_.touch(id, updatedAtUtcIso))
+    repo.cotonomas.get(id)
+      .map { cotonoma =>
+        (repo.cotonomaUpdated(cotonoma), Cmd.none)
+      }
+      .getOrElse(
+        (repo, Root.fetchUpdateCotonoma(id))
+      )
+  }
+
+  def cotonomaUpdated(cotonoma: Cotonoma): Root =
+    this.modify(_.cotonomas.recentIds).using { recent =>
+      if (nodes.focused.isEmpty || nodes.isFocusing(cotonoma.nodeId))
+        recent.prependId(cotonoma.id)
+      else
+        recent
+    }
+
   def fetchRecentCotonomas(
       pageIndex: Double
   ): Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
@@ -442,8 +464,9 @@ object Root {
     case class Reconnected(result: Either[ErrorJson, ServerNode]) extends Msg
     case class NodeDetailsFetched(result: Either[ErrorJson, NodeDetails])
         extends Msg
-    case class CotonomaFetched(result: Either[ErrorJson, (Cotonoma, Coto)])
-        extends Msg
+    case class UpdatedCotonomaFetched(
+        result: Either[ErrorJson, (Cotonoma, Coto)]
+    ) extends Msg
     case class CotoDetailsFetched(result: Either[ErrorJson, CotoDetails])
         extends Msg
     case class ItoFetched(result: Either[ErrorJson, Ito]) extends Msg
@@ -493,10 +516,13 @@ object Root {
       case Msg.NodeDetailsFetched(Left(e)) =>
         (model, cotoami.error("Couldn't fetch node details.", e))
 
-      case Msg.CotonomaFetched(Right(cotonomaPair)) =>
-        (model.importFrom(cotonomaPair), Cmd.none)
+      case Msg.UpdatedCotonomaFetched(Right(cotonomaPair)) =>
+        (
+          model.importFrom(cotonomaPair).cotonomaUpdated(cotonomaPair._1),
+          Cmd.none
+        )
 
-      case Msg.CotonomaFetched(Left(e)) =>
+      case Msg.UpdatedCotonomaFetched(Left(e)) =>
         (model, cotoami.error("Couldn't fetch a cotonoma.", e))
 
       case Msg.CotoDetailsFetched(Right(details)) =>
@@ -622,8 +648,8 @@ object Root {
   def fetchNodeDetails(id: Id[Node]): Cmd.One[AppMsg] =
     NodeDetails.fetch(id).map(Msg.NodeDetailsFetched(_).into)
 
-  def fetchCotonoma(id: Id[Cotonoma]): Cmd.One[AppMsg] =
-    CotonomaBackend.fetch(id).map(Root.Msg.CotonomaFetched(_).into)
+  def fetchUpdateCotonoma(id: Id[Cotonoma]): Cmd.One[AppMsg] =
+    CotonomaBackend.fetch(id).map(Root.Msg.UpdatedCotonomaFetched(_).into)
 
   def fetchCotoDetails(id: Id[Coto]): Cmd.One[AppMsg] =
     CotoDetails.fetch(id).map(Msg.CotoDetailsFetched(_).into)

@@ -119,22 +119,16 @@ object Changelog {
     // RenameCotonoma
     for (json <- change.RenameCotonoma.toOption) {
       val cotonomaId: Id[Cotonoma] = Id(json.cotonoma_id)
-      return touchCotonoma(
-        cotonomaId,
-        json.updated_at,
-        model.repo.cotonomas
-      ).pipe { case (cotonomas, cmd) =>
-        (
-          model.modify(_.repo.cotonomas).setTo(cotonomas),
-          Cmd.Batch(
-            cmd,
-            cotonomas.get(cotonomaId)
+      return model
+        .pipe(touchCotonoma(Some(cotonomaId), json.updated_at))
+        .pipe(
+          addCmd((_: Model) =>
+            model.repo.cotonomas.get(cotonomaId)
               .map(_.cotoId)
               .map(updateCoto)
               .getOrElse(Cmd.none)
           )
         )
-      }
     }
 
     // PromoteJson
@@ -182,58 +176,48 @@ object Changelog {
   private def createCoto(
       cotoJson: CotoJson,
       model: Model
-  ): (Model, Cmd.Batch[Msg]) = {
-    val repo = model.repo
-
-    // Register the coto
+  ): (Model, Cmd[Msg]) = {
     val coto = CotoBackend.toModel(cotoJson)
-    val cotos = repo.cotos.put(coto)
-
-    // Update cotonomas
-    val (cotonomas, fetchCotonoma) =
-      repo.cotonomas.incrementTotalPosts(coto).pipe { cotonomas =>
-        // Update the cotonoma's timestamp or fetch it
-        coto.postedInId
-          .map(touchCotonoma(_, coto.createdAtUtcIso, cotonomas))
-          .getOrElse((cotonomas, Cmd.none))
-      }
 
     // Post it to the timeline
     val timeline =
-      (repo.nodes.focused, repo.cotonomas.focused) match {
-        case (None, None) => model.timeline.post(coto.id) // all posts
-        case (Some(node), None) =>
-          if (coto.nodeId == node.id)
-            model.timeline.post(coto.id) // posts in the focused node
+      (model.repo.nodes.focused, model.repo.cotonomas.focused) match {
+        // all posts
+        case (None, None) => model.timeline.post(coto.id)
+        // only if it's for the focused node
+        case (Some(focusedNode), None) =>
+          if (coto.nodeId == focusedNode.id)
+            model.timeline.post(coto.id)
           else
             model.timeline
-        case (_, Some(cotonoma)) =>
-          if (coto.postedInId == Some(cotonoma.id))
-            model.timeline.post(coto.id) // posts in the focused cotonoma
+        // only if it's for the focused cotonoma
+        case (_, Some(focusedCotonoma)) =>
+          if (coto.postedInId == Some(focusedCotonoma.id))
+            model.timeline.post(coto.id)
           else
             model.timeline
       }
 
-    (
-      model
-        .modify(_.repo.cotos).setTo(cotos)
-        .modify(_.repo.cotonomas).setTo(cotonomas)
-        .modify(_.repo.nodes).using(
-          _.updateOthersLastPostedAt(coto)
-        )
-        .modify(_.timeline).setTo(timeline),
-      Cmd.Batch(
-        fetchCotonoma,
-        // Fetch the updated original if this is a repost
-        coto.repostOfId.map(updateCoto).getOrElse(Cmd.none)
+    model
+      .modify(_.repo.cotos).using(_.put(coto))
+      .modify(_.repo.cotonomas).using(_.incrementTotalPosts(coto))
+      .modify(_.repo.nodes).using(
+        _.updateOthersLastPostedAt(coto)
       )
-    )
+      .modify(_.timeline).setTo(timeline)
+      .pipe(touchCotonoma(coto.postedInId, coto.createdAtUtcIso))
+      .pipe(
+        addCmd((_: Model) =>
+          // Fetch the updated original if this is a repost
+          coto.repostOfId.map(updateCoto).getOrElse(Cmd.none)
+        )
+      )
   }
 
   private def createCotonoma(
       jsonPair: (CotonomaJson, CotoJson),
       model: Model
-  ): (Model, Cmd.Batch[Msg]) = {
+  ): (Model, Cmd[Msg]) = {
     val cotonoma = CotonomaBackend.toModel(jsonPair._1)
     val coto = CotoBackend.toModel(jsonPair._2)
     model
@@ -241,20 +225,15 @@ object Changelog {
       .pipe(createCoto(jsonPair._2, _))
   }
 
-  private def touchCotonoma(
-      id: Id[Cotonoma],
-      updatedAtUtcIso: String,
-      cotonomas: Cotonomas
-  ): (Cotonomas, Cmd.One[Msg]) =
-    (
-      cotonomas
-        .update(id)(_.copy(updatedAtUtcIso = updatedAtUtcIso))
-        .modify(_.recentIds).using(_.prependId(id)),
-      if (!cotonomas.contains(id))
-        Root.fetchCotonoma(id)
-      else
-        Cmd.none
-    )
+  def touchCotonoma(id: Option[Id[Cotonoma]], updatedAtUtcIso: String)(
+      model: Model
+  ): (Model, Cmd.One[Msg]) = {
+    id.map(id =>
+      model.repo.touchCotonoma(id, updatedAtUtcIso).pipe { case (repo, cmd) =>
+        (model.copy(repo = repo), cmd)
+      }
+    ).getOrElse((model, Cmd.none))
+  }
 
   private def updateNode(id: Id[Node]): Cmd.One[Msg] =
     NodeDetails.fetch(id).map(Msg.NodeUpdated(_))

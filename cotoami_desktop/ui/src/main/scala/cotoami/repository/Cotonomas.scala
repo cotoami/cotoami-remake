@@ -111,8 +111,8 @@ case class Cotonomas(
 
   val recent: Seq[Cotonoma] = recentIds.order.map(get).flatten
 
-  def update(id: Id[Cotonoma])(update: Cotonoma => Cotonoma): Cotonomas =
-    get(id).map(update).map(put).getOrElse(this)
+  def touch(id: Id[Cotonoma], updatedAtUtcIso: String): Cotonomas =
+    this.modify(_.map.index(id).updatedAtUtcIso).setTo(updatedAtUtcIso)
 
   def appendPageOfSubs(page: Page[Cotonoma]): Cotonomas =
     this
