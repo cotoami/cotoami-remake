@@ -1,3 +1,5 @@
+@use "../mixins";
+
 span.node {
   cursor: pointer;
 
@@ -28,6 +30,8 @@ section.node-description {
 }
 
 details.node-status {
+  @include mixins.selectable;
+
   border-style: none;
   margin: 0;
   margin-bottom: 8px;
