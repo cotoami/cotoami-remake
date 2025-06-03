@@ -23,8 +23,14 @@ dialog.subcoto {
   }
 
   section.source {
-    article.coto div.body div.scroll-area {
-      max-height: 150px;
+    article.coto {
+      &:hover {
+        background-color: var(--embedded-cotobackground-color) !important;
+      }
+
+      div.body div.scroll-area {
+        max-height: 150px;
+      }
     }
   }
 
