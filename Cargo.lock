@@ -1001,7 +1001,6 @@ dependencies = [
  "percent-encoding",
  "reqwest",
  "reqwest-eventsource",
- "rmp-serde",
  "serde",
  "serde_json",
  "smallvec",

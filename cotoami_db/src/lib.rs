@@ -22,6 +22,8 @@ pub mod prelude {
     };
 }
 
+pub use rmp_serde;
+
 pub use crate::{prelude::*, time::current_datetime};
 
 /// Generate a secret string of the given length which is 32 by default.

@@ -4,7 +4,7 @@ use std::{ops::ControlFlow, time::Duration};
 
 use anyhow::{bail, Result};
 use bytes::Bytes;
-use cotoami_db::{ChangelogEntry, ChildNode};
+use cotoami_db::{rmp_serde, ChangelogEntry, ChildNode};
 use futures::{sink::Sink, StreamExt};
 use reqwest_eventsource::{retry::ExponentialBackoff, Event as ESItem, EventSource, ReadyState};
 use tokio::task::JoinSet;

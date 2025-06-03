@@ -20,7 +20,7 @@ use axum_extra::{
     headers,
 };
 use bytes::Bytes;
-use cotoami_db::prelude::ClientSession;
+use cotoami_db::{prelude::ClientSession, rmp_serde};
 use futures::TryFutureExt;
 use mime::Mime;
 use tokio::{

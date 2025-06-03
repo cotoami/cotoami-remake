@@ -8,7 +8,7 @@ use axum::{
     routing::get,
     Router,
 };
-use cotoami_db::prelude::*;
+use cotoami_db::{prelude::*, rmp_serde};
 use futures::{future::AbortHandle, stream::Stream, StreamExt};
 use tokio::sync::oneshot;
 use tracing::debug;

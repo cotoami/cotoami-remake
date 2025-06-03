@@ -16,7 +16,7 @@
 use std::{borrow::Cow, future::Future, sync::Arc};
 
 use anyhow::{ensure, Context, Result};
-use cotoami_db::prelude::*;
+use cotoami_db::{prelude::*, rmp_serde};
 use derive_new::new;
 use dyn_clone::DynClone;
 use futures::future::BoxFuture;
