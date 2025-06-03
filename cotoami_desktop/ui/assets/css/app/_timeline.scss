@@ -57,10 +57,13 @@ section.timeline {
   }
 
   .repost-header {
-    padding: 0 var(--block-spacing-horizontal);
-    padding-top: 5px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    padding-bottom: 4px;
     color: var(--muted-color);
-    background-color: var(--card-background-color);
+    background-color: var(--coto-flow-background-color);
 
     span.material-symbols {
       font-size: 1.2rem;
@@ -75,12 +78,13 @@ section.timeline {
     }
 
     address.reposter {
-      display: inline;
+      margin: 0;
       margin-left: 16px;
       color: var(--muted-color);
-      font-size: 0.9rem;
+      font-size: 0.8rem;
 
       img.node-icon {
+        margin-right: 4px;
         width: 15px;
         height: 15px;
         border-radius: 3px;

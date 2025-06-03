@@ -14,13 +14,14 @@
 
   .flow-entry {
     margin-bottom: 10px;
-    box-shadow: var(--card-box-shadow);
 
     &.poster-change {
-      margin-top: 40px;
+      margin-top: 50px;
     }
 
     article.coto {
+      border-radius: 8px;
+      box-shadow: var(--card-box-shadow);
       padding: 1rem 0;
 
       >header {
@@ -33,6 +34,20 @@
           padding-left: 0;
           padding-right: 0;
         }
+      }
+    }
+
+    div.itos {
+      background-color: var(--coto-flow-background-color);
+
+      .open-traversal {
+        margin-top: -2px;
+        border-left: 1px solid var(--pane-border-color);
+        border-bottom: 1px solid var(--pane-border-color);
+        border-right: 1px solid var(--pane-border-color);
+        border-radius: 0 0 4px 4px;
+        padding: 2px 16px 26px 16px;
+        background-color: var(--parent-button-color);
       }
     }
   }

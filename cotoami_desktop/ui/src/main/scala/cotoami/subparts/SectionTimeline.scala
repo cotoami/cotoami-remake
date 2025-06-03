@@ -409,6 +409,7 @@ object SectionTimeline {
     val (previous, coto) = post
     val posterChange =
       previous.map(_.postedById != coto.postedById).getOrElse(false)
+    val repostHeader = sectionRepostHeader(coto)
     section(
       className := optionalClasses(
         Seq(
@@ -418,13 +419,13 @@ object SectionTimeline {
         )
       )
     )(
-      repostHeader(coto),
       context.repo.cotos.getOriginal(coto).map(coto =>
         Fragment(
           PartsCoto.ulParents(
             context.repo.parentsOf(coto.id),
             AppMsg.FocusCoto(_)
           ),
+          repostHeader,
           articleCoto(coto),
           PartsCoto.divItosTraversal(coto, "bottom")
         )
@@ -455,7 +456,7 @@ object SectionTimeline {
     )
   }
 
-  private def repostHeader(coto: Coto)(implicit
+  private def sectionRepostHeader(coto: Coto)(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] =
@@ -467,9 +468,6 @@ object SectionTimeline {
         // when the current location is a node home (no cotonoma is focused).
         Option.when(repo.cotonomas.focusedId.isEmpty) {
           repostedIn(coto, repo.cotonomas)
-        },
-        Option.when(!repo.nodes.isSelf(coto.postedById)) {
-          reposter(coto, repo.nodes)
         },
         Option.when(context.repo.nodes.canEdit(coto)) {
           toolButton(
@@ -489,6 +487,9 @@ object SectionTimeline {
               )
             }
           )
+        },
+        Option.when(!repo.nodes.isSelf(coto.postedById)) {
+          reposter(coto, repo.nodes)
         }
       )
     }

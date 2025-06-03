@@ -89,6 +89,7 @@ article.coto {
     min-height: 20px; // empty header serves as padding-top of article.coto
 
     address.author {
+      margin-bottom: 1rem;
       color: var(--muted-color);
     }
   }
@@ -315,7 +316,6 @@ section.reorder-toolbar {
 
 ul.parents {
   padding-top: 12px;
-  background-color: var(--card-background-color);
 
   li {
     padding: 0 var(--block-spacing-horizontal);
@@ -324,6 +324,8 @@ ul.parents {
     button.parent {
       display: block;
       width: 100%;
+      border: 1px solid var(--pane-border-color);
+      border-radius: 4px;
       padding: 4px 12px;
       color: var(--h6-color);
       background-color: var(--parent-button-color);
