@@ -79,18 +79,40 @@ object ServerNodeBackend {
 
 @js.native
 trait NotConnectedJson extends js.Object {
-  val reason: String = js.native
-  val details: String = js.native
+  val Connecting: js.UndefOr[Nullable[String]] = js.native
+  val InitFailed: js.UndefOr[String] = js.native
+  val Disconnected: js.UndefOr[Nullable[String]] = js.native
+
+  // Unit variants are represented as strings in JSON.
+  // https://serde.rs/json.html
+  //
+  // - "Disabled"
+  // - "Unauthorized"
+  // - "SessionExpired"
 }
 
 object NotConnectedBackend {
-  def toModel(json: NotConnectedJson): Server.NotConnected = json.reason match {
-    case "Disabled"     => Server.NotConnected.Disabled
-    case "Connecting"   => Server.NotConnected.Connecting(Option(json.details))
-    case "InitFailed"   => Server.NotConnected.InitFailed(json.details)
-    case "Unauthorized" => Server.NotConnected.Unauthorized
-    case "SessionExpired" => Server.NotConnected.SessionExpired
-    case "Disconnected" =>
-      Server.NotConnected.Disconnected(Option(json.details))
+  def toModel(json: NotConnectedJson): Server.NotConnected = {
+    if (json.toString == "Disabled") {
+      return Server.NotConnected.Disabled
+    }
+    for (msg <- json.Connecting.toOption) {
+      return Server.NotConnected.Connecting(Nullable.toOption(msg))
+    }
+    for (msg <- json.InitFailed.toOption) {
+      return Server.NotConnected.InitFailed(msg)
+    }
+    if (json.toString == "Unauthorized") {
+      return Server.NotConnected.Unauthorized
+    }
+    if (json.toString == "SessionExpired") {
+      return Server.NotConnected.SessionExpired
+    }
+    for (msg <- json.Disconnected.toOption) {
+      return Server.NotConnected.Disconnected(Nullable.toOption(msg))
+    }
+    Server.NotConnected.Disconnected(
+      Some(s"Invalid NotConnected JSON : ${js.JSON.stringify(json)}")
+    )
   }
 }

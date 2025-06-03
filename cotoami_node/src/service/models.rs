@@ -203,7 +203,6 @@ pub struct Server {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(tag = "reason", content = "details")]
 pub enum NotConnected {
     Disabled,
     Connecting(Option<String>),
@@ -369,4 +368,43 @@ pub struct CotoGraph {
     pub cotos: Vec<Coto>,
     pub cotos_related_data: CotosRelatedData,
     pub itos: Vec<Ito>,
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// tests
+/////////////////////////////////////////////////////////////////////////////
+
+#[cfg(test)]
+mod tests {
+    use anyhow::Result;
+    use cotoami_db::rmp_serde;
+    use googletest::prelude::*;
+
+    use super::*;
+
+    #[test]
+    fn not_connected_message_pack_serialization() -> Result<()> {
+        // NotConnected::Disabled (unit variant)
+        let msgpack_bytes = rmp_serde::to_vec(&NotConnected::Disabled)?;
+        assert_that!(
+            rmp_serde::from_slice::<NotConnected>(&msgpack_bytes)?,
+            eq(&NotConnected::Disabled)
+        );
+
+        // NotConnected::Connecting (with None)
+        let msgpack_bytes = rmp_serde::to_vec(&NotConnected::Connecting(None))?;
+        assert_that!(
+            rmp_serde::from_slice::<NotConnected>(&msgpack_bytes)?,
+            eq(&NotConnected::Connecting(None))
+        );
+
+        // NotConnected::InitFailed (with a String)
+        let msgpack_bytes = rmp_serde::to_vec(&NotConnected::InitFailed("error".into()))?;
+        assert_that!(
+            rmp_serde::from_slice::<NotConnected>(&msgpack_bytes)?,
+            eq(&NotConnected::InitFailed("error".into()))
+        );
+
+        Ok(())
+    }
 }
