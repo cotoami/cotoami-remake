@@ -18,6 +18,7 @@ impl NodeState {
         &self,
         mut input: CreateClientNodeSession,
     ) -> Result<ClientNodeSession, ServiceError> {
+        self.check_client_version(&input.client_version)?;
         let (local, local_node) = self.local_node_pair().await?;
 
         // https://github.com/rust-lang/rust-clippy/issues/10390

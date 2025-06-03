@@ -6,6 +6,7 @@ use std::{collections::HashMap, fs, io::ErrorKind, sync::Arc};
 use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
 use parking_lot::{RwLock, RwLockReadGuard};
+use semver::{Version, VersionReq};
 use tokio::{
     sync::oneshot::Sender,
     task::{spawn_blocking, JoinHandle},
@@ -17,7 +18,11 @@ use validator::Validate;
 use crate::{
     config::{NodeConfig, ServerConfig},
     event::local::LocalNodeEvent,
-    service::{models::ActiveClient, NodeService},
+    service::{
+        error::{IntoServiceResult, RequestError, ServiceError},
+        models::ActiveClient,
+        NodeService,
+    },
     Abortables,
 };
 
@@ -37,6 +42,7 @@ pub struct NodeState {
 
 struct State {
     version: String,
+    client_version_requirement: VersionReq,
     config: Arc<RwLock<NodeConfig>>,
     db: Arc<Database>,
     pubsub: Pubsub,
@@ -49,6 +55,8 @@ struct State {
 }
 
 impl NodeState {
+    pub const CLIENT_VERSION_REQUIREMENT: &str = ">=0.7.0";
+
     pub async fn new(config: NodeConfig) -> Result<Self> {
         config.validate()?;
 
@@ -66,6 +74,7 @@ impl NodeState {
 
         let inner = State {
             version: env!("CARGO_PKG_VERSION").into(),
+            client_version_requirement: VersionReq::parse(Self::CLIENT_VERSION_REQUIREMENT)?,
             config: Arc::new(RwLock::new(config)),
             db: Arc::new(db),
             pubsub: Pubsub::default(),
@@ -84,6 +93,27 @@ impl NodeState {
     }
 
     pub fn version(&self) -> &str { &self.inner.version }
+
+    pub(crate) fn check_client_version(&self, client_version: &str) -> Result<(), ServiceError> {
+        let client_version = Version::parse(client_version)?;
+        if self
+            .inner
+            .client_version_requirement
+            .matches(&client_version)
+        {
+            Ok(())
+        } else {
+            RequestError::new(
+                "invalid-client-version",
+                format!(
+                    "Client version {} does not match the required version: {}",
+                    client_version,
+                    Self::CLIENT_VERSION_REQUIREMENT
+                ),
+            )
+            .into_result()
+        }
+    }
 
     pub fn config_arc(&self) -> Arc<RwLock<NodeConfig>> { self.inner.config.clone() }
 
