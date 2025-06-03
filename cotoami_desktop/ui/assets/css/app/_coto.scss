@@ -336,6 +336,14 @@ ul.parents {
         background-color: var(--hover-background-color);
         text-decoration: none;
       }
+
+      img.author {
+        margin-right: 4px;
+        width: 15px;
+        height: 15px;
+        border-radius: 3px;
+        vertical-align: -2px;
+      }
     }
   }
 }

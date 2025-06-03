@@ -270,8 +270,12 @@ object PartsCoto {
 
   def ulParents(
       parents: Seq[(Coto, Ito)],
-      onClickTagger: Id[Coto] => Into[AppMsg]
-  )(implicit dispatch: Into[AppMsg] => Unit): Option[ReactElement] =
+      onClickTagger: Id[Coto] => Into[AppMsg],
+      displayAuthorIcon: Boolean = false
+  )(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): Option[ReactElement] =
     Option.when(!parents.isEmpty) {
       ul(className := "parents")(
         parents.map { case (parent, ito) =>
@@ -279,7 +283,16 @@ object PartsCoto {
             button(
               className := "parent default",
               onClick := (_ => dispatch(onClickTagger(parent.id)))
-            )(parent.abbreviate)
+            )(
+              Option.when(
+                displayAuthorIcon &&
+                  !context.repo.nodes.isSelf(parent.postedById)
+              ) {
+                context.repo.nodes.get(parent.postedById)
+                  .map(PartsNode.imgNode(_, "author"))
+              },
+              parent.abbreviate
+            )
           )
         }
       )

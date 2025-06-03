@@ -423,7 +423,8 @@ object SectionTimeline {
         Fragment(
           PartsCoto.ulParents(
             context.repo.parentsOf(coto.id),
-            AppMsg.FocusCoto(_)
+            AppMsg.FocusCoto(_),
+            true
           ),
           repostHeader,
           articleCoto(coto),
