@@ -635,10 +635,7 @@ object Root {
                 parents.updateOthersLastPostedAt(parentId, map.get(parentId))
               }
             ),
-          cotoami.info(
-            "The last post timestamps by others fetched",
-            Some(map.toString())
-          )
+          Cmd.none
         )
 
       case Msg.OthersLastPostedAtFetched(Left(e)) =>
