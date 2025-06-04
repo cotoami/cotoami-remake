@@ -298,6 +298,25 @@ object PartsCoto {
       )
     }
 
+  def divDetailsButton(
+      coto: Coto
+  )(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): Option[ReactElement] =
+    Option.when(context.repo.itos.anyFrom(coto.id)) {
+      div(className := "more-details")(
+        toolButton(
+          symbol = "more_horiz",
+          classes = "coto-details",
+          onClick = e => {
+            e.stopPropagation()
+            dispatch(AppMsg.FocusCoto(coto.id))
+          }
+        )
+      )
+    }
+
   def divItosTraversal(
       coto: Coto,
       tipPlacement: String

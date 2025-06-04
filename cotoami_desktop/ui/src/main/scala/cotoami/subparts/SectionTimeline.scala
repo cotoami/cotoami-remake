@@ -428,7 +428,7 @@ object SectionTimeline {
           ),
           repostHeader,
           articleCoto(coto),
-          PartsCoto.divItosTraversal(coto, "bottom")
+          PartsCoto.divDetailsButton(coto)
         )
       )
     )

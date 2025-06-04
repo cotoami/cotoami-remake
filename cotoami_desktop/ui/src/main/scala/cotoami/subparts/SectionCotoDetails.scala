@@ -121,7 +121,7 @@ object SectionCotoDetails {
             ),
             PartsCoto.articleFooter(coto)
           ),
-          PartsCoto.divItosTraversal(coto, "bottom")
+          PartsCoto.divDetailsButton(coto)
         ),
         Option.when(order.isLast) {
           divAddSubCoto(ito.sourceCotoId, None, addSubCotoTo)

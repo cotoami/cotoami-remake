@@ -37,18 +37,13 @@
       }
     }
 
-    div.itos {
-      background-color: var(--coto-flow-background-color);
-
-      .open-traversal {
-        margin-top: -2px;
-        border-left: 1px solid var(--pane-border-color);
-        border-bottom: 1px solid var(--pane-border-color);
-        border-right: 1px solid var(--pane-border-color);
-        border-radius: 0 0 4px 4px;
-        padding: 2px 16px 26px 16px;
-        background-color: var(--parent-button-color);
-      }
+    div.more-details button.coto-details {
+      border-left: 1px solid var(--pane-border-color);
+      border-bottom: 1px solid var(--pane-border-color);
+      border-right: 1px solid var(--pane-border-color);
+      border-radius: 0 0 4px 4px;
+      padding: 0 20px 0 20px;
+      background-color: var(--parent-button-color);
     }
   }
 
@@ -57,11 +52,5 @@
     justify-content: center;
     align-items: center;
     height: 50px;
-  }
-
-  div.itos {
-    padding-top: 3px;
-    background-color: var(--card-background-color);
-    text-align: center;
   }
 }
