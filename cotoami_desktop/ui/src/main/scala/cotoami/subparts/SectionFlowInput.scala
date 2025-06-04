@@ -16,7 +16,15 @@ import marubinotto.Validation
 import marubinotto.components.{materialSymbol, SplitPane}
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, Cotonoma, Id, Node, WaitingPost, WaitingPosts}
+import cotoami.models.{
+  Coto,
+  Cotonoma,
+  Geolocation,
+  Id,
+  Node,
+  WaitingPost,
+  WaitingPosts
+}
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
 import cotoami.subparts.EditorCoto._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
@@ -51,6 +59,14 @@ object SectionFlowInput {
     def hasContents: Boolean = form.hasContents
 
     def readyToPost: Boolean = !posting && form.hasValidContents
+
+    def setGeolocation(location: Option[Geolocation]): Model =
+      copy(
+        form = form match {
+          case form: CotoForm.Model     => form.copy(geolocation = location)
+          case form: CotonomaForm.Model => form
+        }
+      )
 
     def clear: Model =
       copy(
