@@ -38,7 +38,12 @@ You can configure the container using the following environment variables:
     * The session duration (in minutes) for connected client nodes (default: `1440` minutes = `24` hours).
     * Clients will automatically reconnect after session expiration.
 * `COTOAMI_CHANGES_CHUNK_SIZE`
-    * The number of changes sent at once when pushing database update logs to each child node (default: `100`).
+    * The number of changes sent at once when pushing database update logs to each child node (default: `30`).
+    * The larger this value is, the less websocket messages will be sent when synchronizing changes, but the more memory will be used to store the changes and you have to configure the `COTOAMI_MAX_MESSAGE_SIZE_AS_CLIENT` and `COTOAMI_MAX_MESSAGE_SIZE_AS_SERVER` accordingly.
+* `COTOAMI_MAX_MESSAGE_SIZE_AS_CLIENT`
+    * The maximum size of an incoming message when the node acts as a client (default: `1073741824` (1 GiB)).
+* `COTOAMI_MAX_MESSAGE_SIZE_AS_SERVER`
+    * The maximum size of an incoming message when the node acts as a server (default: `67108864` (64 MiB)).
 * `COTOAMI_SERVER_PORT`
     * Port number on which the server will run (default: `5103`).
 * The following variables configure the external URL of this server as seen from other nodes. These settings are used for displaying URLs in the UI and for CSRF protection:
