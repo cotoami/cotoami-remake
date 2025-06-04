@@ -194,10 +194,12 @@ Feedback and bug reports are welcome on [GitHub Discussions](https://github.com/
 
 ## Planned Features
 
+- [x] Inline cotonoma link syntax in Markdown
+    - The path displayed at the bottom-left of the window can be used as: `[label](/path)`
+- [x] Unread Notification
+- [ ] Application Auto Update
 - [ ] I18n
-- [ ] Inline cotonoma link syntax in Markdown
 - [ ] Terminal Node (converting to a lightweight node by deleting changelog)
-- [ ] Unread Notification
 - [ ] Graph View
 - [ ] Browsing cotos by date
 - [ ] Map in another window
