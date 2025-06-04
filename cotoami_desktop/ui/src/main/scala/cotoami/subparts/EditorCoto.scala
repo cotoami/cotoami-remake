@@ -105,6 +105,7 @@ object EditorCoto {
 
       def isMediaLocationNotUsed: Boolean =
         mediaLocation.isDefined && geolocation != mediaLocation
+
       def isGeomapLocationNotUsed(map: Geomap): Boolean =
         map.focusedLocation.isDefined && geolocation != map.focusedLocation
     }
@@ -447,9 +448,10 @@ object EditorCoto {
     )(implicit
         context: Context,
         dispatch: CotoForm.Msg => Unit
-    ): Option[ReactElement] =
+    ): Option[ReactElement] = {
+      val geomapOpened = context.uiState.map(_.geomapOpened).getOrElse(false)
       Option.when(
-        context.uiState.map(_.geomapOpened).getOrElse(false) ||
+        geomapOpened ||
           form.geolocation.isDefined ||
           form.mediaLocation.isDefined ||
           context.geomap.focusedLocation.isDefined
@@ -474,7 +476,9 @@ object EditorCoto {
                 ): ReactElement
               )
               .getOrElse(
-                Option.when(context.geomap.focusedLocation.isEmpty) {
+                Option.when(
+                  geomapOpened && context.geomap.focusedLocation.isEmpty
+                ) {
                   span(className := "help")(
                     context.i18n.text.EditorCoto_help_selectLocation
                   )
@@ -506,6 +510,7 @@ object EditorCoto {
           }
         )
       }
+    }
 
     private def divAttributeDelete(
         onClick: SyntheticMouseEvent[_] => Unit
