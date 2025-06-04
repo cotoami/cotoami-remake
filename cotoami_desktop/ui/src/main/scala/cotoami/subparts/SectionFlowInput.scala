@@ -16,7 +16,15 @@ import marubinotto.Validation
 import marubinotto.components.{materialSymbol, SplitPane}
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, Cotonoma, Id, Node, WaitingPost, WaitingPosts}
+import cotoami.models.{
+  Coto,
+  Cotonoma,
+  Geolocation,
+  Id,
+  Node,
+  WaitingPost,
+  WaitingPosts
+}
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
 import cotoami.subparts.EditorCoto._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
@@ -51,6 +59,14 @@ object SectionFlowInput {
     def hasContents: Boolean = form.hasContents
 
     def readyToPost: Boolean = !posting && form.hasValidContents
+
+    def setGeolocation(location: Option[Geolocation]): Model =
+      copy(
+        form = form match {
+          case form: CotoForm.Model     => form.copy(geolocation = location)
+          case form: CotonomaForm.Model => form
+        }
+      )
 
     def clear: Model =
       copy(
@@ -98,6 +114,7 @@ object SectionFlowInput {
     case class CotonomaFormMsg(submsg: CotonomaForm.Msg) extends Msg
     case class ContentRestored(content: Option[String]) extends Msg
     case class SetFolded(folded: Boolean) extends Msg
+    case object Unfold extends Msg
     case object Post extends Msg
     case class PostCoto(
         form: CotoForm.Model,
@@ -208,6 +225,12 @@ object SectionFlowInput {
 
       case (Msg.SetFolded(folded), _, _) =>
         default.copy(_1 = model.copy(folded = folded))
+
+      case (Msg.Unfold, _, _) =>
+        default.copy(_1 =
+          model.copy(folded = false)
+            .setGeolocation(context.geomap.focusedLocation)
+        )
 
       case (Msg.Post, form: CotoForm.Model, Some(cotonoma)) => {
         val postId = WaitingPost.newPostId()
@@ -425,7 +448,7 @@ object SectionFlowInput {
         CotoForm.sectionEditorOrPreview(
           form = form,
           onCtrlEnter = Some(() => dispatch(Msg.Post)),
-          onFocus = Some(() => dispatch(Msg.SetFolded(false)))
+          onFocus = Some(() => dispatch(Msg.Unfold))
         )(context, submsg => dispatch(Msg.CotoFormMsg(submsg)))
       ),
       secondary = SplitPane.Secondary.Props()(
@@ -467,7 +490,7 @@ object SectionFlowInput {
       div(className := "cotonoma-form")(
         CotonomaForm.inputName(
           model = form,
-          onFocus = Some(() => dispatch(Msg.SetFolded(false))),
+          onFocus = Some(() => dispatch(Msg.Unfold)),
           onBlur = Some(() => dispatch(Msg.SetFolded(!model.hasContents))),
           onCtrlEnter = Some(() => dispatch(Msg.Post))
         )(context, submsg => dispatch(Msg.CotonomaFormMsg(submsg)))

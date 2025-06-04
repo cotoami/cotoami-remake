@@ -451,7 +451,18 @@ object Main {
 
       case Msg.SectionGeomapMsg(submsg) => {
         val (geomap, repo, cmd) = SectionGeomap.update(submsg, model.geomap)
-        (model.copy(geomap = geomap, repo = repo), cmd)
+        (
+          model.copy(
+            geomap = geomap,
+            repo = repo,
+            flowInput = submsg match {
+              case SectionGeomap.Msg.FocusLocation(location) =>
+                model.flowInput.setGeolocation(location)
+              case _ => model.flowInput
+            }
+          ),
+          cmd
+        )
       }
     }
   }

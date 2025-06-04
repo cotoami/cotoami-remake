@@ -63,7 +63,10 @@ object PaneStock {
             )
           )
 
-      case Msg.CloseMap => updates.uiState(_.closeMap)(model)
+      case Msg.CloseMap =>
+        model
+          .modify(_.geomap).using(_.unfocus)
+          .pipe(updates.uiState(_.closeMap))
 
       case Msg.SetMapOrientation(vertical) =>
         model.pipe(

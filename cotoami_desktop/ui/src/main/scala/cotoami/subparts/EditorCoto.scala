@@ -105,6 +105,7 @@ object EditorCoto {
 
       def isMediaLocationNotUsed: Boolean =
         mediaLocation.isDefined && geolocation != mediaLocation
+
       def isGeomapLocationNotUsed(map: Geomap): Boolean =
         map.focusedLocation.isDefined && geolocation != map.focusedLocation
     }
@@ -447,9 +448,13 @@ object EditorCoto {
     )(implicit
         context: Context,
         dispatch: CotoForm.Msg => Unit
-    ): Option[ReactElement] =
+    ): Option[ReactElement] = {
+      val geomapOpened = context.uiState.map(_.geomapOpened).getOrElse(false)
       Option.when(
-        form.geolocation.isDefined || form.mediaLocation.isDefined || context.geomap.focusedLocation.isDefined
+        geomapOpened ||
+          form.geolocation.isDefined ||
+          form.mediaLocation.isDefined ||
+          context.geomap.focusedLocation.isDefined
       ) {
         li(className := "attribute geolocation")(
           div(className := "attribute-name")(
@@ -457,18 +462,28 @@ object EditorCoto {
             context.i18n.text.EditorCoto_location
           ),
           div(className := "attribute-value")(
-            form.geolocation.map(location =>
-              Fragment(
-                div(className := "longitude")(
-                  span(className := "label")("longitude:"),
-                  span(className := "value longitude")(location.longitude)
-                ),
-                div(className := "latitude")(
-                  span(className := "label")("latitude:"),
-                  span(className := "value latitude")(location.latitude)
-                )
+            form.geolocation
+              .map(location =>
+                Fragment(
+                  div(className := "longitude")(
+                    span(className := "label")("longitude:"),
+                    span(className := "value longitude")(location.longitude)
+                  ),
+                  div(className := "latitude")(
+                    span(className := "label")("latitude:"),
+                    span(className := "value latitude")(location.latitude)
+                  )
+                ): ReactElement
               )
-            )
+              .getOrElse(
+                Option.when(
+                  geomapOpened && context.geomap.focusedLocation.isEmpty
+                ) {
+                  span(className := "help")(
+                    context.i18n.text.EditorCoto_help_selectLocation
+                  )
+                }
+              )
           ),
           div(className := "from-buttons")(
             Option.when(form.isGeomapLocationNotUsed(context.geomap)) {
@@ -495,6 +510,7 @@ object EditorCoto {
           }
         )
       }
+    }
 
     private def divAttributeDelete(
         onClick: SyntheticMouseEvent[_] => Unit

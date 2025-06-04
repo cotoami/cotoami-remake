@@ -144,6 +144,7 @@ ul.attributes {
 
   li.attribute {
     margin: 8px 0;
+    height: 37px;
 
     display: flex;
     flex-direction: row;
@@ -170,6 +171,11 @@ ul.attributes {
 
       span.value {
         margin-left: 6px;
+        opacity: 0.6;
+      }
+
+      span.help {
+        font-size: 0.9rem;
         opacity: 0.6;
       }
     }

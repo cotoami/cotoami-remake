@@ -82,6 +82,7 @@ trait Text {
   val EditorCoto_inputImage: String
   val EditorCoto_date: String
   val EditorCoto_location: String
+  val EditorCoto_help_selectLocation: String
   def EditorCoto_cotonomaAlreadyExists(cotonomaName: String): String
 
   val ModalWelcome_title: String
