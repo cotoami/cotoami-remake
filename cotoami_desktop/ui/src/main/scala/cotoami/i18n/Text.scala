@@ -18,6 +18,7 @@ trait Text {
 
   val Cancel: String
   val Post: String
+  val Insert: String
   val Save: String
   val Edit: String
   val Delete: String

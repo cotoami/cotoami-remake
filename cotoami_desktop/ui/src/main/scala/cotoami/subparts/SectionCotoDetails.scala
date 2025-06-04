@@ -55,7 +55,7 @@ object SectionCotoDetails {
     div(className := "insert-sub-coto")(
       toolButton(
         symbol = "add_circle",
-        tip = Some(context.i18n.text.WriteSubcoto),
+        tip = Some(context.i18n.text.Insert),
         tipPlacement = "bottom",
         classes = "insert-sub-coto",
         onClick = e =>
