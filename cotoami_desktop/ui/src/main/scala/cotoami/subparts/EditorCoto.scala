@@ -449,7 +449,10 @@ object EditorCoto {
         dispatch: CotoForm.Msg => Unit
     ): Option[ReactElement] =
       Option.when(
-        form.geolocation.isDefined || form.mediaLocation.isDefined || context.geomap.focusedLocation.isDefined
+        context.uiState.map(_.geomapOpened).getOrElse(false) ||
+          form.geolocation.isDefined ||
+          form.mediaLocation.isDefined ||
+          context.geomap.focusedLocation.isDefined
       ) {
         li(className := "attribute geolocation")(
           div(className := "attribute-name")(
@@ -457,18 +460,26 @@ object EditorCoto {
             context.i18n.text.EditorCoto_location
           ),
           div(className := "attribute-value")(
-            form.geolocation.map(location =>
-              Fragment(
-                div(className := "longitude")(
-                  span(className := "label")("longitude:"),
-                  span(className := "value longitude")(location.longitude)
-                ),
-                div(className := "latitude")(
-                  span(className := "label")("latitude:"),
-                  span(className := "value latitude")(location.latitude)
-                )
+            form.geolocation
+              .map(location =>
+                Fragment(
+                  div(className := "longitude")(
+                    span(className := "label")("longitude:"),
+                    span(className := "value longitude")(location.longitude)
+                  ),
+                  div(className := "latitude")(
+                    span(className := "label")("latitude:"),
+                    span(className := "value latitude")(location.latitude)
+                  )
+                ): ReactElement
               )
-            )
+              .getOrElse(
+                Option.when(context.geomap.focusedLocation.isEmpty) {
+                  span(className := "help")(
+                    context.i18n.text.EditorCoto_help_selectLocation
+                  )
+                }
+              )
           ),
           div(className := "from-buttons")(
             Option.when(form.isGeomapLocationNotUsed(context.geomap)) {

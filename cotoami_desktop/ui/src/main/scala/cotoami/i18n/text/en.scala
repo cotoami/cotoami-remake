@@ -95,6 +95,7 @@ object en extends Text {
   val EditorCoto_inputImage = "Drop an image file here, or click to select one"
   val EditorCoto_date = "Date"
   val EditorCoto_location = "Location"
+  val EditorCoto_help_selectLocation = "Click on a location on the map"
   def EditorCoto_cotonomaAlreadyExists(cotonomaName: String) =
     s"The cotonoma \"${cotonomaName}\" already exists in this node."
 
