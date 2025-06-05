@@ -9,6 +9,8 @@ use tauri_plugin_log::LogTarget;
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_shell::init())
         .plugin(plugins::window_state::Builder::default().build())
         .plugin(
             tauri_plugin_log::Builder::default()

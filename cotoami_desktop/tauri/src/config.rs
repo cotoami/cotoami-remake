@@ -51,7 +51,9 @@ impl Configs {
         }
     }
 
-    fn empty() -> Self { Configs(BTreeMap::new()) }
+    fn empty() -> Self {
+        Configs(BTreeMap::new())
+    }
 
     fn read_from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         toml::from_str(&fs::read_to_string(path)?).map_err(anyhow::Error::from)

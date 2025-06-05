@@ -64,7 +64,9 @@ impl RecentDatabases {
         self.save(app_handle);
     }
 
-    fn empty() -> Self { RecentDatabases(Vec::new()) }
+    fn empty() -> Self {
+        RecentDatabases(Vec::new())
+    }
 
     fn read_from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(path)?;

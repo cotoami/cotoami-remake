@@ -49,7 +49,9 @@ bitflags! {
 }
 
 impl Default for StateFlags {
-    fn default() -> Self { Self::all() }
+    fn default() -> Self {
+        Self::all()
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
