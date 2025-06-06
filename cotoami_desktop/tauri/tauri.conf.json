@@ -1,13 +1,42 @@
 {
+  "productName": "Cotoami",
+  "identifier": "me.cotoa.dev",
+  "mainBinaryName": "Cotoami",
   "build": {
     "beforeDevCommand": "",
     "beforeBuildCommand": "cd ui && yarn && yarn run build",
-    "frontendDist": "../ui/dist",
-    "devUrl": "http://localhost:5173/"
+    "devUrl": "http://localhost:5173/",
+    "frontendDist": "../ui/dist"
+  },
+  "app": {
+    "security": {
+      "assetProtocol": {
+        "scope": [
+          "**/*"
+        ],
+        "enable": true
+      },
+      "csp": null
+    },
+    "windows": [
+      {
+        "title": "Cotoami",
+        "fullscreen": false,
+        "resizable": true,
+        "width": 900,
+        "height": 800,
+        "hiddenTitle": true,
+        "titleBarStyle": "Overlay",
+        "dragDropEnabled": false,
+        "useHttpsScheme": true
+      }
+    ]
   },
   "bundle": {
     "active": true,
-    "category": "DeveloperTool",
+    "category": "Utility",
+    "shortDescription": "A note-taking application with a built-in world map.",
+    "longDescription": "",
     "copyright": "",
     "targets": "all",
     "externalBin": [],
@@ -18,18 +47,9 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "windows": {
-      "certificateThumbprint": null,
-      "digestAlgorithm": "sha256",
-      "timestampUrl": "",
-      "wix": {
-        "language": [
-          "en-US",
-          "ja-JP"
-        ]
-      }
-    },
-    "longDescription": "",
+    "resources": [
+      "geomap/*"
+    ],
     "macOS": {
       "entitlements": null,
       "exceptionDomain": "",
@@ -37,42 +57,21 @@
       "providerShortName": null,
       "signingIdentity": "-"
     },
-    "resources": [
-      "geomap/*"
-    ],
-    "shortDescription": "",
     "linux": {
       "deb": {
         "depends": []
       }
+    },
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "",
+      "wix": {
+        "language": [
+          "en-US"
+        ]
+      }
     }
   },
-  "productName": "Cotoami",
-  "mainBinaryName": "Cotoami",
-  "identifier": "me.cotoa.dev",
-  "plugins": {},
-  "app": {
-    "windows": [
-      {
-        "fullscreen": false,
-        "resizable": true,
-        "title": "Cotoami",
-        "width": 900,
-        "height": 800,
-        "hiddenTitle": true,
-        "titleBarStyle": "Overlay",
-        "fileDropEnabled": false,
-        "useHttpsScheme": true
-      }
-    ],
-    "security": {
-      "assetProtocol": {
-        "scope": [
-          "**/*"
-        ],
-        "enable": true
-      },
-      "csp": null
-    }
-  }
+  "plugins": {}
 }
