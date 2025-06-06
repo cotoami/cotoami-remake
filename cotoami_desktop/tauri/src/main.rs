@@ -15,7 +15,7 @@ fn main() {
         .plugin(
             tauri_plugin_log::Builder::new()
                 .targets([Target::new(TargetKind::Stdout)])
-                .level(LevelFilter::Debug)
+                .level(LevelFilter::Info)
                 .build(),
         )
         .invoke_handler(tauri::generate_handler![
