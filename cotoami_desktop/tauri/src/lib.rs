@@ -8,7 +8,6 @@ pub mod commands;
 mod config;
 mod event;
 mod message;
-pub mod plugins;
 
 fn existing_config_file_path(app_handle: &tauri::AppHandle, file_name: &str) -> Option<PathBuf> {
     match app_handle.path().app_config_dir() {

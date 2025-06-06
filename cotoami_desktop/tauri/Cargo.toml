@@ -32,6 +32,7 @@ tauri = {version = "2", features = ["protocol-asset"]}
 tauri-plugin-dialog = "2"
 tauri-plugin-log = {version = "2"}
 tauri-plugin-shell = "2"
+tauri-plugin-window-state = "2.0.0"
 thiserror.workspace = true
 tokio = {version = "1.0", features = ["full"]}
 toml = "0.8.14"
