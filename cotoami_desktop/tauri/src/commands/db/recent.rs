@@ -7,6 +7,7 @@ use std::{
 use anyhow::Result;
 use base64::Engine;
 use cotoami_db::prelude::Node;
+use tauri::Manager;
 use tracing::debug;
 
 use crate::message::MessageSink;
@@ -37,7 +38,7 @@ impl RecentDatabases {
     const MAX_SIZE: usize = 10;
 
     pub fn load(app_handle: &tauri::AppHandle) -> Self {
-        if let Some(path) = crate::config_file_path(app_handle, Self::FILENAME) {
+        if let Some(path) = crate::existing_config_file_path(app_handle, Self::FILENAME) {
             debug!("Reading the recent file: {}", path.to_string_lossy());
             match Self::read_from_file(path) {
                 Ok(recent) => recent,
@@ -64,9 +65,7 @@ impl RecentDatabases {
         self.save(app_handle);
     }
 
-    fn empty() -> Self {
-        RecentDatabases(Vec::new())
-    }
+    fn empty() -> Self { RecentDatabases(Vec::new()) }
 
     fn read_from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(path)?;
@@ -82,12 +81,17 @@ impl RecentDatabases {
     }
 
     fn save(&self, app_handle: &tauri::AppHandle) {
-        if let Some(config_dir) = app_handle.path_resolver().app_config_dir() {
-            let file_path = config_dir.join(Self::FILENAME);
-            if let Err(e) = self.save_to_file(&file_path) {
-                app_handle.error("Error writing the recent file.", Some(&e.to_string()));
-            } else {
-                debug!("RecentDatabases saved: {}", file_path.to_string_lossy());
+        match app_handle.path().app_config_dir() {
+            Ok(config_dir) => {
+                let file_path = config_dir.join(Self::FILENAME);
+                if let Err(e) = self.save_to_file(&file_path) {
+                    app_handle.error("Failed to write the recent file.", Some(e));
+                } else {
+                    debug!("RecentDatabases saved: {}", file_path.to_string_lossy());
+                }
+            }
+            Err(e) => {
+                app_handle.error("Failed to get a config dir.", Some(e));
             }
         }
     }
