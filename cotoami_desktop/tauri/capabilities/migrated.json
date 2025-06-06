@@ -43,6 +43,7 @@
     "shell:allow-open",
     "dialog:allow-open",
     "shell:default",
-    "dialog:default"
+    "dialog:default",
+    "log:default"
   ]
 }
