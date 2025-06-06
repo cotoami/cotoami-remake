@@ -1,7 +1,7 @@
 use cotoami_db::prelude::*;
 use cotoami_node::{prelude::*, Abortables};
 use futures::StreamExt;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter};
 use tokio::task::JoinSet;
 use tracing::error;
 
@@ -15,7 +15,7 @@ pub(crate) trait ChangeSink {
 
 impl ChangeSink for AppHandle {
     fn send_backend_change(&self, change: &ChangelogEntry) {
-        if let Err(e) = self.emit_all("backend-change", change) {
+        if let Err(e) = self.emit("backend-change", change) {
             error!("Emitting a backend change faild: {e}");
         }
     }
@@ -31,7 +31,7 @@ pub(crate) trait NodeEventSink {
 
 impl NodeEventSink for AppHandle {
     fn send_backend_event(&self, event: &LocalNodeEvent) {
-        if let Err(e) = self.emit_all("backend-event", event) {
+        if let Err(e) = self.emit("backend-event", event) {
             error!("Emitting a backend event faild: {e}");
         }
     }

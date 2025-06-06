@@ -1,5 +1,5 @@
 use log::error;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter};
 
 pub(crate) trait MessageSink {
     fn send_message(&self, message: &Message);
@@ -34,7 +34,7 @@ impl<'a> Message<'a> {
 
 impl MessageSink for AppHandle {
     fn send_message(&self, message: &Message) {
-        if let Err(e) = self.emit_all("message", message) {
+        if let Err(e) = self.emit("message", message) {
             error!("Emitting a message faild: {:?} (reason: {})", message, e);
         }
     }

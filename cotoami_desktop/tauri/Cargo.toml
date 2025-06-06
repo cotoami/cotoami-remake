@@ -28,7 +28,7 @@ log = "0.4.21"
 parking_lot.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-tauri = {version = "2", features = []}
+tauri = {version = "2", features = ["protocol-asset"]}
 tauri-plugin-dialog = "2"
 tauri-plugin-log = {version = "2"}
 tauri-plugin-shell = "2"
