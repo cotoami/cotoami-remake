@@ -102,7 +102,7 @@ import marubinotto.libs.geomap.pmtiles
             location.replace("/", tauri.path.sep).stripPrefix(tauri.path.sep)
           val absolutePath =
             resourceDirRef.current + tauri.path.sep + resourcePath
-          tauri.convertFileSrc(absolutePath)
+          tauri.core.convertFileSrc(absolutePath)
         },
       Seq.empty
     )
