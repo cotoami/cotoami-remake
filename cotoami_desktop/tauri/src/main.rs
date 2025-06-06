@@ -4,6 +4,7 @@
 )]
 
 use cotoami_desktop::commands;
+use log::LevelFilter;
 use tauri_plugin_log::{Target, TargetKind};
 
 fn main() {
@@ -14,6 +15,7 @@ fn main() {
         .plugin(
             tauri_plugin_log::Builder::new()
                 .targets([Target::new(TargetKind::Stdout)])
+                .level(LevelFilter::Debug)
                 .build(),
         )
         .invoke_handler(tauri::generate_handler![
