@@ -10,6 +10,7 @@ import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import cats.effect.IO
 
 import marubinotto.fui.{Cmd, Sub}
+import marubinotto.libs.tauri
 
 package object tauri {
 
@@ -94,11 +95,11 @@ package object tauri {
       deltaWidth: Double,
       deltaHeight: Double
   ): Future[Unit] = {
-    val appWindow = marubinotto.libs.tauri.window.appWindow
+    val appWindow = tauri.webviewWindow.getCurrentWebviewWindow()
     appWindow.scaleFactor().toFuture.flatMap(factor =>
       appWindow.innerSize().toFuture.flatMap(physical => {
         val currentSize = physical.toLogical(factor)
-        val newSize = new window.LogicalSize(
+        val newSize = new tauri.dpi.LogicalSize(
           currentSize.width + deltaWidth,
           currentSize.height + deltaHeight
         )
