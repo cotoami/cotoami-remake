@@ -1,9 +1,10 @@
-use std::{borrow::Borrow, collections::BTreeMap, fs, path::Path};
+use std::{collections::BTreeMap, fs, path::Path};
 
 use anyhow::Result;
 use cotoami_db::{Id, Node};
 use cotoami_node::prelude::NodeConfig;
-use log::debug;
+use tauri::Manager;
+use tracing::debug;
 
 use crate::message::MessageSink;
 
@@ -15,7 +16,7 @@ impl Configs {
     const FILENAME: &'static str = "configs.toml";
 
     pub fn load(app_handle: &tauri::AppHandle) -> Self {
-        if let Some(path) = crate::config_file_path(app_handle, Self::FILENAME) {
+        if let Some(path) = crate::existing_config_file_path(app_handle, Self::FILENAME) {
             match Self::read_from_file(path) {
                 Ok(configs) => configs,
                 Err(e) => {
@@ -38,15 +39,17 @@ impl Configs {
     }
 
     pub fn save(&self, app_handle: &tauri::AppHandle) {
-        if let Some(config_dir) = app_handle.path_resolver().app_config_dir() {
-            let file_path = config_dir.join(Self::FILENAME);
-            if let Err(e) = self.save_to_file(&file_path) {
-                app_handle.error("Error writing the configs file.", Some(&e.to_string()));
-            } else {
-                app_handle.info(
-                    "Configuration updated.",
-                    Some(file_path.to_string_lossy().borrow()),
-                );
+        match app_handle.path().app_config_dir() {
+            Ok(config_dir) => {
+                let file_path = config_dir.join(Self::FILENAME);
+                if let Err(e) = self.save_to_file(&file_path) {
+                    app_handle.error("Failed to write the configs file.", Some(e));
+                } else {
+                    app_handle.info("Configuration updated.", Some(file_path.to_string_lossy()));
+                }
+            }
+            Err(e) => {
+                app_handle.error("Failed to get a config dir.", Some(e));
             }
         }
     }

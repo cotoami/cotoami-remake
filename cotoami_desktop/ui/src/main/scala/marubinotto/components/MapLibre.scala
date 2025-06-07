@@ -99,10 +99,12 @@ import marubinotto.libs.geomap.pmtiles
           // its separators replaced with the platform-specific ones.
           // https://github.com/tauri-apps/tauri/issues/8599#issuecomment-1890982596
           val resourcePath =
-            location.replace("/", tauri.path.sep).stripPrefix(tauri.path.sep)
+            location
+              .replace("/", tauri.path.sep())
+              .stripPrefix(tauri.path.sep())
           val absolutePath =
-            resourceDirRef.current + tauri.path.sep + resourcePath
-          tauri.convertFileSrc(absolutePath)
+            resourceDirRef.current + tauri.path.sep() + resourcePath
+          tauri.core.convertFileSrc(absolutePath)
         },
       Seq.empty
     )
@@ -238,7 +240,7 @@ import marubinotto.libs.geomap.pmtiles
           case Success(dir) => {
             // The tauri resource dir where local map resources are located.
             // Remove the trailing path separator of the path returned by `tauri.path.resourceDir()`.
-            resourceDirRef.current = dir.stripSuffix(tauri.path.sep)
+            resourceDirRef.current = dir.stripSuffix(tauri.path.sep())
 
             // Delay rendering the map to ensure it to fit to the container section.
             js.timers.setTimeout(10) {

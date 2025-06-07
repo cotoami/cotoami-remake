@@ -1,94 +1,78 @@
 {
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Cotoami",
+  "identifier": "app.cotoami.desktop",
+  "mainBinaryName": "Cotoami",
   "build": {
     "beforeDevCommand": "",
     "beforeBuildCommand": "cd ui && yarn && yarn run build",
-    "devPath": "http://localhost:5173/",
-    "distDir": "../ui/dist"
+    "devUrl": "http://localhost:5173/",
+    "frontendDist": "../ui/dist"
   },
-  "package": {
-    "productName": "Cotoami"
-  },
-  "tauri": {
-    "allowlist": {
-      "all": false,
-      "dialog": {
-        "open": true
-      },
-      "shell": {
-        "open": true
-      },
-      "window": {
-        "all": true
-      },
-      "path": {
-        "all": true
-      },
-      "protocol": {
-        "all": true,
-        "asset": true,
-        "assetScope": [
-          "**/*"
-        ]
-      }
-    },
-    "bundle": {
-      "active": true,
-      "category": "DeveloperTool",
-      "copyright": "",
-      "deb": {
-        "depends": []
-      },
-      "externalBin": [],
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ],
-      "identifier": "me.cotoa.dev",
-      "longDescription": "",
-      "macOS": {
-        "entitlements": null,
-        "exceptionDomain": "",
-        "frameworks": [],
-        "providerShortName": null,
-        "signingIdentity": "-"
-      },
-      "resources": [
-        "geomap/*"
-      ],
-      "shortDescription": "",
-      "targets": "all",
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampUrl": "",
-        "wix": {
-          "language": [
-            "en-US",
-            "ja-JP"
-          ]
-        }
-      }
-    },
+  "app": {
     "security": {
+      "assetProtocol": {
+        "scope": [
+          "**/*"
+        ],
+        "enable": true
+      },
       "csp": null
-    },
-    "updater": {
-      "active": false
     },
     "windows": [
       {
+        "title": "Cotoami",
         "fullscreen": false,
         "resizable": true,
-        "title": "Cotoami",
         "width": 900,
         "height": 800,
         "hiddenTitle": true,
         "titleBarStyle": "Overlay",
-        "fileDropEnabled": false
+        "dragDropEnabled": false,
+        "useHttpsScheme": true
       }
     ]
-  }
+  },
+  "bundle": {
+    "active": true,
+    "category": "Utility",
+    "shortDescription": "A note-taking application with a built-in world map.",
+    "longDescription": "",
+    "copyright": "",
+    "targets": "all",
+    "externalBin": [],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": [
+      "geomap/*"
+    ],
+    "macOS": {
+      "entitlements": null,
+      "exceptionDomain": "",
+      "frameworks": [],
+      "providerShortName": null,
+      "signingIdentity": "-"
+    },
+    "linux": {
+      "deb": {
+        "depends": []
+      }
+    },
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "",
+      "wix": {
+        "language": [
+          "en-US"
+        ]
+      }
+    }
+  },
+  "plugins": {}
 }

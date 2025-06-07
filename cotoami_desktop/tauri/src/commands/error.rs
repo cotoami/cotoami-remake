@@ -62,7 +62,9 @@ impl From<anyhow::Error> for Error {
 }
 
 impl From<ServiceError> for Error {
-    fn from(e: ServiceError) -> Self { Self::from_service_error(e) }
+    fn from(e: ServiceError) -> Self {
+        Self::from_service_error(e)
+    }
 }
 
 impl From<RequestError> for Error {

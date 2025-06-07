@@ -4,51 +4,15 @@ import scala.util.{Failure, Success}
 import scala.concurrent.Future
 
 import scala.scalajs.js
-import scala.scalajs.js.annotation.JSImport
 import scala.scalajs.js.Thenable.Implicits._
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 import cats.effect.IO
 
 import marubinotto.fui.{Cmd, Sub}
+import marubinotto.libs.tauri
 
 package object tauri {
-
-  /** Convert a device file path to an URL that can be loaded by the webview.
-    *
-    * <https://tauri.app/v1/api/js/tauri#convertfilesrc>
-    */
-  @js.native
-  @JSImport("@tauri-apps/api/tauri", "convertFileSrc")
-  def convertFileSrc(
-      filePath: String,
-      protocol: js.UndefOr[String] = js.undefined
-  ): String =
-    js.native
-
-  /** Sends a message to the backend.
-    *
-    * <https://tauri.app/v1/api/js/tauri#invoke>
-    *
-    * @param cmd
-    *   The command name.
-    * @param args
-    *   The optional arguments to pass to the command. It should be passed as a
-    *   JSON object with camelCase keys (when declaring arguments in Rust using
-    *   snake_case, the arguments are converted to camelCase for JavaScript).
-    *   For the Rust side, it can be of any type, as long as they implement
-    *   `serde::Deserialize`.
-    * @return
-    *   A promise resolving or rejecting to the backend response. For the Rust
-    *   side, the returned data can be of any type, as long as it implements
-    *   `serde::Serialize`.
-    */
-  @js.native
-  @JSImport("@tauri-apps/api/tauri", "invoke")
-  def invoke[T](
-      cmd: String,
-      args: js.Object = js.Dynamic.literal()
-  ): js.Promise[T] = js.native
 
   // To distinguish a normal backend error from a system error during command invocation,
   // which will be returned as a string from Tauri, a backend error must be defined as an Object.
@@ -58,7 +22,7 @@ package object tauri {
   ): Cmd.One[Either[E, T]] =
     Cmd(IO.async { cb =>
       IO {
-        invoke[T](command, args)
+        core.invoke[T](command, args)
           // implicitly convert the Promise to a Future by
           // `scala.scalajs.js.Thenable.Implicits._`
           .onComplete {
@@ -131,11 +95,11 @@ package object tauri {
       deltaWidth: Double,
       deltaHeight: Double
   ): Future[Unit] = {
-    val appWindow = marubinotto.libs.tauri.window.appWindow
+    val appWindow = tauri.webviewWindow.getCurrentWebviewWindow()
     appWindow.scaleFactor().toFuture.flatMap(factor =>
       appWindow.innerSize().toFuture.flatMap(physical => {
         val currentSize = physical.toLogical(factor)
-        val newSize = new window.LogicalSize(
+        val newSize = new tauri.dpi.LogicalSize(
           currentSize.width + deltaWidth,
           currentSize.height + deltaHeight
         )

@@ -90,9 +90,13 @@ pub struct OperatingAs {
 }
 
 impl OperatingAs {
-    pub fn parent_id(&self) -> Option<Id<Node>> { *self.parent_id.read() }
+    pub fn parent_id(&self) -> Option<Id<Node>> {
+        *self.parent_id.read()
+    }
 
-    pub fn operating_remote(&self) -> bool { self.parent_id.read().is_some() }
+    pub fn operating_remote(&self) -> bool {
+        self.parent_id.read().is_some()
+    }
 
     pub fn operate_as_local(&self, state: NodeState, app_handle: AppHandle) -> Result<(), Error> {
         self.operate_as(None, state, app_handle)

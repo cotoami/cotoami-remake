@@ -1,8 +1,9 @@
 use std::{env, path::PathBuf};
 
 use chrono::Local;
+use tauri::{Manager, Result};
 
-use crate::commands::db::recent::RecentDatabases;
+use crate::{commands::db::recent::RecentDatabases, message::MessageSink};
 
 #[derive(serde::Serialize)]
 pub struct SystemInfo {
@@ -24,10 +25,10 @@ pub fn system_info(app_handle: tauri::AppHandle) -> SystemInfo {
 
     // tauri::PathResolver
     // https://docs.rs/tauri/1.6.1/tauri/struct.PathResolver.html
-    let path_resolver = app_handle.path_resolver();
-    let resource_dir = to_path_string(path_resolver.resource_dir());
-    let app_config_dir = to_path_string(path_resolver.app_config_dir());
-    let app_data_dir = to_path_string(path_resolver.app_data_dir());
+    let path_resolver = app_handle.path();
+    let resource_dir = to_path_string(path_resolver.resource_dir(), &app_handle);
+    let app_config_dir = to_path_string(path_resolver.app_config_dir(), &app_handle);
+    let app_data_dir = to_path_string(path_resolver.app_data_dir(), &app_handle);
 
     let time_zone_offset_in_sec = Local::now().offset().local_minus_utc();
 
@@ -45,6 +46,12 @@ pub fn system_info(app_handle: tauri::AppHandle) -> SystemInfo {
     }
 }
 
-fn to_path_string(path: Option<PathBuf>) -> Option<String> {
-    path.and_then(|path| path.to_str().map(str::to_string))
+fn to_path_string(path: Result<PathBuf>, app_handle: &tauri::AppHandle) -> Option<String> {
+    match path {
+        Ok(path) => path.to_str().map(str::to_string),
+        Err(e) => {
+            app_handle.error("Failed to get a path", Some(e));
+            None
+        }
+    }
 }
