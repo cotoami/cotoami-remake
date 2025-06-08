@@ -61,13 +61,15 @@ section.timeline {
     flex-direction: row;
     align-items: center;
 
-    padding-bottom: 4px;
+    padding: 0 var(--block-spacing-horizontal);
     color: var(--muted-color);
-    background-color: var(--coto-flow-background-color);
 
     span.material-symbols {
       font-size: 1.2rem;
-      vertical-align: middle;
+    }
+
+    .repost-icon {
+      padding-top: 1px;
     }
 
     a.reposted-in {
@@ -79,7 +81,7 @@ section.timeline {
 
     address.reposter {
       margin: 0;
-      margin-left: 16px;
+      margin-right: 10px;
       color: var(--muted-color);
       font-size: 0.8rem;
 

@@ -406,10 +406,9 @@ object SectionTimeline {
       post: (Option[Coto], Coto),
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val (previous, coto) = post
+    val (previous, postCoto) = post
     val posterChange =
-      previous.map(_.postedById != coto.postedById).getOrElse(false)
-    val repostHeader = sectionRepostHeader(coto)
+      previous.map(_.postedById != postCoto.postedById).getOrElse(false)
     section(
       className := optionalClasses(
         Seq(
@@ -419,28 +418,28 @@ object SectionTimeline {
         )
       )
     )(
-      context.repo.cotos.getOriginal(coto).map(coto =>
+      context.repo.cotos.getOriginal(postCoto).map(coto =>
         Fragment(
           PartsCoto.ulParents(
             context.repo.parentsOf(coto.id),
             AppMsg.FocusCoto(_),
             true
           ),
-          repostHeader,
-          articleCoto(coto),
+          articleCoto(coto, postCoto),
           PartsCoto.divDetailsButton(coto)
         )
       )
     )
   }
 
-  private def articleCoto(coto: Coto)(implicit
+  private def articleCoto(coto: Coto, post: Coto)(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
     val repo = context.repo
     PartsCoto.article(coto, dispatch)(
       ToolbarCoto(coto),
+      sectionRepostHeader(post),
       header()(
         PartsCoto.divAttributes(coto),
         Option.when(!repo.nodes.isSelf(coto.postedById)) {
@@ -451,7 +450,7 @@ object SectionTimeline {
         PartsCoto.divContent(coto)
       ),
       PartsCoto.articleFooter(coto),
-      Option.when(context.repo.nodes.unread(coto))(
+      Option.when(context.repo.nodes.unread(post))(
         materialSymbolFilled("brightness_1", "unread-mark")
       )
     )
@@ -464,7 +463,10 @@ object SectionTimeline {
     Option.when(coto.repostOfId.isDefined) {
       val repo = context.repo
       section(className := "repost-header")(
-        materialSymbol("repeat"),
+        Option.when(!repo.nodes.isSelf(coto.postedById)) {
+          reposter(coto, repo.nodes)
+        },
+        materialSymbol("repeat", "repost-icon"),
         // Display the cotonomas to which the coto has been reposted
         // when the current location is a node home (no cotonoma is focused).
         Option.when(repo.cotonomas.focusedId.isEmpty) {
@@ -488,9 +490,6 @@ object SectionTimeline {
               )
             }
           )
-        },
-        Option.when(!repo.nodes.isSelf(coto.postedById)) {
-          reposter(coto, repo.nodes)
         }
       )
     }
