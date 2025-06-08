@@ -15,6 +15,16 @@ pub mod db;
 pub mod error;
 pub mod system;
 
+/// Workaround to prevent the window from flashing a white background
+/// before rendering its content.
+/// https://github.com/tauri-apps/tauri/issues/1564
+#[tauri::command]
+pub fn show_window(window: tauri::Window) -> Result<(), Error> {
+    window.show()?;
+    window.set_focus()?;
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn node_command(
     state: tauri::State<'_, NodeState>,
@@ -90,13 +100,9 @@ pub struct OperatingAs {
 }
 
 impl OperatingAs {
-    pub fn parent_id(&self) -> Option<Id<Node>> {
-        *self.parent_id.read()
-    }
+    pub fn parent_id(&self) -> Option<Id<Node>> { *self.parent_id.read() }
 
-    pub fn operating_remote(&self) -> bool {
-        self.parent_id.read().is_some()
-    }
+    pub fn operating_remote(&self) -> bool { self.parent_id.read().is_some() }
 
     pub fn operate_as_local(&self, state: NodeState, app_handle: AppHandle) -> Result<(), Error> {
         self.operate_as(None, state, app_handle)

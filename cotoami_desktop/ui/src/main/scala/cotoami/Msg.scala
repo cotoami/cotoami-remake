@@ -27,6 +27,7 @@ object Msg {
   case class BackendEvent(event: LocalNodeEventJson) extends Msg
 
   // App init
+  case class AppWindowShown(result: Either[ErrorJson, Unit]) extends Msg
   case class SystemInfoFetched(result: Either[Unit, SystemInfoJson]) extends Msg
   case class UiStateRestored(uiState: Option[UiState]) extends Msg
   case class DatabaseOpened(result: Either[ErrorJson, DatabaseInfo]) extends Msg

@@ -61,10 +61,12 @@ impl From<anyhow::Error> for Error {
     }
 }
 
+impl From<tauri::Error> for Error {
+    fn from(e: tauri::Error) -> Self { Error::new("tauri-error", e.to_string()) }
+}
+
 impl From<ServiceError> for Error {
-    fn from(e: ServiceError) -> Self {
-        Self::from_service_error(e)
-    }
+    fn from(e: ServiceError) -> Self { Self::from_service_error(e) }
 }
 
 impl From<RequestError> for Error {

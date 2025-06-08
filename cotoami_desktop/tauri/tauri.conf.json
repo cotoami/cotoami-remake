@@ -26,6 +26,7 @@
         "resizable": true,
         "width": 900,
         "height": 800,
+        "visible": false,
         "hiddenTitle": true,
         "titleBarStyle": "Overlay",
         "dragDropEnabled": false,

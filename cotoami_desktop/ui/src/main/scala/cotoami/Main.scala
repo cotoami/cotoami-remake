@@ -62,6 +62,7 @@ object Main {
     (
       Model(url = url, flowInput = flowInput),
       Cmd.Batch(
+        showAppWindow,
         UiState.restore.map(Msg.UiStateRestored),
         cotoami.backend.SystemInfoJson.fetch().map(Msg.SystemInfoFetched),
         DatabaseFolder.restore.flatMap(
@@ -98,6 +99,13 @@ object Main {
 
       case Msg.BackendEvent(event) =>
         updates.LocalNodeEvent.handle(event, model)
+
+      case Msg.AppWindowShown(result) =>
+        result match {
+          case Right(_) => (model, Cmd.none)
+          case Left(e) =>
+            (model.error("Failed to display the app window.", e), Cmd.none)
+        }
 
       case Msg.SystemInfoFetched(Right(systemInfo)) =>
         (
@@ -143,7 +151,7 @@ object Main {
               model,
               Cmd.Batch(
                 DatabaseFolder.save(info.folder),
-                connectToServers(),
+                connectToServers,
                 Root.fetchOthersLastPostedAt,
                 info.newOwnerPassword
                   .map(password =>
@@ -500,10 +508,14 @@ object Main {
     }
   }
 
-  private def connectToServers(): Cmd.One[Msg] =
-    tauri.invokeCommand("connect_to_servers").map(
-      Msg.ServerConnectionsInitialized
-    )
+  // https://github.com/tauri-apps/tauri/issues/1564
+  private def showAppWindow: Cmd.One[Msg] =
+    tauri.invokeCommand("show_window")
+      .map(Msg.AppWindowShown)
+
+  private def connectToServers: Cmd.One[Msg] =
+    tauri.invokeCommand("connect_to_servers")
+      .map(Msg.ServerConnectionsInitialized)
 
   def subscriptions(model: Model): Sub[Msg] =
     (tauri.listen[MessageJson]("message", None)
