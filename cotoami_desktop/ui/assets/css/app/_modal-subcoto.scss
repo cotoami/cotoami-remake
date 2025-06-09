@@ -25,7 +25,7 @@ dialog.subcoto {
   section.source {
     article.coto {
       &:hover {
-        background-color: var(--embedded-cotobackground-color) !important;
+        border: 2px solid transparent !important; // disable highlight
       }
 
       div.body div.scroll-area {
