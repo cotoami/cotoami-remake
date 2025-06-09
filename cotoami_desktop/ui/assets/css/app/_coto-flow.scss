@@ -22,7 +22,9 @@
     article.coto {
       border-radius: 4px;
       box-shadow: var(--card-box-shadow);
-      padding: 1rem 0;
+      padding: 0;
+      padding-top: 10px;
+      padding-bottom: 12px;
 
       >header {
         padding: 0 var(--block-spacing-horizontal);
