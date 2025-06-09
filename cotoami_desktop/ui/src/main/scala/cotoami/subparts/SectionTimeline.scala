@@ -429,13 +429,13 @@ object SectionTimeline {
   ): ReactElement = {
     val repo = context.repo
     PartsCoto.article(coto, dispatch)(
-      Option.when(context.repo.nodes.unread(post))(
+      Option.when(repo.nodes.unread(post))(
         materialSymbolFilled("brightness_1", "unread-mark")
       ),
       ToolbarCoto(coto),
       sectionRepostHeader(post),
       PartsCoto.ulParents(
-        context.repo.parentsOf(coto.id),
+        repo.parentsOf(coto.id),
         AppMsg.FocusCoto(_),
         true
       ),
