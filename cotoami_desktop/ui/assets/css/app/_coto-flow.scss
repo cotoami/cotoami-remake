@@ -2,8 +2,8 @@
   background-color: var(--coto-flow-background-color);
 
   .scroll-area {
-    padding-left: 6px;
-    padding-right: 8px; // extra padding for the scrollbar
+    padding-left: 4px;
+    padding-right: 6px;
 
     .simplebar-content {
       // override the default padding to make a space for
@@ -13,10 +13,10 @@
   }
 
   .flow-entry {
-    margin-bottom: 10px;
+    margin-bottom: 6px;
 
     &.poster-change {
-      margin-top: 50px;
+      margin-top: 30px;
     }
 
     article.coto {

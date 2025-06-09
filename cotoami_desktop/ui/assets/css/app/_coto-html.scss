@@ -15,8 +15,14 @@ section.text-content {
     }
   }
 
-  blockquote:first-child {
-    margin-top: 0;
+  blockquote {
+    &:first-child {
+      margin-top: 0;
+    }
+
+    p {
+      color: var(--muted-color);
+    }
   }
 
   pre,
