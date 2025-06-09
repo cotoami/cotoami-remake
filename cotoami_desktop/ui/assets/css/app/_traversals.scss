@@ -60,6 +60,10 @@ section.traversals {
       }
     }
 
+    ul.parents {
+      background-color: var(--card-background-color);
+    }
+
     article {
       &.step-coto {
         padding-top: 20px;
