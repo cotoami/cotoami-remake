@@ -34,17 +34,13 @@ object SectionCotoDetails {
       ),
       div(className := "body")(
         ScrollArea()(
-          PartsCoto.ulParents(
-            context.repo.parentsOf(coto.id),
-            AppMsg.FocusCoto(_)
-          ),
           articleMainCoto(coto),
           context.repo.childrenOf(coto.id).map(sectionSubCotos)
         ).withKey(coto.id.uuid) // Reset the state when the coto is changed
       )
     )
 
-  private def divAddSubCoto(
+  private def divInsertSubCoto(
       sourceCotoId: Id[Coto],
       order: Option[Int],
       defaultCotonomaId: Option[Id[Cotonoma]]
@@ -73,6 +69,10 @@ object SectionCotoDetails {
   ): ReactElement =
     PartsCoto.article(coto, dispatch, Seq(("main-coto", true)))(
       ToolbarCoto(coto),
+      PartsCoto.ulParents(
+        context.repo.parentsOf(coto.id),
+        AppMsg.FocusCoto(_)
+      ),
       header()(
         PartsCoto.divAttributes(coto),
         PartsCoto.addressAuthor(coto, context.repo.nodes)
@@ -100,17 +100,17 @@ object SectionCotoDetails {
         else
           None
       div(className := "sub")(
-        divAddSubCoto(ito.sourceCotoId, Some(ito.order), addSubCotoTo),
+        divInsertSubCoto(ito.sourceCotoId, Some(ito.order), addSubCotoTo),
         div(className := "sub-coto")(
-          PartsCoto.ulParents(
-            repo.parentsOf(coto.id).filter(_._2.id != ito.id),
-            AppMsg.FocusCoto(_)
-          ),
           PartsCoto.article(coto, dispatch, Seq(("sub-coto", true)))(
             ToolbarCoto(coto),
             ToolbarReorder(ito, order),
+            PartsIto.buttonSubcotoIto(ito),
+            PartsCoto.ulParents(
+              repo.parentsOf(coto.id).filter(_._2.id != ito.id),
+              AppMsg.FocusCoto(_)
+            ),
             header()(
-              PartsIto.buttonSubcotoIto(ito),
               PartsCoto.divAttributes(coto),
               Option.when(!repo.nodes.isSelf(coto.postedById)) {
                 PartsCoto.addressAuthor(coto, repo.nodes)
@@ -119,12 +119,14 @@ object SectionCotoDetails {
             div(className := "body")(
               PartsCoto.divContent(coto)
             ),
-            PartsCoto.articleFooter(coto)
-          ),
-          PartsCoto.divDetailsButton(coto)
+            PartsCoto.articleFooter(coto),
+            div(className := "padding-bottom")(
+              PartsCoto.divDetailsButton(coto)
+            )
+          )
         ),
         Option.when(order.isLast) {
-          divAddSubCoto(ito.sourceCotoId, None, addSubCotoTo)
+          divInsertSubCoto(ito.sourceCotoId, None, addSubCotoTo)
         }
       )
     }

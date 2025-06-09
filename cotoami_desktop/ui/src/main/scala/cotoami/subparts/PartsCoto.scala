@@ -307,7 +307,7 @@ object PartsCoto {
     Option.when(context.repo.itos.anyFrom(coto.id)) {
       div(className := "more-details")(
         toolButton(
-          symbol = "arrow_forward",
+          symbol = "view_headline",
           classes = "coto-details",
           onClick = e => {
             e.stopPropagation()

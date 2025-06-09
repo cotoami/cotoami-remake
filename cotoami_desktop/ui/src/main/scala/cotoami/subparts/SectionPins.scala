@@ -275,10 +275,6 @@ object SectionPins {
         ),
         id := elementIdOfPin(ito)
       )(
-        PartsCoto.ulParents(
-          context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
-          SectionTraversals.Msg.OpenTraversal(_).into
-        ),
         PartsCoto.article(
           coto,
           dispatch,
@@ -290,6 +286,10 @@ object SectionPins {
           PartsIto.buttonPin(ito),
           ToolbarCoto(coto),
           ToolbarReorder(ito, order),
+          PartsCoto.ulParents(
+            context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
+            SectionTraversals.Msg.OpenTraversal(_).into
+          ),
           div(className := "body")(
             PartsCoto.divContent(coto)
           ),
@@ -380,15 +380,13 @@ object SectionPins {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     PartsIto.sectionSiblings(subCotos, "sub-cotos") { case (ito, coto, order) =>
       div(className := "sub-coto")(
-        PartsCoto.ulParents(
-          context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
-          SectionTraversals.Msg.OpenTraversal(_).into
-        ),
         PartsCoto.article(coto, dispatch, Seq(("sub-coto", true)))(
           ToolbarCoto(coto),
           ToolbarReorder(ito, order),
-          slinky.web.html.header()(
-            PartsIto.buttonSubcotoIto(ito)
+          PartsIto.buttonSubcotoIto(ito),
+          PartsCoto.ulParents(
+            context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
+            SectionTraversals.Msg.OpenTraversal(_).into
           ),
           div(className := "body")(
             PartsCoto.divContent(coto),

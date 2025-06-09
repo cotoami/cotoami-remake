@@ -315,8 +315,6 @@ section.reorder-toolbar {
 }
 
 ul.parents {
-  padding-top: 12px;
-
   li {
     padding: 0 var(--block-spacing-horizontal);
     padding-bottom: 4px;
@@ -350,11 +348,12 @@ ul.parents {
 }
 
 div.more-details {
+  margin-top: 10px;
   text-align: center;
 
   button.coto-details {
     span.material-symbols {
-      font-size: 20px;
+      font-size: 22px;
     }
   }
 }

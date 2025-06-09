@@ -60,28 +60,28 @@ section.traversals {
       }
     }
 
-    ul.parents {
-      background-color: var(--card-background-color);
+    section.coto-toolbar {
+      right: 0;
     }
 
-    article {
-      &.step-coto {
-        padding-top: 20px;
+    article.step-coto {
+      padding-top: 20px;
+    }
+
+    article.traversed {
+      border: 2px dashed var(--traversed-border-color);
+
+      .body {
+        opacity: .5;
+      }
+    }
+
+    article.sub-coto {
+      ul.parents {
+        padding-bottom: 10px;
       }
 
-      &.traversed {
-        border: 2px dashed var(--traversed-border-color);
-
-        .body {
-          opacity: .5;
-        }
-      }
-
-      section.coto-toolbar {
-        right: 0;
-      }
-
-      &.sub-coto .body {
+      .body {
         display: flex;
         flex-direction: row;
         align-items: center;

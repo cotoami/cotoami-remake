@@ -115,6 +115,10 @@ section.pins {
         }
       }
 
+      ul.parents {
+        padding-bottom: 10px;
+      }
+
       div.pinned {
         display: none;
       }
@@ -139,19 +143,25 @@ section.pins {
       }
     }
 
-    article.sub-coto .body {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-
-      div.content {
-        flex: 1;
-        min-width: 0; // let this item shrink below the content size
+    article.sub-coto {
+      ul.parents {
+        padding-bottom: 10px;
       }
 
-      div.itos {
-        flex: 0 0 30px;
-        padding-right: 10px;
+      .body {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+
+        div.content {
+          flex: 1;
+          min-width: 0; // let this item shrink below the content size
+        }
+
+        div.itos {
+          flex: 0 0 30px;
+          padding-right: 10px;
+        }
       }
     }
   }
@@ -195,7 +205,6 @@ section.pins {
     // Disable card-background-color in document-view
     article.coto,
     div.itos-not-yet-loaded,
-    ul.parents,
     section.sub-cotos {
       background-color: var(--background-color);
     }

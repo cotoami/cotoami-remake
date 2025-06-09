@@ -2,7 +2,7 @@ package cotoami.subparts
 
 import scala.util.chaining._
 
-import slinky.core.facade.{Fragment, ReactElement}
+import slinky.core.facade.ReactElement
 import slinky.web.html._
 import com.softwaremill.quicklens._
 
@@ -418,17 +418,8 @@ object SectionTimeline {
         )
       )
     )(
-      context.repo.cotos.getOriginal(postCoto).map(coto =>
-        Fragment(
-          PartsCoto.ulParents(
-            context.repo.parentsOf(coto.id),
-            AppMsg.FocusCoto(_),
-            true
-          ),
-          articleCoto(coto, postCoto),
-          PartsCoto.divDetailsButton(coto)
-        )
-      )
+      context.repo.cotos.getOriginal(postCoto)
+        .map(articleCoto(_, postCoto))
     )
   }
 
@@ -438,8 +429,16 @@ object SectionTimeline {
   ): ReactElement = {
     val repo = context.repo
     PartsCoto.article(coto, dispatch)(
+      Option.when(context.repo.nodes.unread(post))(
+        materialSymbolFilled("brightness_1", "unread-mark")
+      ),
       ToolbarCoto(coto),
       sectionRepostHeader(post),
+      PartsCoto.ulParents(
+        context.repo.parentsOf(coto.id),
+        AppMsg.FocusCoto(_),
+        true
+      ),
       header()(
         PartsCoto.divAttributes(coto),
         Option.when(!repo.nodes.isSelf(coto.postedById)) {
@@ -450,8 +449,8 @@ object SectionTimeline {
         PartsCoto.divContent(coto)
       ),
       PartsCoto.articleFooter(coto),
-      Option.when(context.repo.nodes.unread(post))(
-        materialSymbolFilled("brightness_1", "unread-mark")
+      div(className := "padding-bottom")(
+        PartsCoto.divDetailsButton(coto)
       )
     )
   }

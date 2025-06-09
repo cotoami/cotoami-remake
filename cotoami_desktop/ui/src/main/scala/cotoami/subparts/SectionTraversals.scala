@@ -306,10 +306,6 @@ object SectionTraversals {
     PartsIto.sectionSiblings(subCotos, "sub-cotos") { case (ito, coto, order) =>
       val traversed = traversal._1.traversed(stepIndex, coto.id)
       div(className := "sub-coto")(
-        PartsCoto.ulParents(
-          context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
-          Msg.OpenTraversal(_)
-        ),
         PartsCoto.article(
           coto,
           dispatch,
@@ -320,8 +316,10 @@ object SectionTraversals {
         )(
           ToolbarCoto(coto),
           ToolbarReorder(ito, order),
-          header()(
-            PartsIto.buttonSubcotoIto(ito)
+          PartsIto.buttonSubcotoIto(ito),
+          PartsCoto.ulParents(
+            context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
+            Msg.OpenTraversal(_)
           ),
           div(className := "body")(
             // Coto content

@@ -20,8 +20,6 @@ section.coto-details {
   }
 
   article.coto {
-    padding: 1rem 0;
-
     div.content {
       section.media-content {
         // fit to the left and right border
@@ -72,27 +70,25 @@ section.coto-details {
         border-bottom: 1px solid var(--pane-border-color);
 
         article.sub-coto {
+          padding: 0;
+          padding-top: 4px;
+
+          div.ito-container {
+            padding-left: 6px;
+          }
+
+          ul.parents {
+            padding-bottom: 16px;
+          }
+
           >header {
             position: relative;
             padding: 0 var(--block-spacing-horizontal);
-
-            div.ito-container {
-              position: absolute;
-              top: -10px;
-              left: 10px;
-              right: 10px;
-            }
-
-            div.attributes {
-              padding-top: 20px; // also as padding-top of the header
-            }
           }
         }
 
-        div.itos {
-          padding-top: 3px;
-          background-color: var(--card-background-color);
-          text-align: center;
+        div.padding-bottom {
+          min-height: 12px;
         }
       }
     }
