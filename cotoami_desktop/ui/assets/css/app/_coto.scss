@@ -5,6 +5,7 @@ article.coto {
   margin: 0;
   padding: 0;
   border-radius: 0;
+  border: 2px solid transparent; // for focus and selection
   box-shadow: none;
 
   padding-left: 8px;
@@ -33,13 +34,13 @@ article.coto {
     }
   }
 
-  &.selected {
-    border: 2px dotted var(--selection-color);
-  }
-
   &:hover,
   &.highlighted {
-    background-color: var(--hover-background-color) !important;
+    border: 2px dotted var(--highlight-color);
+  }
+
+  &.selected {
+    border: 2px dotted var(--selection-color);
   }
 
   &.embedded {
