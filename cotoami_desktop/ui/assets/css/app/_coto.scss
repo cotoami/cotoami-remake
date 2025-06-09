@@ -335,6 +335,7 @@ ul.parents {
       &:hover {
         background-color: var(--hover-background-color);
         text-decoration: none;
+        opacity: 1;
       }
 
       img.author {
