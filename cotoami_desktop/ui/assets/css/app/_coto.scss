@@ -34,12 +34,12 @@ article.coto {
     }
   }
 
-  &:hover,
-  &.highlighted {
+  &.selectable:hover,
+  &.selectable.highlighted {
     border: 2px dotted var(--highlight-color);
   }
 
-  &.selected {
+  &.selectable.selected {
     border: 2px dotted var(--selection-color);
   }
 

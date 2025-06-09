@@ -24,10 +24,6 @@ dialog.subcoto {
 
   section.source {
     article.coto {
-      &:hover {
-        border: 2px solid transparent !important; // disable highlight
-      }
-
       div.body div.scroll-area {
         max-height: 150px;
       }

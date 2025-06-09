@@ -30,6 +30,7 @@ object PartsCoto {
       className := optionalClasses(
         Seq(
           ("coto", true),
+          ("selectable", true),
           ("selected", context.repo.cotos.isSelecting(coto.id)),
           ("highlighted", context.isHighlighting(coto.id)),
           ("being-deleted", context.repo.beingDeleted(coto.id))
