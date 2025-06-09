@@ -6,7 +6,6 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 import com.softwaremill.quicklens._
 
-import marubinotto.optionalClasses
 import marubinotto.fui._
 import marubinotto.components.{
   materialSymbol,
@@ -372,9 +371,9 @@ object SectionTimeline {
             flipKey = cotos.length.toString()
           )(
             (model.waitingPosts.posts.map(sectionWaitingPost) ++
-              cotos.zipWithIndex.map { case (coto, index) =>
+              cotos.map { coto =>
                 Flipped(key = coto.id.uuid, flipId = coto.id.uuid)(
-                  sectionPost((cotos.lift(index - 1), coto), model)
+                  sectionPost(coto, model)
                 ): ReactElement
               } :+
               div(
@@ -403,23 +402,12 @@ object SectionTimeline {
     )
 
   private def sectionPost(
-      post: (Option[Coto], Coto),
+      post: Coto,
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val (previous, postCoto) = post
-    val posterChange =
-      previous.map(_.postedById != postCoto.postedById).getOrElse(false)
-    section(
-      className := optionalClasses(
-        Seq(
-          ("post", true),
-          ("flow-entry", true),
-          ("poster-change", posterChange)
-        )
-      )
-    )(
-      context.repo.cotos.getOriginal(postCoto)
-        .map(articleCoto(_, postCoto))
+    section(className := "post flow-entry")(
+      context.repo.cotos.getOriginal(post)
+        .map(articleCoto(_, post))
     )
   }
 
