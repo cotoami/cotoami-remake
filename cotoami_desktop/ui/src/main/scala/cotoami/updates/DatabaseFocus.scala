@@ -79,6 +79,7 @@ object DatabaseFocus {
       moveTo: Boolean
   )(model: Model): (Model, Cmd.One[Msg]) = {
     model
+      .clearHighlight
       .modify(_.repo.cotos).using(_.focus(cotoId))
       .pipe { model =>
         model.repo.cotos.focused match {

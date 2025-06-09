@@ -52,6 +52,7 @@ case class Model(
   def path: String = url.pathname + url.search + url.hash
 
   def isHighlighting(cotoId: Id[Coto]): Boolean = highlight == Some(cotoId)
+  def clearHighlight: Model = copy(highlight = None)
 
   def messages: SystemMessages = viewMessages.messages
 
