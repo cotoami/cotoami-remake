@@ -17,8 +17,8 @@ jobs:
         # for Universal macOS builds (arm64 and x86_64)
         - platform: 'macos-latest'
           args: '--target universal-apple-darwin'
-        # - platform: 'ubuntu-22.04' 
-        #   args: ''
+        - platform: 'ubuntu-22.04' 
+          args: ''
         - platform: 'windows-latest'
           args: ''
 
@@ -42,11 +42,10 @@ jobs:
         targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
     - name: Install dependencies (ubuntu only)
-      if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
+      if: matrix.platform == 'ubuntu-22.04'
       run: |
         sudo apt-get update
-        sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-      # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
+        sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
     - name: Setup JDK
       uses: actions/setup-java@v4
@@ -58,6 +57,31 @@ jobs:
     # https://eed3si9n.com/setup-sbt/
     - name: Install sbt
       uses: sbt/setup-sbt@v1
+
+    - name: Import Apple Developer Certificate
+      if: matrix.platform == 'macos-latest'
+      # Prevents keychain from locking automatically for 3600 seconds.
+      env:
+        APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+        APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      run: |
+        echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
+        security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+        security default-keychain -s build.keychain
+        security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+        security set-keychain-settings -t 3600 -u build.keychain
+        security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+        security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+        security find-identity -v -p codesigning build.keychain
+
+    - name: Verify Certificate
+      if: matrix.platform == 'macos-latest'
+      run: |
+        CERT_INFO=$(security find-identity -v -p codesigning build.keychain | grep "Developer ID Application")
+        CERT_ID=$(echo "$CERT_INFO" | awk -F'"' '{print $2}')
+        echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
+        echo "Certificate imported."
 
     - name: Detect app version
       uses: salsify/action-detect-and-tag-new-version@v2
@@ -71,6 +95,13 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         APP_VERSION: ${{ steps.detect_version.outputs.current-version }}
+        APPLE_ID: ${{ secrets.APPLE_ID }}
+        APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+        APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+        APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+        APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        APPLE_SIGNING_IDENTITY: ${{ env.CERT_ID }}
       with:
         projectPath: cotoami_desktop/tauri
         appVersion: ${{ env.APP_VERSION }}
