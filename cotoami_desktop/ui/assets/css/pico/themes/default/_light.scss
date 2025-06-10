@@ -5,7 +5,7 @@
 // Default: Light theme
 [data-theme="light"],
 :root:not([data-theme="dark"]) {
-  --background-color: #{colors.$white};
+  --background-color: #FFFDF7; // ivory tint
 
   // Texts colors
   --color: #{colors.$grey-800};
