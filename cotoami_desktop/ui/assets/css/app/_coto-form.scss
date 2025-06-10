@@ -86,6 +86,7 @@ section.coto-editor {
 section.coto-preview {
   padding: 16px;
   background-color: var(--card-background-color);
+  min-height: 0; // let this item shrink below the content size
 
   section.summary {
     margin-bottom: 16px;
