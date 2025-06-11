@@ -14,6 +14,8 @@ While Cotoami is designed for private, offline use, it also offers a powerful co
 
 <p align="center"><img src="docs/images/main.png" alt="Main screenshot"></p>
 
+<p align="center"><img src="docs/images/light-mode.png" alt="Light mode"></p>
+
 ## Basic Usage
 
 In Cotoami, you can casually post anything you want to remember—just like sending a chat message or writing a microblog. Each Coto you post is saved to your timeline.
