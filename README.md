@@ -164,20 +164,16 @@ As of its initial release in 2025, there are already countless note-taking apps 
 Download the latest version of Cotoami for your platform (Windows, Linux, or macOS) from the [releases page](https://github.com/cotoami/cotoami-remake/releases).
 
 * File names of downloadable packages by platform:
-    * Windows
-        * `Cotoami_<version>_x64_en-US.msi`
-        * `Cotoami_<version>_x64_ja-JP.msi`
-        * `Cotoami_<version>_x64-setup.exe`
     * macOS
         * `Cotoami_<version>_universal.dmg`
-            * for both Apple silicon and Intel-based Mac computers
+            * For both Apple silicon and Intel-based Mac computers.
+            * Since v0.7.0, this package is properly signed and notarized by Apple.
     * Linux
         * `cotoami_<version>_amd64.AppImage`
-        * Debian-based distributions: `cotoami_<version>_amd64.deb`
-* For Windows and macOS users:
-    * Please note that the application is not digitally signed for now, so you may need to bypass your operating system's security warnings to install and run it for the first time.
-    * macOS - [Open a Mac app from an unknown developer](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unknown-developer-mh40616/mac)
-* Currently, **Ubuntu 24.04 is not supported** due to a [WebKitGTK incompatibility](https://github.com/tauri-apps/tauri/issues/9662).
+        * For debian-based distributions: `cotoami_<version>_amd64.deb`
+    * Windows
+        * `Cotoami_<version>_x64_en-US.msi`
+        * Please note that the application is not digitally signed for now, so you may need to bypass your operating system's security warnings to install and run it for the first time.
 
 Cotoami's source code is released under Apache 2 License. Check the [LICENSE](LICENSE) file for more information.
 
