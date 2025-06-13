@@ -31,6 +31,17 @@ pub(crate) fn try_get<Conn: AsReadableConn>(
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Ito, *id)))
 }
 
+pub(crate) fn incoming<Conn: AsReadableConn>(
+    coto_id: &Id<Coto>,
+) -> impl Operation<Conn, Vec<Ito>> + '_ {
+    read_op(move |conn| {
+        itos::table
+            .filter(itos::target_coto_id.eq(coto_id))
+            .load::<Ito>(conn)
+            .map_err(anyhow::Error::from)
+    })
+}
+
 pub(crate) fn outgoing<Conn: AsReadableConn>(
     coto_ids: &[Id<Coto>],
 ) -> impl Operation<Conn, Vec<Ito>> + '_ {
