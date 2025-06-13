@@ -342,8 +342,6 @@ object SectionTraversals {
               div(className := "traverse")(
                 toolButton(
                   symbol = "arrow_downward",
-                  tip = Some("Traverse"),
-                  tipPlacement = "left",
                   classes = "traverse",
                   onClick = e => {
                     e.stopPropagation()

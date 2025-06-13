@@ -306,35 +306,13 @@ object PartsCoto {
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] =
     Option.when(context.repo.itos.anyFrom(coto.id)) {
-      div(className := "more-details")(
+      div(className := "has-details")(
         toolButton(
           symbol = "view_headline",
-          classes = "coto-details",
+          classes = "open-details",
           onClick = e => {
             e.stopPropagation()
             dispatch(AppMsg.FocusCoto(coto.id))
-          }
-        )
-      )
-    }
-
-  def divItosTraversal(
-      coto: Coto,
-      tipPlacement: String
-  )(implicit
-      context: Context,
-      dispatch: Into[AppMsg] => Unit
-  ): Option[ReactElement] =
-    Option.when(context.repo.itos.anyFrom(coto.id)) {
-      div(className := "itos")(
-        toolButton(
-          symbol = "arrow_forward",
-          tip = Some("Traverse"),
-          tipPlacement = tipPlacement,
-          classes = "open-traversal",
-          onClick = e => {
-            e.stopPropagation()
-            dispatch(SectionTraversals.Msg.OpenTraversal(coto.id))
           }
         )
       )

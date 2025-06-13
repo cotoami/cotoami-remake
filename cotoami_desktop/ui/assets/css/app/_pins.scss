@@ -158,9 +158,18 @@ section.pins {
           min-width: 0; // let this item shrink below the content size
         }
 
-        div.itos {
+        div.has-itos {
           flex: 0 0 30px;
           padding-right: 10px;
+
+          button.open-traversal {
+            height: 24px;
+            line-height: 24px;
+
+            span.material-symbols {
+              font-size: 24px;
+            }
+          }
         }
       }
     }

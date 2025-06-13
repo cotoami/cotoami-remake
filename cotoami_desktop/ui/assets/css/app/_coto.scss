@@ -347,24 +347,13 @@ ul.parents {
   }
 }
 
-div.more-details {
+div.has-details {
   margin-top: 10px;
   text-align: center;
 
-  button.coto-details {
+  button.open-details {
     span.material-symbols {
       font-size: 24px;
-    }
-  }
-}
-
-div.itos {
-  button.open-traversal {
-    height: 24px;
-    line-height: 24px;
-
-    span.material-symbols {
-      font-size: 22px;
     }
   }
 }

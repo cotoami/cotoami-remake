@@ -390,11 +390,30 @@ object SectionPins {
           ),
           div(className := "body")(
             PartsCoto.divContent(coto),
-            PartsCoto.divItosTraversal(coto, "left")
+            divItosTraversalButton(coto)
           ),
           footer()(
             PartsCoto.divAttributes(coto)
           )
+        )
+      )
+    }
+
+  def divItosTraversalButton(
+      coto: Coto
+  )(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): Option[ReactElement] =
+    Option.when(context.repo.itos.anyFrom(coto.id)) {
+      div(className := "has-itos")(
+        toolButton(
+          symbol = "view_headline",
+          classes = "open-traversal",
+          onClick = e => {
+            e.stopPropagation()
+            dispatch(SectionTraversals.Msg.OpenTraversal(coto.id))
+          }
         )
       )
     }
