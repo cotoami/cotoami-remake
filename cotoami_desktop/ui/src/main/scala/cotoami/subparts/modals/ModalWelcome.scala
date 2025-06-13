@@ -145,7 +145,7 @@ object ModalWelcome {
           model.copy(folderNameValidation = Validation.Result.notYetValidated),
           tauri
             .selectSingleDirectory(
-              "Select a base folder",
+              context.i18n.text.ModalWelcome_new_selectBaseFolder,
               Some(model.baseFolder)
             )
             .map(Msg.BaseFolderSelected(_).into)
@@ -207,7 +207,7 @@ object ModalWelcome {
           ),
           tauri
             .selectSingleDirectory(
-              "Select a database folder",
+              context.i18n.text.ModalWelcome_open_selectFolder,
               None
             )
             .map(Msg.DatabaseFolderSelected(_).into)
@@ -307,10 +307,10 @@ object ModalWelcome {
   private def sectionRecent(
       model: Model,
       databases: Seq[DatabaseOpenedJson]
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Option.when(!databases.isEmpty) {
       section(className := "recent-databases")(
-        h2()("Recent"),
+        h2()(context.i18n.text.ModalWelcome_recent),
         ScrollArea()(
           ul()(
             databases.map(db =>
@@ -338,13 +338,13 @@ object ModalWelcome {
 
   private def sectionNewDatabase(
       model: Model
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "new-database")(
-      h2()("New database"),
+      h2()(context.i18n.text.ModalWelcome_new),
       form()(
         // Name
         fieldInput(
-          name = "Name",
+          name = context.i18n.text.ModalWelcome_new_name,
           inputValue = model.databaseName,
           inputErrors = Some(model.validateDatabaseName),
           onInput = input => dispatch(Msg.DatabaseNameInput(input))
@@ -352,7 +352,7 @@ object ModalWelcome {
 
         // Base folder
         field(
-          name = "Base folder"
+          name = context.i18n.text.ModalWelcome_new_baseFolder
         )(
           div(className := "file-select")(
             div(className := "file-path")(model.baseFolder),
@@ -366,7 +366,7 @@ object ModalWelcome {
 
         // Folder name
         fieldInput(
-          name = "Folder name to create",
+          name = context.i18n.text.ModalWelcome_new_folderName,
           inputValue = model.folderName,
           inputErrors = Some(model.folderNameValidation),
           onInput = input => dispatch(Msg.FolderNameInput(input))
@@ -381,20 +381,20 @@ object ModalWelcome {
               e.preventDefault()
               dispatch(Msg.CreateDatabase)
             })
-          )("Create")
+          )(context.i18n.text.ModalWelcome_new_create)
         )
       )
     )
 
   private def sectionOpenDatabase(
       model: Model
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "open-database")(
-      h2()("Open"),
+      h2()(context.i18n.text.ModalWelcome_open),
       form()(
         // Database folder
         field(
-          name = "Database folder"
+          name = context.i18n.text.ModalWelcome_open_folder
         )(
           div(className := "file-select")(
             div(className := "file-path")(model.databaseFolder),
@@ -416,7 +416,7 @@ object ModalWelcome {
               e.preventDefault()
               dispatch(Msg.OpenDatabase)
             })
-          )("Open")
+          )(context.i18n.text.ModalWelcome_open_open)
         )
       )
     )

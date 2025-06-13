@@ -100,6 +100,17 @@ object en extends Text {
     s"The cotonoma \"${cotonomaName}\" already exists in this node."
 
   val ModalWelcome_title = "Welcome to Cotoami"
+  val ModalWelcome_recent = "Recent"
+  val ModalWelcome_new = "New Database"
+  val ModalWelcome_new_name = "Name"
+  val ModalWelcome_new_baseFolder = "Base Folder"
+  val ModalWelcome_new_selectBaseFolder = "Select a Base Folder"
+  val ModalWelcome_new_folderName = "Folder Name to Create"
+  val ModalWelcome_new_create = "Create"
+  val ModalWelcome_open = "Open"
+  val ModalWelcome_open_folder = "Database Folder"
+  val ModalWelcome_open_selectFolder = "Select a Database Folder"
+  val ModalWelcome_open_open = "Open"
 
   val ModalInputOwnerPassword_title = "Owner Password Required"
   val ModalInputOwnerPassword_message =

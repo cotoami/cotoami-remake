@@ -86,6 +86,17 @@ trait Text {
   def EditorCoto_cotonomaAlreadyExists(cotonomaName: String): String
 
   val ModalWelcome_title: String
+  val ModalWelcome_recent: String
+  val ModalWelcome_new: String
+  val ModalWelcome_new_name: String
+  val ModalWelcome_new_baseFolder: String
+  val ModalWelcome_new_selectBaseFolder: String
+  val ModalWelcome_new_folderName: String
+  val ModalWelcome_new_create: String
+  val ModalWelcome_open: String
+  val ModalWelcome_open_folder: String
+  val ModalWelcome_open_selectFolder: String
+  val ModalWelcome_open_open: String
 
   val ModalInputOwnerPassword_title: String
   val ModalInputOwnerPassword_message: String
