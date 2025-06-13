@@ -112,9 +112,7 @@ object SectionCotoDetails {
             ),
             header()(
               PartsCoto.divAttributes(coto),
-              Option.when(!repo.nodes.isSelf(coto.postedById)) {
-                PartsCoto.addressAuthor(coto)
-              }
+              PartsCoto.addressAuthor(coto)
             ),
             div(className := "body")(
               PartsCoto.divContent(coto)
