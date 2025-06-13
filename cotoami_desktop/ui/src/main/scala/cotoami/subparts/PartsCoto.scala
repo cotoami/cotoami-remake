@@ -16,7 +16,6 @@ import marubinotto.components.{materialSymbol, toolButton, Markdown}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, CotoContent, Cotonoma, Id, Ito, WaitingPost}
-import cotoami.repository.Nodes
 import cotoami.subparts.SectionGeomap
 
 object PartsCoto {
@@ -42,12 +41,22 @@ object PartsCoto {
     )(children: _*)
 
   def addressAuthor(
-      coto: Coto,
-      nodes: Nodes
+      coto: Coto
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     address(className := "author")(
-      nodes.get(coto.postedById).map(PartsNode.spanNode)
+      context.repo.nodes.get(coto.postedById).map(PartsNode.spanNode)
     )
+
+  // Display the author only if it is a remote node.
+  def addressRemoteAuthor(
+      coto: Coto
+  )(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): Option[ReactElement] =
+    Option.when(Some(coto.postedById) != context.repo.nodes.selfId) {
+      addressAuthor(coto)
+    }
 
   def divAttributes(
       coto: Coto

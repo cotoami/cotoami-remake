@@ -230,7 +230,7 @@ object ModalSubcoto {
   ): ReactElement =
     article(className := "coto embedded")(
       header()(
-        PartsCoto.addressAuthor(coto, context.repo.nodes)
+        PartsCoto.addressRemoteAuthor(coto)
       ),
       div(className := "body")(
         ScrollArea()(

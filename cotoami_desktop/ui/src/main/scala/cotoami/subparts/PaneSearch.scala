@@ -226,9 +226,7 @@ object PaneSearch {
         ),
         header()(
           PartsCoto.divAttributes(coto),
-          Option.when(Some(coto.postedById) != repo.nodes.selfId) {
-            PartsCoto.addressAuthor(coto, repo.nodes)
-          }
+          PartsCoto.addressRemoteAuthor(coto)
         ),
         div(className := "body")(
           PartsCoto.divContent(coto)

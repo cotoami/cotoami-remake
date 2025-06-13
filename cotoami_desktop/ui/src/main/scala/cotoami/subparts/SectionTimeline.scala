@@ -429,9 +429,7 @@ object SectionTimeline {
       ),
       header()(
         PartsCoto.divAttributes(coto),
-        Option.when(!repo.nodes.isSelf(coto.postedById)) {
-          PartsCoto.addressAuthor(coto, repo.nodes)
-        }
+        PartsCoto.addressRemoteAuthor(coto)
       ),
       div(className := "body")(
         PartsCoto.divContent(coto)
