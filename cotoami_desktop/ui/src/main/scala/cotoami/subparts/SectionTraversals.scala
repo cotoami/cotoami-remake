@@ -18,7 +18,7 @@ import marubinotto.components.{materialSymbol, toolButton, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Id, Ito, Siblings}
-import cotoami.repository.Itos
+import cotoami.repository.{Itos, Root}
 
 object SectionTraversals {
 
@@ -125,7 +125,9 @@ object SectionTraversals {
                 None // no finalizer on cancellation
               }
             }),
-            context.repo.lazyFetchGraphFrom(start)
+            context.repo.lazyFetchGraphFrom(start),
+            // Reload the start coto with its parents.
+            Root.fetchCotoDetails(start)
           )
         )
 
@@ -159,7 +161,8 @@ object SectionTraversals {
       case Msg.StepToParent(traversalIndex, parentId) =>
         (
           model.stepToParent(traversalIndex, parentId, context.repo.itos),
-          Cmd.none
+          // Reload the parent with its parents (grandparents).
+          Root.fetchCotoDetails(parentId)
         )
     }
 
