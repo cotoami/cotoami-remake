@@ -287,8 +287,9 @@ pub struct CotonomaDetails {
 #[derive(Debug, serde::Serialize, serde::Deserialize, new)]
 pub struct CotoDetails {
     pub coto: Coto,
+    pub itos: Vec<Ito>,
+    pub incoming_neighbors: Vec<Coto>,
     pub related_data: CotosRelatedData,
-    pub outgoing_itos: Vec<Ito>,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]

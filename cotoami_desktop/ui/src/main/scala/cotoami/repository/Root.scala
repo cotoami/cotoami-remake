@@ -411,8 +411,9 @@ case class Root(
   def importFrom(details: CotoDetails): Root =
     this
       .modify(_.cotos).using(_.put(details.coto))
-      .modify(_.cotonomas).using(_.importFrom(details.relatedData))
-      .modify(_.itos).using(_.putAll(details.outgoingItos))
+      .modify(_.cotos).using(_.putAll(details.incomingNeighbors))
+      .modify(_.itos).using(_.putAll(details.itos))
+      .importFrom(details.relatedData)
 
   def importFrom(cotonomaPair: (Cotonoma, Coto)): Root =
     this
@@ -422,13 +423,13 @@ case class Root(
   def importFrom(cotos: PaginatedCotos): Root =
     this
       .modify(_.cotos).using(_.importFrom(cotos))
-      .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
       .modify(_.itos).using(_.putAll(cotos.outgoingItos))
+      .importFrom(cotos.relatedData)
 
   def importFrom(cotos: GeolocatedCotos): Root =
     this
       .modify(_.cotos).using(_.importFrom(cotos))
-      .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
+      .importFrom(cotos.relatedData)
 
   def importFrom(graph: CotoGraph): Root =
     this
@@ -436,6 +437,11 @@ case class Root(
       .modify(_.cotos).using(_.importFrom(graph))
       .modify(_.cotonomas).using(_.importFrom(graph))
       .modify(_.itos).using(_.putAll(graph.itos))
+
+  def importFrom(data: CotosRelatedData): Root =
+    this
+      .modify(_.cotos).using(_.putAll(data.originals))
+      .modify(_.cotonomas).using(_.importFrom(data))
 }
 
 object Root {

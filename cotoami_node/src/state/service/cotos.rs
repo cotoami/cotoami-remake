@@ -98,9 +98,16 @@ impl NodeState {
     pub async fn coto_details(&self, id: Id<Coto>) -> Result<CotoDetails, ServiceError> {
         self.get(move |ds| {
             let coto = ds.try_get_coto(&id)?;
-            let related_data = CotosRelatedData::fetch(ds, slice::from_ref(&coto))?;
-            let outgoing_itos = ds.outgoing_itos(&[coto.uuid])?;
-            Ok(CotoDetails::new(coto, related_data, outgoing_itos))
+            let outgoing_itos = ds.outgoing_itos(&[id])?;
+            let (incoming_itos, incoming_neighbors) = ds.incoming_neighbors(&id)?;
+            let cotos = [slice::from_ref(&coto), incoming_neighbors.as_ref()].concat();
+            let related_data = CotosRelatedData::fetch(ds, &cotos)?;
+            Ok(CotoDetails::new(
+                coto,
+                [outgoing_itos, incoming_itos].concat(),
+                incoming_neighbors,
+                related_data,
+            ))
         })
         .await
     }

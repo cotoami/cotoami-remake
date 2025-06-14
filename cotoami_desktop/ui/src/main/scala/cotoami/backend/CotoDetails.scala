@@ -7,9 +7,10 @@ import cotoami.models.{Coto, Id, Ito}
 
 case class CotoDetails(json: CotoDetailsJson) {
   def coto: Coto = CotoBackend.toModel(json.coto)
+  def itos: js.Array[Ito] = json.itos.map(ItoBackend.toModel)
+  def incomingNeighbors: js.Array[Coto] =
+    json.incoming_neighbors.map(CotoBackend.toModel)
   def relatedData: CotosRelatedData = CotosRelatedData(json.related_data)
-  def outgoingItos: js.Array[Ito] =
-    json.outgoing_itos.map(ItoBackend.toModel)
 }
 
 object CotoDetails {
@@ -20,8 +21,9 @@ object CotoDetails {
 @js.native
 trait CotoDetailsJson extends js.Object {
   val coto: CotoJson = js.native
+  val itos: js.Array[ItoJson] = js.native
+  val incoming_neighbors: js.Array[CotoJson] = js.native
   val related_data: CotosRelatedDataJson = js.native
-  val outgoing_itos: js.Array[ItoJson] = js.native
 }
 
 object CotoDetailsJson {

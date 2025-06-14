@@ -253,32 +253,29 @@ object Main {
 
         model.copy(url = newUrl)
           .pipe(DatabaseFocus.coto(id, moveTo))
-          .pipe { case (model, focus) =>
-            (
-              model,
-              Cmd.Batch(
-                focus,
-                Browser.pushUrl(newUrl.toString(), notify = false),
-                Browser.send(AppMain.Msg.SetPaneFlowOpen(true).into)
-              )
-            )
-          }
+          .pipe(
+            // Change the URL, but prevent the current node/cotonoma from being reloaded.
+            addCmd(_ => Browser.pushUrl(newUrl.toString(), notify = false))
+          )
+          .pipe(
+            addCmd(_ => Browser.send(AppMain.Msg.SetPaneFlowOpen(true).into))
+          )
+          .pipe(
+            // Reload the coto with its incoming neighbors.
+            addCmd(_ => Root.fetchCotoDetails(id))
+          )
       }
 
-      case Msg.FocusedCotoDetailsFetched(Right(details)) =>
+      case Msg.CotoFetchedOnDirectVisit(Right(details)) =>
         model.modify(_.repo).using(_.importFrom(details))
-          .pipe(DatabaseFocus.coto(details.coto.id, true))
-          .pipe { case (model, focus) =>
-            (
-              model,
-              Cmd.Batch(
-                focus,
-                Browser.send(AppMain.Msg.SetPaneFlowOpen(true).into)
-              )
-            )
-          }
+          .pipe(
+            DatabaseFocus.coto(details.coto.id, moveTo = true)
+          )
+          .pipe(
+            addCmd(_ => Browser.send(AppMain.Msg.SetPaneFlowOpen(true).into))
+          )
 
-      case Msg.FocusedCotoDetailsFetched(Left(e)) =>
+      case Msg.CotoFetchedOnDirectVisit(Left(e)) =>
         update(Msg.UnfocusCoto, model)
 
       case Msg.UnfocusCoto => {
@@ -476,32 +473,39 @@ object Main {
   }
 
   def applyUrlChange(url: URL, model: Model): (Model, Cmd[Msg]) = {
+    // Detect the focused coto from the fragment identifier
     val focusCoto =
       if (url.hash.isBlank())
         Cmd.none
       else {
         CotoDetails.fetch(Id(url.hash.stripPrefix("#")))
-          .map(Msg.FocusedCotoDetailsFetched(_))
+          .map(Msg.CotoFetchedOnDirectVisit(_))
       }
-    url.pathname + url.search + url.hash match {
+
+    // Detect the focused node/cotonoma from the path
+    url.pathname match {
       case Route.index(_) =>
-        DatabaseFocus.node(None)(model)
-          .modify(_._2).using(_ :+ focusCoto)
+        model
+          .pipe(DatabaseFocus.node(None))
+          .pipe(addCmd(_ => focusCoto))
 
       case Route.node(id) =>
         if (model.repo.nodes.contains(id))
-          DatabaseFocus.node(Some(id))(model)
-            .modify(_._2).using(_ :+ focusCoto)
+          model
+            .pipe(DatabaseFocus.node(Some(id)))
+            .pipe(addCmd(_ => focusCoto))
         else
           (model, Browser.pushUrl(Route.index.url(())))
 
       case Route.cotonoma(id) =>
-        DatabaseFocus.cotonoma(None, id)(model)
-          .modify(_._2).using(_ :+ focusCoto)
+        model
+          .pipe(DatabaseFocus.cotonoma(None, id))
+          .pipe(addCmd(_ => focusCoto))
 
       case Route.cotonomaInNode((nodeId, cotonomaId)) =>
-        DatabaseFocus.cotonoma(Some(nodeId), cotonomaId)(model)
-          .modify(_._2).using(_ :+ focusCoto)
+        model
+          .pipe(DatabaseFocus.cotonoma(Some(nodeId), cotonomaId))
+          .pipe(addCmd(_ => focusCoto))
 
       case _ =>
         (model, Browser.pushUrl(Route.index.url(())))
