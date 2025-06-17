@@ -91,6 +91,12 @@ package object tauri {
       }
     })
 
+  def setAppBadge(label: String): Future[Unit] =
+    os.`type`() match {
+      case "macos" => window.getCurrentWindow().setBadgeLabel(label).toFuture
+      case _       => Future.successful(()) // Not supported for now
+    }
+
   def resizeWindow(
       deltaWidth: Double,
       deltaHeight: Double
