@@ -31,6 +31,7 @@ serde_json.workspace = true
 tauri = {version = "2.5.1", features = ["protocol-asset"] }
 tauri-plugin-dialog = "2.2.2"
 tauri-plugin-log = {version = "2.4.0"}
+tauri-plugin-os = "2.2.2"
 tauri-plugin-shell = "2.2.1"
 tauri-plugin-window-state = "2.2.2"
 thiserror.workspace = true

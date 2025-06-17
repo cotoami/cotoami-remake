@@ -140,7 +140,7 @@ object Main {
       case Msg.DatabaseOpened(Left(e)) =>
         (model.error(e.default_message, e), Cmd.none)
 
-      case Msg.SetDatabaseInfo(info) => {
+      case Msg.SetDatabaseInfo(info) =>
         model
           .modify(_.databaseFolder).setTo(Some(info.folder))
           .modify(_.repo).setTo(Root(info.initialDataset, info.localNodeId))
@@ -161,7 +161,6 @@ object Main {
               ) ++ cmd
             )
           }
-      }
 
       case Msg.ServerConnectionsInitialized(result) =>
         (

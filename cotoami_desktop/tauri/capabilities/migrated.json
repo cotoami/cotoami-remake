@@ -45,6 +45,7 @@
     "dialog:allow-open",
     "shell:default",
     "dialog:default",
-    "log:default"
+    "log:default",
+    "os:default"
   ]
 }
