@@ -77,6 +77,27 @@ pub(crate) fn others_last_posted_at<Conn: AsReadableConn>(
     })
 }
 
+/// Returns a map from parent node ID to the number of unread posts for that node
+pub(crate) fn unread_counts<Conn: AsReadableConn>(
+    local_node_id: &Id<Node>,
+) -> impl Operation<Conn, HashMap<Id<Node>, i64>> + '_ {
+    read_op(move |conn| {
+        parent_nodes::table
+            .inner_join(cotos::table.on(cotos::node_id.eq(parent_nodes::node_id)))
+            .filter(cotos::posted_by_id.ne(local_node_id))
+            .filter(
+                parent_nodes::last_read_at
+                    .is_null()
+                    .or(cotos::created_at.nullable().gt(parent_nodes::last_read_at)),
+            )
+            .group_by(parent_nodes::node_id)
+            .select((parent_nodes::node_id, diesel::dsl::count_star()))
+            .load::<(Id<Node>, i64)>(conn)
+            .map(|rows| rows.into_iter().collect())
+            .map_err(anyhow::Error::from)
+    })
+}
+
 /// Inserts a new parent node represented as a [NewParentNode].
 pub(super) fn insert<'a>(
     new_parent_node: &'a NewParentNode<'a>,
