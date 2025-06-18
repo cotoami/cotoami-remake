@@ -16,7 +16,7 @@ use crate::{
     models::{
         coto::{Coto, CotoContentDiff, NewCoto, UpdateCoto},
         cotonoma::{Cotonoma, NewCotonoma},
-        node::Node,
+        node::{local::LocalNode, Node},
         Geolocation, Id,
     },
     schema::cotos,
@@ -170,6 +170,23 @@ pub(crate) fn others_last_posted_at_in_local<Conn: AsReadableConn>(
             .filter(cotos::posted_by_id.ne(local_node_id))
             .select(max(cotos::created_at))
             .first(conn)
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub(crate) fn unread_count_in_local<Conn: AsReadableConn>(
+    local: &LocalNode,
+) -> impl Operation<Conn, i64> + '_ {
+    read_op(move |conn| {
+        let mut query = cotos::table.into_boxed();
+        if let Some(last_read_at) = local.last_read_at {
+            query = query.filter(cotos::created_at.gt(last_read_at));
+        }
+        query
+            .filter(cotos::node_id.eq(local.node_id))
+            .filter(cotos::posted_by_id.ne(local.node_id))
+            .count()
+            .get_result(conn)
             .map_err(anyhow::Error::from)
     })
 }
