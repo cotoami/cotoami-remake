@@ -109,6 +109,19 @@ impl DatabaseSession<'_> {
         })
     }
 
+    pub fn unread_counts(&mut self, operator: &Operator) -> Result<HashMap<Id<Node>, i64>> {
+        operator.requires_to_be_owner()?;
+        let local = self.globals.try_get_local_node()?;
+        self.read_transaction(|ctx: &mut Context<'_, SqliteConnection>| {
+            let mut map = parent_ops::unread_counts(&local.node_id).run(ctx)?;
+            map.insert(
+                local.node_id,
+                coto_ops::unread_count_in_local(&local).run(ctx)?,
+            );
+            Ok(map)
+        })
+    }
+
     /// Marks the local node and all the parents as read at the given timestamp.
     /// If `read_at` is `None`, the current timestamp will be used.
     pub fn mark_all_as_read(

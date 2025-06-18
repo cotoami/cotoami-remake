@@ -12,7 +12,7 @@ fn parents() -> Result<()> {
 
     let (_sun_dir, sun_db, sun_node) = common::setup_db("Sun")?;
     let (_moon_dir, moon_db, moon_node) = common::setup_db("Moon")?;
-    let (_earth_dir, earth_db, _earth_node) = common::setup_db("Earth")?;
+    let (_earth_dir, earth_db, earth_node) = common::setup_db("Earth")?;
 
     let mut sun_ds = sun_db.new_session()?;
     let (_sun_root_cotonoma, sun_root_coto) = sun_ds.try_get_local_node_root()?;
@@ -55,6 +55,12 @@ fn parents() -> Result<()> {
         others_last_posted_at,
         has_entry(moon_node.uuid, eq(&moon_root_coto.created_at))
     );
+
+    let unread_counts = earth_ds.unread_counts(&earth_opr)?;
+    assert_that!(unread_counts.len(), eq(3));
+    assert_that!(unread_counts, has_entry(earth_node.uuid, eq(&0)));
+    assert_that!(unread_counts, has_entry(sun_node.uuid, eq(&1)));
+    assert_that!(unread_counts, has_entry(moon_node.uuid, eq(&1)));
 
     /////////////////////////////////////////////////////////////////////////////
     // When: parent_nodes
