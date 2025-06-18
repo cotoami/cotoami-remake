@@ -5,6 +5,7 @@
 
 use cotoami_desktop::commands;
 use log::LevelFilter;
+use tauri::Manager;
 use tauri_plugin_log::{Target, TargetKind};
 use tauri_plugin_window_state::StateFlags;
 
@@ -37,6 +38,27 @@ fn main() {
             commands::db::new_owner_password,
             commands::conn::connect_to_servers
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .on_window_event(|window, event| match event {
+            // On macOS, do not quit the app when the window is closed;
+            // keep it running in the background
+            #[cfg(target_os = "macos")]
+            tauri::WindowEvent::CloseRequested { api, .. } => {
+                window.hide().unwrap();
+                api.prevent_close();
+            }
+            _ => {}
+        })
+        .build(tauri::generate_context!())
+        .expect("error while running tauri application")
+        .run(|app, event| match event {
+            // Handle clicking on the dock icon on macOS.
+            // https://github.com/tauri-apps/tauri/issues/3084#issuecomment-2938951372
+            #[cfg(target_os = "macos")]
+            tauri::RunEvent::Reopen { .. } => {
+                if let Some(window) = app.get_webview_window("main") {
+                    window.show().unwrap();
+                }
+            }
+            _ => {}
+        });
 }

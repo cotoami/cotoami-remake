@@ -21,6 +21,7 @@
     },
     "windows": [
       {
+        "label": "main",
         "title": "Cotoami",
         "fullscreen": false,
         "resizable": true,
