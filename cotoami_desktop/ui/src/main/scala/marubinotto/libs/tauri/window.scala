@@ -59,7 +59,7 @@ object window extends js.Object {
       * @return
       *   A promise indicating the success or failure of the operation.
       */
-    def setBadgeLabel(label: String): js.Promise[Unit] = js.native
+    def setBadgeLabel(label: js.UndefOr[String]): js.Promise[Unit] = js.native
   }
 }
 

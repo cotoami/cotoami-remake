@@ -1,12 +1,17 @@
 package cotoami.repository
 
 import scala.util.chaining._
+import scala.util.{Failure, Success}
 import scala.collection.immutable.HashSet
 import scala.scalajs.js
 
+import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
+
 import com.softwaremill.quicklens._
+import cats.effect.IO
 
 import marubinotto.fui._
+import marubinotto.libs.tauri
 import cotoami.{Into, Msg => AppMsg}
 import cotoami.models._
 import cotoami.backend._
@@ -82,6 +87,24 @@ case class Root(
       pinning = HashSet.empty,
       reordering = HashSet.empty
     )
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Nodes
+  /////////////////////////////////////////////////////////////////////////////
+
+  def updateUnreadBadge: Cmd.One[AppMsg] = {
+    // Use a "Zero Width Space" as the label to show the badge
+    val label = if (nodes.anyUnreadPosts) Some("\u200B") else None
+    Cmd(IO.async { cb =>
+      IO {
+        tauri.setAppBadge(label).onComplete {
+          case Success(_) => cb(Right(None))
+          case Failure(e) => cb(Left(e))
+        }
+        None
+      }
+    })
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // Cotos
@@ -631,18 +654,16 @@ object Root {
         (model, cotoami.error("Couldn't fetch a sibling ito group.", e))
 
       case Msg.OthersLastPostedAtFetched(Right(map)) =>
-        (
-          model
-            .modify(_.nodes.selfSettings.each.othersLastPostedAtUtcIso).setTo(
-              model.nodes.selfId.flatMap(map.get(_))
-            )
-            .modify(_.nodes.parents).using(parents =>
-              parents.order.foldLeft(parents) { case (parents, parentId) =>
-                parents.updateOthersLastPostedAt(parentId, map.get(parentId))
-              }
-            ),
-          Cmd.none
-        )
+        model
+          .modify(_.nodes.selfSettings.each.othersLastPostedAtUtcIso).setTo(
+            model.nodes.selfId.flatMap(map.get(_))
+          )
+          .modify(_.nodes.parents).using(parents =>
+            parents.order.foldLeft(parents) { case (parents, parentId) =>
+              parents.updateOthersLastPostedAt(parentId, map.get(parentId))
+            }
+          )
+          .pipe { model => (model, model.updateUnreadBadge) }
 
       case Msg.OthersLastPostedAtFetched(Left(e)) =>
         (model, cotoami.error("Couldn't fetch others' last posted at.", e))

@@ -207,11 +207,12 @@ object Changelog {
       .modify(_.timeline).setTo(timeline)
       .pipe(touchCotonoma(coto.postedInId, coto.createdAtUtcIso))
       .pipe(
-        addCmd((_: Model) =>
+        addCmd(_ =>
           // Fetch the updated original if this is a repost
           coto.repostOfId.map(updateCoto).getOrElse(Cmd.none)
         )
       )
+      .pipe(addCmd(_.repo.updateUnreadBadge))
   }
 
   private def createCotonoma(

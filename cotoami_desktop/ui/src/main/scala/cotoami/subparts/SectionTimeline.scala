@@ -232,14 +232,17 @@ object SectionTimeline {
         )
       }
 
-      case Msg.MarkedAsRead(nodeId, Right(utcIso)) =>
+      case Msg.MarkedAsRead(nodeId, Right(utcIso)) => {
+        val repo = context.repo.modify(_.nodes).using { nodes =>
+          nodeId.map(nodes.markAsRead(_, utcIso))
+            .getOrElse(nodes.markAllAsRead(utcIso))
+        }
         default.copy(
           _1 = model.copy(markingAsRead = false),
-          _2 = context.repo.modify(_.nodes).using { nodes =>
-            nodeId.map(nodes.markAsRead(_, utcIso))
-              .getOrElse(nodes.markAllAsRead(utcIso))
-          }
+          _2 = repo,
+          _3 = repo.updateUnreadBadge
         )
+      }
 
       case Msg.MarkedAsRead(nodeId, Left(e)) =>
         default.copy(

@@ -4,6 +4,7 @@ import scala.util.{Failure, Success}
 import scala.concurrent.Future
 
 import scala.scalajs.js
+import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.Thenable.Implicits._
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
@@ -91,10 +92,11 @@ package object tauri {
       }
     })
 
-  def setAppBadge(label: String): Future[Unit] =
+  def setAppBadge(label: Option[String]): Future[Unit] =
     os.`type`() match {
-      case "macos" => window.getCurrentWindow().setBadgeLabel(label).toFuture
-      case _       => Future.successful(()) // Not supported for now
+      case "macos" =>
+        window.getCurrentWindow().setBadgeLabel(label.orUndefined).toFuture
+      case _ => Future.successful(()) // Not supported for now
     }
 
   def resizeWindow(
