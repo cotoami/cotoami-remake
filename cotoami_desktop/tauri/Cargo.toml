@@ -9,7 +9,7 @@ rust-version.workspace = true
 version.workspace = true
 
 [build-dependencies]
-tauri-build = {version = "2.2.0", features = [] }
+tauri-build = {version = "2.2.0", features = []}
 
 [dependencies]
 anyhow.workspace = true
@@ -28,14 +28,14 @@ log = "0.4.21"
 parking_lot.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-tauri = {version = "2.5.1", features = ["protocol-asset"] }
+tauri = {version = "2.5.1", features = ["protocol-asset"]}
 tauri-plugin-dialog = "2.2.2"
 tauri-plugin-log = {version = "2.4.0"}
 tauri-plugin-os = "2.2.2"
 tauri-plugin-shell = "2.2.1"
 tauri-plugin-window-state = "2.2.2"
 thiserror.workspace = true
-tokio = {version = "1.0", features = ["full"] }
+tokio = {version = "1.0", features = ["full"]}
 toml = "0.8.14"
 tracing.workspace = true
 
@@ -46,3 +46,6 @@ default = ["custom-protocol"]
 # this feature is used for production builds where `devPath` points to the filesystem
 # DO NOT remove this
 custom-protocol = ["tauri/custom-protocol"]
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2.8.1"

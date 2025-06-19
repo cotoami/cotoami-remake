@@ -26,6 +26,22 @@ fn main() {
                 .level(LevelFilter::Info)
                 .build(),
         )
+        .setup(|app| {
+            #[cfg(desktop)]
+            app.handle()
+                .plugin(tauri_plugin_updater::Builder::new().build())?;
+            Ok(())
+        })
+        .on_window_event(|window, event| match event {
+            // On macOS, do not quit the app when the window is closed;
+            // keep it running in the background
+            #[cfg(target_os = "macos")]
+            tauri::WindowEvent::CloseRequested { api, .. } => {
+                window.hide().unwrap();
+                api.prevent_close();
+            }
+            _ => {}
+        })
         .invoke_handler(tauri::generate_handler![
             commands::show_window,
             commands::node_command,
@@ -38,16 +54,6 @@ fn main() {
             commands::db::new_owner_password,
             commands::conn::connect_to_servers
         ])
-        .on_window_event(|window, event| match event {
-            // On macOS, do not quit the app when the window is closed;
-            // keep it running in the background
-            #[cfg(target_os = "macos")]
-            tauri::WindowEvent::CloseRequested { api, .. } => {
-                window.hide().unwrap();
-                api.prevent_close();
-            }
-            _ => {}
-        })
         .build(tauri::generate_context!())
         .expect("error while running tauri application")
         .run(|app, event| match event {
