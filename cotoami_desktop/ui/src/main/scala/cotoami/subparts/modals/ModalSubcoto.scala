@@ -120,7 +120,10 @@ object ModalSubcoto {
 
       val targetCotonomas =
         targetCotonomaIds.map(repo.cotonomas.get).flatten.map(cotonoma =>
-          new TargetCotonoma(cotonoma, !repo.nodes.isWritable(cotonoma.nodeId))
+          new TargetCotonoma(
+            cotonoma,
+            !repo.nodes.canEditItosIn(cotonoma.nodeId)
+          )
         )
 
       Model(
