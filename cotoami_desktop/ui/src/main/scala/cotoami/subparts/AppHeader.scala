@@ -190,11 +190,7 @@ object AppHeader {
       className := "node-profile, default",
       title := context.i18n.text.ModalNodeProfile_title,
       onClick := (_ =>
-        dispatch(
-          (Modal.Msg.OpenModal.apply _).tupled(
-            Modal.NodeProfile(node.id)
-          )
-        )
+        dispatch(Modal.Msg.OpenModal(Modal.NodeProfile(node.id)))
       )
     )(
       PartsNode.imgNode(node)

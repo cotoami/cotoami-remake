@@ -95,12 +95,8 @@ object SectionNodeTools {
           symbol = "settings",
           tip = Some("Node Settings"),
           classes = "settings",
-          onClick = _ =>
-            dispatch(
-              (Modal.Msg.OpenModal.apply _).tupled(
-                Modal.NodeProfile(node.id)
-              )
-            )
+          onClick =
+            _ => dispatch(Modal.Msg.OpenModal(Modal.NodeProfile(node.id)))
         ),
         PartsNode.buttonSwitchNode(node)
       )

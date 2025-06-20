@@ -28,6 +28,8 @@ object ModalWelcome {
   /////////////////////////////////////////////////////////////////////////////
 
   case class Model(
+      appUpdate: Option[tauri.updater.Update],
+
       // New database
       databaseName: String = "",
       baseFolder: String = "",
@@ -99,6 +101,10 @@ object ModalWelcome {
       )
   }
 
+  object Model {
+    def apply(): (Model, Cmd[AppMsg]) = (Model(appUpdate = None), Cmd.none)
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   // Update
   /////////////////////////////////////////////////////////////////////////////
@@ -108,6 +114,10 @@ object ModalWelcome {
   }
 
   object Msg {
+    case class AppUpdateChecked(
+        result: Either[Throwable, Option[tauri.updater.Update]]
+    ) extends Msg
+
     // New database
     case class DatabaseNameInput(query: String) extends Msg
     case object SelectBaseFolder extends Msg
@@ -137,6 +147,14 @@ object ModalWelcome {
       context: Context
   ): (Model, Cmd[AppMsg]) =
     msg match {
+      case Msg.AppUpdateChecked(Right(appUpdate)) =>
+        (model.copy(appUpdate = appUpdate), Cmd.none)
+
+      case Msg.AppUpdateChecked(Left(e)) => {
+        println(s"Tauri update check failed: ${e}")
+        (model, Cmd.none)
+      }
+
       case Msg.DatabaseNameInput(value) =>
         (model.copy(databaseName = value), Cmd.none)
 

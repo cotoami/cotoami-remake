@@ -64,8 +64,13 @@ object Modal {
       Confirm(ModalConfirm.Model(message, msgOnConfirm.into))
   }
 
-  case class Welcome(model: ModalWelcome.Model = ModalWelcome.Model())
-      extends Modal
+  case class Welcome(model: ModalWelcome.Model) extends Modal
+  object Welcome {
+    def apply(): (Welcome, Cmd[AppMsg]) = {
+      val (model, cmd) = ModalWelcome.Model()
+      (Welcome(model), cmd)
+    }
+  }
 
   case class InputPassword(model: ModalInputPassword.Model) extends Modal
   object InputPassword {
@@ -210,6 +215,10 @@ object Modal {
 
   object Msg {
     case class OpenModal(modal: Modal, cmd: Cmd[AppMsg] = Cmd.none) extends Msg
+    object OpenModal {
+      def apply(pair: (Modal, Cmd[AppMsg])): OpenModal =
+        OpenModal(pair._1, pair._2)
+    }
     case class CloseModal[M <: Modal](modalType: Class[M]) extends Msg
 
     case class ConfirmMsg(msg: ModalConfirm.Msg) extends Msg
@@ -233,6 +242,9 @@ object Modal {
 
   def open(modal: Modal): Cmd.One[AppMsg] =
     Browser.send(Msg.OpenModal(modal).into)
+
+  def open(pair: (Modal, Cmd[AppMsg])): Cmd.One[AppMsg] =
+    Browser.send(Msg.OpenModal(pair).into)
 
   def close[M <: Modal](modalType: Class[M]): Cmd.One[AppMsg] =
     Browser.send(Msg.CloseModal(modalType).into)

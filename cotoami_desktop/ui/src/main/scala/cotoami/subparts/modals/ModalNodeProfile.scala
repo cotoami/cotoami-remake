@@ -287,13 +287,7 @@ object ModalNodeProfile {
   ): ReactElement =
     Option.when(model.isSelf) {
       div(className := "edit")(
-        buttonEdit(_ =>
-          dispatch(
-            (Modal.Msg.OpenModal.apply _).tupled(
-              Modal.EditCoto(rootCoto)
-            )
-          )
-        )
+        buttonEdit(_ => dispatch(Modal.Msg.OpenModal(Modal.EditCoto(rootCoto))))
       )
     }
 }

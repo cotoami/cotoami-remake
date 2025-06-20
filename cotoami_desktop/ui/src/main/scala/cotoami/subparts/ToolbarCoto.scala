@@ -58,7 +58,7 @@ object ToolbarCoto {
           tipPlacement = "left",
           onClick = e => {
             e.stopPropagation()
-            dispatch((Modal.Msg.OpenModal.apply _).tupled(Modal.EditCoto(coto)))
+            dispatch(Modal.Msg.OpenModal(Modal.EditCoto(coto)))
           }
         )
       },
@@ -99,7 +99,7 @@ object ToolbarCoto {
           tipPlacement = "left",
           onClick = e => {
             e.stopPropagation()
-            dispatch((Modal.Msg.OpenModal.apply _).tupled(Modal.Promote(coto)))
+            dispatch(Modal.Msg.OpenModal(Modal.Promote(coto)))
           }
         )
       },
