@@ -3,9 +3,16 @@ package marubinotto.libs.tauri
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 
+import marubinotto.facade.Nullable
+
 @js.native
 @JSImport("@tauri-apps/plugin-updater", JSImport.Namespace)
 object updater extends js.Object {
+
+  /** Check for updates, resolves to null if no updates are available.
+    */
+  def check(options: js.UndefOr[CheckOptions]): js.Promise[Nullable[Update]] =
+    js.native
 
   /** Options used when checking for updates
     */
