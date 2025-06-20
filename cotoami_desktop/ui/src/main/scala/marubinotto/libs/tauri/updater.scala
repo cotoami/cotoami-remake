@@ -14,7 +14,16 @@ object updater extends js.Object {
     val date: js.UndefOr[String] = js.native
     val body: js.UndefOr[String] = js.native
 
+    /** Download the updater package.
+      */
     def download(
+        onEvent: js.Function1[DownloadEvent, Unit],
+        options: js.UndefOr[DownloadOptions]
+    ): js.Promise[Unit] = js.native
+
+    /** Downloads the updater package and installs it.
+      */
+    def downloadAndInstall(
         onEvent: js.Function1[DownloadEvent, Unit],
         options: js.UndefOr[DownloadOptions]
     ): js.Promise[Unit] = js.native
