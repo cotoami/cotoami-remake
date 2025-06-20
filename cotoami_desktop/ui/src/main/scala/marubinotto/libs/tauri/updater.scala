@@ -21,6 +21,10 @@ object updater extends js.Object {
         options: js.UndefOr[DownloadOptions]
     ): js.Promise[Unit] = js.native
 
+    /** Install downloaded updater package.
+      */
+    def install(): js.Promise[Unit] = js.native
+
     /** Downloads the updater package and installs it.
       */
     def downloadAndInstall(
