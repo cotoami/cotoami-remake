@@ -7,6 +7,29 @@ import scala.scalajs.js.annotation.JSImport
 @JSImport("@tauri-apps/plugin-updater", JSImport.Namespace)
 object updater extends js.Object {
 
+  /** Options used when checking for updates
+    */
+  trait CheckOptions extends js.Object {
+
+    /** Allow downgrades to previous versions by not checking if the current
+      * version is greater than the available version.
+      */
+    val allowDowngrades: js.UndefOr[Boolean] = js.undefined
+
+    /** A proxy url to be used when checking and downloading updates.
+      */
+    val proxy: js.UndefOr[String] = js.undefined
+
+    /** Target identifier for the running application. This is sent to the
+      * backend.
+      */
+    val target: js.UndefOr[String] = js.undefined
+
+    /** Timeout in milliseconds
+      */
+    val timeout: js.UndefOr[Double] = js.undefined
+  }
+
   @js.native
   class Update(metadata: js.Object) extends js.Object {
     val version: String = js.native
