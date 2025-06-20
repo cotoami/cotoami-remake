@@ -43,6 +43,7 @@
     "copyright": "",
     "targets": "all",
     "externalBin": [],
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -76,5 +77,12 @@
       }
     }
   },
-  "plugins": {}
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEU2N0I5OTE0MkZEODAzRkEKUldUNkE5Z3ZGSmw3NXBXTit6aEFlSjhndzhYdEsrMzNUN1MzSlh3TlRpaFZaOFhzMlYrbDRwSjEK",
+      "endpoints": [
+        "https://github.com/cotoami/cotoami-remake/releases/latest/download/latest.json"
+      ]
+    }
+  }
 }
