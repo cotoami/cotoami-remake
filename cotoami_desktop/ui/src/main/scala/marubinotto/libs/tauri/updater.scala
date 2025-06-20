@@ -13,6 +13,11 @@ object updater extends js.Object {
     val currentVersion: String = js.native
     val date: js.UndefOr[String] = js.native
     val body: js.UndefOr[String] = js.native
+
+    def download(
+        onEvent: js.Function1[DownloadEvent, Unit],
+        options: js.UndefOr[DownloadOptions]
+    ): js.Promise[Unit] = js.native
   }
 
   /** Options used when downloading an update
