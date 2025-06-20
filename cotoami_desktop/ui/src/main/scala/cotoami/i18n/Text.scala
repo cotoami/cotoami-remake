@@ -97,6 +97,8 @@ trait Text {
   val ModalWelcome_open_folder: String
   val ModalWelcome_open_selectFolder: String
   val ModalWelcome_open_open: String
+  def ModalWelcome_update_message(newVersion: String): ReactElement
+  val ModalWelcome_update_updateNow: String
 
   val ModalInputOwnerPassword_title: String
   val ModalInputOwnerPassword_message: String

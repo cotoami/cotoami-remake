@@ -16,19 +16,54 @@ dialog.welcome {
 
   div.modal-body {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
 
-    section.recent-databases {
-      width: 20rem;
-      margin-right: 16px;
+    div.app-update {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
 
-      div.scroll-area {
-        height: 480px;
+      margin-bottom: 1rem;
+      border: 1px solid var(--pane-border-color);
+      border-radius: 4px;
+      padding: 10px 20px;
+      background-color: var(--input-background-color);
+
+      div.message {
+        span.version {
+          margin-left: 4px;
+          margin-right: 4px;
+          font-weight: 700;
+        }
+      }
+
+      button.update {
+        margin-left: 10px;
+        height: 30px;
+        padding: 0 10px;
+        font-size: 14px;
       }
     }
 
-    div.create-or-open {
-      width: 25rem;
+    div.database {
+      flex: 1;
+
+      display: flex;
+      flex-direction: row;
+
+      section.recent-databases {
+        width: 20rem;
+        margin-right: 16px;
+
+        div.scroll-area {
+          height: 480px;
+        }
+      }
+
+      div.create-or-open {
+        width: 25rem;
+      }
     }
   }
 

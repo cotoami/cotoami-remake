@@ -323,10 +323,18 @@ object ModalWelcome {
       ),
       context.i18n.text.ModalWelcome_title
     )(
-      sectionRecent(model, recentDatabases),
-      div(className := "create-or-open")(
-        sectionNewDatabase(model),
-        sectionOpenDatabase(model)
+      div(className := "app-update")(
+        context.i18n.text.ModalWelcome_update_message("0.8.0"),
+        button(
+          className := "update contrast outline"
+        )(context.i18n.text.ModalWelcome_update_updateNow)
+      ),
+      div(className := "database")(
+        sectionRecent(model, recentDatabases),
+        div(className := "create-or-open")(
+          sectionNewDatabase(model),
+          sectionOpenDatabase(model)
+        )
       )
     )
 
