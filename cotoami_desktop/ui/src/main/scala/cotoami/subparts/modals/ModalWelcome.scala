@@ -8,6 +8,7 @@ import slinky.web.html._
 import marubinotto.fui._
 import marubinotto.libs.tauri
 import marubinotto.Validation
+import marubinotto.facade.Nullable
 import marubinotto.components.{materialSymbol, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
@@ -102,7 +103,8 @@ object ModalWelcome {
   }
 
   object Model {
-    def apply(): (Model, Cmd[AppMsg]) = (Model(appUpdate = None), Cmd.none)
+    def apply(): (Model, Cmd[AppMsg]) =
+      (Model(appUpdate = None), checkAppUpdate)
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -295,6 +297,12 @@ object ModalWelcome {
             )
         }
     }
+
+  private def checkAppUpdate: Cmd.One[AppMsg] =
+    tauri.updater.check(js.undefined).toFuture
+      .pipe(Cmd.fromFuture)
+      .map(_.map(Nullable.toOption(_)))
+      .map(Msg.AppUpdateChecked(_).into)
 
   /////////////////////////////////////////////////////////////////////////////
   // View
