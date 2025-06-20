@@ -18,7 +18,7 @@ dialog.welcome {
     display: flex;
     flex-direction: column;
 
-    div.app-update {
+    section.app-update {
       display: flex;
       flex-direction: row;
       align-items: center;
@@ -29,6 +29,11 @@ dialog.welcome {
       border-radius: 4px;
       padding: 10px 20px;
       background-color: var(--input-background-color);
+
+      span.material-symbols {
+        margin-right: 4px;
+        font-size: 20px;
+      }
 
       div.message {
         span.version {

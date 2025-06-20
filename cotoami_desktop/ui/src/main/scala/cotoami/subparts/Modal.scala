@@ -72,6 +72,9 @@ object Modal {
     }
   }
 
+  case class AppUpdate(model: ModalAppUpdate.Model = ModalAppUpdate.Model())
+      extends Modal
+
   case class InputPassword(model: ModalInputPassword.Model) extends Modal
   object InputPassword {
     def apply(
@@ -223,6 +226,7 @@ object Modal {
 
     case class ConfirmMsg(msg: ModalConfirm.Msg) extends Msg
     case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
+    case class AppUpdateMsg(msg: ModalAppUpdate.Msg) extends Msg
     case class InputPasswordMsg(msg: ModalInputPassword.Msg) extends Msg
     case class EditCotoMsg(msg: ModalEditCoto.Msg) extends Msg
     case class PromoteMsg(msg: ModalPromote.Msg) extends Msg
@@ -271,6 +275,13 @@ object Modal {
         stack.get[Welcome].map { case Welcome(modal) =>
           ModalWelcome.update(modalMsg, modal).pipe { case (modal, cmds) =>
             (updateModal(Welcome(modal), model), cmds)
+          }
+        }
+
+      case Msg.AppUpdateMsg(modalMsg) =>
+        stack.get[AppUpdate].map { case AppUpdate(modal) =>
+          ModalAppUpdate.update(modalMsg, modal).pipe { case (modal, cmds) =>
+            (updateModal(AppUpdate(modal), model), cmds)
           }
         }
 
@@ -475,6 +486,8 @@ object Modal {
         model.systemInfo.map(info =>
           ModalWelcome(modal, info.recent_databases.toSeq)
         )
+
+      case AppUpdate(modal) => Some(ModalAppUpdate(modal))
 
       case InputPassword(modal) => Some(ModalInputPassword(modal))
 

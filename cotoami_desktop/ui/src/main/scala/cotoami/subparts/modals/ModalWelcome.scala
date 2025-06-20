@@ -323,12 +323,7 @@ object ModalWelcome {
       ),
       context.i18n.text.ModalWelcome_title
     )(
-      div(className := "app-update")(
-        context.i18n.text.ModalWelcome_update_message("0.8.0"),
-        button(
-          className := "update contrast outline"
-        )(context.i18n.text.ModalWelcome_update_updateNow)
-      ),
+      sectionAppUpdate(),
       div(className := "database")(
         sectionRecent(model, recentDatabases),
         div(className := "create-or-open")(
@@ -336,6 +331,19 @@ object ModalWelcome {
           sectionOpenDatabase(model)
         )
       )
+    )
+
+  private def sectionAppUpdate()(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
+    section(className := "app-update")(
+      materialSymbol("info"),
+      context.i18n.text.ModalWelcome_update_message("0.8.0"),
+      button(
+        className := "update contrast outline",
+        onClick := (_ => dispatch(Modal.Msg.OpenModal(Modal.AppUpdate())))
+      )(context.i18n.text.ModalWelcome_update_updateNow)
     )
 
   private def sectionRecent(
