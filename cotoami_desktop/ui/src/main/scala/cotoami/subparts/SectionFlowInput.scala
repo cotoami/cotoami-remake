@@ -21,7 +21,6 @@ import cotoami.models.{
   Cotonoma,
   Geolocation,
   Id,
-  Node,
   WaitingPost,
   WaitingPosts
 }
@@ -334,7 +333,6 @@ object SectionFlowInput {
 
   def apply(
       model: Model,
-      operatingNode: Node,
       currentCotonoma: Cotonoma,
       geomap: Geomap,
       editorHeight: Int,
@@ -354,7 +352,6 @@ object SectionFlowInput {
           val divForm = formCoto(
             form,
             model,
-            operatingNode,
             currentCotonoma,
             geomap,
             editorHeight,
@@ -378,7 +375,7 @@ object SectionFlowInput {
         }
 
         case form: CotonomaForm.Model =>
-          formCotonoma(form, model, operatingNode, currentCotonoma, geomap)
+          formCotonoma(form, model, currentCotonoma, geomap)
       }
     )
 
@@ -433,7 +430,6 @@ object SectionFlowInput {
   private def formCoto(
       form: CotoForm.Model,
       model: Model,
-      operatingNode: Node,
       currentCotonoma: Cotonoma,
       geomap: Geomap,
       editorHeight: Int,
@@ -467,7 +463,6 @@ object SectionFlowInput {
                 materialSymbol("arrow_drop_up")
               )
             ),
-            addressPoster(operatingNode),
             div(className := "buttons")(
               CotoForm.buttonPreview(form)(submsg =>
                 dispatch(Msg.CotoFormMsg(submsg))
@@ -482,7 +477,6 @@ object SectionFlowInput {
   private def formCotonoma(
       form: CotonomaForm.Model,
       model: Model,
-      operatingNode: Node,
       currentCotonoma: Cotonoma,
       geomap: Geomap
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
@@ -498,19 +492,11 @@ object SectionFlowInput {
       div(className := "post")(
         Validation.sectionValidationError(form.validation),
         section(className := "post")(
-          addressPoster(operatingNode),
           div(className := "buttons")(
             buttonPost(model, currentCotonoma)
           )
         )
       )
-    )
-
-  private def addressPoster(
-      operatingNode: Node
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    address(className := "poster")(
-      PartsNode.spanNode(operatingNode)
     )
 
   private def buttonPost(

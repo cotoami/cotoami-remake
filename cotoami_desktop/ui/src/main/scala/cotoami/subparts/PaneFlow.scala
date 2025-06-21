@@ -39,16 +39,11 @@ object PaneFlow {
       uiState: UiState
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Fragment(
-      (
-        model.repo.nodes.self,
-        model.repo.currentCotonoma,
-        model.repo.canPostCoto
-      ) match {
-        case (Some(selfNode), Some(cotonoma), true) =>
+      (model.repo.currentCotonoma, model.repo.canPostCoto) match {
+        case (Some(cotonoma), true) =>
           Some(
             SectionFlowInput(
               model.flowInput,
-              selfNode,
               cotonoma,
               model.geomap,
               uiState.paneSizes.getOrElse(
