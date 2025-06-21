@@ -17,7 +17,7 @@ jobs:
         # for Universal macOS builds (arm64 and x86_64)
         - platform: 'macos-latest'
           args: '--target universal-apple-darwin'
-        - platform: 'ubuntu-22.04' 
+        - platform: 'ubuntu-24.04' 
           args: ''
         - platform: 'windows-latest'
           args: ''
@@ -41,11 +41,30 @@ jobs:
         # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
         targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-    - name: Install dependencies (ubuntu only)
-      if: matrix.platform == 'ubuntu-22.04'
+    # https://github.com/gitbutlerapp/gitbutler/issues/5638#issuecomment-2507918738
+    # https://www.reddit.com/r/tauri/comments/1k4i5r7/comment/mpowuyi/
+    - name: Install linux dependencies
+      shell: bash
+      if: runner.os == 'Linux'
       run: |
-        sudo apt-get update
-        sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+        sudo apt update;
+        sudo apt install -y \
+          build-essential \
+          curl \
+          wget \
+          file \
+          libssl-dev \
+          libgtk-3-dev \
+          libappindicator3-dev \
+          librsvg2-dev;
+
+        sudo apt install -y \
+          libwebkit2gtk-4.1-0=2.44.0-2 \
+          libwebkit2gtk-4.1-dev=2.44.0-2 \
+          libjavascriptcoregtk-4.1-0=2.44.0-2 \
+          libjavascriptcoregtk-4.1-dev=2.44.0-2 \
+          gir1.2-javascriptcoregtk-4.1=2.44.0-2 \
+          gir1.2-webkit2-4.1=2.44.0-2;
 
     - name: Setup JDK
       uses: actions/setup-java@v4
@@ -60,14 +79,14 @@ jobs:
 
     - name: Import Apple Developer Certificate
       uses: apple-actions/import-codesign-certs@v3
-      if: matrix.platform == 'macos-latest'
+      if: runner.os == 'macOS'
       with:
         p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
         p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         keychain: build
 
     - name: Verify Certificate
-      if: matrix.platform == 'macos-latest'
+      if: runner.os == 'macOS'
       run: |
         CERT_INFO=$(security find-identity -v -p codesigning build.keychain | grep "Developer ID Application")
         CERT_ID=$(echo "$CERT_INFO" | awk -F'"' '{print $2}')
