@@ -520,17 +520,17 @@ object Main {
       .map(Msg.ServerConnectionsInitialized)
 
   def subscriptions(model: Model): Sub[Msg] =
-    (tauri.listen[MessageJson]("message", None)
+    (tauri.listen[MessageJson]("message")
       .map(Msg.BackendMessage): Sub[Msg]) <+>
       listenToBackendChanges(model) <+>
-      (tauri.listen[LocalNodeEventJson]("backend-event", None)
+      (tauri.listen[LocalNodeEventJson]("backend-event")
         .map(Msg.BackendEvent))
 
   private def listenToBackendChanges(model: Model): Sub[Msg] =
     if (model.modalStack.opened[Modal.ParentSync])
       Sub.Empty
     else
-      tauri.listen[ChangelogEntryJson]("backend-change", None)
+      tauri.listen[ChangelogEntryJson]("backend-change")
         .map(Msg.BackendChange)
 
   def view(model: Model, dispatch: Into[Msg] => Unit): ReactElement = {
