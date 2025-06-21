@@ -323,7 +323,7 @@ object ModalWelcome {
       ),
       context.i18n.text.ModalWelcome_title
     )(
-      sectionAppUpdate(),
+      model.appUpdate.map(sectionAppUpdate),
       div(className := "database")(
         sectionRecent(model, recentDatabases),
         div(className := "create-or-open")(
@@ -333,7 +333,7 @@ object ModalWelcome {
       )
     )
 
-  private def sectionAppUpdate()(implicit
+  private def sectionAppUpdate(appUpdate: tauri.updater.Update)(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -344,7 +344,9 @@ object ModalWelcome {
       ),
       button(
         className := "update contrast outline",
-        onClick := (_ => dispatch(Modal.Msg.OpenModal(Modal.AppUpdate())))
+        onClick := (_ =>
+          dispatch(Modal.Msg.OpenModal(Modal.AppUpdate(appUpdate)))
+        )
       )(context.i18n.text.ModalWelcome_update_updateNow)
     )
 

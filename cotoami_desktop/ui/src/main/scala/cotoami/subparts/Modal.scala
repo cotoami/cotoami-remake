@@ -7,6 +7,7 @@ import slinky.web.html._
 import com.softwaremill.quicklens._
 
 import marubinotto.fui.{Browser, Cmd}
+import marubinotto.libs.tauri
 import marubinotto.components.materialSymbol
 
 import cotoami.{Context, Into, Model => AppModel, Msg => AppMsg}
@@ -72,8 +73,13 @@ object Modal {
     }
   }
 
-  case class AppUpdate(model: ModalAppUpdate.Model = ModalAppUpdate.Model())
-      extends Modal
+  case class AppUpdate(model: ModalAppUpdate.Model) extends Modal
+  object AppUpdate {
+    def apply(appUpdate: tauri.updater.Update): (AppUpdate, Cmd[AppMsg]) = {
+      val (model, cmd) = ModalAppUpdate.Model(appUpdate)
+      (AppUpdate(model), cmd)
+    }
+  }
 
   case class InputPassword(model: ModalInputPassword.Model) extends Modal
   object InputPassword {

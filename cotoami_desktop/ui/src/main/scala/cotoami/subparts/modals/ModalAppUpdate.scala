@@ -18,9 +18,15 @@ object ModalAppUpdate {
   /////////////////////////////////////////////////////////////////////////////
 
   case class Model(
+      appUpdate: tauri.updater.Update,
       restarting: Boolean = false
   ) {
     lazy val readyToRestart: Boolean = !restarting
+  }
+
+  object Model {
+    def apply(appUpdate: tauri.updater.Update): (Model, Cmd[AppMsg]) =
+      (Model(appUpdate = appUpdate), Cmd.none)
   }
 
   /////////////////////////////////////////////////////////////////////////////
