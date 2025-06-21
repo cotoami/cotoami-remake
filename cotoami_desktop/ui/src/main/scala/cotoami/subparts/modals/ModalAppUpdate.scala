@@ -2,6 +2,7 @@ package cotoami.subparts.modals
 
 import scala.util.chaining._
 import slinky.core.facade.{Fragment, ReactElement}
+import slinky.web.html
 import slinky.web.html._
 
 import marubinotto.fui.Cmd
@@ -42,7 +43,14 @@ object ModalAppUpdate {
         "Updating Application"
       )
     )(
-      section(className := "update-details")(),
+      section(className := "update-details")(
+        section(className := "message")(
+          "Downloading and installing version 0.8.0 (current: 0.7.0)"
+        ),
+        div(className := "progress-bar")(
+          html.progress(value := "50", max := "100")
+        )
+      ),
       div(className := "buttons")(
         button(
           `type` := "button",
