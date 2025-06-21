@@ -19,9 +19,15 @@ object ModalAppUpdate {
 
   case class Model(
       appUpdate: tauri.updater.Update,
+      contentLength: Double = 0,
+      downloaded: Double = 0,
+      finished: Boolean = false,
       restarting: Boolean = false
   ) {
-    lazy val readyToRestart: Boolean = !restarting
+    def progress(chunkLength: Double): Model =
+      copy(downloaded = downloaded + chunkLength)
+
+    lazy val readyToRestart: Boolean = finished && !restarting
   }
 
   object Model {
@@ -38,12 +44,23 @@ object ModalAppUpdate {
   }
 
   object Msg {
+    case class Started(contentLength: Double) extends Msg
+    case class Progress(chunkLength: Double) extends Msg
+    case object Finished extends Msg
     case object Restart extends Msg
     case class Restarted(result: Either[Throwable, Unit]) extends Msg
   }
 
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
     msg match {
+      case Msg.Started(contentLength) =>
+        (model.copy(contentLength = contentLength), Cmd.none)
+
+      case Msg.Progress(chunkLength) =>
+        (model.progress(chunkLength), Cmd.none)
+
+      case Msg.Finished => (model.copy(finished = true), Cmd.none)
+
       case Msg.Restart => (model.copy(restarting = true), restart)
 
       case Msg.Restarted(Right(_)) =>
@@ -79,10 +96,16 @@ object ModalAppUpdate {
     )(
       section(className := "update-details")(
         section(className := "message")(
-          context.i18n.text.ModalAppUpdate_message("0.8.0", "0.7.0")
+          context.i18n.text.ModalAppUpdate_message(
+            model.appUpdate.version,
+            model.appUpdate.currentVersion
+          )
         ),
         div(className := "progress-bar")(
-          html.progress(value := "50", max := "100")
+          html.progress(
+            value := model.downloaded.toString(),
+            max := model.contentLength.toString()
+          )
         )
       ),
       div(className := "buttons")(
