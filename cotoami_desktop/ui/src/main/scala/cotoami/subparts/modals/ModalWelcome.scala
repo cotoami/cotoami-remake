@@ -339,7 +339,9 @@ object ModalWelcome {
   ): ReactElement =
     section(className := "app-update")(
       materialSymbol("info"),
-      context.i18n.text.ModalWelcome_update_message("0.8.0"),
+      div(className := "message")(
+        context.i18n.text.ModalWelcome_update_message("0.8.0")
+      ),
       button(
         className := "update contrast outline",
         onClick := (_ => dispatch(Modal.Msg.OpenModal(Modal.AppUpdate())))

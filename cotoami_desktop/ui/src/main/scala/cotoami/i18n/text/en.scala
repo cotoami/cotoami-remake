@@ -112,12 +112,24 @@ object en extends Text {
   val ModalWelcome_open_selectFolder = "Select a Database Folder"
   val ModalWelcome_open_open = "Open"
   def ModalWelcome_update_message(newVersion: String) =
-    div(className := "message")(
-      "A new version",
+    span()(
+      "A new version ",
       span(className := "version")(newVersion),
-      "of Cotoami Desktop is available."
+      " of Cotoami Desktop is available."
     )
   val ModalWelcome_update_updateNow = "Update Now"
+
+  val ModalAppUpdate_title = "Updating Application"
+  def ModalAppUpdate_message(
+      newVersion: String,
+      currentVersion: String
+  ) = span()(
+    "Downloading and installing version ",
+    span(className := "version")(newVersion),
+    " (current: ",
+    span(className := "version")(currentVersion),
+    ")"
+  )
 
   val ModalInputOwnerPassword_title = "Owner Password Required"
   val ModalInputOwnerPassword_message =

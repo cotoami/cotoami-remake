@@ -3,6 +3,12 @@ dialog.app-update {
     width: 600px;
   }
 
+  section.message {
+    span.version {
+      font-weight: 700;
+    }
+  }
+
   div.progress-bar {
     margin-top: 1rem;
   }

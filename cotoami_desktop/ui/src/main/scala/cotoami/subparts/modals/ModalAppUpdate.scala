@@ -6,7 +6,7 @@ import slinky.web.html
 import slinky.web.html._
 
 import marubinotto.fui.Cmd
-import cotoami.{Into, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.subparts.Modal
 
 object ModalAppUpdate {
@@ -33,19 +33,19 @@ object ModalAppUpdate {
 
   def apply(
       model: Model
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     Modal.view(
       dialogClasses = "app-update",
       closeButton = Some((classOf[Modal.AppUpdate], dispatch))
     )(
       Fragment(
         Modal.spanTitleIcon("system_update_alt"),
-        "Updating Application"
+        context.i18n.text.ModalAppUpdate_title
       )
     )(
       section(className := "update-details")(
         section(className := "message")(
-          "Downloading and installing version 0.8.0 (current: 0.7.0)"
+          context.i18n.text.ModalAppUpdate_message("0.8.0", "0.7.0")
         ),
         div(className := "progress-bar")(
           html.progress(value := "50", max := "100")

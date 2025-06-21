@@ -100,6 +100,12 @@ trait Text {
   def ModalWelcome_update_message(newVersion: String): ReactElement
   val ModalWelcome_update_updateNow: String
 
+  val ModalAppUpdate_title: String
+  def ModalAppUpdate_message(
+      newVersion: String,
+      currentVersion: String
+  ): ReactElement
+
   val ModalInputOwnerPassword_title: String
   val ModalInputOwnerPassword_message: String
 
