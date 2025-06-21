@@ -46,6 +46,7 @@
     "shell:default",
     "dialog:default",
     "log:default",
-    "os:default"
+    "os:default",
+    "process:default"
   ]
 }

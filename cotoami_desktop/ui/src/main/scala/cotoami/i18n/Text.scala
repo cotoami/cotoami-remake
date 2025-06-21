@@ -105,6 +105,7 @@ trait Text {
       newVersion: String,
       currentVersion: String
   ): ReactElement
+  val ModalAppUpdate_restart: String
 
   val ModalInputOwnerPassword_title: String
   val ModalInputOwnerPassword_message: String

@@ -6,6 +6,8 @@ import slinky.web.html
 import slinky.web.html._
 
 import marubinotto.fui.Cmd
+import marubinotto.libs.tauri
+
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.subparts.Modal
 
@@ -15,7 +17,11 @@ object ModalAppUpdate {
   // Model
   /////////////////////////////////////////////////////////////////////////////
 
-  case class Model()
+  case class Model(
+      restarting: Boolean = false
+  ) {
+    lazy val readyToRestart: Boolean = !restarting
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // Update
@@ -25,7 +31,29 @@ object ModalAppUpdate {
     def into = Modal.Msg.AppUpdateMsg(this).pipe(AppMsg.ModalMsg)
   }
 
-  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) = (model, Cmd.none)
+  object Msg {
+    case object Restart extends Msg
+    case class Restarted(result: Either[Throwable, Unit]) extends Msg
+  }
+
+  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
+    msg match {
+      case Msg.Restart => (model.copy(restarting = true), restart)
+
+      case Msg.Restarted(Right(_)) =>
+        (model.copy(restarting = false), Cmd.none)
+
+      case Msg.Restarted(Left(e)) =>
+        (
+          model.copy(restarting = false),
+          cotoami.error("Couldn't restart app.", Some(e.toString()))
+        )
+    }
+
+  private def restart: Cmd[AppMsg] =
+    tauri.process.relaunch().toFuture
+      .pipe(Cmd.fromFuture)
+      .map(Msg.Restarted(_).into)
 
   /////////////////////////////////////////////////////////////////////////////
   // View
@@ -54,8 +82,10 @@ object ModalAppUpdate {
       div(className := "buttons")(
         button(
           `type` := "button",
-          disabled := true
-        )("Restart App")
+          disabled := !model.readyToRestart,
+          aria - "busy" := model.restarting.toString(),
+          onClick := (_ => dispatch(Msg.Restart))
+        )(context.i18n.text.ModalAppUpdate_restart)
       )
     )
   }

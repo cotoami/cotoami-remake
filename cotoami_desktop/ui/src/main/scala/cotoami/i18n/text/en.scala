@@ -130,6 +130,7 @@ object en extends Text {
     span(className := "version")(currentVersion),
     ")"
   )
+  val ModalAppUpdate_restart = "Restart App"
 
   val ModalInputOwnerPassword_title = "Owner Password Required"
   val ModalInputOwnerPassword_message =
