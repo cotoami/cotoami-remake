@@ -44,6 +44,11 @@ object updater extends js.Object {
     val date: js.UndefOr[String] = js.native
     val body: js.UndefOr[String] = js.native
 
+    /** Destroys and cleans up this resource from memory. You should not call
+      * any method on this object anymore and should drop any reference to it.
+      */
+    def close(): js.Promise[Unit] = js.native
+
     /** Download the updater package.
       */
     def download(

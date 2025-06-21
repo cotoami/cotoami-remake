@@ -23,6 +23,7 @@ import cotoami.models._
 import cotoami.updates
 import cotoami.updates._
 import cotoami.subparts._
+import cotoami.subparts.modals.ModalAppUpdate
 
 object Main {
 
@@ -520,11 +521,14 @@ object Main {
       .map(Msg.ServerConnectionsInitialized)
 
   def subscriptions(model: Model): Sub[Msg] =
-    (tauri.listen[MessageJson]("message")
-      .map(Msg.BackendMessage): Sub[Msg]) <+>
+    listenToBackendMessages <+>
       listenToBackendChanges(model) <+>
-      (tauri.listen[LocalNodeEventJson]("backend-event")
-        .map(Msg.BackendEvent))
+      listenToBackendEvents <+>
+      appUpdateProgress(model)
+
+  private def listenToBackendMessages: Sub[Msg] =
+    (tauri.listen[MessageJson]("message")
+      .map(Msg.BackendMessage): Sub[Msg])
 
   private def listenToBackendChanges(model: Model): Sub[Msg] =
     if (model.modalStack.opened[Modal.ParentSync])
@@ -532,6 +536,15 @@ object Main {
     else
       tauri.listen[ChangelogEntryJson]("backend-change")
         .map(Msg.BackendChange)
+
+  private def listenToBackendEvents: Sub[Msg] =
+    tauri.listen[LocalNodeEventJson]("backend-event")
+      .map(Msg.BackendEvent)
+
+  private def appUpdateProgress(model: Model): Sub[Msg] =
+    model.modalStack.get[Modal.AppUpdate]
+      .map { case Modal.AppUpdate(modal) => ModalAppUpdate.progress(modal) }
+      .getOrElse(Sub.Empty)
 
   def view(model: Model, dispatch: Into[Msg] => Unit): ReactElement = {
     implicit val _context: Context = model

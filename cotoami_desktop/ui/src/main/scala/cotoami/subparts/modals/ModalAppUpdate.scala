@@ -1,11 +1,12 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
+import scala.scalajs.js
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html
 import slinky.web.html._
 
-import marubinotto.fui.Cmd
+import marubinotto.fui.{Cmd, Sub}
 import marubinotto.libs.tauri
 
 import cotoami.{Context, Into, Msg => AppMsg}
@@ -77,6 +78,42 @@ object ModalAppUpdate {
     tauri.process.relaunch().toFuture
       .pipe(Cmd.fromFuture)
       .map(Msg.Restarted(_).into)
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Sub
+  /////////////////////////////////////////////////////////////////////////////
+
+  def progress(model: Model): Sub[AppMsg] =
+    Sub.Impl[AppMsg](
+      "app-update-progress",
+      (dispatch, onSubscribe) => {
+        model.appUpdate.downloadAndInstall(
+          event =>
+            event.event match {
+              case "Started" =>
+                event.data.foreach(
+                  _.contentLength.foreach(length =>
+                    dispatch(Msg.Started(length).into)
+                  )
+                )
+              case "Progress" =>
+                event.data.foreach(
+                  _.chunkLength.foreach(length =>
+                    dispatch(Msg.Progress(length).into)
+                  )
+                )
+              case "Finished" => dispatch(Msg.Finished.into)
+            },
+          js.undefined
+        )
+        val unsubscribe = () => {
+          println("Canceling app-update-progress ...")
+          model.appUpdate.close() // fire-and-forget js.Promise[Unit]
+          ()
+        }
+        onSubscribe(Some(unsubscribe))
+      }
+    )
 
   /////////////////////////////////////////////////////////////////////////////
   // View
