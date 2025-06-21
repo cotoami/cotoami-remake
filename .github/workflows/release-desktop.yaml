@@ -39,7 +39,7 @@ jobs:
       uses: dtolnay/rust-toolchain@stable
       with:
         # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
-        targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+        targets: ${{ runner.os == 'macOS' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
     # https://github.com/gitbutlerapp/gitbutler/issues/5638#issuecomment-2507918738
     # https://www.reddit.com/r/tauri/comments/1k4i5r7/comment/mpowuyi/
