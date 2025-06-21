@@ -27,11 +27,7 @@ object PartsNode {
     span(
       className := "node",
       onClick := (_ =>
-        dispatch(
-          (Modal.Msg.OpenModal.apply _).tupled(
-            Modal.NodeProfile(node.id)
-          )
-        )
+        dispatch(Modal.Msg.OpenModal(Modal.NodeProfile(node.id)))
       )
     )(
       imgNode(node),

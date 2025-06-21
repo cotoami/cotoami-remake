@@ -249,11 +249,7 @@ object ModalClients {
           symbol = "settings",
           disabled = isLocal,
           onClick = _ =>
-            dispatch(
-              (Modal.Msg.OpenModal.apply _).tupled(
-                Modal.NodeProfile(client.node.id)
-              )
-            )
+            dispatch(Modal.Msg.OpenModal(Modal.NodeProfile(client.node.id)))
         )
       )
     )

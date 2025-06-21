@@ -171,9 +171,7 @@ object SectionSelfNodeServer {
     )(
       sectionClientNodesCount(model.clientCount, context.repo.nodes),
       div(className := "edit")(
-        buttonEdit(_ =>
-          dispatch((Modal.Msg.OpenModal.apply _).tupled(Modal.Clients()))
-        )
+        buttonEdit(_ => dispatch(Modal.Msg.OpenModal(Modal.Clients())))
       )
     )
 

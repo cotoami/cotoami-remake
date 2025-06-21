@@ -8,6 +8,7 @@ import slinky.web.html._
 import marubinotto.fui._
 import marubinotto.libs.tauri
 import marubinotto.Validation
+import marubinotto.facade.Nullable
 import marubinotto.components.{materialSymbol, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
@@ -28,6 +29,8 @@ object ModalWelcome {
   /////////////////////////////////////////////////////////////////////////////
 
   case class Model(
+      appUpdate: Option[tauri.updater.Update],
+
       // New database
       databaseName: String = "",
       baseFolder: String = "",
@@ -99,6 +102,11 @@ object ModalWelcome {
       )
   }
 
+  object Model {
+    def apply(): (Model, Cmd[AppMsg]) =
+      (Model(appUpdate = None), checkAppUpdate)
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   // Update
   /////////////////////////////////////////////////////////////////////////////
@@ -108,6 +116,10 @@ object ModalWelcome {
   }
 
   object Msg {
+    case class AppUpdateChecked(
+        result: Either[Throwable, Option[tauri.updater.Update]]
+    ) extends Msg
+
     // New database
     case class DatabaseNameInput(query: String) extends Msg
     case object SelectBaseFolder extends Msg
@@ -137,6 +149,14 @@ object ModalWelcome {
       context: Context
   ): (Model, Cmd[AppMsg]) =
     msg match {
+      case Msg.AppUpdateChecked(Right(appUpdate)) =>
+        (model.copy(appUpdate = appUpdate), Cmd.none)
+
+      case Msg.AppUpdateChecked(Left(e)) => {
+        println(s"Tauri update check failed: ${e}")
+        (model, Cmd.none)
+      }
+
       case Msg.DatabaseNameInput(value) =>
         (model.copy(databaseName = value), Cmd.none)
 
@@ -278,6 +298,12 @@ object ModalWelcome {
         }
     }
 
+  private def checkAppUpdate: Cmd.One[AppMsg] =
+    tauri.updater.check(js.undefined).toFuture
+      .pipe(Cmd.fromFuture)
+      .map(_.map(Nullable.toOption(_)))
+      .map(Msg.AppUpdateChecked(_).into)
+
   /////////////////////////////////////////////////////////////////////////////
   // View
   /////////////////////////////////////////////////////////////////////////////
@@ -297,11 +323,31 @@ object ModalWelcome {
       ),
       context.i18n.text.ModalWelcome_title
     )(
-      sectionRecent(model, recentDatabases),
-      div(className := "create-or-open")(
-        sectionNewDatabase(model),
-        sectionOpenDatabase(model)
+      model.appUpdate.map(sectionAppUpdate),
+      div(className := "database")(
+        sectionRecent(model, recentDatabases),
+        div(className := "create-or-open")(
+          sectionNewDatabase(model),
+          sectionOpenDatabase(model)
+        )
       )
+    )
+
+  private def sectionAppUpdate(appUpdate: tauri.updater.Update)(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
+    section(className := "app-update")(
+      materialSymbol("info"),
+      div(className := "message")(
+        context.i18n.text.ModalWelcome_update_message("0.8.0")
+      ),
+      button(
+        className := "update contrast outline",
+        onClick := (_ =>
+          dispatch(Modal.Msg.OpenModal(Modal.AppUpdate(appUpdate)))
+        )
+      )(context.i18n.text.ModalWelcome_update_updateNow)
     )
 
   private def sectionRecent(

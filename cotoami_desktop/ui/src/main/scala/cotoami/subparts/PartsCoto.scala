@@ -76,11 +76,7 @@ object PartsCoto {
             className := "remote-node-icon",
             title := context.i18n.text.Coto_inRemoteNode(node.name),
             onClick := (_ =>
-              dispatch(
-                (Modal.Msg.OpenModal.apply _).tupled(
-                  Modal.NodeProfile(node.id)
-                )
-              )
+              dispatch(Modal.Msg.OpenModal(Modal.NodeProfile(node.id)))
             )
           )(
             PartsNode.imgNode(node)
