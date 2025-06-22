@@ -19,6 +19,7 @@ object en extends Text {
   val Id = "ID"
   val Name = "Name"
 
+  val OK = "OK"
   val Cancel = "Cancel"
   val Post = "Post"
   val Insert = "Insert"
@@ -98,6 +99,8 @@ object en extends Text {
   val EditorCoto_help_selectLocation = "Click on a location on the map"
   def EditorCoto_cotonomaAlreadyExists(cotonomaName: String) =
     s"The cotonoma \"${cotonomaName}\" already exists in this node."
+
+  val ModalConfirm_title = "Confirmation"
 
   val ModalWelcome_title = "Welcome to Cotoami"
   val ModalWelcome_recent = "Recent"

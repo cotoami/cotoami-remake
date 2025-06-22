@@ -5,7 +5,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import marubinotto.fui.{Browser, Cmd}
-import cotoami.{Into, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.subparts.Modal
 
 object ModalConfirm {
@@ -49,7 +49,7 @@ object ModalConfirm {
 
   def apply(
       model: Model
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val modalType = classOf[Modal.Confirm]
     Modal.view(
       dialogClasses = "confirm",
@@ -57,7 +57,7 @@ object ModalConfirm {
     )(
       Fragment(
         Modal.spanTitleIcon("check_circle"),
-        "Confirmation"
+        context.i18n.text.ModalConfirm_title
       )
     )(
       section(className := "confirmation-message")(model.message),
@@ -66,11 +66,11 @@ object ModalConfirm {
           `type` := "button",
           className := "cancel contrast outline",
           onClick := (_ => dispatch(Modal.Msg.CloseModal(modalType)))
-        )("Cancel"),
+        )(context.i18n.text.Cancel),
         button(
           `type` := "button",
           onClick := (_ => dispatch(Msg.Confirm))
-        )("OK")
+        )(context.i18n.text.OK)
       )
     )
   }

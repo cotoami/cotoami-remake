@@ -16,6 +16,7 @@ trait Text {
   val Id: String
   val Name: String
 
+  val OK: String
   val Cancel: String
   val Post: String
   val Insert: String
@@ -84,6 +85,8 @@ trait Text {
   val EditorCoto_location: String
   val EditorCoto_help_selectLocation: String
   def EditorCoto_cotonomaAlreadyExists(cotonomaName: String): String
+
+  val ModalConfirm_title: String
 
   val ModalWelcome_title: String
   val ModalWelcome_recent: String
