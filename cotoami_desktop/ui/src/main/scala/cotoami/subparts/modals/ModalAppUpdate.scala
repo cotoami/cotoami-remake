@@ -146,12 +146,14 @@ object ModalAppUpdate {
         )
       ),
       div(className := "buttons")(
-        button(
-          `type` := "button",
-          disabled := !model.readyToRestart,
-          aria - "busy" := model.restarting.toString(),
-          onClick := (_ => dispatch(Msg.Restart))
-        )(context.i18n.text.ModalAppUpdate_restart)
+        Option.when(model.readyToRestart) {
+          button(
+            `type` := "button",
+            disabled := !model.readyToRestart,
+            aria - "busy" := model.restarting.toString(),
+            onClick := (_ => dispatch(Msg.Restart))
+          )(context.i18n.text.ModalAppUpdate_restart)
+        }
       )
     )
   }
