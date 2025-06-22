@@ -340,7 +340,7 @@ object ModalWelcome {
     section(className := "app-update")(
       materialSymbol("info"),
       div(className := "message")(
-        context.i18n.text.ModalWelcome_update_message("0.8.0")
+        context.i18n.text.ModalWelcome_update_message(appUpdate.version)
       ),
       button(
         className := "update contrast outline",
