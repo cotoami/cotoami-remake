@@ -3,6 +3,7 @@ members = [
   "cotoami_desktop/tauri",
   "cotoami_db",
   "cotoami_node",
+  "cotoami_plugins/echo",
 ]
 resolver = "2"
 
