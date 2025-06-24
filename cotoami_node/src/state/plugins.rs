@@ -5,31 +5,32 @@ use std::{
     sync::Arc,
 };
 
-use anyhow::Result;
+use anyhow::{ensure, Result};
 use cotoami_plugin_api::*;
 use extism::*;
-use parking_lot::{Mutex, RwLock};
+use parking_lot::Mutex;
 use thiserror::Error;
 use tracing::debug;
 
-pub struct Plugin(Arc<Mutex<extism::Plugin>>);
+pub struct Plugin(Mutex<extism::Plugin>);
 
 impl Plugin {
-    pub fn new(plugin: extism::Plugin) -> Self { Self(Arc::new(Mutex::new(plugin))) }
+    pub fn new(plugin: extism::Plugin) -> Self { Self(Mutex::new(plugin)) }
 
     pub fn metadata(&self) -> Result<PluginMetadata> {
         self.0.lock().call::<(), PluginMetadata>("metadata", ())
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Default)]
 pub struct Plugins {
-    plugins: Arc<RwLock<HashMap<String, Plugin>>>,
+    plugins: HashMap<String, Plugin>,
+    metadata: Vec<PluginMetadata>,
 }
 
 impl Plugins {
     pub fn load<P: AsRef<Path>>(plugins_dir: P) -> Result<Self> {
-        let plugins = Self::default();
+        let mut plugins = Self::default();
         let path = plugins_dir.as_ref().canonicalize()?;
         for entry in
             fs::read_dir(&path).map_err(|e| PluginError::InvalidPluginsDir(path, Some(e)))?
@@ -46,10 +47,17 @@ impl Plugins {
         Ok(plugins)
     }
 
-    fn register(&self, plugin: Plugin) -> Result<()> {
+    fn register(&mut self, plugin: Plugin) -> Result<()> {
         let metadata = plugin.metadata()?;
+        let identifier = metadata.identifier.clone();
+        ensure!(
+            !self.plugins.contains_key(&identifier),
+            PluginError::DuplicatePlugin(identifier)
+        );
+
         debug!("Registering a plugin: {metadata:?}");
-        self.plugins.write().insert(metadata.identifier, plugin);
+        self.plugins.insert(identifier, plugin);
+        self.metadata.push(metadata);
         Ok(())
     }
 }
@@ -68,4 +76,7 @@ fn check_if_plugin_file(entry: &DirEntry) -> bool {
 pub enum PluginError {
     #[error("Invalid plugins dir path {0}: {1:?}")]
     InvalidPluginsDir(PathBuf, Option<std::io::Error>),
+
+    #[error("Duplicate plugin: {0}")]
+    DuplicatePlugin(String),
 }
