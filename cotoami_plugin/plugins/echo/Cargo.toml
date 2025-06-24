@@ -10,4 +10,5 @@ version.workspace = true
 crate-type = ["cdylib"]
 
 [dependencies]
-extism-pdk = "1.4.1"
+cotoami_plugin_api.workspace = true
+extism-pdk.workspace = true

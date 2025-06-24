@@ -1100,9 +1100,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "cotoami_plugin_api"
+version = "0.7.4"
+dependencies = [
+ "extism-pdk",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "cotoami_plugin_echo"
 version = "0.7.4"
 dependencies = [
+ "cotoami_plugin_api",
  "extism-pdk",
 ]
 

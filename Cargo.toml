@@ -3,7 +3,8 @@ members = [
   "cotoami_desktop/tauri",
   "cotoami_db",
   "cotoami_node",
-  "cotoami_plugins/echo",
+  "cotoami_plugin/api",
+  "cotoami_plugin/plugins/echo",
 ]
 resolver = "2"
 
@@ -22,8 +23,10 @@ chrono = {version = "0.4.31", features = ["serde"]}
 clap = {version = "4.4.16", features = ["derive"]}
 cotoami_db = {path = "cotoami_db"}
 cotoami_node = {path = "cotoami_node"}
+cotoami_plugin_api = {path = "cotoami_plugin/api"}
 derive-new = "0.6.0"
 derive_more = {version = "1.0.0", features = ["debug", "display"]}
+extism-pdk = "1.4.1"
 futures = "0.3.30"
 futures-util = "0.3.30"
 googletest = "0.12.0"
