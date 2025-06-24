@@ -77,12 +77,12 @@ pub struct NodeConfig {
 }
 
 impl NodeConfig {
-    const ENV_PREFXI: &'static str = "COTOAMI_";
+    const ENV_PREFIX: &'static str = "COTOAMI_";
     const DEFAULT_DB_DIR_NAME: &'static str = "cotoami";
 
     pub fn load_from_env() -> Result<Self, envy::Error> {
         dotenv().ok();
-        envy::prefixed(Self::ENV_PREFXI).from_env::<Self>()
+        envy::prefixed(Self::ENV_PREFIX).from_env::<Self>()
     }
 
     pub fn new_standalone(db_dir: Option<String>, node_name: Option<String>) -> Self {
@@ -157,11 +157,11 @@ pub struct ServerConfig {
 }
 
 impl ServerConfig {
-    const ENV_PREFXI: &'static str = "COTOAMI_SERVER_";
+    const ENV_PREFIX: &'static str = "COTOAMI_SERVER_";
 
     pub fn load_from_env() -> Result<Self, envy::Error> {
         dotenv().ok();
-        envy::prefixed(Self::ENV_PREFXI).from_env::<Self>()
+        envy::prefixed(Self::ENV_PREFIX).from_env::<Self>()
     }
 
     // Functions returning a default value as a workaround for the issue:

@@ -32,6 +32,7 @@ mime = "0.3.17"
 parking_lot.workspace = true 
 percent-encoding = "2.3.1" 
 # reqwest without openssl - https://github.com/seanmonstar/reqwest/issues/495
+cotoami_plugin_api.workspace = true
 extism = "1.11.1"
 reqwest = {version = "0.12", default-features = false, features = ["json", "rustls-tls", "charset", "http2", "macos-system-configuration"]}
 reqwest-eventsource = "0.6.0"

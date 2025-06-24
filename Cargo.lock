@@ -1169,6 +1169,7 @@ dependencies = [
  "chrono",
  "const_format",
  "cotoami_db",
+ "cotoami_plugin_api",
  "derive-new",
  "derive_more 1.0.0",
  "dirs 5.0.1",
