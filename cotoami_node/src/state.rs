@@ -29,6 +29,7 @@ use crate::{
 mod client_conn;
 mod error;
 mod internal;
+mod plugins;
 mod pubsub;
 mod server_conn;
 mod service;
