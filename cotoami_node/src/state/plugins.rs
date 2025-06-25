@@ -7,17 +7,14 @@ use std::{
 use anyhow::{ensure, Result};
 use cotoami_plugin_api::*;
 use extism::*;
-use parking_lot::Mutex;
 use thiserror::Error;
-use tracing::debug;
+use tracing::{debug, info};
 
-pub struct Plugin(Mutex<extism::Plugin>);
+pub struct Plugin(extism::Plugin);
 
 impl Plugin {
-    pub fn new(plugin: extism::Plugin) -> Self { Self(Mutex::new(plugin)) }
-
-    pub fn metadata(&self) -> Result<PluginMetadata> {
-        self.0.lock().call::<(), PluginMetadata>("metadata", ())
+    pub fn metadata(&mut self) -> Result<PluginMetadata> {
+        self.0.call::<(), PluginMetadata>("metadata", ())
     }
 }
 
@@ -30,6 +27,7 @@ pub struct Plugins {
 impl Plugins {
     pub fn load_from_dir<P: AsRef<Path>>(&mut self, plugins_dir: P) -> Result<()> {
         let path = plugins_dir.as_ref().canonicalize()?;
+        info!("Loading plugins from: {path:?}");
         for entry in
             fs::read_dir(&path).map_err(|e| PluginError::InvalidPluginsDir(path, Some(e)))?
         {
@@ -38,14 +36,14 @@ impl Plugins {
                 let path = entry.path();
                 debug!("Loading a plugin: {path:?}");
                 let manifest = Manifest::new([Wasm::file(path)]);
-                let plugin = Plugin::new(extism::Plugin::new(&manifest, [], true)?);
+                let plugin = Plugin(extism::Plugin::new(&manifest, [], true)?);
                 self.register(plugin)?;
             }
         }
         Ok(())
     }
 
-    fn register(&mut self, plugin: Plugin) -> Result<()> {
+    fn register(&mut self, mut plugin: Plugin) -> Result<()> {
         let metadata = plugin.metadata()?;
         let identifier = metadata.identifier.clone();
         ensure!(
@@ -53,9 +51,9 @@ impl Plugins {
             PluginError::DuplicatePlugin(identifier)
         );
 
-        debug!("Registering a plugin: {metadata:?}");
-        self.plugins.insert(identifier, plugin);
+        self.plugins.insert(identifier.clone(), plugin);
         self.metadata.push(metadata);
+        info!("Registered a plugin: {identifier}");
         Ok(())
     }
 }

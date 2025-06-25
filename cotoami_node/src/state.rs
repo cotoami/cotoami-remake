@@ -1,7 +1,7 @@
 //! This module defines the global state ([NodeState]) and functions dealing with it.
 
 use core::future::Future;
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, path::Path, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use cotoami_db::prelude::*;
@@ -53,7 +53,7 @@ struct State {
     parent_services: ParentServices,
     abortables: Abortables,
     local_server_config: RwLock<Option<Arc<ServerConfig>>>,
-    plugins: Plugins,
+    plugins: RwLock<Plugins>,
 }
 
 impl NodeState {
@@ -79,7 +79,7 @@ impl NodeState {
             parent_services: ParentServices::default(),
             abortables: Abortables::default(),
             local_server_config: RwLock::new(None),
-            plugins: Plugins::default(),
+            plugins: RwLock::new(Plugins::default()),
         };
         let state = Self {
             inner: Arc::new(inner),
@@ -217,6 +217,11 @@ impl NodeState {
 
     pub fn local_server_config(&self) -> Option<Arc<ServerConfig>> {
         self.inner.local_server_config.read().clone()
+    }
+
+    pub fn load_plugins_from_dir<P: AsRef<Path>>(&self, plugins_dir: P) -> Result<()> {
+        self.inner.plugins.write().load_from_dir(plugins_dir)?;
+        Ok(())
     }
 }
 

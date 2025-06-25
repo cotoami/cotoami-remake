@@ -118,10 +118,9 @@ impl NodeState {
     }
 
     fn load_plugins(&self) -> Result<()> {
-        // Create a plugins directory if it doesn't exist yet
         let plugins_dir = self.config_arc().read().plugins_dir();
-        crate::create_dir_if_not_exist(plugins_dir)?;
-
-        unimplemented!()
+        crate::create_dir_if_not_exist(&plugins_dir)?;
+        self.load_plugins_from_dir(plugins_dir)?;
+        Ok(())
     }
 }
