@@ -13,6 +13,16 @@ use tracing::{debug, info};
 pub struct Plugin(extism::Plugin);
 
 impl Plugin {
+    const FILE_NAME_SUFFIX: &'static str = ".wasm";
+
+    fn is_plugin_file(entry: &DirEntry) -> bool {
+        entry
+            .file_name()
+            .to_str()
+            .map(|name| name.ends_with(Plugin::FILE_NAME_SUFFIX))
+            .unwrap_or(false)
+    }
+
     pub fn metadata(&mut self) -> Result<PluginMetadata> {
         self.0.call::<(), PluginMetadata>("metadata", ())
     }
@@ -32,7 +42,7 @@ impl Plugins {
             fs::read_dir(&path).map_err(|e| PluginError::InvalidPluginsDir(path, Some(e)))?
         {
             let entry = entry?;
-            if check_if_plugin_file(&entry) {
+            if Plugin::is_plugin_file(&entry) {
                 let path = entry.path();
                 debug!("Loading a plugin: {path:?}");
                 let manifest = Manifest::new([Wasm::file(path)]);
@@ -56,16 +66,6 @@ impl Plugins {
         info!("Registered a plugin: {identifier}");
         Ok(())
     }
-}
-
-const PLUGIN_FILE_NAME_SUFFIX: &'static str = ".wasm";
-
-fn check_if_plugin_file(entry: &DirEntry) -> bool {
-    entry
-        .file_name()
-        .to_str()
-        .map(|name| name.ends_with(PLUGIN_FILE_NAME_SUFFIX))
-        .unwrap_or(false)
 }
 
 #[derive(Error, Debug)]
