@@ -74,11 +74,15 @@ pub struct NodeConfig {
     /// cf. https://docs.rs/tungstenite/latest/tungstenite/protocol/struct.WebSocketConfig.html#structfield.max_message_size
     #[serde(default = "NodeConfig::default_max_message_size_as_server")]
     pub max_message_size_as_server: Option<usize>,
+
+    /// `COTOAMI_PLUGINS_DIR`
+    pub plugins_dir: Option<String>,
 }
 
 impl NodeConfig {
     const ENV_PREFIX: &'static str = "COTOAMI_";
     const DEFAULT_DB_DIR_NAME: &'static str = "cotoami";
+    const DEFAULT_PLUGINS_DIR_NAME: &'static str = "plugins";
 
     pub fn load_from_env() -> Result<Self, envy::Error> {
         dotenv().ok();
@@ -96,6 +100,7 @@ impl NodeConfig {
             changes_chunk_size: Self::default_changes_chunk_size(),
             max_message_size_as_client: Self::default_max_message_size_as_client(),
             max_message_size_as_server: Self::default_max_message_size_as_server(),
+            plugins_dir: None,
         }
     }
 
@@ -119,6 +124,17 @@ impl NodeConfig {
                 })
                 .unwrap_or(PathBuf::from(Self::DEFAULT_DB_DIR_NAME))
         })
+    }
+
+    pub fn plugins_dir(&self) -> PathBuf {
+        self.plugins_dir
+            .as_ref()
+            .map(PathBuf::from)
+            .unwrap_or_else(|| {
+                let mut path = self.db_dir();
+                path.push(Self::DEFAULT_PLUGINS_DIR_NAME);
+                path
+            })
     }
 
     pub fn try_get_owner_password(&self) -> Result<&str> {
