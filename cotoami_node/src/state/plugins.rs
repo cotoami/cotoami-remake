@@ -2,7 +2,6 @@ use std::{
     collections::HashMap,
     fs::{self, DirEntry},
     path::{Path, PathBuf},
-    sync::Arc,
 };
 
 use anyhow::{ensure, Result};
@@ -29,8 +28,7 @@ pub struct Plugins {
 }
 
 impl Plugins {
-    pub fn load<P: AsRef<Path>>(plugins_dir: P) -> Result<Self> {
-        let mut plugins = Self::default();
+    pub fn load_from_dir<P: AsRef<Path>>(&mut self, plugins_dir: P) -> Result<()> {
         let path = plugins_dir.as_ref().canonicalize()?;
         for entry in
             fs::read_dir(&path).map_err(|e| PluginError::InvalidPluginsDir(path, Some(e)))?
@@ -41,10 +39,10 @@ impl Plugins {
                 debug!("Loading a plugin: {path:?}");
                 let manifest = Manifest::new([Wasm::file(path)]);
                 let plugin = Plugin::new(extism::Plugin::new(&manifest, [], true)?);
-                plugins.register(plugin)?;
+                self.register(plugin)?;
             }
         }
-        Ok(plugins)
+        Ok(())
     }
 
     fn register(&mut self, plugin: Plugin) -> Result<()> {

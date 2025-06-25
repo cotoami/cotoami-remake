@@ -34,7 +34,7 @@ mod pubsub;
 mod server_conn;
 mod service;
 
-pub use self::{client_conn::*, error::*, pubsub::*, server_conn::*};
+pub use self::{client_conn::*, error::*, plugins::*, pubsub::*, server_conn::*};
 
 #[derive(Clone)]
 pub struct NodeState {
@@ -53,6 +53,7 @@ struct State {
     parent_services: ParentServices,
     abortables: Abortables,
     local_server_config: RwLock<Option<Arc<ServerConfig>>>,
+    plugins: Plugins,
 }
 
 impl NodeState {
@@ -85,6 +86,7 @@ impl NodeState {
             parent_services: ParentServices::default(),
             abortables: Abortables::default(),
             local_server_config: RwLock::new(None),
+            plugins: Plugins::default(),
         };
         let state = Self {
             inner: Arc::new(inner),
