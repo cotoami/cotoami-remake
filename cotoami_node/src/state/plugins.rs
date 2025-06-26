@@ -24,6 +24,10 @@ impl Plugin {
     }
 
     pub fn metadata(&mut self) -> Result<Metadata> { self.0.call::<(), Metadata>("metadata", ()) }
+
+    pub fn init(&mut self, config: Config) -> Result<()> {
+        self.0.call::<Config, ()>("init", config)
+    }
 }
 
 #[derive(Default)]
