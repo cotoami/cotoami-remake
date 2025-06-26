@@ -2,15 +2,12 @@ use std::{
     collections::{BTreeMap, HashMap},
     fs::{self, DirEntry},
     path::{Path, PathBuf},
-    str::FromStr,
 };
 
 use anyhow::{ensure, Result};
-use cotoami_db::prelude::*;
 use cotoami_plugin_api::*;
 use extism::*;
 use thiserror::Error;
-use toml::{Table, Value};
 use tracing::{debug, info};
 
 pub struct Plugin(extism::Plugin);
@@ -26,38 +23,14 @@ impl Plugin {
             .unwrap_or(false)
     }
 
-    pub fn metadata(&mut self) -> Result<PluginMetadata> {
-        self.0.call::<(), PluginMetadata>("metadata", ())
-    }
-}
-
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-#[serde(transparent)]
-pub struct PluginConfig(Table);
-
-impl PluginConfig {
-    pub fn disabled(&self) -> bool {
-        if let Some(Value::Boolean(disabled)) = self.0.get("disabled") {
-            *disabled
-        } else {
-            false
-        }
-    }
-
-    pub fn agent_node_id(&self) -> Option<Id<Node>> {
-        if let Some(Value::String(id)) = self.0.get("agent_node_id") {
-            Id::from_str(id).ok()
-        } else {
-            None
-        }
-    }
+    pub fn metadata(&mut self) -> Result<Metadata> { self.0.call::<(), Metadata>("metadata", ()) }
 }
 
 #[derive(Default)]
 pub struct Plugins {
-    metadata: Vec<PluginMetadata>,
+    metadata: Vec<Metadata>,
     plugins: HashMap<String, Plugin>,
-    configs: BTreeMap<String, PluginConfig>,
+    configs: BTreeMap<String, Config>,
 }
 
 impl Plugins {
