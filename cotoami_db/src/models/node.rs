@@ -136,6 +136,16 @@ impl<'a> NewNode<'a> {
             created_at: crate::current_datetime(),
         }
     }
+
+    pub fn new_agent(name: &'a str, icon: Vec<u8>) -> Self {
+        Self {
+            uuid: Id::generate(),
+            icon,
+            name,
+            version: 0,
+            created_at: crate::current_datetime(),
+        }
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
