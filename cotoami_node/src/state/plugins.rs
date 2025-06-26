@@ -8,7 +8,7 @@ use anyhow::{ensure, Result};
 use cotoami_plugin_api::*;
 use extism::*;
 use thiserror::Error;
-use tracing::{debug, info};
+use tracing::{debug, error, info};
 
 pub struct Plugin(extism::Plugin);
 
@@ -53,9 +53,11 @@ impl Plugins {
             if Plugin::is_plugin_file(&entry) {
                 let path = entry.path();
                 debug!("Loading a plugin: {path:?}");
-                let manifest = Manifest::new([Wasm::file(path)]);
+                let manifest = Manifest::new([Wasm::file(&path)]);
                 let plugin = Plugin(extism::Plugin::new(&manifest, [], true)?);
-                self.register(plugin)?;
+                if let Err(e) = self.register(plugin) {
+                    error!("Couldn't register a plugin {path:?}: {e}");
+                }
             }
         }
         Ok(())
@@ -81,10 +83,19 @@ impl Plugins {
             PluginError::DuplicatePlugin(identifier)
         );
 
+        plugin.init(self.config(&identifier))?;
+
         self.plugins.insert(identifier.clone(), plugin);
         self.metadata.push(metadata);
         info!("Registered a plugin: {identifier}");
         Ok(())
+    }
+
+    fn config(&self, identifier: &str) -> Config {
+        self.configs
+            .get(identifier)
+            .cloned()
+            .unwrap_or(Config::default())
     }
 }
 
