@@ -9,6 +9,30 @@ pub struct Metadata {
     pub identifier: String,
     pub name: String,
     pub version: String,
+    pub agent_name: Option<String>,
+    pub agent_icon: Option<Vec<u8>>,
+}
+
+impl Metadata {
+    pub fn new(
+        identifier: impl Into<String>,
+        name: impl Into<String>,
+        version: impl Into<String>,
+    ) -> Self {
+        Self {
+            identifier: identifier.into(),
+            name: name.into(),
+            version: version.into(),
+            agent_name: None,
+            agent_icon: None,
+        }
+    }
+
+    pub fn as_agent(mut self, name: impl Into<String>, icon: Vec<u8>) -> Self {
+        self.agent_name = Some(name.into());
+        self.agent_icon = Some(icon);
+        self
+    }
 }
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]

@@ -3,11 +3,8 @@ use extism_pdk::*;
 
 #[plugin_fn]
 pub fn metadata() -> FnResult<Metadata> {
-    Ok(Metadata {
-        identifier: "app.cotoami.plugin.echo".into(),
-        name: "Echo".into(),
-        version: "0.1.0".into(),
-    })
+    Ok(Metadata::new("app.cotoami.plugin.echo", "Echo", "0.1.0")
+        .as_agent("Echo", Vec::from(include_bytes!("icon.png"))))
 }
 
 #[plugin_fn]
