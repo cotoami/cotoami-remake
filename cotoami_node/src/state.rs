@@ -1,7 +1,7 @@
 //! This module defines the global state ([NodeState]) and functions dealing with it.
 
 use core::future::Future;
-use std::{collections::HashMap, path::Path, sync::Arc};
+use std::{collections::HashMap, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use cotoami_db::prelude::*;
@@ -67,6 +67,10 @@ impl NodeState {
         crate::create_dir_if_not_exist(&db_dir)?;
         let db = Database::new(db_dir)?;
 
+        // Plugins directory
+        let plugins_dir = config.plugins_dir();
+        crate::create_dir_if_not_exist(&plugins_dir)?;
+
         let inner = State {
             version: env!("CARGO_PKG_VERSION").into(),
             client_version_requirement: VersionReq::parse(Self::CLIENT_VERSION_REQUIREMENT)?,
@@ -79,7 +83,7 @@ impl NodeState {
             parent_services: ParentServices::default(),
             abortables: Abortables::default(),
             local_server_config: RwLock::new(None),
-            plugins: RwLock::new(Plugins::default()),
+            plugins: RwLock::new(Plugins::new(plugins_dir)?),
         };
         let state = Self {
             inner: Arc::new(inner),
@@ -219,8 +223,8 @@ impl NodeState {
         self.inner.local_server_config.read().clone()
     }
 
-    pub fn load_plugins_from_dir<P: AsRef<Path>>(&self, plugins_dir: P) -> Result<()> {
-        self.inner.plugins.write().load_from_dir(plugins_dir)?;
+    pub(crate) fn init_plugins(&self) -> Result<()> {
+        self.inner.plugins.write().init()?;
         Ok(())
     }
 }

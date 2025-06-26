@@ -16,7 +16,7 @@ impl NodeState {
         self.register_owner_remote_node().await?;
         self.start_handling_local_events();
         self.restore_server_conns().await?;
-        self.load_plugins()?;
+        self.init_plugins()?;
         Ok(())
     }
 
@@ -114,13 +114,6 @@ impl NodeState {
             self.server_conns()
                 .put(server.node_id, ServerConnection::new(server, self.clone()));
         }
-        Ok(())
-    }
-
-    fn load_plugins(&self) -> Result<()> {
-        let plugins_dir = self.config_arc().read().plugins_dir();
-        crate::create_dir_if_not_exist(&plugins_dir)?;
-        self.load_plugins_from_dir(plugins_dir)?;
         Ok(())
     }
 }

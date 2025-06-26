@@ -30,8 +30,9 @@ impl Plugin {
     }
 }
 
-#[derive(Default)]
 pub struct Plugins {
+    plugins_dir: PathBuf,
+    configs_path: PathBuf,
     metadata: Vec<Metadata>,
     plugins: HashMap<String, Plugin>,
     configs: BTreeMap<String, Config>,
@@ -40,15 +41,26 @@ pub struct Plugins {
 impl Plugins {
     const CONFIGS_FILE_NAME: &'static str = "configs.toml";
 
-    pub fn load_from_dir<P: AsRef<Path>>(&mut self, plugins_dir: P) -> Result<()> {
-        let path = plugins_dir.as_ref().canonicalize()?;
-        info!("Loading plugins from: {path:?}");
+    pub fn new<P: AsRef<Path>>(plugins_dir: P) -> Result<Self> {
+        let plugins_dir = plugins_dir.as_ref().canonicalize()?;
+        ensure!(
+            plugins_dir.is_dir(),
+            PluginError::InvalidPluginsDir(plugins_dir, None)
+        );
+        let configs_path = plugins_dir.join(Self::CONFIGS_FILE_NAME);
+        Ok(Self {
+            plugins_dir,
+            configs_path,
+            metadata: Vec::default(),
+            plugins: HashMap::default(),
+            configs: BTreeMap::default(),
+        })
+    }
 
-        self.load_configs(plugins_dir)?;
-
-        for entry in
-            fs::read_dir(&path).map_err(|e| PluginError::InvalidPluginsDir(path, Some(e)))?
-        {
+    pub fn init(&mut self) -> Result<()> {
+        info!("Loading plugins from: {:?}", self.plugins_dir);
+        self.load_configs()?;
+        for entry in fs::read_dir(&self.plugins_dir)? {
             let entry = entry?;
             if Plugin::is_plugin_file(&entry) {
                 let path = entry.path();
@@ -63,8 +75,8 @@ impl Plugins {
         Ok(())
     }
 
-    fn load_configs<P: AsRef<Path>>(&mut self, plugins_dir: P) -> Result<()> {
-        let path = plugins_dir.as_ref().join(Self::CONFIGS_FILE_NAME);
+    fn load_configs(&mut self) -> Result<()> {
+        let path = &self.configs_path;
         if path.is_file() {
             info!("Plugins configs: {path:?}");
             let file_content = fs::read_to_string(path)?;
@@ -72,6 +84,13 @@ impl Plugins {
         } else {
             debug!("No plugin configs: {path:?}");
         }
+        Ok(())
+    }
+
+    pub fn save_configs(&self) -> Result<()> {
+        let path = &self.configs_path;
+        let file_content = toml::to_string(&self.configs)?;
+        fs::write(path, file_content)?;
         Ok(())
     }
 
