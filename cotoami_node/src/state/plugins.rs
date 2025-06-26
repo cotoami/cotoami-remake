@@ -66,6 +66,9 @@ impl Plugins {
     pub fn load_from_dir<P: AsRef<Path>>(&mut self, plugins_dir: P) -> Result<()> {
         let path = plugins_dir.as_ref().canonicalize()?;
         info!("Loading plugins from: {path:?}");
+
+        self.load_configs(plugins_dir)?;
+
         for entry in
             fs::read_dir(&path).map_err(|e| PluginError::InvalidPluginsDir(path, Some(e)))?
         {
@@ -77,6 +80,18 @@ impl Plugins {
                 let plugin = Plugin(extism::Plugin::new(&manifest, [], true)?);
                 self.register(plugin)?;
             }
+        }
+        Ok(())
+    }
+
+    fn load_configs<P: AsRef<Path>>(&mut self, plugins_dir: P) -> Result<()> {
+        let path = plugins_dir.as_ref().join(Self::CONFIGS_FILE_NAME);
+        if path.is_file() {
+            info!("Plugins configs: {path:?}");
+            let file_content = fs::read_to_string(path)?;
+            self.configs = toml::from_str(&file_content)?;
+        } else {
+            debug!("No plugin configs: {path:?}");
         }
         Ok(())
     }
