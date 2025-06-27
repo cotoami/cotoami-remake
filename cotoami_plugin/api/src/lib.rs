@@ -80,3 +80,10 @@ impl Config {
             .insert(Self::KEY_AGENT_NODE_ID.into(), json!(id.into()));
     }
 }
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
+#[serde(tag = "type")]
+#[encoding(Json)]
+pub enum Event {
+    CotoPosted { coto: Coto, local_node_id: String },
+}

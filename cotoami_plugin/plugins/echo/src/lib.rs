@@ -14,3 +14,9 @@ pub fn init(config: Config) -> FnResult<()> {
     info!("init: {config:?}");
     Ok(())
 }
+
+#[plugin_fn]
+pub fn on(event: Event) -> FnResult<()> {
+    info!("on: {event:?}");
+    Ok(())
+}
