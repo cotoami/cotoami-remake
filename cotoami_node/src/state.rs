@@ -53,7 +53,7 @@ struct State {
     parent_services: ParentServices,
     abortables: Abortables,
     local_server_config: RwLock<Option<Arc<ServerConfig>>>,
-    plugins: RwLock<Plugins>,
+    plugins: RwLock<PluginSystem>,
 }
 
 impl NodeState {
@@ -83,7 +83,7 @@ impl NodeState {
             parent_services: ParentServices::default(),
             abortables: Abortables::default(),
             local_server_config: RwLock::new(None),
-            plugins: RwLock::new(Plugins::new(plugins_dir)?),
+            plugins: RwLock::new(PluginSystem::new(plugins_dir)?),
         };
         let state = Self {
             inner: Arc::new(inner),

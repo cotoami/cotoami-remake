@@ -48,7 +48,7 @@ impl Plugin {
     pub fn destroy(&mut self) -> Result<()> { self.plugin.call::<(), ()>("destroy", ()) }
 }
 
-pub struct Plugins {
+pub struct PluginSystem {
     plugins_dir: PathBuf,
     configs_path: PathBuf,
     node_state: Option<NodeState>,
@@ -57,7 +57,7 @@ pub struct Plugins {
     event_loop: Option<AbortHandle>,
 }
 
-impl Plugins {
+impl PluginSystem {
     const CONFIGS_FILE_NAME: &'static str = "configs.toml";
 
     pub fn new<P: AsRef<Path>>(plugins_dir: P) -> Result<Self> {
