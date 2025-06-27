@@ -16,7 +16,7 @@ impl NodeState {
         self.register_owner_remote_node().await?;
         self.start_handling_local_events();
         self.restore_server_conns().await?;
-        self.init_plugins()?;
+        self.init_plugins().await?;
         Ok(())
     }
 

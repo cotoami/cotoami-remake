@@ -105,7 +105,7 @@ impl Node {
 #[diesel(table_name = nodes)]
 pub(crate) struct NewNode<'a> {
     uuid: Id<Node>,
-    icon: Vec<u8>,
+    icon: Cow<'a, [u8]>,
     #[validate(length(max = "Node::NAME_MAX_LENGTH"))]
     name: &'a str,
     version: i32,
@@ -118,7 +118,7 @@ impl<'a> NewNode<'a> {
         let icon_binary = generate_identicon(&uuid.to_string())?;
         let new_node = Self {
             uuid,
-            icon: icon_binary,
+            icon: Cow::from(icon_binary),
             name,
             version: 1,
             created_at: crate::current_datetime(),
@@ -130,17 +130,17 @@ impl<'a> NewNode<'a> {
     pub fn new_placeholder(uuid: Id<Node>) -> Self {
         Self {
             uuid,
-            icon: Vec::default(),
+            icon: Cow::from(Vec::default()),
             name: "",
             version: 0,
             created_at: crate::current_datetime(),
         }
     }
 
-    pub fn new_agent(name: &'a str, icon: Vec<u8>) -> Self {
+    pub fn new_agent(name: &'a str, icon: &'a [u8]) -> Self {
         Self {
             uuid: Id::generate(),
-            icon,
+            icon: Cow::from(icon),
             name,
             version: 0,
             created_at: crate::current_datetime(),

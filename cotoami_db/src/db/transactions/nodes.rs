@@ -58,13 +58,7 @@ impl DatabaseSession<'_> {
         })
     }
 
-    pub fn create_agent_node(
-        &self,
-        name: &str,
-        icon: Vec<u8>,
-        operator: &Operator,
-    ) -> Result<(Node, ChangelogEntry)> {
-        operator.requires_to_be_owner()?;
+    pub fn create_agent_node(&self, name: &str, icon: &[u8]) -> Result<(Node, ChangelogEntry)> {
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let new_agent = NewNode::new_agent(name, icon);

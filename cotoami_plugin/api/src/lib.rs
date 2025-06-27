@@ -28,10 +28,17 @@ impl Metadata {
         }
     }
 
-    pub fn as_agent(mut self, name: impl Into<String>, icon: Vec<u8>) -> Self {
+    pub fn mark_as_agent(mut self, name: impl Into<String>, icon: Vec<u8>) -> Self {
         self.agent_name = Some(name.into());
         self.agent_icon = Some(icon);
         self
+    }
+
+    pub fn as_agent(&self) -> Option<(&str, &[u8])> {
+        match (&self.agent_name, &self.agent_icon) {
+            (Some(name), Some(icon)) => Some((name, icon)),
+            _ => None,
+        }
     }
 }
 

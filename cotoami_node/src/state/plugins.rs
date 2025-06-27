@@ -2,9 +2,11 @@ use std::{
     collections::{BTreeMap, HashMap},
     fs::{self, DirEntry},
     path::{Path, PathBuf},
+    str::FromStr,
 };
 
 use anyhow::{ensure, Result};
+use cotoami_db::prelude::Id;
 use cotoami_plugin_api::*;
 use extism::*;
 use thiserror::Error;
@@ -61,7 +63,7 @@ impl Plugins {
         })
     }
 
-    pub fn init(&mut self, node_state: NodeState) -> Result<()> {
+    pub async fn init(&mut self, node_state: NodeState) -> Result<()> {
         self.node_state = Some(node_state);
         info!("Loading plugins from: {:?}", self.plugins_dir);
         self.load_configs()?;
@@ -72,7 +74,7 @@ impl Plugins {
                 debug!("Loading a plugin: {path:?}");
                 let manifest = Manifest::new([Wasm::file(&path)]);
                 let plugin = Plugin(extism::Plugin::new(&manifest, [], true)?);
-                if let Err(e) = self.register(plugin) {
+                if let Err(e) = self.register(plugin).await {
                     error!("Couldn't register a plugin {path:?}: {e}");
                 }
             }
@@ -99,15 +101,23 @@ impl Plugins {
         Ok(())
     }
 
-    fn register(&mut self, mut plugin: Plugin) -> Result<()> {
+    async fn register(&mut self, mut plugin: Plugin) -> Result<()> {
         let metadata = plugin.metadata()?;
         let identifier = metadata.identifier.clone();
+
         ensure!(
             !self.plugins.contains_key(&identifier),
             PluginError::DuplicatePlugin(identifier)
         );
 
-        plugin.init(self.config(&identifier))?;
+        self.register_agent(&metadata).await?;
+
+        let config = self
+            .configs
+            .get(&identifier)
+            .cloned()
+            .unwrap_or(Config::default());
+        plugin.init(config)?;
 
         self.plugins.insert(identifier.clone(), plugin);
         self.metadata.push(metadata);
@@ -115,11 +125,48 @@ impl Plugins {
         Ok(())
     }
 
-    fn config(&self, identifier: &str) -> Config {
+    fn config_mut(&mut self, metadata: &Metadata) -> &mut Config {
         self.configs
-            .get(identifier)
-            .cloned()
-            .unwrap_or(Config::default())
+            .entry(metadata.identifier.clone())
+            .or_insert(Config::default())
+    }
+
+    async fn register_agent(&mut self, metadata: &Metadata) -> Result<()> {
+        if let Some(node_state) = &self.node_state {
+            // Already registered?
+            if let Some(agent_node_id) = self
+                .configs
+                .get(&metadata.identifier)
+                .and_then(|c| c.agent_node_id())
+            {
+                if node_state
+                    .node(Id::from_str(agent_node_id)?)
+                    .await?
+                    .is_some()
+                {
+                    info!(
+                        "{}: agent node found: {}",
+                        metadata.identifier, agent_node_id
+                    );
+                    return Ok(());
+                }
+            }
+
+            // Register an agent node.
+            if let Some((name, icon)) = metadata.as_agent() {
+                let node = node_state
+                    .clone()
+                    .create_agent_node(name.into(), Vec::from(icon))
+                    .await?;
+                self.config_mut(&metadata).set_agent_node_id(node.uuid);
+                self.save_configs()?;
+                info!(
+                    "{}: agent node registered: {}",
+                    metadata.identifier, node.uuid
+                );
+            }
+        }
+        Ok(())
     }
 }
 

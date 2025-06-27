@@ -223,8 +223,8 @@ impl NodeState {
         self.inner.local_server_config.read().clone()
     }
 
-    pub(crate) fn init_plugins(&self) -> Result<()> {
-        self.inner.plugins.write().init(self.clone())?;
+    pub(crate) async fn init_plugins(&self) -> Result<()> {
+        self.inner.plugins.write().init(self.clone()).await?;
         Ok(())
     }
 }

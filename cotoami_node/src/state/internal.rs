@@ -10,6 +10,7 @@ use crate::state::NodeState;
 mod changes;
 mod events;
 mod init;
+mod nodes;
 mod parents;
 
 impl NodeState {
