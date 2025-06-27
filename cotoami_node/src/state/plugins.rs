@@ -43,8 +43,12 @@ impl Plugin {
 
     pub fn identifier(&self) -> &str { &self.metadata.identifier }
 
-    pub fn init(&mut self, config: Config) -> Result<()> {
-        self.plugin.call::<Config, ()>("init", config)
+    pub fn init(&mut self, config: &Config) -> Result<()> {
+        self.plugin.call::<&Config, ()>("init", config)
+    }
+
+    pub fn on(&mut self, event: &Event) -> Result<()> {
+        self.plugin.call::<&Event, ()>("on", event)
     }
 
     pub fn destroy(&mut self) -> Result<()> { self.plugin.call::<(), ()>("destroy", ()) }
@@ -119,7 +123,7 @@ impl Plugins {
             info!("{identifier}: disabled.");
         } else {
             // init a plugin only if not disabled
-            plugin.init(config)?;
+            plugin.init(&config)?;
         }
 
         self.plugins.insert(identifier.clone(), plugin);
@@ -245,10 +249,15 @@ impl PluginSystem {
         let event_loop = tokio::spawn({
             let local_node_id = state.try_get_local_node_id()?;
             let mut changes = state.pubsub().changes().subscribe(None::<()>);
+            let plugins = self.plugins.clone();
             async move {
                 while let Some(log) = changes.next().await {
-                    if let event = convert::into_plugin_event(log.change, local_node_id) {
-                        //
+                    if let Some(event) = convert::into_plugin_event(log.change, local_node_id) {
+                        for plugin in plugins.lock().iter_enabled() {
+                            if let Err(e) = plugin.on(&event) {
+                                error!("{}: event handling error: {e}", plugin.identifier());
+                            }
+                        }
                     }
                 }
             }
