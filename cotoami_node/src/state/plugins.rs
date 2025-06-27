@@ -3,7 +3,6 @@ use std::{
     fs::{self, DirEntry},
     path::{Path, PathBuf},
     str::FromStr,
-    sync::Arc,
 };
 
 use anyhow::{ensure, Result};
@@ -11,7 +10,6 @@ use cotoami_db::prelude::Id;
 use cotoami_plugin_api::*;
 use extism::*;
 use futures::StreamExt;
-use parking_lot::Mutex;
 use thiserror::Error;
 use tokio::task::AbortHandle;
 use tracing::{debug, error, info};
@@ -20,13 +18,18 @@ use crate::state::NodeState;
 
 mod convert;
 
-#[derive(Clone)]
-pub struct Plugin(Arc<Mutex<extism::Plugin>>);
+pub struct Plugin {
+    plugin: extism::Plugin,
+    metadata: Metadata,
+}
 
 impl Plugin {
     const FILE_NAME_SUFFIX: &'static str = ".wasm";
 
-    fn new(plugin: extism::Plugin) -> Self { Self(Arc::new(Mutex::new(plugin))) }
+    fn new(mut plugin: extism::Plugin) -> Result<Self> {
+        let metadata = plugin.call::<(), Metadata>("metadata", ())?;
+        Ok(Self { plugin, metadata })
+    }
 
     fn is_plugin_file(entry: &DirEntry) -> bool {
         entry
@@ -36,22 +39,19 @@ impl Plugin {
             .unwrap_or(false)
     }
 
-    pub fn metadata(&self) -> Result<Metadata> {
-        self.0.lock().call::<(), Metadata>("metadata", ())
+    pub fn identifier(&self) -> &str { &self.metadata.identifier }
+
+    pub fn init(&mut self, config: Config) -> Result<()> {
+        self.plugin.call::<Config, ()>("init", config)
     }
 
-    pub fn init(&self, config: Config) -> Result<()> {
-        self.0.lock().call::<Config, ()>("init", config)
-    }
-
-    pub fn destroy(&self) -> Result<()> { self.0.lock().call::<(), ()>("destroy", ()) }
+    pub fn destroy(&mut self) -> Result<()> { self.plugin.call::<(), ()>("destroy", ()) }
 }
 
 pub struct Plugins {
     plugins_dir: PathBuf,
     configs_path: PathBuf,
     node_state: Option<NodeState>,
-    metadata: Vec<Metadata>,
     plugins: HashMap<String, Plugin>,
     configs: BTreeMap<String, Config>,
     event_loop: Option<AbortHandle>,
@@ -71,7 +71,6 @@ impl Plugins {
             plugins_dir,
             configs_path,
             node_state: None,
-            metadata: Vec::default(),
             plugins: HashMap::default(),
             configs: BTreeMap::default(),
             event_loop: None,
@@ -88,7 +87,7 @@ impl Plugins {
                 let path = entry.path();
                 debug!("Loading a plugin: {path:?}");
                 let manifest = Manifest::new([Wasm::file(&path)]);
-                let plugin = Plugin::new(extism::Plugin::new(&manifest, [], true)?);
+                let plugin = Plugin::new(extism::Plugin::new(&manifest, [], true)?)?;
                 if let Err(e) = self.register(plugin).await {
                     error!("Couldn't register a plugin {path:?}: {e}");
                 }
@@ -117,16 +116,14 @@ impl Plugins {
         Ok(())
     }
 
-    async fn register(&mut self, plugin: Plugin) -> Result<()> {
-        let metadata = plugin.metadata()?;
-        let identifier = metadata.identifier.clone();
-
+    async fn register(&mut self, mut plugin: Plugin) -> Result<()> {
+        let identifier = plugin.identifier().to_owned();
         ensure!(
             !self.plugins.contains_key(&identifier),
             PluginError::DuplicatePlugin(identifier)
         );
 
-        self.register_agent(&metadata).await?;
+        self.register_agent(&plugin.metadata).await?;
 
         let config = self
             .configs
@@ -141,7 +138,6 @@ impl Plugins {
         }
 
         self.plugins.insert(identifier.clone(), plugin);
-        self.metadata.push(metadata);
         info!("{identifier}: registered.");
         Ok(())
     }
@@ -190,20 +186,18 @@ impl Plugins {
         Ok(())
     }
 
-    fn iter_enabled(&self) -> impl Iterator<Item = (&Plugin, &Metadata)> {
-        self.metadata.iter().filter_map(move |metadata| {
-            self.plugins.get(&metadata.identifier).and_then(|plugin| {
-                if self
-                    .configs
-                    .get(&metadata.identifier)
-                    .map(|c| c.disabled())
-                    .unwrap_or(false)
-                {
-                    None
-                } else {
-                    Some((plugin, metadata))
-                }
-            })
+    fn iter_enabled(&mut self) -> impl Iterator<Item = &mut Plugin> {
+        self.plugins.values_mut().filter_map(|plugin| {
+            if self
+                .configs
+                .get(plugin.identifier())
+                .map(|c| c.disabled())
+                .unwrap_or(false)
+            {
+                None
+            } else {
+                Some(plugin)
+            }
         })
     }
 
@@ -228,10 +222,10 @@ impl Plugins {
         if let Some(event_loop) = self.event_loop.as_ref() {
             event_loop.abort();
         }
-        for (plugin, metadata) in self.iter_enabled() {
+        for plugin in self.iter_enabled() {
             match plugin.destroy() {
-                Ok(_) => info!("{}: destroyed.", metadata.identifier),
-                Err(e) => error!("{}: destroying error : {e}", metadata.identifier),
+                Ok(_) => info!("{}: destroyed.", plugin.identifier()),
+                Err(e) => error!("{}: destroying error : {e}", plugin.identifier()),
             }
         }
     }
