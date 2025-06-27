@@ -20,3 +20,8 @@ pub fn on(event: Event) -> FnResult<()> {
     info!("on: {event:?}");
     Ok(())
 }
+
+#[plugin_fn]
+pub fn destroy() -> FnResult<()> {
+    Ok(())
+}

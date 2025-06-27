@@ -12,6 +12,7 @@ use cotoami_plugin_api::*;
 use extism::*;
 use parking_lot::Mutex;
 use thiserror::Error;
+use tokio::task::AbortHandle;
 use tracing::{debug, error, info};
 
 use crate::state::NodeState;
@@ -32,13 +33,15 @@ impl Plugin {
             .unwrap_or(false)
     }
 
-    pub fn metadata(&mut self) -> Result<Metadata> {
+    pub fn metadata(&self) -> Result<Metadata> {
         self.0.lock().call::<(), Metadata>("metadata", ())
     }
 
-    pub fn init(&mut self, config: Config) -> Result<()> {
+    pub fn init(&self, config: Config) -> Result<()> {
         self.0.lock().call::<Config, ()>("init", config)
     }
+
+    pub fn destroy(&self) -> Result<()> { self.0.lock().call::<(), ()>("destroy", ()) }
 }
 
 pub struct Plugins {
@@ -48,6 +51,7 @@ pub struct Plugins {
     metadata: Vec<Metadata>,
     plugins: HashMap<String, Plugin>,
     configs: BTreeMap<String, Config>,
+    event_loop: Option<AbortHandle>,
 }
 
 impl Plugins {
@@ -67,6 +71,7 @@ impl Plugins {
             metadata: Vec::default(),
             plugins: HashMap::default(),
             configs: BTreeMap::default(),
+            event_loop: None,
         })
     }
 
@@ -108,7 +113,7 @@ impl Plugins {
         Ok(())
     }
 
-    async fn register(&mut self, mut plugin: Plugin) -> Result<()> {
+    async fn register(&mut self, plugin: Plugin) -> Result<()> {
         let metadata = plugin.metadata()?;
         let identifier = metadata.identifier.clone();
 
@@ -181,7 +186,7 @@ impl Plugins {
         Ok(())
     }
 
-    fn iter_enabled(&self) -> impl Iterator<Item = &Plugin> {
+    fn iter_enabled(&self) -> impl Iterator<Item = (&Plugin, &Metadata)> {
         self.metadata.iter().filter_map(move |metadata| {
             self.plugins.get(&metadata.identifier).and_then(|plugin| {
                 if self
@@ -192,10 +197,22 @@ impl Plugins {
                 {
                     None
                 } else {
-                    Some(plugin)
+                    Some((plugin, metadata))
                 }
             })
         })
+    }
+
+    pub fn destroy_all(&mut self) {
+        if let Some(event_loop) = self.event_loop.as_ref() {
+            event_loop.abort();
+        }
+        for (plugin, metadata) in self.iter_enabled() {
+            match plugin.destroy() {
+                Ok(_) => info!("{}: destroyed.", metadata.identifier),
+                Err(e) => error!("{}: destroying error : {e}", metadata.identifier),
+            }
+        }
     }
 }
 
