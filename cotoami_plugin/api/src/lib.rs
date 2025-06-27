@@ -5,6 +5,8 @@ use serde_json::{json, Value};
 
 mod models;
 
+pub use models::*;
+
 #[derive(Debug, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
 #[encoding(Json)]
 pub struct Metadata {
