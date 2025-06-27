@@ -7,6 +7,8 @@ rust-version.workspace = true
 version.workspace = true
 
 [dependencies]
+bytes.workspace = true
+chrono.workspace = true
 extism-pdk.workspace = true
 serde.workspace = true
 serde_json.workspace = true

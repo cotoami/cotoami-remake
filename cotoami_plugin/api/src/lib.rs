@@ -3,6 +3,8 @@ use std::collections::HashMap;
 use extism_pdk::*;
 use serde_json::{json, Value};
 
+mod models;
+
 #[derive(Debug, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
 #[encoding(Json)]
 pub struct Metadata {
