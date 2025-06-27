@@ -121,7 +121,7 @@ impl Plugins {
 
         self.plugins.insert(identifier.clone(), plugin);
         self.metadata.push(metadata);
-        info!("Registered a plugin: {identifier}");
+        info!("{identifier}: registered.");
         Ok(())
     }
 
