@@ -10,6 +10,8 @@ use extism::*;
 use thiserror::Error;
 use tracing::{debug, error, info};
 
+use crate::state::NodeState;
+
 pub struct Plugin(extism::Plugin);
 
 impl Plugin {
@@ -33,6 +35,7 @@ impl Plugin {
 pub struct Plugins {
     plugins_dir: PathBuf,
     configs_path: PathBuf,
+    node_state: Option<NodeState>,
     metadata: Vec<Metadata>,
     plugins: HashMap<String, Plugin>,
     configs: BTreeMap<String, Config>,
@@ -51,13 +54,15 @@ impl Plugins {
         Ok(Self {
             plugins_dir,
             configs_path,
+            node_state: None,
             metadata: Vec::default(),
             plugins: HashMap::default(),
             configs: BTreeMap::default(),
         })
     }
 
-    pub fn init(&mut self) -> Result<()> {
+    pub fn init(&mut self, node_state: NodeState) -> Result<()> {
+        self.node_state = Some(node_state);
         info!("Loading plugins from: {:?}", self.plugins_dir);
         self.load_configs()?;
         for entry in fs::read_dir(&self.plugins_dir)? {

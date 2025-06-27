@@ -224,7 +224,7 @@ impl NodeState {
     }
 
     pub(crate) fn init_plugins(&self) -> Result<()> {
-        self.inner.plugins.write().init()?;
+        self.inner.plugins.write().init(self.clone())?;
         Ok(())
     }
 }
