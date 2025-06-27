@@ -173,6 +173,23 @@ impl Plugins {
         }
         Ok(())
     }
+
+    fn iter_enabled(&self) -> impl Iterator<Item = &Plugin> {
+        self.metadata.iter().filter_map(move |metadata| {
+            self.plugins.get(&metadata.identifier).and_then(|plugin| {
+                if self
+                    .configs
+                    .get(&metadata.identifier)
+                    .map(|c| c.disabled())
+                    .unwrap_or(false)
+                {
+                    None
+                } else {
+                    Some(plugin)
+                }
+            })
+        })
+    }
 }
 
 #[derive(Error, Debug)]
