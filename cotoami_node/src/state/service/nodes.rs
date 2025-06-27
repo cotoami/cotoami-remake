@@ -47,6 +47,16 @@ impl NodeState {
             .await
     }
 
+    pub async fn create_agent_node(
+        self,
+        name: String,
+        icon: Vec<u8>,
+        operator: Arc<Operator>,
+    ) -> Result<Node, ServiceError> {
+        self.change_local(move |ds| ds.create_agent_node(&name, icon, operator.as_ref()))
+            .await
+    }
+
     pub async fn mark_all_as_read(
         &self,
         operator: Arc<Operator>,
