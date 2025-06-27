@@ -3,6 +3,7 @@ use std::{
     fs::{self, DirEntry},
     path::{Path, PathBuf},
     str::FromStr,
+    sync::Arc,
 };
 
 use anyhow::{ensure, Result};
@@ -10,6 +11,7 @@ use cotoami_db::prelude::Id;
 use cotoami_plugin_api::*;
 use extism::*;
 use futures::StreamExt;
+use parking_lot::Mutex;
 use thiserror::Error;
 use tokio::task::AbortHandle;
 use tracing::{debug, error, info};
@@ -48,31 +50,127 @@ impl Plugin {
     pub fn destroy(&mut self) -> Result<()> { self.plugin.call::<(), ()>("destroy", ()) }
 }
 
+struct Plugins {
+    configs_path: PathBuf,
+    configs: BTreeMap<String, Config>,
+    plugins: HashMap<String, Plugin>,
+}
+
+impl Plugins {
+    const CONFIGS_FILE_NAME: &'static str = "configs.toml";
+
+    fn new<P: AsRef<Path>>(plugins_dir: P) -> Result<Self> {
+        let mut plugins = Self {
+            configs_path: plugins_dir.as_ref().join(Self::CONFIGS_FILE_NAME),
+            configs: BTreeMap::default(),
+            plugins: HashMap::default(),
+        };
+        plugins.load_configs()?;
+        Ok(plugins)
+    }
+
+    fn load_configs(&mut self) -> Result<()> {
+        let path = &self.configs_path;
+        if path.is_file() {
+            info!("Plugins configs: {path:?}");
+            let file_content = fs::read_to_string(path)?;
+            self.configs = toml::from_str(&file_content)?;
+        } else {
+            debug!("No plugin configs: {path:?}");
+        }
+        Ok(())
+    }
+
+    fn save_configs(&self) -> Result<()> {
+        let path = &self.configs_path;
+        let file_content = toml::to_string(&self.configs)?;
+        fs::write(path, file_content)?;
+        Ok(())
+    }
+
+    fn config_mut(&mut self, identifier: String) -> &mut Config {
+        self.configs.entry(identifier).or_insert(Config::default())
+    }
+
+    fn agent_node_id(&self, identifier: &str) -> Option<&str> {
+        self.configs.get(identifier).and_then(|c| c.agent_node_id())
+    }
+
+    fn ensure_unregistered(&self, plugin: &Plugin) -> Result<()> {
+        let identifier = plugin.identifier();
+        ensure!(
+            !self.plugins.contains_key(identifier),
+            PluginError::DuplicatePlugin(identifier.to_string())
+        );
+        Ok(())
+    }
+
+    fn register(&mut self, mut plugin: Plugin) -> Result<()> {
+        self.ensure_unregistered(&plugin)?;
+
+        let identifier = plugin.identifier().to_owned();
+        let config = self
+            .configs
+            .get(&identifier)
+            .cloned()
+            .unwrap_or(Config::default());
+
+        if config.disabled() {
+            info!("{identifier}: disabled.");
+        } else {
+            // init a plugin only if not disabled
+            plugin.init(config)?;
+        }
+
+        self.plugins.insert(identifier.clone(), plugin);
+        info!("{identifier}: registered.");
+        Ok(())
+    }
+
+    fn iter_enabled(&mut self) -> impl Iterator<Item = &mut Plugin> {
+        self.plugins.values_mut().filter_map(|plugin| {
+            if self
+                .configs
+                .get(plugin.identifier())
+                .map(|c| c.disabled())
+                .unwrap_or(false)
+            {
+                None
+            } else {
+                Some(plugin)
+            }
+        })
+    }
+
+    fn destroy_all(&mut self) {
+        for plugin in self.iter_enabled() {
+            match plugin.destroy() {
+                Ok(_) => info!("{}: destroyed.", plugin.identifier()),
+                Err(e) => error!("{}: destroying error : {e}", plugin.identifier()),
+            }
+        }
+    }
+}
+
 pub struct PluginSystem {
     plugins_dir: PathBuf,
-    configs_path: PathBuf,
     node_state: Option<NodeState>,
-    plugins: HashMap<String, Plugin>,
-    configs: BTreeMap<String, Config>,
+    plugins: Arc<Mutex<Plugins>>,
     event_loop: Option<AbortHandle>,
 }
 
 impl PluginSystem {
-    const CONFIGS_FILE_NAME: &'static str = "configs.toml";
-
     pub fn new<P: AsRef<Path>>(plugins_dir: P) -> Result<Self> {
         let plugins_dir = plugins_dir.as_ref().canonicalize()?;
         ensure!(
             plugins_dir.is_dir(),
             PluginError::InvalidPluginsDir(plugins_dir, None)
         );
-        let configs_path = plugins_dir.join(Self::CONFIGS_FILE_NAME);
+        let plugins = Arc::new(Mutex::new(Plugins::new(&plugins_dir)?));
         Ok(Self {
-            plugins_dir,
-            configs_path,
+            plugins_dir: plugins_dir,
             node_state: None,
-            plugins: HashMap::default(),
-            configs: BTreeMap::default(),
+            plugins,
             event_loop: None,
         })
     }
@@ -80,7 +178,6 @@ impl PluginSystem {
     pub async fn init(&mut self, node_state: NodeState) -> Result<()> {
         self.node_state = Some(node_state);
         info!("Loading plugins from: {:?}", self.plugins_dir);
-        self.load_configs()?;
         for entry in fs::read_dir(&self.plugins_dir)? {
             let entry = entry?;
             if Plugin::is_plugin_file(&entry) {
@@ -97,65 +194,17 @@ impl PluginSystem {
         Ok(())
     }
 
-    fn load_configs(&mut self) -> Result<()> {
-        let path = &self.configs_path;
-        if path.is_file() {
-            info!("Plugins configs: {path:?}");
-            let file_content = fs::read_to_string(path)?;
-            self.configs = toml::from_str(&file_content)?;
-        } else {
-            debug!("No plugin configs: {path:?}");
-        }
-        Ok(())
-    }
-
-    pub fn save_configs(&self) -> Result<()> {
-        let path = &self.configs_path;
-        let file_content = toml::to_string(&self.configs)?;
-        fs::write(path, file_content)?;
-        Ok(())
-    }
-
-    async fn register(&mut self, mut plugin: Plugin) -> Result<()> {
-        let identifier = plugin.identifier().to_owned();
-        ensure!(
-            !self.plugins.contains_key(&identifier),
-            PluginError::DuplicatePlugin(identifier)
-        );
-
+    async fn register(&mut self, plugin: Plugin) -> Result<()> {
+        self.plugins.lock().ensure_unregistered(&plugin)?;
         self.register_agent(&plugin.metadata).await?;
-
-        let config = self
-            .configs
-            .get(&identifier)
-            .cloned()
-            .unwrap_or(Config::default());
-        if config.disabled() {
-            info!("{identifier}: disabled.");
-        } else {
-            // init a plugin only if not disabled
-            plugin.init(config)?;
-        }
-
-        self.plugins.insert(identifier.clone(), plugin);
-        info!("{identifier}: registered.");
+        self.plugins.lock().register(plugin)?;
         Ok(())
-    }
-
-    fn config_mut(&mut self, metadata: &Metadata) -> &mut Config {
-        self.configs
-            .entry(metadata.identifier.clone())
-            .or_insert(Config::default())
     }
 
     async fn register_agent(&mut self, metadata: &Metadata) -> Result<()> {
         if let Some(node_state) = &self.node_state {
             // Already registered?
-            if let Some(agent_node_id) = self
-                .configs
-                .get(&metadata.identifier)
-                .and_then(|c| c.agent_node_id())
-            {
+            if let Some(agent_node_id) = self.plugins.lock().agent_node_id(&metadata.identifier) {
                 if node_state
                     .node(Id::from_str(agent_node_id)?)
                     .await?
@@ -175,8 +224,13 @@ impl PluginSystem {
                     .clone()
                     .create_agent_node(name.into(), Vec::from(icon))
                     .await?;
-                self.config_mut(&metadata).set_agent_node_id(node.uuid);
-                self.save_configs()?;
+                {
+                    let mut plugins = self.plugins.lock();
+                    plugins
+                        .config_mut(metadata.identifier.clone())
+                        .set_agent_node_id(node.uuid);
+                    plugins.save_configs()?;
+                }
                 info!(
                     "{}: agent node registered: {}",
                     metadata.identifier, node.uuid
@@ -184,21 +238,6 @@ impl PluginSystem {
             }
         }
         Ok(())
-    }
-
-    fn iter_enabled(&mut self) -> impl Iterator<Item = &mut Plugin> {
-        self.plugins.values_mut().filter_map(|plugin| {
-            if self
-                .configs
-                .get(plugin.identifier())
-                .map(|c| c.disabled())
-                .unwrap_or(false)
-            {
-                None
-            } else {
-                Some(plugin)
-            }
-        })
     }
 
     fn start_event_loop(&mut self) -> Result<()> {
@@ -222,12 +261,7 @@ impl PluginSystem {
         if let Some(event_loop) = self.event_loop.as_ref() {
             event_loop.abort();
         }
-        for plugin in self.iter_enabled() {
-            match plugin.destroy() {
-                Ok(_) => info!("{}: destroyed.", plugin.identifier()),
-                Err(e) => error!("{}: destroying error : {e}", plugin.identifier()),
-            }
-        }
+        self.plugins.lock().destroy_all();
     }
 }
 
