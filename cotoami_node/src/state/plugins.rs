@@ -3,21 +3,26 @@ use std::{
     fs::{self, DirEntry},
     path::{Path, PathBuf},
     str::FromStr,
+    sync::Arc,
 };
 
 use anyhow::{ensure, Result};
 use cotoami_db::prelude::Id;
 use cotoami_plugin_api::*;
 use extism::*;
+use parking_lot::Mutex;
 use thiserror::Error;
 use tracing::{debug, error, info};
 
 use crate::state::NodeState;
 
-pub struct Plugin(extism::Plugin);
+#[derive(Clone)]
+pub struct Plugin(Arc<Mutex<extism::Plugin>>);
 
 impl Plugin {
     const FILE_NAME_SUFFIX: &'static str = ".wasm";
+
+    fn new(plugin: extism::Plugin) -> Self { Self(Arc::new(Mutex::new(plugin))) }
 
     fn is_plugin_file(entry: &DirEntry) -> bool {
         entry
@@ -27,10 +32,12 @@ impl Plugin {
             .unwrap_or(false)
     }
 
-    pub fn metadata(&mut self) -> Result<Metadata> { self.0.call::<(), Metadata>("metadata", ()) }
+    pub fn metadata(&mut self) -> Result<Metadata> {
+        self.0.lock().call::<(), Metadata>("metadata", ())
+    }
 
     pub fn init(&mut self, config: Config) -> Result<()> {
-        self.0.call::<Config, ()>("init", config)
+        self.0.lock().call::<Config, ()>("init", config)
     }
 }
 
@@ -73,7 +80,7 @@ impl Plugins {
                 let path = entry.path();
                 debug!("Loading a plugin: {path:?}");
                 let manifest = Manifest::new([Wasm::file(&path)]);
-                let plugin = Plugin(extism::Plugin::new(&manifest, [], true)?);
+                let plugin = Plugin::new(extism::Plugin::new(&manifest, [], true)?);
                 if let Err(e) = self.register(plugin).await {
                     error!("Couldn't register a plugin {path:?}: {e}");
                 }
