@@ -10,6 +10,7 @@ use anyhow::{ensure, Result};
 use cotoami_db::prelude::Id;
 use cotoami_plugin_api::*;
 use extism::*;
+use futures::StreamExt;
 use parking_lot::Mutex;
 use thiserror::Error;
 use tokio::task::AbortHandle;
@@ -207,7 +208,19 @@ impl Plugins {
     }
 
     fn start_event_loop(&mut self) -> Result<()> {
-        // TODO
+        let state = self.node_state.as_ref().unwrap();
+        let event_loop = tokio::spawn({
+            let local_node_id = state.try_get_local_node_id()?;
+            let mut changes = state.pubsub().changes().subscribe(None::<()>);
+            async move {
+                while let Some(log) = changes.next().await {
+                    if let event = convert::into_plugin_event(log.change, local_node_id) {
+                        //
+                    }
+                }
+            }
+        });
+        self.event_loop = Some(event_loop.abort_handle());
         Ok(())
     }
 
