@@ -3,8 +3,10 @@ use std::collections::HashMap;
 use extism_pdk::*;
 use serde_json::{json, Value};
 
+mod event;
 mod models;
 
+pub use event::*;
 pub use models::*;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
@@ -79,11 +81,4 @@ impl Config {
         self.0
             .insert(Self::KEY_AGENT_NODE_ID.into(), json!(id.into()));
     }
-}
-
-#[derive(Debug, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
-#[serde(tag = "type")]
-#[encoding(Json)]
-pub enum Event {
-    CotoPosted { coto: Coto, local_node_id: String },
 }
