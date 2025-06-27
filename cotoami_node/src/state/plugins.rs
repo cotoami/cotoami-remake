@@ -117,7 +117,12 @@ impl Plugins {
             .get(&identifier)
             .cloned()
             .unwrap_or(Config::default());
-        plugin.init(config)?;
+        if config.disabled() {
+            info!("{identifier}: disabled.");
+        } else {
+            // init a plugin only if not disabled
+            plugin.init(config)?;
+        }
 
         self.plugins.insert(identifier.clone(), plugin);
         self.metadata.push(metadata);
