@@ -17,6 +17,8 @@ use tracing::{debug, error, info};
 
 use crate::state::NodeState;
 
+mod convert;
+
 #[derive(Clone)]
 pub struct Plugin(Arc<Mutex<extism::Plugin>>);
 
@@ -91,6 +93,7 @@ impl Plugins {
                 }
             }
         }
+        self.start_event_loop()?;
         Ok(())
     }
 
@@ -201,6 +204,11 @@ impl Plugins {
                 }
             })
         })
+    }
+
+    fn start_event_loop(&mut self) -> Result<()> {
+        // TODO
+        Ok(())
     }
 
     pub fn destroy_all(&mut self) {
