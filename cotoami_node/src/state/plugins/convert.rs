@@ -26,10 +26,10 @@ pub(crate) fn into_plugin_coto(coto: Coto) -> Option<cotoami_plugin_api::Coto> {
             is_cotonoma: coto.is_cotonoma,
             longitude: coto.longitude,
             latitude: coto.latitude,
-            datetime_start: coto.datetime_start,
-            datetime_end: coto.datetime_end,
+            datetime_start: coto.datetime_start.map(|time| time.to_string()),
+            datetime_end: coto.datetime_end.map(|time| time.to_string()),
             repost_of_id: coto.repost_of_id.map(|id| id.to_string()),
-            created_at: coto.created_at,
-            updated_at: coto.updated_at,
+            created_at: coto.created_at.to_string(),
+            updated_at: coto.updated_at.to_string(),
         })
 }

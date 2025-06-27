@@ -1212,7 +1212,6 @@ name = "cotoami_plugin_api"
 version = "0.7.4"
 dependencies = [
  "bytes",
- "chrono",
  "derive_more 1.0.0",
  "extism-pdk",
  "serde",

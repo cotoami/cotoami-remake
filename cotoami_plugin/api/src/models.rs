@@ -1,4 +1,3 @@
-use chrono::NaiveDateTime;
 use extism_pdk::*;
 
 #[derive(derive_more::Debug, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
@@ -16,11 +15,11 @@ pub struct Coto {
     pub is_cotonoma: bool,
     pub longitude: Option<f64>,
     pub latitude: Option<f64>,
-    pub datetime_start: Option<NaiveDateTime>,
-    pub datetime_end: Option<NaiveDateTime>,
+    pub datetime_start: Option<String>,
+    pub datetime_end: Option<String>,
     pub repost_of_id: Option<String>,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
+    pub created_at: String,
+    pub updated_at: String,
 }
 
 #[derive(derive_more::Debug, Default, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
@@ -35,8 +34,8 @@ pub struct CotoInput {
     pub media_type: Option<String>,
     pub longitude: Option<f64>,
     pub latitude: Option<f64>,
-    pub datetime_start: Option<NaiveDateTime>,
-    pub datetime_end: Option<NaiveDateTime>,
+    pub datetime_start: Option<String>,
+    pub datetime_end: Option<String>,
 }
 
 impl CotoInput {
