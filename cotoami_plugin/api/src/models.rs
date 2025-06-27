@@ -39,9 +39,10 @@ pub struct CotoInput {
 }
 
 impl CotoInput {
-    pub fn new(content: String) -> Self {
+    pub fn new(content: String, posted_in_id: String) -> Self {
         let mut input = CotoInput::default();
         input.content = Some(content);
+        input.posted_in_id = Some(posted_in_id);
         input
     }
 }
