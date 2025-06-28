@@ -3,7 +3,7 @@ use std::path::Path;
 use anyhow::Result;
 use cotoami_plugin_api::*;
 use extism::*;
-use tracing::debug;
+use tracing::{debug, info};
 
 pub struct Plugin {
     plugin: extism::Plugin,
@@ -17,7 +17,10 @@ impl Plugin {
         let wasm_file = wasm_file.as_ref();
         debug!("Loading a plugin: {wasm_file:?}");
         let manifest = Manifest::new([Wasm::file(&wasm_file)]);
-        let mut plugin = extism::Plugin::new(&manifest, [], true)?;
+        let mut plugin = PluginBuilder::new(manifest)
+            .with_wasi(true)
+            .with_function("log", [PTR], [], UserData::new(()), log)
+            .build()?;
         let metadata = plugin.call::<(), Metadata>("metadata", ())?;
         Ok(Self { plugin, metadata })
     }
@@ -47,3 +50,8 @@ impl Plugin {
 
     pub fn destroy(&mut self) -> Result<()> { self.plugin.call::<(), ()>("destroy", ()) }
 }
+
+host_fn!(log(_user_data: (); message: String) {
+    info!(message);
+    Ok(())
+});
