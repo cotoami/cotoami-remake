@@ -68,14 +68,14 @@ impl PluginSystem {
         Ok(())
     }
 
-    async fn register(&mut self, plugin: Plugin) -> Result<()> {
+    async fn register(&self, plugin: Plugin) -> Result<()> {
         self.plugins.ensure_unregistered(&plugin)?;
         self.register_agent(plugin.metadata()).await?;
         self.plugins.register(plugin)?;
         Ok(())
     }
 
-    async fn register_agent(&mut self, metadata: &Metadata) -> Result<()> {
+    async fn register_agent(&self, metadata: &Metadata) -> Result<()> {
         if let Some(node_state) = &self.node_state {
             // Already registered?
             if let Some(agent_node_id) = self.plugins.configs.agent_node_id(&metadata.identifier) {
@@ -137,6 +137,7 @@ impl PluginSystem {
     pub fn destroy_all(&mut self) {
         if let Some(event_loop) = self.event_loop.as_ref() {
             event_loop.abort();
+            self.event_loop = None;
         }
         self.plugins.destroy_all();
     }
@@ -174,7 +175,7 @@ impl Plugins {
         Ok(())
     }
 
-    fn register(&mut self, mut plugin: Plugin) -> Result<()> {
+    fn register(&self, mut plugin: Plugin) -> Result<()> {
         self.ensure_unregistered(&plugin)?;
 
         let identifier = plugin.identifier().to_owned();
@@ -204,7 +205,7 @@ impl Plugins {
         }
     }
 
-    fn destroy_all(&mut self) {
+    fn destroy_all(&self) {
         self.for_each_enabled(|plugin, _| match plugin.destroy() {
             Ok(_) => info!("{}: destroyed.", plugin.identifier()),
             Err(e) => error!("{}: destroying error : {e}", plugin.identifier()),
