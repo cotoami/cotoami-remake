@@ -18,6 +18,7 @@ use tracing::{debug, error, info};
 use self::plugin::Plugin;
 use crate::state::NodeState;
 
+mod configs;
 mod convert;
 mod plugin;
 
