@@ -252,10 +252,8 @@ impl PluginSystem {
             async move {
                 while let Some(log) = changes.next().await {
                     if let Some(event) = convert::into_plugin_event(log.change, local_node_id) {
-                        for (plugin, _config) in plugins.lock().iter_enabled() {
-                            if let Err(e) = plugin.on(&event) {
-                                error!("{}: event handling error: {e}", plugin.identifier());
-                            }
+                        for (plugin, config) in plugins.lock().iter_enabled() {
+                            send_event_to_plugin(&event, plugin, config);
                         }
                     }
                 }
@@ -270,6 +268,22 @@ impl PluginSystem {
             event_loop.abort();
         }
         self.plugins.lock().destroy_all();
+    }
+}
+
+fn send_event_to_plugin(event: &Event, plugin: &mut Plugin, config: Option<&Config>) {
+    if let Some(agent_node_id) = config.and_then(|c| c.agent_node_id()) {
+        // Filter events caused by the target plugin.
+        match event {
+            Event::CotoPosted { coto, .. } => {
+                if coto.posted_by_id == agent_node_id {
+                    return; // exclude self post
+                }
+            }
+        }
+    }
+    if let Err(e) = plugin.on(&event) {
+        error!("{}: event handling error: {e}", plugin.identifier());
     }
 }
 
