@@ -12,6 +12,7 @@ use parking_lot::{
 };
 use tracing::{debug, info};
 
+#[derive(Debug, Clone)]
 pub(crate) struct Configs {
     configs_path: PathBuf,
     entries: Arc<RwLock<BTreeMap<String, Config>>>,
@@ -48,9 +49,14 @@ impl Configs {
         Ok(())
     }
 
-    pub fn agent_node_id(&self, identifier: &str) -> Option<String> {
-        self.read(identifier)
-            .and_then(|config| config.agent_node_id().map(ToOwned::to_owned))
+    pub fn read(&self, identifier: &str) -> Option<MappedRwLockReadGuard<Config>> {
+        RwLockReadGuard::try_map(self.entries.read(), |entries| entries.get(identifier)).ok()
+    }
+
+    pub fn write(&self, identifier: String) -> MappedRwLockWriteGuard<Config> {
+        RwLockWriteGuard::map(self.entries.write(), |entries| {
+            entries.entry(identifier).or_insert(Config::default())
+        })
     }
 
     pub fn config(&self, identifier: &str) -> Config {
@@ -61,13 +67,14 @@ impl Configs {
             .unwrap_or(Config::default())
     }
 
-    pub fn read(&self, identifier: &str) -> Option<MappedRwLockReadGuard<Config>> {
-        RwLockReadGuard::try_map(self.entries.read(), |entries| entries.get(identifier)).ok()
+    pub fn agent_node_id(&self, identifier: &str) -> Option<String> {
+        self.read(identifier)
+            .and_then(|config| config.agent_node_id().map(ToOwned::to_owned))
     }
 
-    pub fn write(&self, identifier: String) -> MappedRwLockWriteGuard<Config> {
-        RwLockWriteGuard::map(self.entries.write(), |entries| {
-            entries.entry(identifier).or_insert(Config::default())
-        })
+    pub fn disabled(&self, identifier: &str) -> bool {
+        self.read(identifier)
+            .map(|config| config.disabled())
+            .unwrap_or(false)
     }
 }
