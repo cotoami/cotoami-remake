@@ -3,7 +3,9 @@ use std::path::Path;
 use anyhow::Result;
 use cotoami_plugin_api::*;
 use extism::*;
-use tracing::{debug, info};
+use tracing::info;
+
+use crate::state::NodeState;
 
 pub struct Plugin {
     plugin: extism::Plugin,
@@ -13,16 +15,37 @@ pub struct Plugin {
 impl Plugin {
     const FILE_NAME_SUFFIX: &'static str = ".wasm";
 
-    pub fn new<P: AsRef<Path>>(wasm_file: P) -> Result<Self> {
-        let wasm_file = wasm_file.as_ref();
-        debug!("Loading a plugin: {wasm_file:?}");
-        let manifest = Manifest::new([Wasm::file(&wasm_file)]);
-        let mut plugin = PluginBuilder::new(manifest)
+    pub fn new<P: AsRef<Path>>(wasm_file: P, node_state: NodeState) -> Result<Self> {
+        // Host functions need plugin metadata as `UserData`, which has to be registered
+        // during building a plugin, but you need the plugin to get its metadata.
+        // To resolve this egg or chicken situation, it requires a bit tricky way to
+        // build a plugin:
+        //   1) First, load the real metadata using dummy metadata.
+        //   2) Then, build a plugin with the loaded metadata.
+
+        let metadata = Self::build(wasm_file.as_ref(), "", node_state.clone())?
+            .call::<(), Metadata>("metadata", ())?;
+
+        let plugin = Self::build(
+            wasm_file.as_ref(),
+            metadata.identifier.clone(),
+            node_state.clone(),
+        )?;
+        Ok(Self { plugin, metadata })
+    }
+
+    fn build<P: AsRef<Path>>(
+        wasm_file: P,
+        identifier: impl Into<String>,
+        node_state: NodeState,
+    ) -> Result<extism::Plugin> {
+        let host_fn_conext = HostFnConext::new(identifier.into(), node_state);
+        let manifest = Manifest::new([Wasm::file(wasm_file)]);
+        PluginBuilder::new(manifest)
             .with_wasi(true)
             .with_function("log", [PTR], [], UserData::new(()), log)
-            .build()?;
-        let metadata = plugin.call::<(), Metadata>("metadata", ())?;
-        Ok(Self { plugin, metadata })
+            .with_function("version", [], [PTR], UserData::new(host_fn_conext), version)
+            .build()
     }
 
     pub fn is_plugin_file<P: AsRef<Path>>(path: P) -> bool {
@@ -51,7 +74,22 @@ impl Plugin {
     pub fn destroy(&mut self) -> Result<()> { self.plugin.call::<(), ()>("destroy", ()) }
 }
 
+#[derive(Clone, derive_new::new)]
+struct HostFnConext {
+    pub plugin_identifier: String,
+    pub node_state: NodeState,
+}
+
+// fn log(message: String)
 host_fn!(log(_user_data: (); message: String) {
     info!(message);
     Ok(())
+});
+
+// fn version() -> String
+host_fn!(version(context: HostFnConext;) -> String {
+    let context = context.get()?;
+    let context = context.lock().unwrap();
+    info!(context.plugin_identifier);
+    Ok(context.node_state.version().to_owned())
 });

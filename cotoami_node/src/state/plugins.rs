@@ -45,14 +45,14 @@ impl PluginSystem {
     }
 
     pub async fn init(&mut self, node_state: NodeState) -> Result<()> {
-        self.node_state = Some(node_state);
+        self.node_state = Some(node_state.clone());
         info!("Loading plugins from: {:?}", self.plugins_dir);
         for entry in fs::read_dir(&self.plugins_dir)? {
             let path = entry?.path();
             if !Plugin::is_plugin_file(&path) {
                 continue;
             }
-            match Plugin::new(&path) {
+            match Plugin::new(&path, node_state.clone()) {
                 Ok(plugin) => {
                     if let Err(e) = self.register(plugin).await {
                         error!("Couldn't register a plugin {path:?}: {e}");
