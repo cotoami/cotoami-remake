@@ -3,12 +3,13 @@ use std::path::Path;
 use anyhow::Result;
 use cotoami_plugin_api::*;
 use extism::*;
+use parking_lot::Mutex;
 use tracing::info;
 
 use crate::state::NodeState;
 
 pub struct Plugin {
-    plugin: extism::Plugin,
+    plugin: Mutex<extism::Plugin>,
     metadata: Metadata,
 }
 
@@ -26,11 +27,11 @@ impl Plugin {
         let metadata = Self::build(wasm_file.as_ref(), "", node_state.clone())?
             .call::<(), Metadata>("metadata", ())?;
 
-        let plugin = Self::build(
+        let plugin = Mutex::new(Self::build(
             wasm_file.as_ref(),
             metadata.identifier.clone(),
             node_state.clone(),
-        )?;
+        )?);
         Ok(Self { plugin, metadata })
     }
 
@@ -63,15 +64,15 @@ impl Plugin {
 
     pub fn identifier(&self) -> &str { &self.metadata.identifier }
 
-    pub fn init(&mut self, config: &Config) -> Result<()> {
-        self.plugin.call::<&Config, ()>("init", config)
+    pub fn init(&self, config: &Config) -> Result<()> {
+        self.plugin.lock().call::<&Config, ()>("init", config)
     }
 
-    pub fn on(&mut self, event: &Event) -> Result<()> {
-        self.plugin.call::<&Event, ()>("on", event)
+    pub fn on(&self, event: &Event) -> Result<()> {
+        self.plugin.lock().call::<&Event, ()>("on", event)
     }
 
-    pub fn destroy(&mut self) -> Result<()> { self.plugin.call::<(), ()>("destroy", ()) }
+    pub fn destroy(&self) -> Result<()> { self.plugin.lock().call::<(), ()>("destroy", ()) }
 }
 
 #[derive(Clone, derive_new::new)]

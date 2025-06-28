@@ -10,7 +10,7 @@ use anyhow::{ensure, Result};
 use cotoami_db::prelude::Id;
 use cotoami_plugin_api::*;
 use futures::StreamExt;
-use parking_lot::Mutex;
+use parking_lot::RwLock;
 use thiserror::Error;
 use tokio::task::AbortHandle;
 use tracing::{error, info};
@@ -154,7 +154,7 @@ pub enum PluginError {
 
 #[derive(Clone)]
 struct Plugins {
-    plugins: Arc<Mutex<HashMap<String, Plugin>>>,
+    plugins: Arc<RwLock<HashMap<String, Plugin>>>,
     configs: Configs,
 }
 
@@ -169,13 +169,13 @@ impl Plugins {
     fn ensure_unregistered(&self, plugin: &Plugin) -> Result<()> {
         let identifier = plugin.identifier();
         ensure!(
-            !self.plugins.lock().contains_key(identifier),
+            !self.plugins.read().contains_key(identifier),
             PluginError::DuplicatePlugin(identifier.to_string())
         );
         Ok(())
     }
 
-    fn register(&self, mut plugin: Plugin) -> Result<()> {
+    fn register(&self, plugin: Plugin) -> Result<()> {
         self.ensure_unregistered(&plugin)?;
 
         let identifier = plugin.identifier().to_owned();
@@ -188,16 +188,16 @@ impl Plugins {
             plugin.init(&config)?;
         }
 
-        self.plugins.lock().insert(identifier.clone(), plugin);
+        self.plugins.write().insert(identifier.clone(), plugin);
         info!("{identifier}: registered.");
         Ok(())
     }
 
     fn for_each_enabled<F>(&self, mut f: F)
     where
-        F: FnMut(&mut Plugin, Config),
+        F: FnMut(&Plugin, Config),
     {
-        for plugin in self.plugins.lock().values_mut() {
+        for plugin in self.plugins.read().values() {
             let identifier = plugin.identifier().to_owned();
             if !self.configs.disabled(&identifier) {
                 f(plugin, self.configs.config(&identifier))
@@ -213,7 +213,7 @@ impl Plugins {
     }
 }
 
-fn send_event_to_plugin(event: &Event, plugin: &mut Plugin, config: &Config) {
+fn send_event_to_plugin(event: &Event, plugin: &Plugin, config: &Config) {
     if let Some(agent_node_id) = config.agent_node_id() {
         // Filter events caused by the target plugin.
         match event {
