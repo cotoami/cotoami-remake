@@ -134,23 +134,19 @@ impl Plugins {
         Ok(())
     }
 
-    fn iter_enabled(&mut self) -> impl Iterator<Item = &mut Plugin> {
+    fn iter_enabled(&mut self) -> impl Iterator<Item = (&mut Plugin, Option<&Config>)> {
         self.plugins.values_mut().filter_map(|plugin| {
-            if self
-                .configs
-                .get(plugin.identifier())
-                .map(|c| c.disabled())
-                .unwrap_or(false)
-            {
+            let config = self.configs.get(plugin.identifier());
+            if config.map(|c| c.disabled()).unwrap_or(false) {
                 None
             } else {
-                Some(plugin)
+                Some((plugin, config))
             }
         })
     }
 
     fn destroy_all(&mut self) {
-        for plugin in self.iter_enabled() {
+        for (plugin, _) in self.iter_enabled() {
             match plugin.destroy() {
                 Ok(_) => info!("{}: destroyed.", plugin.identifier()),
                 Err(e) => error!("{}: destroying error : {e}", plugin.identifier()),
@@ -256,7 +252,7 @@ impl PluginSystem {
             async move {
                 while let Some(log) = changes.next().await {
                     if let Some(event) = convert::into_plugin_event(log.change, local_node_id) {
-                        for plugin in plugins.lock().iter_enabled() {
+                        for (plugin, _config) in plugins.lock().iter_enabled() {
                             if let Err(e) = plugin.on(&event) {
                                 error!("{}: event handling error: {e}", plugin.identifier());
                             }
