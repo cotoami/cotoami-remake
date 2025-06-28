@@ -13,6 +13,7 @@ use crate::{
 pub enum Operator {
     LocalNode(Id<Node>),
     ChildNode(ChildNode),
+    Agent(Id<Node>),
     Anonymous,
 }
 
@@ -21,6 +22,7 @@ impl Operator {
         match self {
             Operator::LocalNode(node_id) => Some(*node_id),
             Operator::ChildNode(child_node) => Some(child_node.node_id),
+            Operator::Agent(node_id) => Some(*node_id),
             Operator::Anonymous => None,
         }
     }
@@ -33,6 +35,7 @@ impl Operator {
         match self {
             Operator::LocalNode(_) => true,
             Operator::ChildNode(child_node) => child_node.as_owner,
+            Operator::Agent(_) => false,
             Operator::Anonymous => false,
         }
     }
