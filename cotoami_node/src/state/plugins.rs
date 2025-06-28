@@ -92,6 +92,13 @@ impl Plugins {
         Ok(())
     }
 
+    fn config(&self, identifier: &str) -> Config {
+        self.configs
+            .get(identifier)
+            .cloned()
+            .unwrap_or(Config::default())
+    }
+
     fn config_mut(&mut self, identifier: String) -> &mut Config {
         self.configs.entry(identifier).or_insert(Config::default())
     }
@@ -113,11 +120,7 @@ impl Plugins {
         self.ensure_unregistered(&plugin)?;
 
         let identifier = plugin.identifier().to_owned();
-        let config = self
-            .configs
-            .get(&identifier)
-            .cloned()
-            .unwrap_or(Config::default());
+        let config = self.config(&identifier);
 
         if config.disabled() {
             info!("{identifier}: disabled.");
