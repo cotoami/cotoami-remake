@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{path::Path, sync::Arc};
 
 use anyhow::Result;
 use cotoami_plugin_api::*;
@@ -8,9 +8,10 @@ use tracing::info;
 
 use crate::state::NodeState;
 
+#[derive(Clone)]
 pub struct Plugin {
-    plugin: Mutex<extism::Plugin>,
-    metadata: Metadata,
+    plugin: Arc<Mutex<extism::Plugin>>,
+    metadata: Arc<Metadata>,
 }
 
 impl Plugin {
@@ -27,12 +28,15 @@ impl Plugin {
         let metadata = Self::build(wasm_file.as_ref(), "", node_state.clone())?
             .call::<(), Metadata>("metadata", ())?;
 
-        let plugin = Mutex::new(Self::build(
+        let plugin = Self::build(
             wasm_file.as_ref(),
             metadata.identifier.clone(),
             node_state.clone(),
-        )?);
-        Ok(Self { plugin, metadata })
+        )?;
+        Ok(Self {
+            plugin: Arc::new(Mutex::new(plugin)),
+            metadata: Arc::new(metadata),
+        })
     }
 
     fn build<P: AsRef<Path>>(
