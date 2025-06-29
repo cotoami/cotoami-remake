@@ -12,7 +12,7 @@ use cotoami_plugin_api::*;
 use futures::StreamExt;
 use parking_lot::RwLock;
 use thiserror::Error;
-use tokio::task::AbortHandle;
+use tokio::task::{spawn_blocking, AbortHandle};
 use tracing::{error, info};
 
 use self::{configs::Configs, plugin::Plugin};
@@ -123,8 +123,9 @@ impl PluginSystem {
             async move {
                 while let Some(log) = changes.next().await {
                     if let Some(event) = convert::into_plugin_event(log.change, local_node_id) {
+                        let event = Arc::new(event);
                         plugins.for_each_enabled(|plugin, config| {
-                            send_event_to_plugin(&event, plugin, &config);
+                            send_event_to_plugin(event.clone(), plugin, &config);
                         });
                     }
                 }
@@ -213,10 +214,10 @@ impl Plugins {
     }
 }
 
-fn send_event_to_plugin(event: &Event, plugin: &Plugin, config: &Config) {
+fn send_event_to_plugin(event: Arc<Event>, plugin: &Plugin, config: &Config) {
+    // Filter events.
     if let Some(agent_node_id) = config.agent_node_id() {
-        // Filter events caused by the target plugin.
-        match event {
+        match &*event {
             Event::CotoPosted { coto, .. } => {
                 if coto.posted_by_id == agent_node_id {
                     return; // exclude self post
@@ -224,7 +225,14 @@ fn send_event_to_plugin(event: &Event, plugin: &Plugin, config: &Config) {
             }
         }
     }
-    if let Err(e) = plugin.on(&event) {
-        error!("{}: event handling error: {e}", plugin.identifier());
-    }
+
+    // Let a plugin handle the event on a thread where blocking is acceptable.
+    spawn_blocking({
+        let plugin = plugin.clone();
+        move || {
+            if let Err(e) = plugin.on(&event) {
+                error!("{}: event handling error: {e}", plugin.identifier());
+            }
+        }
+    });
 }

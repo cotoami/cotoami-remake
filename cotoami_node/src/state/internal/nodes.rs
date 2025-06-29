@@ -11,13 +11,11 @@ impl NodeState {
     }
 
     pub(crate) async fn create_agent_node(self, name: String, icon: Vec<u8>) -> Result<Node> {
-        spawn_blocking({
-            move || {
-                let ds = self.db().new_session()?;
-                let (node, log) = ds.create_agent_node(&name, &icon)?;
-                self.pubsub().publish_change(log);
-                Ok(node)
-            }
+        spawn_blocking(move || {
+            let ds = self.db().new_session()?;
+            let (node, log) = ds.create_agent_node(&name, &icon)?;
+            self.pubsub().publish_change(log);
+            Ok(node)
         })
         .await?
     }
