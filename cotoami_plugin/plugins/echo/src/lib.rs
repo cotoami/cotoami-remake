@@ -29,7 +29,7 @@ pub fn init(config: Config) -> FnResult<()> {
 
 #[plugin_fn]
 pub fn on(event: Event) -> FnResult<()> {
-    info!("on: {event:?}");
+    unsafe { log(format!("{IDENTIFIER}: {event:?}"))? };
     Ok(())
 }
 
