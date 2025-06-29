@@ -26,21 +26,19 @@ pub struct Coto {
 #[encoding(Json)]
 pub struct CotoInput {
     pub posted_in_id: Option<String>,
-    pub content: Option<String>,
+    pub content: String,
     pub summary: Option<String>,
     #[debug(skip)]
     pub media_content: Option<bytes::Bytes>,
     pub media_type: Option<String>,
     pub longitude: Option<f64>,
     pub latitude: Option<f64>,
-    pub datetime_start: Option<String>,
-    pub datetime_end: Option<String>,
 }
 
 impl CotoInput {
     pub fn new(content: String, posted_in_id: String) -> Self {
         let mut input = CotoInput::default();
-        input.content = Some(content);
+        input.content = content;
         input.posted_in_id = Some(posted_in_id);
         input
     }

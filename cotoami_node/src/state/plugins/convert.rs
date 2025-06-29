@@ -1,3 +1,6 @@
+use std::borrow::Cow;
+
+use anyhow::Result;
 use cotoami_db::prelude::*;
 use cotoami_plugin_api::Event;
 
@@ -32,4 +35,27 @@ pub(crate) fn into_plugin_coto(coto: Coto) -> Option<cotoami_plugin_api::Coto> {
             created_at: coto.created_at.to_string(),
             updated_at: coto.updated_at.to_string(),
         })
+}
+
+pub(crate) fn as_db_coto_input<'a>(
+    input: &'a cotoami_plugin_api::CotoInput,
+) -> Result<CotoInput<'a>> {
+    let media_content =
+        if let (Some(content), Some(content_type)) = (&input.media_content, &input.media_type) {
+            Some((content.clone().into(), Cow::from(content_type)))
+        } else {
+            None
+        };
+    let geolocation = if let (Some(longitude), Some(latitude)) = (input.longitude, input.latitude) {
+        Some(Geolocation::from_lng_lat((longitude, latitude)))
+    } else {
+        None
+    };
+    Ok(CotoInput {
+        content: Cow::from(&input.content),
+        summary: input.summary.as_deref().map(Cow::from),
+        media_content,
+        geolocation,
+        datetime_range: None,
+    })
 }
