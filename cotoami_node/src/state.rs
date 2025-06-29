@@ -222,11 +222,6 @@ impl NodeState {
     pub fn local_server_config(&self) -> Option<Arc<ServerConfig>> {
         self.inner.local_server_config.read().clone()
     }
-
-    pub(crate) async fn init_plugins(&self) -> Result<()> {
-        self.inner.plugins.write().init(self.clone()).await?;
-        Ok(())
-    }
 }
 
 impl Drop for State {
