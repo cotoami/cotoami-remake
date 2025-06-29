@@ -222,6 +222,8 @@ impl NodeState {
     pub fn local_server_config(&self) -> Option<Arc<ServerConfig>> {
         self.inner.local_server_config.read().clone()
     }
+
+    pub fn read_plugins(&self) -> RwLockReadGuard<PluginSystem> { self.inner.plugins.read() }
 }
 
 impl Drop for State {
