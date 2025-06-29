@@ -115,7 +115,7 @@ impl NodeState {
         }
     }
 
-    pub fn config_arc(&self) -> Arc<RwLock<NodeConfig>> { self.inner.config.clone() }
+    pub fn config(&self) -> &Arc<RwLock<NodeConfig>> { &self.inner.config }
 
     pub fn read_config(&self) -> RwLockReadGuard<NodeConfig> { self.inner.config.read() }
 

@@ -22,7 +22,7 @@ impl NodeState {
 
     async fn init_local_node(&self) -> Result<LocalNode> {
         let db = self.db().clone();
-        let config = self.config_arc();
+        let config = self.config().clone();
         spawn_blocking(move || {
             let ds = db.new_session()?;
             let config = config.read();
