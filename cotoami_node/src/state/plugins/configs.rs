@@ -13,7 +13,7 @@ use parking_lot::{
 use tracing::{debug, info};
 
 #[derive(Debug, Clone)]
-pub(crate) struct Configs {
+pub struct Configs {
     configs_path: PathBuf,
     entries: Arc<RwLock<BTreeMap<String, Config>>>,
 }

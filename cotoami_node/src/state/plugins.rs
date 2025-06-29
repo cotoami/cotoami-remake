@@ -20,6 +20,7 @@ use crate::state::NodeState;
 
 mod configs;
 mod convert;
+mod ops;
 mod plugin;
 
 pub struct PluginSystem {
@@ -134,6 +135,8 @@ impl PluginSystem {
         self.event_loop = Some(event_loop.abort_handle());
         Ok(())
     }
+
+    pub fn configs(&self) -> &Configs { &self.plugins.configs }
 
     pub fn destroy_all(&mut self) {
         if let Some(event_loop) = self.event_loop.as_ref() {
