@@ -15,7 +15,7 @@ use thiserror::Error;
 use tokio::task::{spawn_blocking, AbortHandle};
 use tracing::{error, info};
 
-use self::{configs::Configs, plugin::Plugin};
+use self::{configs::Configs, convert::*, plugin::Plugin};
 use crate::state::NodeState;
 
 mod configs;
@@ -122,7 +122,7 @@ impl PluginSystem {
             let plugins = self.plugins.clone();
             async move {
                 while let Some(log) = changes.next().await {
-                    if let Some(event) = convert::into_plugin_event(log.change, local_node_id) {
+                    if let Some(event) = into_plugin_event(log.change, local_node_id) {
                         let event = Arc::new(event);
                         plugins.for_each_enabled(|plugin, config| {
                             send_event_to_plugin(event.clone(), plugin, &config);
