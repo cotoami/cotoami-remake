@@ -7,7 +7,7 @@ use std::{
 };
 
 use anyhow::{ensure, Result};
-use cotoami_db::prelude::Id;
+use cotoami_db::Id;
 use cotoami_plugin_api::*;
 use futures::StreamExt;
 use parking_lot::RwLock;
