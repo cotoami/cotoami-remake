@@ -26,7 +26,6 @@ pub struct Coto {
 #[encoding(Json)]
 pub struct CotoInput {
     pub posted_in_id: Option<String>,
-    pub posted_by_id: Option<String>,
     pub content: Option<String>,
     pub summary: Option<String>,
     #[debug(skip)]
