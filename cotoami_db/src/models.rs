@@ -111,7 +111,6 @@ impl<T> FromStr for Id<T> {
 
 impl<T> TryFrom<&str> for Id<T> {
     type Error = uuid::Error;
-
     fn try_from(value: &str) -> Result<Self, Self::Error> { Self::from_str(value) }
 }
 

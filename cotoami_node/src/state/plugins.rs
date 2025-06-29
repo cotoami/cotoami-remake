@@ -154,6 +154,9 @@ pub enum PluginError {
 
     #[error("Duplicate plugin: {0}")]
     DuplicatePlugin(String),
+
+    #[error("Missing agent config: {0}")]
+    MissingAgentConfig(String),
 }
 
 #[derive(Clone)]
