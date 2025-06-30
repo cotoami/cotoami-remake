@@ -31,6 +31,12 @@ case class Parents(
   def appendAll(parents: Iterable[ParentNode]): Parents =
     parents.foldLeft(this)(_ append _)
 
+  lazy val anyOthersPosts: Boolean =
+    map.values.exists(_.othersLastPostedAt.isDefined)
+
+  def anyOthersPostsIn(id: Id[Node]): Boolean =
+    map.get(id).exists(_.othersLastPostedAt.isDefined)
+
   lazy val anyUnreadPosts: Boolean = map.values.exists(_.anyUnreadPosts)
 
   def anyUnreadPostsIn(id: Id[Node]): Boolean =

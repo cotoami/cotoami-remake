@@ -74,9 +74,6 @@ object en extends Text {
       someoneElse
     )
   val ConfirmDeleteCotonoma = "Are you sure you want to delete the cotonoma?"
-  val ConfirmMarkAllAsRead = "Are you sure you want to mark all cotos as read?"
-  def ConfirmMarkNodeAsRead(nodeName: String) =
-    s"Are you sure you want to mark all cotos in \"${nodeName}\" as read?"
 
   val NavNodes_allNodes = "All Nodes"
   val NavNodes_addNode = "Add Node"

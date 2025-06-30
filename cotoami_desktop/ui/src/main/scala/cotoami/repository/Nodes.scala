@@ -90,6 +90,20 @@ case class Nodes(
       }
     }
 
+  lazy val anyOthersPosts: Boolean =
+    anyOthersPostsInSelf || parents.anyOthersPosts
+
+  lazy val anyOthersPostsInSelf: Boolean =
+    selfSettings.exists(_.othersLastPostedAt.isDefined)
+
+  lazy val anyOthersPostsInFocus: Boolean =
+    focusedId match {
+      case Some(focusedId) =>
+        if (isSelf(focusedId)) anyOthersPostsInSelf
+        else parents.anyOthersPostsIn(focusedId)
+      case None => anyOthersPosts
+    }
+
   lazy val anyUnreadPosts: Boolean =
     anyUnreadPostsInSelf || parents.anyUnreadPosts
 

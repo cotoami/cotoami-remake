@@ -137,6 +137,9 @@ object SectionTimeline {
         (copy(queryInput = query), Cmd.none)
       else
         copy(queryInput = query).fetchFirst
+
+    def readyToMarkAsRead(implicit context: Context): Boolean =
+      context.repo.nodes.anyUnreadPostsInFocus && !markingAsRead
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -352,27 +355,13 @@ object SectionTimeline {
     header(className := "tools")(
       Option.when(
         context.repo.cotonomas.focusedId.isEmpty &&
-          context.repo.nodes.anyUnreadPostsInFocus
+          context.repo.nodes.anyOthersPostsInFocus
       )(
         button(
           className := "mark-as-read contrast outline",
-          disabled := model.markingAsRead,
+          disabled := !model.readyToMarkAsRead,
           aria - "busy" := model.markingAsRead.toString(),
-          onClick := (_ =>
-            dispatch(
-              Modal.Msg.OpenModal(
-                Modal.Confirm(
-                  context.repo.nodes.focused match {
-                    case Some(node) =>
-                      context.i18n.text.ConfirmMarkNodeAsRead(node.name)
-                    case None =>
-                      context.i18n.text.ConfirmMarkAllAsRead
-                  },
-                  Msg.MarkAsRead
-                )
-              )
-            )
-          )
+          onClick := (_ => dispatch(Msg.MarkAsRead))
         )(context.i18n.text.MarkAllAsRead)
       ),
       div(className := "search")(
