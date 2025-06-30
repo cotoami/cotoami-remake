@@ -3,6 +3,7 @@ use extism_pdk::*;
 
 const IDENTIFIER: &'static str = "app.cotoami.plugin.echo";
 const NAME: &'static str = "Echo";
+const COMMAND_PREFIX: &'static str = "#echo ";
 
 #[host_fn]
 extern "ExtismHost" {
@@ -20,11 +21,8 @@ pub fn metadata() -> FnResult<Metadata> {
 #[plugin_fn]
 pub fn init(config: Config) -> FnResult<()> {
     let version = unsafe { version()? };
-    unsafe {
-        log(format!(
-            "{IDENTIFIER}: init called from {version}: {config:?}"
-        ))?
-    };
+    unsafe { log(format!("{IDENTIFIER}: node version: {version}"))? };
+    unsafe { log(format!("{IDENTIFIER}: init with: {config:?}"))? };
     Ok(())
 }
 
@@ -35,8 +33,10 @@ pub fn on(event: Event) -> FnResult<()> {
             coto,
             local_node_id,
         } => {
-            if coto.node_id == local_node_id {
-                let input = CotoInput::new("Hello!", Some(coto.posted_in_id));
+            let content = coto.content.unwrap_or_default();
+            if coto.node_id == local_node_id && content.trim().starts_with(COMMAND_PREFIX) {
+                let echo = content.trim().strip_prefix(COMMAND_PREFIX).unwrap().trim();
+                let input = CotoInput::new(echo, Some(coto.posted_in_id));
                 unsafe { post_coto(input)? };
             }
         }
