@@ -16,12 +16,13 @@ impl NodeState {
         self.register_owner_remote_node().await?;
         self.start_handling_local_events();
         self.restore_server_conns().await?;
+        self.clone().init_plugins();
         Ok(())
     }
 
     async fn init_local_node(&self) -> Result<LocalNode> {
         let db = self.db().clone();
-        let config = self.config_arc();
+        let config = self.config().clone();
         spawn_blocking(move || {
             let ds = db.new_session()?;
             let config = config.read();
@@ -114,5 +115,14 @@ impl NodeState {
                 .put(server.node_id, ServerConnection::new(server, self.clone()));
         }
         Ok(())
+    }
+
+    fn init_plugins(self) {
+        // Let it run in the background to avoid blocking init too long.
+        tokio::spawn(async move {
+            if let Err(e) = self.inner.plugins.write().init(self.clone()).await {
+                error!("Plugin system initialization failed: {e}");
+            }
+        });
     }
 }

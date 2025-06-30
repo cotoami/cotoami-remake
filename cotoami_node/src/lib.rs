@@ -1,6 +1,7 @@
 use core::future::Future;
-use std::sync::Arc;
+use std::{fs, io::ErrorKind, path::Path, sync::Arc};
 
+use anyhow::{bail, Result};
 use parking_lot::Mutex;
 use tokio::task::{AbortHandle, JoinHandle};
 
@@ -49,4 +50,14 @@ impl Abortables {
     }
 
     pub fn has_running_tasks(&self) -> bool { self.0.lock().iter().any(|task| !task.is_finished()) }
+}
+
+pub fn create_dir_if_not_exist<P: AsRef<Path>>(path: P) -> Result<()> {
+    if let Err(e) = fs::create_dir(path) {
+        match e.kind() {
+            ErrorKind::AlreadyExists => (), // ignore
+            _ => bail!("Unable to create a directory: {e}"),
+        }
+    }
+    Ok(())
 }

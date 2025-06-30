@@ -58,6 +58,18 @@ impl DatabaseSession<'_> {
         })
     }
 
+    pub fn create_agent_node(&self, name: &str, icon: &[u8]) -> Result<(Node, ChangelogEntry)> {
+        let local_node_id = self.globals.try_get_local_node_id()?;
+        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let new_agent = NewNode::new_agent(name, icon);
+            let node = node_ops::insert(&new_agent).run(ctx)?;
+            let change = Change::UpsertNode(node);
+            let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
+            let Change::UpsertNode(node) = change else { unreachable!() };
+            Ok((node, changelog))
+        })
+    }
+
     pub fn set_network_disabled(
         &self,
         id: &Id<Node>,

@@ -1,9 +1,9 @@
 //! This module defines the global state ([NodeState]) and functions dealing with it.
 
 use core::future::Future;
-use std::{collections::HashMap, fs, io::ErrorKind, sync::Arc};
+use std::{collections::HashMap, sync::Arc};
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, Result};
 use cotoami_db::prelude::*;
 use parking_lot::{RwLock, RwLockReadGuard};
 use semver::{Version, VersionReq};
@@ -29,11 +29,12 @@ use crate::{
 mod client_conn;
 mod error;
 mod internal;
+mod plugins;
 mod pubsub;
 mod server_conn;
 mod service;
 
-pub use self::{client_conn::*, error::*, pubsub::*, server_conn::*};
+pub use self::{client_conn::*, error::*, plugins::*, pubsub::*, server_conn::*};
 
 #[derive(Clone)]
 pub struct NodeState {
@@ -52,6 +53,7 @@ struct State {
     parent_services: ParentServices,
     abortables: Abortables,
     local_server_config: RwLock<Option<Arc<ServerConfig>>>,
+    plugins: RwLock<PluginSystem>,
 }
 
 impl NodeState {
@@ -60,17 +62,14 @@ impl NodeState {
     pub async fn new(config: NodeConfig) -> Result<Self> {
         config.validate()?;
 
-        // Create the directory if it doesn't exist yet (a new database).
-        let db_dir = config.db_dir();
-        if let Err(e) = fs::create_dir(&db_dir) {
-            match e.kind() {
-                ErrorKind::AlreadyExists => (), // ignore
-                _ => bail!("Unable to create a directory: {}", e.to_string()),
-            }
-        }
-
         // Open or create a database in the directory
+        let db_dir = config.db_dir();
+        crate::create_dir_if_not_exist(&db_dir)?;
         let db = Database::new(db_dir)?;
+
+        // Plugins directory
+        let plugins_dir = config.plugins_dir();
+        crate::create_dir_if_not_exist(&plugins_dir)?;
 
         let inner = State {
             version: env!("CARGO_PKG_VERSION").into(),
@@ -84,6 +83,7 @@ impl NodeState {
             parent_services: ParentServices::default(),
             abortables: Abortables::default(),
             local_server_config: RwLock::new(None),
+            plugins: RwLock::new(PluginSystem::new(plugins_dir)?),
         };
         let state = Self {
             inner: Arc::new(inner),
@@ -115,7 +115,7 @@ impl NodeState {
         }
     }
 
-    pub fn config_arc(&self) -> Arc<RwLock<NodeConfig>> { self.inner.config.clone() }
+    pub fn config(&self) -> &Arc<RwLock<NodeConfig>> { &self.inner.config }
 
     pub fn read_config(&self) -> RwLockReadGuard<NodeConfig> { self.inner.config.read() }
 
@@ -127,6 +127,10 @@ impl NodeState {
 
     pub fn local_node_as_operator(&self) -> Result<Operator> {
         self.db().globals().local_node_as_operator()
+    }
+
+    pub fn root_cotonoma_id(&self) -> Option<Id<Cotonoma>> {
+        self.db().globals().root_cotonoma_id()
     }
 
     pub async fn generate_owner_password(
@@ -222,6 +226,8 @@ impl NodeState {
     pub fn local_server_config(&self) -> Option<Arc<ServerConfig>> {
         self.inner.local_server_config.read().clone()
     }
+
+    pub fn read_plugins(&self) -> RwLockReadGuard<PluginSystem> { self.inner.plugins.read() }
 }
 
 impl Drop for State {
