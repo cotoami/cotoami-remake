@@ -22,6 +22,12 @@
 
       >header {
         padding: 0 var(--block-spacing-horizontal);
+
+        address.author img.node-icon {
+          width: 36px;
+          height: 36px;
+          margin-right: 10px;
+        }
       }
 
       div.content {
