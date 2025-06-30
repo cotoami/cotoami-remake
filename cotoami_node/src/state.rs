@@ -129,6 +129,10 @@ impl NodeState {
         self.db().globals().local_node_as_operator()
     }
 
+    pub fn root_cotonoma_id(&self) -> Option<Id<Cotonoma>> {
+        self.db().globals().root_cotonoma_id()
+    }
+
     pub async fn generate_owner_password(
         &self,
         current_password: Option<String>,

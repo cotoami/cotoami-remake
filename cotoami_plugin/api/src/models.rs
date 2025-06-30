@@ -25,7 +25,7 @@ pub struct Coto {
 #[derive(derive_more::Debug, Default, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
 #[encoding(Json)]
 pub struct CotoInput {
-    pub posted_in_id: Option<String>,
+    pub post_to: Option<String>,
     pub content: String,
     pub summary: Option<String>,
     #[debug(skip)]
@@ -36,10 +36,10 @@ pub struct CotoInput {
 }
 
 impl CotoInput {
-    pub fn new(content: String, posted_in_id: String) -> Self {
+    pub fn new(content: String, post_to: Option<String>) -> Self {
         let mut input = CotoInput::default();
         input.content = content;
-        input.posted_in_id = Some(posted_in_id);
+        input.post_to = post_to;
         input
     }
 }

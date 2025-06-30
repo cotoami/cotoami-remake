@@ -1,20 +1,29 @@
 use std::str::FromStr;
 
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
 
-use crate::state::{plugins::PluginError, NodeState};
+use crate::state::{
+    plugins::{convert::*, PluginError},
+    NodeState,
+};
 
 impl NodeState {
     pub fn plugin_post_coto(
         &self,
-        input: CotoInput<'_>,
-        post_to: Id<Cotonoma>,
+        input: cotoami_plugin_api::CotoInput,
         identifier: &str,
     ) -> Result<Coto> {
+        let db_input: CotoInput<'_> = as_db_coto_input(&input)?;
+        let post_to: Id<Cotonoma> = if let Some(ref post_to) = input.post_to {
+            Id::from_str(post_to)?
+        } else {
+            self.root_cotonoma_id()
+                .ok_or(anyhow!("Missing root cotonoma."))?
+        };
         let opr = self.try_get_agent(identifier)?;
         let ds = self.db().new_session()?;
-        let (coto, log) = ds.post_coto(&input, &post_to, &opr)?;
+        let (coto, log) = ds.post_coto(&db_input, &post_to, &opr)?;
         self.pubsub().publish_change(log);
         Ok(coto)
     }
