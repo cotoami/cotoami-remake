@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, str::FromStr};
 
 use anyhow::Result;
 use cotoami_db::prelude::*;
@@ -57,5 +57,15 @@ pub(crate) fn as_db_coto_input<'a>(
         media_content,
         geolocation,
         datetime_range: None,
+    })
+}
+
+pub(crate) fn as_db_ito_input<'a>(input: &'a cotoami_plugin_api::ItoInput) -> Result<ItoInput<'a>> {
+    Ok(ItoInput {
+        source_coto_id: Id::from_str(&input.source_coto_id)?,
+        target_coto_id: Id::from_str(&input.target_coto_id)?,
+        description: input.description.as_deref().map(Cow::from),
+        details: None,
+        order: None,
     })
 }

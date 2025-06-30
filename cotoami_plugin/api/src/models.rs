@@ -37,9 +37,28 @@ pub struct CotoInput {
 
 impl CotoInput {
     pub fn new(content: impl Into<String>, post_to: Option<String>) -> Self {
-        let mut input = CotoInput::default();
-        input.content = content.into();
-        input.post_to = post_to;
-        input
+        Self {
+            content: content.into(),
+            post_to,
+            ..Default::default()
+        }
+    }
+}
+
+#[derive(derive_more::Debug, Default, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
+#[encoding(Json)]
+pub struct ItoInput {
+    pub source_coto_id: String,
+    pub target_coto_id: String,
+    pub description: Option<String>,
+}
+
+impl ItoInput {
+    pub fn new(source_coto_id: String, target_coto_id: String) -> Self {
+        Self {
+            source_coto_id,
+            target_coto_id,
+            ..Default::default()
+        }
     }
 }
