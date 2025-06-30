@@ -28,6 +28,11 @@
           height: 32px;
           margin-right: 10px;
         }
+
+        div.attributes {
+          // as padding-top for a header that has address.author but not attributes.
+          min-height: 12px;
+        }
       }
 
       div.content {
