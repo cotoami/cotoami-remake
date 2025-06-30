@@ -44,7 +44,7 @@ impl Plugin {
         identifier: impl Into<String>,
         node_state: NodeState,
     ) -> Result<extism::Plugin> {
-        let host_fn_conext = HostFnConext::new(identifier.into(), node_state);
+        let host_fn_conext = HostFnContext::new(identifier.into(), node_state);
         let manifest = Manifest::new([Wasm::file(wasm_file)]);
         PluginBuilder::new(manifest)
             .with_wasi(true)
@@ -80,7 +80,7 @@ impl Plugin {
 }
 
 #[derive(Clone, derive_new::new)]
-struct HostFnConext {
+struct HostFnContext {
     pub plugin_identifier: String,
     pub node_state: NodeState,
 }
@@ -92,9 +92,8 @@ host_fn!(log(_user_data: (); message: String) {
 });
 
 // fn version() -> String
-host_fn!(version(context: HostFnConext;) -> String {
+host_fn!(version(context: HostFnContext;) -> String {
     let context = context.get()?;
     let context = context.lock().unwrap();
-    info!(context.plugin_identifier);
     Ok(context.node_state.version().to_owned())
 });
