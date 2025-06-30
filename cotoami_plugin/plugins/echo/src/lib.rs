@@ -1,9 +1,10 @@
 use cotoami_plugin_api::*;
 use extism_pdk::*;
+use lazy_regex::*;
 
 const IDENTIFIER: &'static str = "app.cotoami.plugin.echo";
 const NAME: &'static str = "Echo";
-const COMMAND_PREFIX: &'static str = "#echo ";
+static COMMAND_PREFIX: Lazy<Regex> = lazy_regex!(r"^\s*\#echo\s");
 
 #[host_fn]
 extern "ExtismHost" {
@@ -34,8 +35,8 @@ pub fn on(event: Event) -> FnResult<()> {
             local_node_id,
         } => {
             let content = coto.content.unwrap_or_default();
-            if coto.node_id == local_node_id && content.trim().starts_with(COMMAND_PREFIX) {
-                let echo = content.trim().strip_prefix(COMMAND_PREFIX).unwrap().trim();
+            if coto.node_id == local_node_id && COMMAND_PREFIX.is_match(&content) {
+                let echo = COMMAND_PREFIX.replace(&content, "").trim().to_owned();
                 let input = CotoInput::new(echo, Some(coto.posted_in_id));
                 unsafe { post_coto(input)? };
             }

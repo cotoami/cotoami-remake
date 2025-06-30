@@ -12,4 +12,4 @@ crate-type = ["cdylib"]
 [dependencies]
 cotoami_plugin_api.workspace = true
 extism-pdk.workspace = true
-regex-lite = "0.1.6"
+lazy-regex = {version = "3.4.1", default-features = false, features = ["lite"]}
