@@ -315,49 +315,7 @@ object SectionTimeline {
       currentCotonomaId: Id[Cotonoma]
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "timeline header-and-body")(
-      header(className := "tools")(
-        Option.when(
-          context.repo.cotonomas.focusedId.isEmpty &&
-            context.repo.nodes.anyUnreadPostsInFocus
-        )(
-          button(
-            className := "mark-as-read contrast outline",
-            disabled := model.markingAsRead,
-            aria - "busy" := model.markingAsRead.toString(),
-            onClick := (_ =>
-              dispatch(
-                Modal.Msg.OpenModal(
-                  Modal.Confirm(
-                    context.repo.nodes.focused match {
-                      case Some(node) =>
-                        context.i18n.text.ConfirmMarkNodeAsRead(node.name)
-                      case None =>
-                        context.i18n.text.ConfirmMarkAllAsRead
-                    },
-                    Msg.MarkAsRead
-                  )
-                )
-              )
-            )
-          )(context.i18n.text.MarkAllAsRead)
-        ),
-        div(className := "search")(
-          input(
-            `type` := "search",
-            name := "query",
-            value := model.queryInput,
-            onChange := ((e) => dispatch(Msg.QueryInput(e.target.value))),
-            onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart)),
-            onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd))
-          ),
-          Option.when(!model.queryInput.isBlank) {
-            button(
-              className := "clear default",
-              onClick := (_ => dispatch(Msg.ClearQuery))
-            )(materialSymbol("close"))
-          }
-        )
-      ),
+      headerTools(model),
       div(className := "coto-flow body")(
         ScrollArea(
           setScrollTop = model.getScrollPos(currentCotonomaId),
@@ -385,6 +343,53 @@ object SectionTimeline {
               )()): _*
           )
         )
+      )
+    )
+
+  private def headerTools(
+      model: Model
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    header(className := "tools")(
+      Option.when(
+        context.repo.cotonomas.focusedId.isEmpty &&
+          context.repo.nodes.anyUnreadPostsInFocus
+      )(
+        button(
+          className := "mark-as-read contrast outline",
+          disabled := model.markingAsRead,
+          aria - "busy" := model.markingAsRead.toString(),
+          onClick := (_ =>
+            dispatch(
+              Modal.Msg.OpenModal(
+                Modal.Confirm(
+                  context.repo.nodes.focused match {
+                    case Some(node) =>
+                      context.i18n.text.ConfirmMarkNodeAsRead(node.name)
+                    case None =>
+                      context.i18n.text.ConfirmMarkAllAsRead
+                  },
+                  Msg.MarkAsRead
+                )
+              )
+            )
+          )
+        )(context.i18n.text.MarkAllAsRead)
+      ),
+      div(className := "search")(
+        input(
+          `type` := "search",
+          name := "query",
+          value := model.queryInput,
+          onChange := ((e) => dispatch(Msg.QueryInput(e.target.value))),
+          onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart)),
+          onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd))
+        ),
+        Option.when(!model.queryInput.isBlank) {
+          button(
+            className := "clear default",
+            onClick := (_ => dispatch(Msg.ClearQuery))
+          )(materialSymbol("close"))
+        }
       )
     )
 
