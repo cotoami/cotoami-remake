@@ -6,7 +6,7 @@ use extism::*;
 use parking_lot::Mutex;
 use tracing::info;
 
-use crate::state::NodeState;
+use crate::state::{plugins::host_fn::HostFnContext, NodeState};
 
 #[derive(Clone)]
 pub struct Plugin {
@@ -49,7 +49,20 @@ impl Plugin {
         PluginBuilder::new(manifest)
             .with_wasi(true)
             .with_function("log", [PTR], [], UserData::new(()), log)
-            .with_function("version", [], [PTR], UserData::new(host_fn_conext), version)
+            .with_function(
+                "version",
+                [],
+                [PTR],
+                UserData::new(host_fn_conext.clone()),
+                version,
+            )
+            .with_function(
+                "post_coto",
+                [PTR],
+                [PTR],
+                UserData::new(host_fn_conext.clone()),
+                post_coto,
+            )
             .build()
     }
 
@@ -79,12 +92,6 @@ impl Plugin {
     pub fn destroy(&self) -> Result<()> { self.plugin.lock().call::<(), ()>("destroy", ()) }
 }
 
-#[derive(Clone, derive_new::new)]
-struct HostFnContext {
-    pub plugin_identifier: String,
-    pub node_state: NodeState,
-}
-
 // fn log(message: String)
 host_fn!(log(_user_data: (); message: String) {
     info!(message);
@@ -96,4 +103,11 @@ host_fn!(version(context: HostFnContext;) -> String {
     let context = context.get()?;
     let context = context.lock().unwrap();
     Ok(context.node_state.version().to_owned())
+});
+
+// fn post_coto(input: CotoInput) -> Coto
+host_fn!(post_coto(context: HostFnContext; input: CotoInput) -> Coto {
+    let context = context.get()?;
+    let context = context.lock().unwrap();
+    context.post_coto(input)
 });

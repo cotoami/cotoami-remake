@@ -8,6 +8,7 @@ const NAME: &'static str = "Echo";
 extern "ExtismHost" {
     fn log(message: String);
     fn version() -> String;
+    fn post_coto(input: CotoInput) -> Coto;
 }
 
 #[plugin_fn]
@@ -29,7 +30,17 @@ pub fn init(config: Config) -> FnResult<()> {
 
 #[plugin_fn]
 pub fn on(event: Event) -> FnResult<()> {
-    unsafe { log(format!("{IDENTIFIER}: {event:?}"))? };
+    match event {
+        Event::CotoPosted {
+            coto,
+            local_node_id,
+        } => {
+            if coto.node_id == local_node_id {
+                let input = CotoInput::new("Hello!", Some(coto.posted_in_id));
+                unsafe { post_coto(input)? };
+            }
+        }
+    }
     Ok(())
 }
 
