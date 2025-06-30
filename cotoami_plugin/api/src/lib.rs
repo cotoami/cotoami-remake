@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{hash_map::Iter, HashMap};
 
 use extism_pdk::*;
 use serde_json::{json, Value};
@@ -56,6 +56,8 @@ pub struct Config(HashMap<String, Value>);
 impl Config {
     const KEY_DISABLED: &'static str = "disabled";
     const KEY_AGENT_NODE_ID: &'static str = "agent_node_id";
+
+    pub fn iter(&self) -> Iter<'_, String, Value> { self.0.iter() }
 
     pub fn disabled(&self) -> bool {
         if let Some(Value::Bool(disabled)) = self.0.get(Self::KEY_DISABLED) {

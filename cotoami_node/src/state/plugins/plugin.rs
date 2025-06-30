@@ -18,10 +18,9 @@ impl Plugin {
     const FILE_NAME_SUFFIX: &'static str = ".wasm";
 
     pub fn new<P: AsRef<Path>>(wasm_file: P, node_state: NodeState) -> Result<Self> {
-        // Host functions need plugin metadata as `UserData`, which has to be registered
-        // during building a plugin, but you need the plugin to get its metadata.
-        // To resolve this egg or chicken situation, it requires a bit tricky way to
-        // build a plugin:
+        // Building a plugin needs plugin metadata (identifier) to get a config and
+        // in `UserData`, but you need the plugin to get its metadata. To resolve
+        // this egg or chicken situation, it requires a bit tricky way to build a plugin:
         //   1) First, load the real metadata using dummy metadata.
         //   2) Then, build a plugin with the loaded metadata.
 
