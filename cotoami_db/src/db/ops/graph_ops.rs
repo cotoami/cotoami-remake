@@ -22,38 +22,37 @@ pub(crate) fn traverse_by_level_queries<Conn: AsReadableConn>(
 ) -> impl Operation<Conn, Graph> {
     read_op(move |conn| {
         let mut graph = Graph::new(root);
-        let mut level: HashSet<Id<Coto>> = HashSet::new();
-        level.insert(graph.root().uuid);
+        let mut next: HashSet<Id<Coto>> = [graph.root().uuid].into();
         loop {
-            // Itos to the next level
+            // Next itos
             let itos = itos::table
-                .filter(itos::source_coto_id.eq_any(&level))
+                .filter(itos::source_coto_id.eq_any(&next))
                 .load::<Ito>(conn)?;
 
-            // Coto IDs in the next level
-            level.clear();
+            // Next coto IDs
+            next.clear();
             for ito in itos.into_iter() {
                 if !graph.contains(&ito.target_coto_id) {
-                    level.insert(ito.target_coto_id);
+                    next.insert(ito.target_coto_id);
                 }
                 graph.add_ito(ito);
             }
-            if level.is_empty() {
+            if next.is_empty() {
                 break;
             }
 
-            // Cotos in the level
+            // Next cotos
             let cotos = cotos::table
-                .filter(cotos::uuid.eq_any(&level))
+                .filter(cotos::uuid.eq_any(&next))
                 .load::<Coto>(conn)?;
             for coto in cotos.into_iter() {
                 // Stop traversing the route upon finding a cotonoma
-                if until_cotonoma && !graph.is_root(&coto.uuid) && coto.is_cotonoma {
-                    level.remove(&coto.uuid);
+                if until_cotonoma && coto.is_cotonoma {
+                    next.remove(&coto.uuid);
                 }
                 graph.add_coto(coto);
             }
-            if level.is_empty() {
+            if next.is_empty() {
                 break;
             }
         }
