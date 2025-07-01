@@ -54,10 +54,19 @@ impl Metadata {
 pub struct Config(HashMap<String, Value>);
 
 impl Config {
+    const KEY_ALLOWED_HOSTS: &'static str = "allowed_hosts";
     const KEY_DISABLED: &'static str = "disabled";
     const KEY_AGENT_NODE_ID: &'static str = "agent_node_id";
 
     pub fn iter(&self) -> Iter<'_, String, Value> { self.0.iter() }
+
+    pub fn allowed_hosts(&self) -> Vec<String> {
+        match self.0.get(Self::KEY_ALLOWED_HOSTS) {
+            Some(Value::String(host)) => vec![host.clone()],
+            Some(Value::Array(hosts)) => hosts.into_iter().map(|host| host.to_string()).collect(),
+            _ => Vec::new(),
+        }
+    }
 
     pub fn disabled(&self) -> bool {
         if let Some(Value::Bool(disabled)) = self.0.get(Self::KEY_DISABLED) {
