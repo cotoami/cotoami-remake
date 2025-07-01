@@ -33,7 +33,7 @@ pub(crate) fn traverse_by_level_queries<Conn: AsReadableConn>(
             next.clear();
             for ito in itos.into_iter() {
                 if !graph.contains(&ito.target_coto_id) {
-                    next.insert(ito.target_coto_id);
+                    next.insert(ito.target_coto_id); // unvisited
                 }
                 graph.add_ito(ito);
             }
@@ -46,7 +46,7 @@ pub(crate) fn traverse_by_level_queries<Conn: AsReadableConn>(
                 .filter(cotos::uuid.eq_any(&next))
                 .load::<Coto>(conn)?;
             for coto in cotos.into_iter() {
-                // Stop traversing the route upon finding a cotonoma
+                // Stop traversing upon finding a cotonoma
                 if until_cotonoma && coto.is_cotonoma {
                     next.remove(&coto.uuid);
                 }
@@ -116,6 +116,49 @@ struct TraversedIto {
 
     #[diesel(sql_type = diesel::sql_types::Text)]
     target: Id<Coto>,
+}
+
+pub(crate) fn ancestors_of<Conn: AsReadableConn>(
+    coto_id: Id<Coto>,
+) -> impl Operation<Conn, Vec<(Vec<Ito>, Vec<Coto>)>> {
+    read_op(move |conn| {
+        let mut ancestors = Vec::new();
+        let mut traversed: HashSet<Id<Coto>> = [coto_id].into();
+        let mut next: HashSet<Id<Coto>> = [coto_id].into();
+        loop {
+            // Next itos
+            let itos: Vec<Ito> = itos::table
+                .filter(itos::target_coto_id.eq_any(&next))
+                .load::<Ito>(conn)?;
+            if itos.is_empty() {
+                break;
+            }
+
+            // Next coto IDs
+            next = itos
+                .iter()
+                .filter_map(|ito| {
+                    if !traversed.contains(&ito.source_coto_id) {
+                        Some(ito.source_coto_id) // unvisited
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+            traversed.extend(&next);
+
+            // Next cotos
+            let cotos = cotos::table
+                .filter(cotos::uuid.eq_any(&next))
+                .load::<Coto>(conn)?;
+            ancestors.push((itos, cotos));
+
+            if next.is_empty() {
+                break;
+            }
+        }
+        Ok(ancestors)
+    })
 }
 
 pub(crate) fn change_owner_node<'a>(
