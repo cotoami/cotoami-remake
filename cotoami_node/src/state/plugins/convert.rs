@@ -37,6 +37,20 @@ pub(crate) fn into_plugin_coto(coto: Coto) -> Option<cotoami_plugin_api::Coto> {
         })
 }
 
+pub(crate) fn into_plugin_ito(ito: Ito) -> cotoami_plugin_api::Ito {
+    cotoami_plugin_api::Ito {
+        uuid: ito.uuid.to_string(),
+        node_id: ito.node_id.to_string(),
+        created_by_id: ito.created_by_id.to_string(),
+        source_coto_id: ito.source_coto_id.to_string(),
+        target_coto_id: ito.target_coto_id.to_string(),
+        description: ito.description,
+        order: ito.order,
+        created_at: ito.created_at.to_string(),
+        updated_at: ito.updated_at.to_string(),
+    }
+}
+
 pub(crate) fn as_db_coto_input<'a>(
     input: &'a cotoami_plugin_api::CotoInput,
 ) -> Result<CotoInput<'a>> {

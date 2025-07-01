@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
+use extism::UserData;
 
 use crate::state::{
     plugins::{convert::*, PluginError},
@@ -15,6 +16,8 @@ pub(crate) struct HostFnContext {
 }
 
 impl HostFnContext {
+    pub fn new_user_data(&self) -> UserData<HostFnContext> { UserData::new(self.clone()) }
+
     #[allow(dead_code)]
     pub fn post_coto(
         &self,
@@ -27,6 +30,19 @@ impl HostFnContext {
         let (coto, log) = ds.post_coto(&db_input, &post_to, &opr)?;
         self.node_state.pubsub().publish_change(log);
         Ok(into_plugin_coto(coto).unwrap())
+    }
+
+    #[allow(dead_code)]
+    pub fn create_ito(
+        &self,
+        input: cotoami_plugin_api::ItoInput,
+    ) -> Result<cotoami_plugin_api::Ito> {
+        let opr = self.try_get_agent()?;
+        let db_input: ItoInput<'_> = as_db_ito_input(&input)?;
+        let ds = self.node_state.db().new_session()?;
+        let (ito, log) = ds.create_ito(&db_input, &opr)?;
+        self.node_state.pubsub().publish_change(log);
+        Ok(into_plugin_ito(ito))
     }
 
     fn try_get_agent(&self) -> Result<Operator> {

@@ -43,25 +43,14 @@ impl Plugin {
         identifier: impl Into<String>,
         node_state: NodeState,
     ) -> Result<extism::Plugin> {
-        let host_fn_conext = HostFnContext::new(identifier.into(), node_state);
+        let ctx = HostFnContext::new(identifier.into(), node_state);
         let manifest = Manifest::new([Wasm::file(wasm_file)]);
         PluginBuilder::new(manifest)
             .with_wasi(true)
             .with_function("log", [PTR], [], UserData::new(()), log)
-            .with_function(
-                "version",
-                [],
-                [PTR],
-                UserData::new(host_fn_conext.clone()),
-                version,
-            )
-            .with_function(
-                "post_coto",
-                [PTR],
-                [PTR],
-                UserData::new(host_fn_conext.clone()),
-                post_coto,
-            )
+            .with_function("version", [], [PTR], ctx.new_user_data(), version)
+            .with_function("post_coto", [PTR], [PTR], ctx.new_user_data(), post_coto)
+            .with_function("create_ito", [PTR], [PTR], ctx.new_user_data(), create_ito)
             .build()
     }
 
@@ -109,4 +98,11 @@ host_fn!(post_coto(context: HostFnContext; input: CotoInput) -> Coto {
     let context = context.get()?;
     let context = context.lock().unwrap();
     context.post_coto(input)
+});
+
+// fn create_ito(input: ItoInput) -> Ito
+host_fn!(create_ito(context: HostFnContext; input: ItoInput) -> Ito {
+    let context = context.get()?;
+    let context = context.lock().unwrap();
+    context.create_ito(input)
 });

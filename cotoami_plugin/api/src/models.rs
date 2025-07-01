@@ -1,5 +1,9 @@
 use extism_pdk::*;
 
+/////////////////////////////////////////////////////////////////////////////
+// Coto
+/////////////////////////////////////////////////////////////////////////////
+
 #[derive(derive_more::Debug, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
 #[encoding(Json)]
 pub struct Coto {
@@ -22,6 +26,16 @@ pub struct Coto {
     pub updated_at: String,
 }
 
+impl CotoInput {
+    pub fn new(content: impl Into<String>, post_to: Option<String>) -> Self {
+        Self {
+            content: content.into(),
+            post_to,
+            ..Default::default()
+        }
+    }
+}
+
 #[derive(derive_more::Debug, Default, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
 #[encoding(Json)]
 pub struct CotoInput {
@@ -35,14 +49,22 @@ pub struct CotoInput {
     pub latitude: Option<f64>,
 }
 
-impl CotoInput {
-    pub fn new(content: impl Into<String>, post_to: Option<String>) -> Self {
-        Self {
-            content: content.into(),
-            post_to,
-            ..Default::default()
-        }
-    }
+/////////////////////////////////////////////////////////////////////////////
+// Ito
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(derive_more::Debug, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
+#[encoding(Json)]
+pub struct Ito {
+    pub uuid: String,
+    pub node_id: String,
+    pub created_by_id: String,
+    pub source_coto_id: String,
+    pub target_coto_id: String,
+    pub description: Option<String>,
+    pub order: i32,
+    pub created_at: String,
+    pub updated_at: String,
 }
 
 #[derive(derive_more::Debug, Default, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
