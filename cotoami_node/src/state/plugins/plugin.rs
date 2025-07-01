@@ -69,6 +69,13 @@ impl Plugin {
             .with_function("version", [], [PTR], ctx.new_user_data(), version)
             .with_function("post_coto", [PTR], [PTR], ctx.new_user_data(), post_coto)
             .with_function("create_ito", [PTR], [PTR], ctx.new_user_data(), create_ito)
+            .with_function(
+                "ancestors_of",
+                [PTR],
+                [PTR],
+                ctx.new_user_data(),
+                ancestors_of,
+            )
             .build()
     }
 
@@ -123,4 +130,12 @@ host_fn!(create_ito(context: HostFnContext; input: ItoInput) -> Ito {
     let context = context.get()?;
     let context = context.lock().unwrap();
     context.create_ito(input)
+});
+
+// fn ancestors_of(coto_id: String) -> Ancestors
+host_fn!(ancestors_of(context: HostFnContext; coto_id: String) -> Ancestors {
+    let context = context.get()?;
+    let mut context = context.lock().unwrap();
+    let ancestors = context.ancestors_of(coto_id)?;
+    Ok(Ancestors(ancestors))
 });

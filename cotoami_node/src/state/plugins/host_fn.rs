@@ -45,6 +45,26 @@ impl HostFnContext {
         Ok(into_plugin_ito(ito))
     }
 
+    #[allow(dead_code)]
+    pub fn ancestors_of(
+        &mut self,
+        coto_id: String,
+    ) -> Result<Vec<(Vec<cotoami_plugin_api::Ito>, Vec<cotoami_plugin_api::Coto>)>> {
+        let coto_id: Id<Coto> = Id::from_str(&coto_id)?;
+        let mut ds = self.node_state.db().new_session()?;
+        let ancestors = ds
+            .ancestors_of(&coto_id)?
+            .into_iter()
+            .map(|(itos, cotos)| {
+                (
+                    itos.into_iter().map(into_plugin_ito).collect(),
+                    cotos.into_iter().filter_map(into_plugin_coto).collect(),
+                )
+            })
+            .collect();
+        Ok(ancestors)
+    }
+
     fn try_get_agent(&self) -> Result<Operator> {
         if let Some(node_id) = self
             .node_state

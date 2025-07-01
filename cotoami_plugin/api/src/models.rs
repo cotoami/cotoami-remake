@@ -84,3 +84,12 @@ impl ItoInput {
         }
     }
 }
+
+/////////////////////////////////////////////////////////////////////////////
+// Graph
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(derive_more::Debug, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
+#[serde(transparent)]
+#[encoding(Json)]
+pub struct Ancestors(pub Vec<(Vec<Ito>, Vec<Coto>)>);
