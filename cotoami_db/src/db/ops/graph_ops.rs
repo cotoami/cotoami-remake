@@ -119,12 +119,12 @@ struct TraversedIto {
 }
 
 pub(crate) fn ancestors_of<Conn: AsReadableConn>(
-    coto_id: Id<Coto>,
-) -> impl Operation<Conn, Vec<(Vec<Ito>, Vec<Coto>)>> {
+    coto_id: &Id<Coto>,
+) -> impl Operation<Conn, Vec<(Vec<Ito>, Vec<Coto>)>> + '_ {
     read_op(move |conn| {
         let mut ancestors = Vec::new();
-        let mut traversed: HashSet<Id<Coto>> = [coto_id].into();
-        let mut next: HashSet<Id<Coto>> = [coto_id].into();
+        let mut traversed: HashSet<Id<Coto>> = [*coto_id].into();
+        let mut next: HashSet<Id<Coto>> = [*coto_id].into();
         loop {
             // Next itos
             let itos: Vec<Ito> = itos::table

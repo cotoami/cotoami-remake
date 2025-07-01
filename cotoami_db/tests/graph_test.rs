@@ -20,9 +20,9 @@ fn graph() -> Result<()> {
     let connect = {
         let ds = db.new_session()?;
         let opr = opr.clone();
-        move |input: &ItoInput| -> Result<()> {
-            let _ = ds.create_ito(input, &opr)?;
-            Ok(())
+        move |input: &ItoInput| -> Result<Ito> {
+            let (ito, _) = ds.create_ito(input, &opr)?;
+            Ok(ito)
         }
     };
 
@@ -31,7 +31,7 @@ fn graph() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
 
     let (coto1, _) = ds.post_coto(&CotoInput::new("coto1"), &root.uuid, &opr)?;
-    connect(&ItoInput::new(root_coto.uuid, coto1.uuid).description("foo"))?;
+    let ito1 = connect(&ItoInput::new(root_coto.uuid, coto1.uuid).description("foo"))?;
 
     let expected_dot = indoc! {r#"
         digraph {
@@ -43,15 +43,28 @@ fn graph() -> Result<()> {
     assert_graph(ds.graph(root_coto.clone(), true)?, expected_dot);
     assert_graph(ds.graph_by_cte(root_coto.clone(), true)?, expected_dot);
 
+    assert_that!(
+        ds.ancestors_of(&coto1.uuid)?,
+        elements_are![(
+            unordered_elements_are![pat!(Ito {
+                uuid: eq(&ito1.uuid),
+                description: some(eq(&"foo"))
+            })],
+            unordered_elements_are![pat!(Coto {
+                uuid: eq(&root_coto.uuid)
+            })]
+        )]
+    );
+
     /////////////////////////////////////////////////////////////////////////////
     // When: add grandchildren
     /////////////////////////////////////////////////////////////////////////////
 
     let (coto2, _) = ds.post_coto(&CotoInput::new("coto2"), &root.uuid, &opr)?;
-    connect(&ItoInput::new(coto1.uuid, coto2.uuid))?;
+    let ito2 = connect(&ItoInput::new(coto1.uuid, coto2.uuid))?;
 
     let ((cotonoma1, _), _) = ds.post_cotonoma(&CotonomaInput::new("cotonoma1"), &root, &opr)?;
-    connect(&ItoInput::new(coto1.uuid, cotonoma1.coto_id))?;
+    let _ito3 = connect(&ItoInput::new(coto1.uuid, cotonoma1.coto_id))?;
 
     let graph = ds.graph(root_coto.clone(), true)?;
     let graph_by_cte = ds.graph_by_cte(root_coto.clone(), true)?;
@@ -73,13 +86,36 @@ fn graph() -> Result<()> {
     assert_graph(graph, expected_dot);
     assert_graph(graph_by_cte, expected_dot);
 
+    assert_that!(
+        ds.ancestors_of(&coto2.uuid)?,
+        elements_are![
+            (
+                unordered_elements_are![pat!(Ito {
+                    uuid: eq(&ito2.uuid)
+                })],
+                unordered_elements_are![pat!(Coto {
+                    uuid: eq(&coto1.uuid)
+                })]
+            ),
+            (
+                unordered_elements_are![pat!(Ito {
+                    uuid: eq(&ito1.uuid),
+                    description: some(eq(&"foo"))
+                })],
+                unordered_elements_are![pat!(Coto {
+                    uuid: eq(&root_coto.uuid)
+                })]
+            )
+        ]
+    );
+
     /////////////////////////////////////////////////////////////////////////////
     // When: add a loop
     /////////////////////////////////////////////////////////////////////////////
 
     let (coto3, _) = ds.post_coto(&CotoInput::new("coto3"), &root.uuid, &opr)?;
-    connect(&ItoInput::new(coto2.uuid, coto3.uuid))?;
-    connect(&ItoInput::new(coto3.uuid, coto1.uuid))?;
+    let ito4 = connect(&ItoInput::new(coto2.uuid, coto3.uuid))?;
+    let ito5 = connect(&ItoInput::new(coto3.uuid, coto1.uuid))?;
 
     let expected_dot = indoc! {r#"
         digraph {
@@ -97,6 +133,42 @@ fn graph() -> Result<()> {
     "#};
     assert_graph(ds.graph(root_coto.clone(), true)?, expected_dot);
     assert_graph(ds.graph_by_cte(root_coto.clone(), true)?, expected_dot);
+
+    assert_that!(
+        ds.ancestors_of(&coto3.uuid)?,
+        elements_are![
+            (
+                unordered_elements_are![pat!(Ito {
+                    uuid: eq(&ito4.uuid)
+                })],
+                unordered_elements_are![pat!(Coto {
+                    uuid: eq(&coto2.uuid)
+                })]
+            ),
+            (
+                unordered_elements_are![pat!(Ito {
+                    uuid: eq(&ito2.uuid)
+                })],
+                unordered_elements_are![pat!(Coto {
+                    uuid: eq(&coto1.uuid)
+                })]
+            ),
+            (
+                unordered_elements_are![
+                    pat!(Ito {
+                        uuid: eq(&ito1.uuid),
+                        description: some(eq(&"foo"))
+                    }),
+                    pat!(Ito {
+                        uuid: eq(&ito5.uuid)
+                    })
+                ],
+                unordered_elements_are![pat!(Coto {
+                    uuid: eq(&root_coto.uuid)
+                })]
+            )
+        ]
+    );
 
     /////////////////////////////////////////////////////////////////////////////
     // When: until cotonoma

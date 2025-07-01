@@ -28,4 +28,8 @@ impl DatabaseSession<'_> {
             Ok((itos, cotos))
         })
     }
+
+    pub fn ancestors_of(&mut self, coto_id: &Id<Coto>) -> Result<Vec<(Vec<Ito>, Vec<Coto>)>> {
+        self.read_transaction(graph_ops::ancestors_of(coto_id))
+    }
 }
