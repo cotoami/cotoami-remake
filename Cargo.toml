@@ -5,6 +5,7 @@ members = [
   "cotoami_node",
   "cotoami_plugin/api",
   "cotoami_plugin/plugins/echo",
+  "cotoami_plugin/plugins/chatgpt",
 ]
 resolver = "2"
 

@@ -1219,6 +1219,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cotoami_plugin_chatgpt"
+version = "0.1.0"
+dependencies = [
+ "cotoami_plugin_api",
+ "extism-pdk",
+ "lazy-regex",
+]
+
+[[package]]
 name = "cotoami_plugin_echo"
 version = "0.1.0"
 dependencies = [
