@@ -6,7 +6,10 @@ use extism::*;
 use parking_lot::Mutex;
 use tracing::info;
 
-use crate::state::{plugins::host_fn::HostFnContext, NodeState};
+use crate::state::{
+    plugins::{configs::Configs, host_fn::HostFnContext},
+    NodeState,
+};
 
 #[derive(Clone)]
 pub struct Plugin {
@@ -17,19 +20,31 @@ pub struct Plugin {
 impl Plugin {
     const FILE_NAME_SUFFIX: &'static str = ".wasm";
 
-    pub fn new<P: AsRef<Path>>(wasm_file: P, node_state: NodeState) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(
+        wasm_file: P,
+        configs: &Configs,
+        node_state: NodeState,
+    ) -> Result<Self> {
         // Building a plugin needs plugin metadata (identifier) to register host functions
         // with `HostFnContext`, but you need the plugin to get its metadata. To resolve
         // this egg or chicken situation, it requires a bit tricky way to build a plugin:
         //   1) First, load the real metadata using dummy metadata.
         //   2) Then, build a plugin with the loaded metadata.
 
-        let metadata = Self::build(wasm_file.as_ref(), "", node_state.clone())?
-            .call::<(), Metadata>("metadata", ())?;
+        let metadata = Self::build(
+            wasm_file.as_ref(),
+            "",
+            Config::default(),
+            node_state.clone(),
+        )?
+        .call::<(), Metadata>("metadata", ())?;
+        let identifier = metadata.identifier.clone();
+        let config = configs.config(&identifier);
 
         let plugin = Self::build(
             wasm_file.as_ref(),
             metadata.identifier.clone(),
+            config,
             node_state.clone(),
         )?;
         Ok(Self {
@@ -41,10 +56,12 @@ impl Plugin {
     fn build<P: AsRef<Path>>(
         wasm_file: P,
         identifier: impl Into<String>,
+        config: Config,
         node_state: NodeState,
     ) -> Result<extism::Plugin> {
         let ctx = HostFnContext::new(identifier.into(), node_state);
-        let manifest = Manifest::new([Wasm::file(wasm_file)]);
+        let manifest = Manifest::new([Wasm::file(wasm_file)])
+            .with_config(config.iter().map(|(key, value)| (key, value.to_string())));
         PluginBuilder::new(manifest)
             .with_wasi(true)
             .with_function("log", [PTR], [], UserData::new(()), log)

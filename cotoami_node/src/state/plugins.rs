@@ -54,7 +54,7 @@ impl PluginSystem {
             if !Plugin::is_plugin_file(&path) {
                 continue;
             }
-            match Plugin::new(&path, node_state.clone()) {
+            match Plugin::new(&path, &self.plugins.configs, node_state.clone()) {
                 Ok(plugin) => {
                     if let Err(e) = self.register(plugin).await {
                         error!("Couldn't register a plugin {path:?}: {e}");
