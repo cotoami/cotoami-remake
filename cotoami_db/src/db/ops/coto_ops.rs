@@ -80,9 +80,9 @@ pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Coto>> {
     })
 }
 
-pub(crate) fn map_from_ids<'a, Conn: AsReadableConn>(
-    ids: &'a [Id<Coto>],
-) -> impl Operation<Conn, HashMap<Id<Coto>, Coto>> + 'a {
+pub(crate) fn map_from_ids<Conn: AsReadableConn>(
+    ids: &[Id<Coto>],
+) -> impl Operation<Conn, HashMap<Id<Coto>, Coto>> + '_ {
     read_op(move |conn| {
         let map: HashMap<Id<Coto>, Coto> = cotos::table
             .filter(cotos::uuid.eq_any(ids))
