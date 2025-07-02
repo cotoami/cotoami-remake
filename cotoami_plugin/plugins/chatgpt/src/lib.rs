@@ -18,6 +18,7 @@ static COMMAND_PREFIX: Lazy<Regex> = lazy_regex!(r"^\s*\#chatgpt\s");
 #[host_fn]
 extern "ExtismHost" {
     fn log(message: String);
+    fn ancestors_of(coto_id: String) -> Ancestors;
     fn post_coto(input: CotoInput) -> Coto;
     fn create_ito(input: ItoInput) -> Ito;
 }
@@ -45,11 +46,9 @@ pub fn on(event: Event) -> FnResult<()> {
             let content = coto.content.unwrap_or_default();
             if coto.node_id == local_node_id && COMMAND_PREFIX.is_match(&content) {
                 let message = COMMAND_PREFIX.replace(&content, "").trim().to_owned();
-                let messages = vec![InputMessage {
-                    role: "user".into(),
-                    content: message,
-                    name: None,
-                }];
+                let mut messages: Vec<InputMessage> = base_messages(coto.uuid.clone())?;
+                messages.push(InputMessage::by_user(message, coto.posted_by_id));
+                unsafe { log(format!("{IDENTIFIER}: messages: {messages:?}"))? };
                 match request_chat_completion(messages) {
                     Ok(res_body) => {
                         for choice in res_body.choices {
@@ -77,6 +76,22 @@ pub fn on(event: Event) -> FnResult<()> {
 #[plugin_fn]
 pub fn destroy() -> FnResult<()> {
     Ok(())
+}
+
+fn base_messages(coto_id: String) -> Result<Vec<InputMessage>> {
+    let mut ancestors = unsafe { ancestors_of(coto_id)? };
+    ancestors.ancestors.reverse();
+    Ok(ancestors
+        .ancestors
+        .into_iter()
+        .map(|(_, cotos)| cotos)
+        .flatten()
+        .map(|coto| InputMessage {
+            role: "user".into(),
+            content: coto.content.unwrap_or_default(),
+            name: None,
+        })
+        .collect())
 }
 
 fn request_chat_completion(messages: Vec<InputMessage>) -> Result<ResponseBody> {

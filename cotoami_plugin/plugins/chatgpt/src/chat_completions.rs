@@ -17,6 +17,24 @@ pub struct InputMessage {
     pub name: Option<String>,
 }
 
+impl InputMessage {
+    pub fn by_user(content: String, name: String) -> Self {
+        InputMessage {
+            role: "user".into(),
+            content,
+            name: Some(name),
+        }
+    }
+
+    pub fn by_assistant(content: String) -> Self {
+        InputMessage {
+            role: "assistant".into(),
+            content,
+            name: None,
+        }
+    }
+}
+
 #[derive(Debug, serde::Deserialize, FromBytes)]
 #[encoding(Json)]
 pub struct ResponseBody {
