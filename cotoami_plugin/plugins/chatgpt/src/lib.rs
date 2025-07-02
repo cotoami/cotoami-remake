@@ -33,6 +33,7 @@ pub fn metadata() -> FnResult<Metadata> {
 pub fn init(config: Config) -> FnResult<()> {
     config.require_key(CONFIG_API_KEY)?;
     config.require_key(CONFIG_MODEL)?;
+    var::set("agent_node_id", config.agent_node_id().unwrap())?;
     Ok(())
 }
 
@@ -79,6 +80,7 @@ pub fn destroy() -> FnResult<()> {
 }
 
 fn base_messages(coto_id: String) -> Result<Vec<InputMessage>> {
+    let agent_node_id: String = var::get("agent_node_id")?.unwrap();
     let mut ancestors = unsafe { ancestors_of(coto_id)? };
     ancestors.ancestors.reverse();
     Ok(ancestors
@@ -86,10 +88,13 @@ fn base_messages(coto_id: String) -> Result<Vec<InputMessage>> {
         .into_iter()
         .map(|(_, cotos)| cotos)
         .flatten()
-        .map(|coto| InputMessage {
-            role: "user".into(),
-            content: coto.content.unwrap_or_default(),
-            name: None,
+        .map(|coto| {
+            let message = coto.content.unwrap_or_default();
+            if coto.posted_by_id == agent_node_id {
+                InputMessage::by_assistant(message)
+            } else {
+                InputMessage::by_user(message, coto.posted_by_id.clone())
+            }
         })
         .collect())
 }
