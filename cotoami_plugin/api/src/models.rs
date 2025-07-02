@@ -1,4 +1,17 @@
+use std::collections::HashMap;
+
 use extism_pdk::*;
+
+/////////////////////////////////////////////////////////////////////////////
+// Node
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(derive_more::Debug, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
+#[encoding(Json)]
+pub struct Node {
+    pub uuid: String,
+    pub name: String,
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // Coto
@@ -90,6 +103,8 @@ impl ItoInput {
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(derive_more::Debug, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
-#[serde(transparent)]
 #[encoding(Json)]
-pub struct Ancestors(pub Vec<(Vec<Ito>, Vec<Coto>)>);
+pub struct Ancestors {
+    pub ancestors: Vec<(Vec<Ito>, Vec<Coto>)>,
+    pub authors: HashMap<String, Node>,
+}

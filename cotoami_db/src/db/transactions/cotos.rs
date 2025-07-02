@@ -26,7 +26,10 @@ impl DatabaseSession<'_> {
         self.read_transaction(coto_ops::contains(id))
     }
 
-    pub fn cotos_map(&mut self, ids: &[Id<Coto>]) -> Result<HashMap<Id<Coto>, Coto>> {
+    pub fn cotos_map<'a>(
+        &mut self,
+        ids: impl IntoIterator<Item = &'a Id<Coto>>,
+    ) -> Result<HashMap<Id<Coto>, Coto>> {
         self.read_transaction(coto_ops::map_from_ids(ids))
     }
 

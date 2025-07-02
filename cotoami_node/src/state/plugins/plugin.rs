@@ -136,6 +136,5 @@ host_fn!(create_ito(context: HostFnContext; input: ItoInput) -> Ito {
 host_fn!(ancestors_of(context: HostFnContext; coto_id: String) -> Ancestors {
     let context = context.get()?;
     let mut context = context.lock().unwrap();
-    let ancestors = context.ancestors_of(coto_id)?;
-    Ok(Ancestors(ancestors))
+    context.ancestors_of(coto_id)
 });

@@ -34,7 +34,10 @@ impl DatabaseSession<'_> {
 
     pub fn all_nodes(&mut self) -> Result<Vec<Node>> { self.read_transaction(node_ops::all()) }
 
-    pub fn nodes_map(&mut self, ids: &[Id<Node>]) -> Result<HashMap<Id<Node>, Node>> {
+    pub fn nodes_map<'a>(
+        &mut self,
+        ids: impl IntoIterator<Item = &'a Id<Node>>,
+    ) -> Result<HashMap<Id<Node>, Node>> {
         self.read_transaction(node_ops::map_from_ids(ids))
     }
 

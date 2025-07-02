@@ -43,9 +43,9 @@ pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Node>> {
     })
 }
 
-pub(crate) fn map_from_ids<Conn: AsReadableConn>(
-    ids: &[Id<Node>],
-) -> impl Operation<Conn, HashMap<Id<Node>, Node>> + '_ {
+pub(crate) fn map_from_ids<'a, Conn: AsReadableConn>(
+    ids: impl IntoIterator<Item = &'a Id<Node>>,
+) -> impl Operation<Conn, HashMap<Id<Node>, Node>> {
     read_op(move |conn| {
         let map: HashMap<Id<Node>, Node> = nodes::table
             .filter(nodes::uuid.eq_any(ids))

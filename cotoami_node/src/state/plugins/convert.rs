@@ -15,6 +15,13 @@ pub(crate) fn into_plugin_event(change: Change, local_node_id: Id<Node>) -> Opti
     }
 }
 
+pub(crate) fn into_plugin_node(node: Node) -> cotoami_plugin_api::Node {
+    cotoami_plugin_api::Node {
+        uuid: node.uuid.to_string(),
+        name: node.name,
+    }
+}
+
 pub(crate) fn into_plugin_coto(coto: Coto) -> Option<cotoami_plugin_api::Coto> {
     coto.posted_in_id
         .map(|posted_in_id| cotoami_plugin_api::Coto {

@@ -1,7 +1,8 @@
-use std::str::FromStr;
+use std::{collections::HashSet, str::FromStr};
 
 use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
+use cotoami_plugin_api::Ancestors;
 use extism::UserData;
 
 use crate::state::{
@@ -46,14 +47,26 @@ impl HostFnContext {
     }
 
     #[allow(dead_code)]
-    pub fn ancestors_of(
-        &mut self,
-        coto_id: String,
-    ) -> Result<Vec<(Vec<cotoami_plugin_api::Ito>, Vec<cotoami_plugin_api::Coto>)>> {
+    pub fn ancestors_of(&mut self, coto_id: String) -> Result<Ancestors> {
         let coto_id: Id<Coto> = Id::from_str(&coto_id)?;
         let mut ds = self.node_state.db().new_session()?;
-        let ancestors = ds
-            .ancestors_of(&coto_id)?
+        let ancestors = ds.ancestors_of(&coto_id)?;
+        let author_ids: HashSet<Id<Node>> = ancestors
+            .iter()
+            .map(|(itos, cotos)| {
+                itos.iter()
+                    .map(|ito| ito.created_by_id)
+                    .chain(cotos.iter().map(|coto| coto.posted_by_id))
+                    .collect::<Vec<Id<Node>>>()
+            })
+            .flatten()
+            .collect();
+        let authors = ds
+            .nodes_map(&author_ids)?
+            .into_iter()
+            .map(|(id, node)| (id.to_string(), into_plugin_node(node)))
+            .collect();
+        let ancestors = ancestors
             .into_iter()
             .map(|(itos, cotos)| {
                 (
@@ -62,7 +75,7 @@ impl HostFnContext {
                 )
             })
             .collect();
-        Ok(ancestors)
+        Ok(Ancestors { ancestors, authors })
     }
 
     fn try_get_agent(&self) -> Result<Operator> {
