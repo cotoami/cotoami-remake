@@ -1,5 +1,7 @@
 use extism_pdk::*;
 
+pub const ENDPOINT: &'static str = "https://api.openai.com/v1/chat/completions";
+
 #[derive(Debug, serde::Serialize, ToBytes)]
 #[encoding(Json)]
 pub struct RequestBody {

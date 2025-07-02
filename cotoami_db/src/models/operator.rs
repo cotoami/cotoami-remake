@@ -60,16 +60,14 @@ impl Operator {
         if self.has_owner_permission() {
             return Ok(());
         }
-
-        if let Operator::ChildNode(ChildNode {
-            can_post_cotonomas: true,
-            ..
-        }) = self
-        {
-            return Ok(());
+        match self {
+            Operator::ChildNode(ChildNode {
+                can_post_cotonomas: true,
+                ..
+            }) => Ok(()),
+            Operator::Agent(_) => Ok(()),
+            _ => Err(DatabaseError::PermissionDenied),
         }
-
-        Err(DatabaseError::PermissionDenied)
     }
 
     /// Checks if this operator can update the given coto.
@@ -100,15 +98,13 @@ impl Operator {
         if self.has_owner_permission() {
             return Ok(());
         }
-
-        if let Operator::ChildNode(ChildNode {
-            can_edit_itos: true,
-            ..
-        }) = self
-        {
-            return Ok(());
+        match self {
+            Operator::ChildNode(ChildNode {
+                can_edit_itos: true,
+                ..
+            }) => Ok(()),
+            Operator::Agent(_) => Ok(()),
+            _ => Err(DatabaseError::PermissionDenied),
         }
-
-        Err(DatabaseError::PermissionDenied)
     }
 }

@@ -19,6 +19,7 @@ static COMMAND_PREFIX: Lazy<Regex> = lazy_regex!(r"^\s*\#chatgpt\s");
 extern "ExtismHost" {
     fn log(message: String);
     fn post_coto(input: CotoInput) -> Coto;
+    fn create_ito(input: ItoInput) -> Ito;
 }
 
 #[plugin_fn]
@@ -49,14 +50,16 @@ pub fn on(event: Event) -> FnResult<()> {
                     content: message,
                     name: None,
                 }];
-                match send_request(messages) {
+                match request_chat_completion(messages) {
                     Ok(res_body) => {
                         for choice in res_body.choices {
-                            let input = CotoInput::new(
+                            let coto_input = CotoInput::new(
                                 choice.message.content,
                                 Some(coto.posted_in_id.clone()),
                             );
-                            unsafe { post_coto(input)? };
+                            let reply = unsafe { post_coto(coto_input)? };
+                            let ito_input = ItoInput::new(coto.uuid.clone(), reply.uuid);
+                            unsafe { create_ito(ito_input)? };
                         }
                     }
                     Err(e) => {
@@ -71,9 +74,14 @@ pub fn on(event: Event) -> FnResult<()> {
     Ok(())
 }
 
-fn send_request(messages: Vec<InputMessage>) -> Result<ResponseBody> {
+#[plugin_fn]
+pub fn destroy() -> FnResult<()> {
+    Ok(())
+}
+
+fn request_chat_completion(messages: Vec<InputMessage>) -> Result<ResponseBody> {
     let api_key = config::get(CONFIG_API_KEY)?.unwrap();
-    let req = HttpRequest::new("https://api.openai.com/v1/chat/completions")
+    let req = HttpRequest::new(chat_completions::ENDPOINT)
         .with_method("POST")
         .with_header("Content-Type", "application/json")
         .with_header("Authorization", format!("Bearer {}", api_key));
@@ -83,9 +91,4 @@ fn send_request(messages: Vec<InputMessage>) -> Result<ResponseBody> {
     };
     let res = http::request::<RequestBody>(&req, Some(req_body))?;
     res.json()
-}
-
-#[plugin_fn]
-pub fn destroy() -> FnResult<()> {
-    Ok(())
 }
