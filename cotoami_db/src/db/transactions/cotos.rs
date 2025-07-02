@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use anyhow::Result;
 
 use crate::{
@@ -22,6 +24,10 @@ impl DatabaseSession<'_> {
 
     pub fn contains_coto(&mut self, id: &Id<Coto>) -> Result<bool> {
         self.read_transaction(coto_ops::contains(id))
+    }
+
+    pub fn cotos_map(&mut self, ids: &[Id<Coto>]) -> Result<HashMap<Id<Coto>, Coto>> {
+        self.read_transaction(coto_ops::map_from_ids(ids))
     }
 
     pub fn cotos(&mut self, ids: &[Id<Coto>]) -> Result<Vec<Coto>> {
