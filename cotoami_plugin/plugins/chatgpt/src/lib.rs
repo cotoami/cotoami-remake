@@ -4,12 +4,15 @@ use lazy_regex::*;
 
 const IDENTIFIER: &'static str = "app.cotoami.plugin.chatgpt";
 const NAME: &'static str = "ChatGPT";
+
+const CONFIG_API_KEY: &'static str = "api_key";
+const CONFIG_MODEL: &'static str = "model";
+
 static COMMAND_PREFIX: Lazy<Regex> = lazy_regex!(r"^\s*\#chatgpt\s");
 
 #[host_fn]
 extern "ExtismHost" {
     fn log(message: String);
-    fn version() -> String;
     fn post_coto(input: CotoInput) -> Coto;
 }
 
@@ -21,9 +24,8 @@ pub fn metadata() -> FnResult<Metadata> {
 
 #[plugin_fn]
 pub fn init(config: Config) -> FnResult<()> {
-    let version = unsafe { version()? };
-    unsafe { log(format!("{IDENTIFIER}: node version: {version}"))? };
-    unsafe { log(format!("{IDENTIFIER}: init with: {config:?}"))? };
+    config.require_key(CONFIG_API_KEY)?;
+    config.require_key(CONFIG_MODEL)?;
     Ok(())
 }
 
