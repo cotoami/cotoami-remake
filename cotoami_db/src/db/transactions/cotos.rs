@@ -6,7 +6,7 @@ use crate::{
     db::{
         error::*,
         op::*,
-        ops::{changelog_ops, coto_ops, cotonoma_ops, Page},
+        ops::{changelog_ops, coto_ops, cotonoma_ops, ito_ops, Page},
         DatabaseSession,
     },
     models::prelude::*,
@@ -225,6 +225,48 @@ impl DatabaseSession<'_> {
             let change = Change::CreateCoto(repost.clone());
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
             Ok(((repost, original), changelog))
+        })
+    }
+
+    /// Posting a subcoto as a single atomic operation.
+    ///
+    /// TODO: Update [ChangelogEntry] to be able to have multiple changes so that
+    /// the [Change]s can also be applied as a single atomic operation.
+    pub fn post_subcoto(
+        &self,
+        source_coto_id: &Id<Coto>,
+        coto_input: &CotoInput,
+        post_to: &Id<Cotonoma>,
+        operator: &Operator,
+    ) -> Result<((Coto, Ito), Vec<ChangelogEntry>)> {
+        operator.can_post_cotos()?;
+        operator.can_edit_itos()?;
+        let local_node = self.globals.try_read_local_node()?;
+        let poster = operator.try_get_node_id()?;
+        let new_coto = NewCoto::new(
+            &local_node.node_id,
+            post_to,
+            &poster,
+            coto_input,
+            local_node.image_max_size(),
+        )?;
+        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let post_to = cotonoma_ops::try_get(post_to).run(ctx)??;
+            self.globals.ensure_local(&post_to)?;
+
+            // Create a coto
+            let (inserted_coto, _) = coto_ops::insert(&new_coto).run(ctx)?;
+            let change = Change::CreateCoto(inserted_coto.clone());
+            let changelog1 = changelog_ops::log_change(&change, &local_node.node_id).run(ctx)?;
+
+            // Create an ito
+            let ito_input = ItoInput::new(*source_coto_id, inserted_coto.uuid);
+            let new_ito = NewIto::new(&local_node.node_id, &poster, &ito_input)?;
+            let inserted_ito = ito_ops::insert(new_ito).run(ctx)?;
+            let change = Change::CreateIto(inserted_ito.clone());
+            let changelog2 = changelog_ops::log_change(&change, &local_node.node_id).run(ctx)?;
+
+            Ok(((inserted_coto, inserted_ito), vec![changelog1, changelog2]))
         })
     }
 }
