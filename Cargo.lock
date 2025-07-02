@@ -1224,9 +1224,12 @@ dependencies = [
 name = "cotoami_plugin_chatgpt"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "cotoami_plugin_api",
  "extism-pdk",
  "lazy-regex",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

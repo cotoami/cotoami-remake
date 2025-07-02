@@ -1,6 +1,11 @@
+use anyhow::Result;
 use cotoami_plugin_api::*;
 use extism_pdk::*;
 use lazy_regex::*;
+
+pub use self::chat_completions::*;
+
+mod chat_completions;
 
 const IDENTIFIER: &'static str = "app.cotoami.plugin.chatgpt";
 const NAME: &'static str = "ChatGPT";
@@ -38,13 +43,46 @@ pub fn on(event: Event) -> FnResult<()> {
         } => {
             let content = coto.content.unwrap_or_default();
             if coto.node_id == local_node_id && COMMAND_PREFIX.is_match(&content) {
-                let echo = COMMAND_PREFIX.replace(&content, "").trim().to_owned();
-                let input = CotoInput::new(echo, Some(coto.posted_in_id));
-                unsafe { post_coto(input)? };
+                let message = COMMAND_PREFIX.replace(&content, "").trim().to_owned();
+                let messages = vec![InputMessage {
+                    role: "user".into(),
+                    content: message,
+                    name: None,
+                }];
+                match send_request(messages) {
+                    Ok(res_body) => {
+                        for choice in res_body.choices {
+                            let input = CotoInput::new(
+                                choice.message.content,
+                                Some(coto.posted_in_id.clone()),
+                            );
+                            unsafe { post_coto(input)? };
+                        }
+                    }
+                    Err(e) => {
+                        let input =
+                            CotoInput::new(format!("[ERROR] {e}"), Some(coto.posted_in_id.clone()));
+                        unsafe { post_coto(input)? };
+                    }
+                }
             }
         }
     }
     Ok(())
+}
+
+fn send_request(messages: Vec<InputMessage>) -> Result<ResponseBody> {
+    let api_key = config::get(CONFIG_API_KEY)?.unwrap();
+    let req = HttpRequest::new("https://api.openai.com/v1/chat/completions")
+        .with_method("POST")
+        .with_header("Content-Type", "application/json")
+        .with_header("Authorization", format!("Bearer {}", api_key));
+    let req_body = RequestBody {
+        model: config::get(CONFIG_MODEL)?.unwrap(),
+        messages,
+    };
+    let res = http::request::<RequestBody>(&req, Some(req_body))?;
+    res.json()
 }
 
 #[plugin_fn]

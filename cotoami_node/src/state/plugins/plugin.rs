@@ -61,7 +61,11 @@ impl Plugin {
     ) -> Result<extism::Plugin> {
         let ctx = HostFnContext::new(identifier.into(), node_state);
         let manifest = Manifest::new([Wasm::file(wasm_file)])
-            .with_config(config.iter().map(|(key, value)| (key, value.to_string())))
+            .with_config(
+                config
+                    .iter()
+                    .map(|(key, value)| (key, Config::to_string(value))),
+            )
             .with_allowed_hosts(config.allowed_hosts().into_iter());
         PluginBuilder::new(manifest)
             .with_wasi(true)

@@ -60,12 +60,22 @@ impl Config {
     const KEY_DISABLED: &'static str = "disabled";
     const KEY_AGENT_NODE_ID: &'static str = "agent_node_id";
 
+    pub fn to_string(value: &Value) -> String {
+        match value {
+            Value::String(s) => s.clone(),
+            other => other.to_string(),
+        }
+    }
+
     pub fn iter(&self) -> Iter<'_, String, Value> { self.0.iter() }
 
     pub fn allowed_hosts(&self) -> Vec<String> {
         match self.0.get(Self::KEY_ALLOWED_HOSTS) {
             Some(Value::String(host)) => vec![host.clone()],
-            Some(Value::Array(hosts)) => hosts.into_iter().map(|host| host.to_string()).collect(),
+            Some(Value::Array(hosts)) => hosts
+                .into_iter()
+                .map(|host| Self::to_string(host))
+                .collect(),
             _ => Vec::new(),
         }
     }
