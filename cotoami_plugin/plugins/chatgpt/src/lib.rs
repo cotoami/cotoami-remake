@@ -20,6 +20,7 @@ extern "ExtismHost" {
     fn log(message: String);
     fn ancestors_of(coto_id: String) -> Ancestors;
     fn post_coto(input: CotoInput, post_to: Option<String>) -> Coto;
+    fn edit_coto(id: String, diff: CotoContentDiff) -> Coto;
     fn create_ito(input: ItoInput) -> Ito;
 }
 
@@ -44,13 +45,13 @@ pub fn on(event: Event) -> FnResult<()> {
             coto,
             local_node_id,
         } => {
-            respond_to(coto, local_node_id)?;
+            reply_to(coto, local_node_id)?;
         }
         Event::CotoUpdated {
             coto,
             local_node_id,
         } => {
-            respond_to(coto, local_node_id)?;
+            reply_to(coto, local_node_id)?;
         }
     }
     Ok(())
@@ -61,25 +62,35 @@ pub fn destroy() -> FnResult<()> {
     Ok(())
 }
 
-fn respond_to(coto: Coto, local_node_id: String) -> Result<()> {
+const CONTENT_LOADING: &'static str = "![](/images/loading.svg)";
+
+fn reply_to(coto: Coto, local_node_id: String) -> Result<()> {
     let content = coto.content.unwrap_or_default();
     if coto.node_id == local_node_id && COMMAND_PREFIX.is_match(&content) {
-        let message = COMMAND_PREFIX.replace(&content, "").trim().to_owned();
-        let mut messages: Vec<InputMessage> = base_messages(coto.uuid.clone())?;
-        messages.push(InputMessage::by_user(message, coto.posted_by_id));
+        // Post an empty reply with a loading icon.
         let post_to = coto.posted_in_id.clone();
+        let coto_input = CotoInput::new(CONTENT_LOADING);
+        let reply = unsafe { post_coto(coto_input, Some(post_to))? };
+        let ito_input = ItoInput::new(coto.uuid.clone(), reply.uuid.clone());
+        unsafe { create_ito(ito_input)? };
+
+        // Messages (ancestors cotos and target coto)
+        let mut messages: Vec<InputMessage> = base_messages(coto.uuid.clone())?;
+        let message = COMMAND_PREFIX.replace(&content, "").trim().to_owned();
+        messages.push(InputMessage::by_user(message, coto.posted_by_id));
+
         match request_chat_completion(messages) {
             Ok(res_body) => {
                 for choice in res_body.choices {
-                    let coto_input = CotoInput::new(choice.message.content);
-                    let reply = unsafe { post_coto(coto_input, Some(post_to.clone()))? };
-                    let ito_input = ItoInput::new(coto.uuid.clone(), reply.uuid);
-                    unsafe { create_ito(ito_input)? };
+                    let mut reply_diff = CotoContentDiff::default();
+                    reply_diff.content = Some(choice.message.content);
+                    unsafe { edit_coto(reply.uuid.clone(), reply_diff)? };
                 }
             }
             Err(e) => {
-                let input = CotoInput::new(format!("[ERROR] {e}"));
-                unsafe { post_coto(input, Some(post_to))? };
+                let mut reply_diff = CotoContentDiff::default();
+                reply_diff.content = Some(format!("[ERROR] {e}"));
+                unsafe { edit_coto(reply.uuid, reply_diff)? };
             }
         }
     }
