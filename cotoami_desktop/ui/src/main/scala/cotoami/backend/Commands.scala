@@ -366,11 +366,18 @@ object Commands {
   def MarkAsRead(nodeId: Option[Id[Node]]) =
     jso(MarkAsRead = jso(node = nodeId.map(_.uuid).getOrElse(null)))
 
-  private def geolocationJson(location: Geolocation) =
-    jso(longitude = location.longitude, latitude = location.latitude)
-
-  private def dateTimeRangeJson(range: DateTimeRange) =
-    jso(start = range.startUtcIso, end = range.endUtcIso.getOrElse(null))
+  def PostSubcoto(
+      sourceCotoId: Id[Coto],
+      input: CotoInput,
+      postTo: Id[Cotonoma]
+  ) =
+    jso(PostSubcoto =
+      jso(
+        source_coto = sourceCotoId.uuid,
+        input = input.toJson,
+        post_to = postTo.uuid
+      )
+    )
 
   private def fieldDiffJson(value: Option[Option[js.Any]]): js.Any =
     value match {

@@ -1,11 +1,28 @@
 package cotoami.backend
 
 import scala.scalajs.js
+import scala.scalajs.js.Dynamic.{literal => jso}
 
 import marubinotto.fui.{Browser, Cmd}
 import marubinotto.facade.Nullable
 
 import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Id}
+
+case class CotoInput(
+    content: String,
+    summary: Option[String],
+    mediaContent: Option[(String, String)],
+    location: Option[Geolocation],
+    timeRange: Option[DateTimeRange]
+) {
+  def toJson = jso(
+    content = content,
+    summary = summary.getOrElse(null),
+    media_content = mediaContent.map(js.Tuple2.fromScalaTuple2).getOrElse(null),
+    geolocation = location.map(geolocationJson).getOrElse(null),
+    datetime_range = timeRange.map(dateTimeRangeJson).getOrElse(null)
+  )
+}
 
 @js.native
 trait CotoJson extends js.Object {
