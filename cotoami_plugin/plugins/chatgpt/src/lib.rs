@@ -44,31 +44,7 @@ pub fn on(event: Event) -> FnResult<()> {
             coto,
             local_node_id,
         } => {
-            let content = coto.content.unwrap_or_default();
-            if coto.node_id == local_node_id && COMMAND_PREFIX.is_match(&content) {
-                let message = COMMAND_PREFIX.replace(&content, "").trim().to_owned();
-                let mut messages: Vec<InputMessage> = base_messages(coto.uuid.clone())?;
-                messages.push(InputMessage::by_user(message, coto.posted_by_id));
-                unsafe { log(format!("{IDENTIFIER}: messages: {messages:?}"))? };
-                match request_chat_completion(messages) {
-                    Ok(res_body) => {
-                        for choice in res_body.choices {
-                            let coto_input = CotoInput::new(
-                                choice.message.content,
-                                Some(coto.posted_in_id.clone()),
-                            );
-                            let reply = unsafe { post_coto(coto_input)? };
-                            let ito_input = ItoInput::new(coto.uuid.clone(), reply.uuid);
-                            unsafe { create_ito(ito_input)? };
-                        }
-                    }
-                    Err(e) => {
-                        let input =
-                            CotoInput::new(format!("[ERROR] {e}"), Some(coto.posted_in_id.clone()));
-                        unsafe { post_coto(input)? };
-                    }
-                }
-            }
+            respond_to(coto, local_node_id)?;
         }
     }
     Ok(())
@@ -76,6 +52,31 @@ pub fn on(event: Event) -> FnResult<()> {
 
 #[plugin_fn]
 pub fn destroy() -> FnResult<()> {
+    Ok(())
+}
+
+fn respond_to(coto: Coto, local_node_id: String) -> Result<()> {
+    let content = coto.content.unwrap_or_default();
+    if coto.node_id == local_node_id && COMMAND_PREFIX.is_match(&content) {
+        let message = COMMAND_PREFIX.replace(&content, "").trim().to_owned();
+        let mut messages: Vec<InputMessage> = base_messages(coto.uuid.clone())?;
+        messages.push(InputMessage::by_user(message, coto.posted_by_id));
+        match request_chat_completion(messages) {
+            Ok(res_body) => {
+                for choice in res_body.choices {
+                    let coto_input =
+                        CotoInput::new(choice.message.content, Some(coto.posted_in_id.clone()));
+                    let reply = unsafe { post_coto(coto_input)? };
+                    let ito_input = ItoInput::new(coto.uuid.clone(), reply.uuid);
+                    unsafe { create_ito(ito_input)? };
+                }
+            }
+            Err(e) => {
+                let input = CotoInput::new(format!("[ERROR] {e}"), Some(coto.posted_in_id.clone()));
+                unsafe { post_coto(input)? };
+            }
+        }
+    }
     Ok(())
 }
 
