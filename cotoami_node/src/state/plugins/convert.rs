@@ -80,6 +80,10 @@ pub(crate) fn into_plugin_ito(ito: Ito) -> cotoami_plugin_api::Ito {
     }
 }
 
+pub(crate) fn as_db_geolocation(location: &cotoami_plugin_api::Geolocation) -> Geolocation {
+    Geolocation::from_lng_lat((location.longitude, location.latitude))
+}
+
 pub(crate) fn as_db_coto_input<'a>(
     input: &'a cotoami_plugin_api::CotoInput,
 ) -> Result<CotoInput<'a>> {
@@ -88,19 +92,11 @@ pub(crate) fn as_db_coto_input<'a>(
     } else {
         None
     };
-    let geolocation = if let Some(location) = &input.geolocation {
-        Some(Geolocation::from_lng_lat((
-            location.longitude,
-            location.latitude,
-        )))
-    } else {
-        None
-    };
     Ok(CotoInput {
         content: Cow::from(&input.content),
         summary: input.summary.as_deref().map(Cow::from),
         media_content,
-        geolocation,
+        geolocation: input.geolocation.as_ref().map(as_db_geolocation),
         datetime_range: None,
     })
 }
