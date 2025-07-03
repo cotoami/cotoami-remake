@@ -1,0 +1,20 @@
+<svg width="36" height="36" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <style> 
+    .loading-dots {
+      animation: loading .8s linear infinite;
+      fill: #666666;
+    }
+    .dots2 {
+      animation-delay: -.65s;
+    }
+    .dots3 {
+      animation-delay: -.5s;
+    }
+    @keyframes loading {
+      93.75%,100%{r:3px}46.875%{r:.2px}
+    }
+  </style>
+  <circle class="loading-dots" cx="4" cy="12" r="3"/>
+  <circle class="loading-dots dots2" cx="12" cy="12" r="3"/>
+  <circle class="loading-dots dots3" cx="20" cy="12" r="3"/>
+</svg>
