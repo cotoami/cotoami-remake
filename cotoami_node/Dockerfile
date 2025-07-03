@@ -38,13 +38,7 @@ WORKDIR /app
 
 # Copy the source files needed to build cotoami_node.
 COPY Cargo.toml Cargo.lock ./
-COPY cotoami_db ./cotoami_db
-COPY cotoami_node ./cotoami_node
-# cotoami_desktop is not needed, but it cannot be simply excluded from the workspace:
-# https://github.com/rust-lang/cargo/issues/14566
-# so let's include minimal files required to build.
-COPY cotoami_desktop/tauri/Cargo.toml ./cotoami_desktop/tauri/
-COPY cotoami_desktop/tauri/src/main.rs ./cotoami_desktop/tauri/src/
+COPY crates ./crates
 
 # Build the application.
 #

@@ -9,7 +9,7 @@ on:
 
 jobs:
   run-tests:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
     - name: Checkout
@@ -29,7 +29,16 @@ jobs:
           librsvg2-dev \
           patchelf
 
-    - name: Run tests
+    - name: Run cotoami_node tests
+      working-directory: cotoami_node
+      # WARN: actions-rs has been unmaintained for quite a while
+      uses: actions-rs/cargo@v1
+      with:
+        command: test
+        args: --release --all-features
+
+    - name: Run cotoami_desktop tests
+      working-directory: cotoami_desktop/tauri
       # WARN: actions-rs has been unmaintained for quite a while
       uses: actions-rs/cargo@v1
       with:

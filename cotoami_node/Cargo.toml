@@ -1,58 +1,45 @@
-[package]
-authors.workspace = true
-edition.workspace = true
-license.workspace = true
-name = "cotoami_node"
-rust-version.workspace = true
-version.workspace = true
+[workspace]
+members = [
+  "crates/db",
+  "crates/node",
+  "crates/plugin_api",
+]
+resolver = "2"
 
-[dependencies]
-anyhow.workspace = true 
-async-stream = "0.3.6" 
-async-trait = "0.1.80" 
-axum = {version = "0.8.1", features = ["tokio", "ws"]} 
-axum-extra = {version = "0.10.0", features = ["cookie", "typed-header"]} 
-axum-macros = "0.5.0" 
-bytes.workspace = true 
-chrono.workspace = true 
-const_format = "0.2.32" 
-cotoami_db.workspace = true 
-derive-new.workspace = true 
-derive_more.workspace = true 
-dirs = "5.0.1" 
-dotenvy = "0.15.7" 
-dyn-clone = "1.0.16" 
-envy = "0.4" # seems unmaintained
-eventsource-stream = "0.2.3" 
-futures-util.workspace = true 
-futures.workspace = true 
-googletest.workspace = true 
-itertools.workspace = true 
-mime = "0.3.17" 
-parking_lot.workspace = true 
-percent-encoding = "2.3.1" 
-# reqwest without openssl - https://github.com/seanmonstar/reqwest/issues/495
-cotoami_plugin_api.workspace = true
-extism = "1.11.1"
-reqwest = {version = "0.12", default-features = false, features = ["json", "rustls-tls", "charset", "http2", "macos-system-configuration"]}
-reqwest-eventsource = "0.6.0"
-semver = "1.0"
-serde.workspace = true
-serde_json.workspace = true
-smallvec = "1.11.0"
-thiserror.workspace = true
-time = "0.3.37"
-tokio = {version = "1.0", features = ["full"]}
-tokio-tungstenite = {version = "0.26.1", features = ["rustls-tls-webpki-roots", "url"]}
-tokio-util = "0.7.10"
-toml.workspace = true
-tower-http = {version = "0.6.0", features = ["timeout", "trace"]}
-tracing-subscriber.workspace = true
-tracing.workspace = true
-url.workspace = true
-uuid.workspace = true
-validator.workspace = true
+[workspace.package]
+authors = ["Daisuke Morita <daisuke.marubinotto@gmail.com>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+rust-version = "1.88"
+version = "0.8.0"
 
-[dev-dependencies]
-tempfile = "3"
-test-log = "0.2.16"
+[workspace.dependencies]
+anyhow = "1.0"
+base64 = "0.22.0"
+bytes = {version = "1", features = ["serde"]}
+chrono = {version = "0.4.31", features = ["serde"]}
+clap = {version = "4.4.16", features = ["derive"]}
+cotoami_db = {path = "crates/db"}
+cotoami_plugin_api = {path = "crates/plugin_api"}
+derive-new = "0.6.0"
+derive_more = {version = "1.0.0", features = ["debug", "display"]}
+extism-pdk = "1.4.1"
+futures = "0.3.30"
+futures-util = "0.3.30"
+googletest = "0.12.0"
+indoc = "2.0.5"
+itertools = "0.14.0"
+once_cell = "1.19.0"
+parking_lot = {version = "0.12.3", features = ["send_guard"]}
+rand = "0.8.5"
+regex = "1.10.2"
+serde = {version = "1.0", features = ["derive", "rc"]}
+serde_json = "1.0"
+thiserror = "1.0.56"
+toml = "0.8.23"
+tower-service = "0.3.2"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+url = "2.5.0"
+uuid = {version = "1.8.0", features = ["std", "v4", "v7", "serde"]}
+validator = {version = "0.18.1", features = ["derive"]}
