@@ -4,13 +4,28 @@ use anyhow::Result;
 use cotoami_db::prelude::*;
 use cotoami_plugin_api::Event;
 
-pub(crate) fn into_plugin_event(change: Change, local_node_id: Id<Node>) -> Option<Event> {
+use crate::state::NodeState;
+
+pub(crate) async fn into_plugin_event(
+    change: Change,
+    local_node_id: Id<Node>,
+    node_state: NodeState,
+) -> Option<Event> {
     let local_node_id = local_node_id.to_string();
     match change {
         Change::CreateCoto(coto) => into_plugin_coto(coto).map(|coto| Event::CotoPosted {
             coto,
             local_node_id,
         }),
+        Change::EditCoto { coto_id, .. } => node_state
+            .coto(coto_id)
+            .await
+            .ok()
+            .and_then(into_plugin_coto)
+            .map(|coto| Event::CotoUpdated {
+                coto,
+                local_node_id,
+            }),
         _ => None,
     }
 }

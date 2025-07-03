@@ -41,6 +41,7 @@ pub fn on(event: Event) -> FnResult<()> {
                 unsafe { post_coto(input)? };
             }
         }
+        _ => (),
     }
     Ok(())
 }

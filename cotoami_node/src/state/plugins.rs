@@ -116,14 +116,16 @@ impl PluginSystem {
     }
 
     fn start_event_loop(&mut self) -> Result<()> {
-        let state = self.node_state.as_ref().unwrap();
         let event_loop = tokio::spawn({
+            let state = self.node_state.as_ref().unwrap().clone();
             let local_node_id = state.try_get_local_node_id()?;
             let mut changes = state.pubsub().changes().subscribe(None::<()>);
             let plugins = self.plugins.clone();
             async move {
                 while let Some(log) = changes.next().await {
-                    if let Some(event) = into_plugin_event(log.change, local_node_id) {
+                    if let Some(event) =
+                        into_plugin_event(log.change, local_node_id, state.clone()).await
+                    {
                         let event = Arc::new(event);
                         plugins.for_each_enabled(|plugin, config| {
                             send_event_to_plugin(event.clone(), plugin, &config);
@@ -229,6 +231,7 @@ fn send_event_to_plugin(event: Arc<Event>, plugin: &Plugin, config: &Config) {
                     return; // exclude self post
                 }
             }
+            _ => (),
         }
     }
 

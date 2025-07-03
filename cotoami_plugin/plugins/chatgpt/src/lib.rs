@@ -46,6 +46,12 @@ pub fn on(event: Event) -> FnResult<()> {
         } => {
             respond_to(coto, local_node_id)?;
         }
+        Event::CotoUpdated {
+            coto,
+            local_node_id,
+        } => {
+            respond_to(coto, local_node_id)?;
+        }
     }
     Ok(())
 }
