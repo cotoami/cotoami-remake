@@ -3,7 +3,8 @@ use std::sync::Arc;
 use anyhow::Result;
 use axum::{
     extract::{Json, Path, Query, State},
-    routing::{get, put},
+    http::StatusCode,
+    routing::{get, post, put},
     Extension, Router,
 };
 use axum_extra::TypedHeader;
@@ -35,6 +36,7 @@ pub(super) fn routes() -> Router<NodeState> {
         .route("/{coto_id}/promote", put(promote))
         .route("/{coto_id}/itos", get(sibling_itos))
         .route("/{coto_id}/graph", get(graph))
+        .route("/{coto_id}/subcotos", post(post_subcoto))
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -245,4 +247,33 @@ async fn graph(
         .graph_from_coto(coto_id)
         .await
         .map(|graph| Content(graph, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// POST /api/data/cotos/{coto_id}/subcotos?post_to=xxx
+/////////////////////////////////////////////////////////////////////////////
+
+async fn post_subcoto(
+    State(state): State<NodeState>,
+    Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(source_coto_id): Path<Id<Coto>>,
+    Query(destination): Query<Destination>,
+    Json(input): Json<CotoInput<'static>>,
+) -> Result<(StatusCode, Content<(Coto, Ito)>), ServiceError> {
+    state
+        .post_subcoto(
+            source_coto_id,
+            input,
+            destination.post_to.unwrap(),
+            Arc::new(operator),
+        )
+        .await
+        .map(|subcoto| (StatusCode::CREATED, Content(subcoto, accept)))
+}
+
+#[derive(Debug, serde::Deserialize)]
+pub struct Destination {
+    #[serde(default)]
+    pub post_to: Option<Id<Cotonoma>>,
 }

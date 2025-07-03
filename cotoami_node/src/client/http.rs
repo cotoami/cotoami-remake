@@ -291,6 +291,14 @@ impl HttpClient {
                 };
                 self.put(&url)
             }
+            Command::PostSubcoto {
+                source_coto,
+                input,
+                post_to,
+            } => self
+                .post(&format!("{API_PATH_COTOS}/{source_coto}/subcotos"))
+                .query(&vec![("post_to", post_to)])
+                .json(&input),
         };
 
         // Set the "Accept" header from Request::accept()

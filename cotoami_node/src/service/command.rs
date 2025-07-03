@@ -204,4 +204,13 @@ pub enum Command {
     /// Request to mark the given node as read and
     /// return the saved timestamp (UTC ISO string) if suceeded.
     MarkAsRead { node: Option<Id<Node>> },
+
+    /// Request to create a new [Coto] in the given cotonoma (`post_to`) and
+    /// create an ito from `source_coto`. Return a tuple of [Coto] and [Ito]
+    /// if suceeded.
+    PostSubcoto {
+        source_coto: Id<Coto>,
+        input: CotoInput<'static>,
+        post_to: Id<Cotonoma>,
+    },
 }
