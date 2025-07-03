@@ -6,7 +6,7 @@ import scala.scalajs.js.Dynamic.{literal => jso}
 import marubinotto.fui.{Browser, Cmd}
 import marubinotto.facade.Nullable
 
-import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Id}
+import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Id, Ito}
 
 case class CotoInput(
     content: String,
@@ -97,6 +97,13 @@ object CotoJson {
       dest: Id[Cotonoma]
   ): Cmd.One[Either[ErrorJson, js.Tuple2[CotoJson, CotoJson]]] =
     Commands.send(Commands.Repost(id, dest))
+
+  def postSubcoto(
+      sourceCotoId: Id[Coto],
+      input: CotoInput,
+      postTo: Id[Cotonoma]
+  ): Cmd.One[Either[ErrorJson, js.Tuple2[CotoJson, ItoJson]]] =
+    Commands.send(Commands.PostSubcoto(sourceCotoId, input, postTo))
 }
 
 object CotoBackend {
@@ -177,5 +184,14 @@ object CotoBackend {
       _.map(pair =>
         (CotoBackend.toModel(pair._1), CotoBackend.toModel(pair._2))
       )
+    )
+
+  def postSubcoto(
+      sourceCotoId: Id[Coto],
+      input: CotoInput,
+      postTo: Id[Cotonoma]
+  ): Cmd.One[Either[ErrorJson, (Coto, Ito)]] =
+    CotoJson.postSubcoto(sourceCotoId, input, postTo).map(
+      _.map(pair => (CotoBackend.toModel(pair._1), ItoBackend.toModel(pair._2)))
     )
 }
