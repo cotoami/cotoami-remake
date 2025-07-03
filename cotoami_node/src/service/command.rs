@@ -211,6 +211,6 @@ pub enum Command {
     PostSubcoto {
         source_coto: Id<Coto>,
         input: CotoInput<'static>,
-        post_to: Id<Cotonoma>,
+        post_to: Option<Id<Cotonoma>>,
     },
 }

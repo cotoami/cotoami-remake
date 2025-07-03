@@ -204,7 +204,7 @@ impl NodeState {
         self,
         source_coto_id: Id<Coto>,
         input: CotoInput<'static>,
-        post_to: Id<Cotonoma>,
+        post_to: Option<Id<Cotonoma>>,
         operator: Arc<Operator>,
     ) -> Result<(Coto, Ito), ServiceError> {
         if let Err(errors) = input.validate() {
@@ -213,7 +213,9 @@ impl NodeState {
 
         let local_node_id = self.try_get_local_node_id()?;
         let source_coto = self.coto(source_coto_id).await?;
-        let post_to = self.cotonoma(post_to).await?;
+        let post_to = self
+            .determine_subcoto_destination(&source_coto, post_to)
+            .await?;
         let ito_node_id =
             Ito::determine_node(&source_coto.node_id, &post_to.node_id, &local_node_id);
 
@@ -245,6 +247,24 @@ impl NodeState {
             .await?
         } else {
             unimplemented!();
+        }
+    }
+
+    async fn determine_subcoto_destination(
+        &self,
+        source_coto: &Coto,
+        post_to: Option<Id<Cotonoma>>,
+    ) -> Result<Cotonoma, ServiceError> {
+        if let Some(post_to) = post_to {
+            self.cotonoma(post_to).await
+        } else {
+            if source_coto.is_cotonoma {
+                let (cotonoma, _) = self.cotonoma_pair_by_coto_id(source_coto.uuid).await?;
+                Ok(cotonoma)
+            } else {
+                // non-cotonoma coto should have posted_in_id
+                self.cotonoma(source_coto.posted_in_id.unwrap()).await
+            }
         }
     }
 }

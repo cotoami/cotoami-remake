@@ -265,7 +265,7 @@ async fn post_subcoto(
         .post_subcoto(
             source_coto_id,
             input,
-            destination.post_to.unwrap(),
+            destination.post_to,
             Arc::new(operator),
         )
         .await
