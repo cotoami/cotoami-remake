@@ -40,6 +40,7 @@ jobs:
   
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
+      id: setup-buildx
 
     # Enable BuildKit CacheMount
     # https://github.com/reproducible-containers/buildkit-cache-dance
@@ -54,8 +55,9 @@ jobs:
         key: cache-${{ hashFiles('cotoami_node/Dockerfile') }}
 
     - name: Inject cache into docker
-      uses: reproducible-containers/buildkit-cache-dance@v3.1.0
+      uses: reproducible-containers/buildkit-cache-dance@v3
       with:
+        builder: ${{ steps.setup-buildx.outputs.name }}
         cache-map: |
           {
             "usr-local-cargo-registry": "/usr/local/cargo/registry",
