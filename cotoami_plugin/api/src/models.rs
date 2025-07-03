@@ -27,11 +27,9 @@ pub struct Coto {
     pub content: Option<String>,
     pub summary: Option<String>,
     #[debug(skip)]
-    pub media_content: Option<bytes::Bytes>,
-    pub media_type: Option<String>,
+    pub media_content: Option<(bytes::Bytes, String)>,
     pub is_cotonoma: bool,
-    pub longitude: Option<f64>,
-    pub latitude: Option<f64>,
+    pub geolocation: Option<Geolocation>,
     pub datetime_start: Option<String>,
     pub datetime_end: Option<String>,
     pub repost_of_id: Option<String>,
@@ -41,14 +39,19 @@ pub struct Coto {
 
 #[derive(derive_more::Debug, Default, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
 #[encoding(Json)]
+pub struct Geolocation {
+    pub longitude: f64,
+    pub latitude: f64,
+}
+
+#[derive(derive_more::Debug, Default, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
+#[encoding(Json)]
 pub struct CotoInput {
     pub content: String,
     pub summary: Option<String>,
     #[debug(skip)]
-    pub media_content: Option<bytes::Bytes>,
-    pub media_type: Option<String>,
-    pub longitude: Option<f64>,
-    pub latitude: Option<f64>,
+    pub media_content: Option<(bytes::Bytes, String)>,
+    pub geolocation: Option<Geolocation>,
 }
 
 impl CotoInput {
@@ -58,6 +61,16 @@ impl CotoInput {
             ..Default::default()
         }
     }
+}
+
+#[derive(derive_more::Debug, Default, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
+#[encoding(Json)]
+pub struct CotoContentDiff {
+    pub content: Option<String>,
+    pub summary: Option<String>,
+    #[debug(skip)]
+    pub media_content: Option<(bytes::Bytes, String)>,
+    pub geolocation: Option<Geolocation>,
 }
 
 /////////////////////////////////////////////////////////////////////////////

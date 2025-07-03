@@ -46,11 +46,18 @@ pub(crate) fn into_plugin_coto(coto: Coto) -> Option<cotoami_plugin_api::Coto> {
             posted_by_id: coto.posted_by_id.to_string(),
             content: coto.content,
             summary: coto.summary,
-            media_content: coto.media_content.map(|bytes| bytes.inner()),
-            media_type: coto.media_type,
+            media_content: match (coto.media_content, coto.media_type) {
+                (Some(c), Some(t)) => Some((c.inner(), t)),
+                _ => None,
+            },
             is_cotonoma: coto.is_cotonoma,
-            longitude: coto.longitude,
-            latitude: coto.latitude,
+            geolocation: match (coto.longitude, coto.latitude) {
+                (Some(longitude), Some(latitude)) => Some(cotoami_plugin_api::Geolocation {
+                    longitude,
+                    latitude,
+                }),
+                _ => None,
+            },
             datetime_start: coto.datetime_start.map(|time| time.to_string()),
             datetime_end: coto.datetime_end.map(|time| time.to_string()),
             repost_of_id: coto.repost_of_id.map(|id| id.to_string()),
@@ -76,14 +83,16 @@ pub(crate) fn into_plugin_ito(ito: Ito) -> cotoami_plugin_api::Ito {
 pub(crate) fn as_db_coto_input<'a>(
     input: &'a cotoami_plugin_api::CotoInput,
 ) -> Result<CotoInput<'a>> {
-    let media_content =
-        if let (Some(content), Some(content_type)) = (&input.media_content, &input.media_type) {
-            Some((content.clone().into(), Cow::from(content_type)))
-        } else {
-            None
-        };
-    let geolocation = if let (Some(longitude), Some(latitude)) = (input.longitude, input.latitude) {
-        Some(Geolocation::from_lng_lat((longitude, latitude)))
+    let media_content = if let Some((content, content_type)) = &input.media_content {
+        Some((content.clone().into(), Cow::from(content_type)))
+    } else {
+        None
+    };
+    let geolocation = if let Some(location) = &input.geolocation {
+        Some(Geolocation::from_lng_lat((
+            location.longitude,
+            location.latitude,
+        )))
     } else {
         None
     };
