@@ -71,7 +71,13 @@ impl Plugin {
             .with_wasi(true)
             .with_function("log", [PTR], [], UserData::new(()), log)
             .with_function("version", [], [PTR], ctx.new_user_data(), version)
-            .with_function("post_coto", [PTR], [PTR], ctx.new_user_data(), post_coto)
+            .with_function(
+                "post_coto",
+                [PTR, PTR],
+                [PTR],
+                ctx.new_user_data(),
+                post_coto,
+            )
             .with_function("create_ito", [PTR], [PTR], ctx.new_user_data(), create_ito)
             .with_function(
                 "ancestors_of",
@@ -122,11 +128,11 @@ host_fn!(version(context: HostFnContext;) -> String {
     Ok(context.node_state.version().to_owned())
 });
 
-// fn post_coto(input: CotoInput) -> Coto
-host_fn!(post_coto(context: HostFnContext; input: CotoInput) -> Coto {
+// fn post_coto(input: CotoInput, post_to: Option<String>) -> Coto
+host_fn!(post_coto(context: HostFnContext; input: CotoInput, post_to: Option<String>) -> Coto {
     let context = context.get()?;
     let context = context.lock().unwrap();
-    context.post_coto(input)
+    context.post_coto(input, post_to)
 });
 
 // fn create_ito(input: ItoInput) -> Ito

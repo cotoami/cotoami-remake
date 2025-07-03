@@ -19,7 +19,7 @@ static COMMAND_PREFIX: Lazy<Regex> = lazy_regex!(r"^\s*\#chatgpt\s");
 extern "ExtismHost" {
     fn log(message: String);
     fn ancestors_of(coto_id: String) -> Ancestors;
-    fn post_coto(input: CotoInput) -> Coto;
+    fn post_coto(input: CotoInput, post_to: Option<String>) -> Coto;
     fn create_ito(input: ItoInput) -> Ito;
 }
 
@@ -67,19 +67,19 @@ fn respond_to(coto: Coto, local_node_id: String) -> Result<()> {
         let message = COMMAND_PREFIX.replace(&content, "").trim().to_owned();
         let mut messages: Vec<InputMessage> = base_messages(coto.uuid.clone())?;
         messages.push(InputMessage::by_user(message, coto.posted_by_id));
+        let post_to = coto.posted_in_id.clone();
         match request_chat_completion(messages) {
             Ok(res_body) => {
                 for choice in res_body.choices {
-                    let coto_input =
-                        CotoInput::new(choice.message.content, Some(coto.posted_in_id.clone()));
-                    let reply = unsafe { post_coto(coto_input)? };
+                    let coto_input = CotoInput::new(choice.message.content);
+                    let reply = unsafe { post_coto(coto_input, Some(post_to.clone()))? };
                     let ito_input = ItoInput::new(coto.uuid.clone(), reply.uuid);
                     unsafe { create_ito(ito_input)? };
                 }
             }
             Err(e) => {
-                let input = CotoInput::new(format!("[ERROR] {e}"), Some(coto.posted_in_id.clone()));
-                unsafe { post_coto(input)? };
+                let input = CotoInput::new(format!("[ERROR] {e}"));
+                unsafe { post_coto(input, Some(post_to))? };
             }
         }
     }

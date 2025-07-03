@@ -23,10 +23,11 @@ impl HostFnContext {
     pub fn post_coto(
         &self,
         input: cotoami_plugin_api::CotoInput,
+        post_to: Option<String>,
     ) -> Result<cotoami_plugin_api::Coto> {
         let opr = self.try_get_agent()?;
         let db_input: CotoInput<'_> = as_db_coto_input(&input)?;
-        let post_to = self.target_cotonoma_id(input.post_to.as_deref())?;
+        let post_to = self.target_cotonoma_id(post_to.as_deref())?;
         let ds = self.node_state.db().new_session()?;
         let (coto, log) = ds.post_coto(&db_input, &post_to, &opr)?;
         self.node_state.pubsub().publish_change(log);

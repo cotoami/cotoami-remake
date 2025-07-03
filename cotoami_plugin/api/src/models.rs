@@ -39,20 +39,9 @@ pub struct Coto {
     pub updated_at: String,
 }
 
-impl CotoInput {
-    pub fn new(content: impl Into<String>, post_to: Option<String>) -> Self {
-        Self {
-            content: content.into(),
-            post_to,
-            ..Default::default()
-        }
-    }
-}
-
 #[derive(derive_more::Debug, Default, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
 #[encoding(Json)]
 pub struct CotoInput {
-    pub post_to: Option<String>,
     pub content: String,
     pub summary: Option<String>,
     #[debug(skip)]
@@ -60,6 +49,15 @@ pub struct CotoInput {
     pub media_type: Option<String>,
     pub longitude: Option<f64>,
     pub latitude: Option<f64>,
+}
+
+impl CotoInput {
+    pub fn new(content: impl Into<String>) -> Self {
+        Self {
+            content: content.into(),
+            ..Default::default()
+        }
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
