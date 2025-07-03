@@ -61,13 +61,30 @@ impl Plugin {
     ) -> Result<extism::Plugin> {
         let ctx = HostFnContext::new(identifier.into(), node_state);
         let manifest = Manifest::new([Wasm::file(wasm_file)])
-            .with_config(config.iter().map(|(key, value)| (key, value.to_string())))
+            .with_config(
+                config
+                    .iter()
+                    .map(|(key, value)| (key, Config::to_string(value))),
+            )
             .with_allowed_hosts(config.allowed_hosts().into_iter());
         PluginBuilder::new(manifest)
             .with_wasi(true)
             .with_function("log", [PTR], [], UserData::new(()), log)
             .with_function("version", [], [PTR], ctx.new_user_data(), version)
-            .with_function("post_coto", [PTR], [PTR], ctx.new_user_data(), post_coto)
+            .with_function(
+                "post_coto",
+                [PTR, PTR],
+                [PTR],
+                ctx.new_user_data(),
+                post_coto,
+            )
+            .with_function(
+                "edit_coto",
+                [PTR, PTR],
+                [PTR],
+                ctx.new_user_data(),
+                edit_coto,
+            )
             .with_function("create_ito", [PTR], [PTR], ctx.new_user_data(), create_ito)
             .with_function(
                 "ancestors_of",
@@ -118,11 +135,18 @@ host_fn!(version(context: HostFnContext;) -> String {
     Ok(context.node_state.version().to_owned())
 });
 
-// fn post_coto(input: CotoInput) -> Coto
-host_fn!(post_coto(context: HostFnContext; input: CotoInput) -> Coto {
+// fn post_coto(input: CotoInput, post_to: Option<String>) -> Coto
+host_fn!(post_coto(context: HostFnContext; input: CotoInput, post_to: Option<String>) -> Coto {
     let context = context.get()?;
     let context = context.lock().unwrap();
-    context.post_coto(input)
+    context.post_coto(input, post_to)
+});
+
+// fn edit_coto(id: String, diff: CotoContentDiff) -> Coto
+host_fn!(edit_coto(context: HostFnContext; id: String, diff: CotoContentDiff) -> Coto {
+    let context = context.get()?;
+    let context = context.lock().unwrap();
+    context.edit_coto(id, diff)
 });
 
 // fn create_ito(input: ItoInput) -> Ito
@@ -136,6 +160,5 @@ host_fn!(create_ito(context: HostFnContext; input: ItoInput) -> Ito {
 host_fn!(ancestors_of(context: HostFnContext; coto_id: String) -> Ancestors {
     let context = context.get()?;
     let mut context = context.lock().unwrap();
-    let ancestors = context.ancestors_of(coto_id)?;
-    Ok(Ancestors(ancestors))
+    context.ancestors_of(coto_id)
 });

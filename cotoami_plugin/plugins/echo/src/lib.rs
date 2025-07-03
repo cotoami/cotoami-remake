@@ -10,7 +10,7 @@ static COMMAND_PREFIX: Lazy<Regex> = lazy_regex!(r"^\s*\#echo\s");
 extern "ExtismHost" {
     fn log(message: String);
     fn version() -> String;
-    fn post_coto(input: CotoInput) -> Coto;
+    fn post_coto(input: CotoInput, post_to: Option<String>) -> Coto;
 }
 
 #[plugin_fn]
@@ -37,10 +37,11 @@ pub fn on(event: Event) -> FnResult<()> {
             let content = coto.content.unwrap_or_default();
             if coto.node_id == local_node_id && COMMAND_PREFIX.is_match(&content) {
                 let echo = COMMAND_PREFIX.replace(&content, "").trim().to_owned();
-                let input = CotoInput::new(echo, Some(coto.posted_in_id));
-                unsafe { post_coto(input)? };
+                let input = CotoInput::new(echo);
+                unsafe { post_coto(input, Some(coto.posted_in_id))? };
             }
         }
+        _ => (),
     }
     Ok(())
 }

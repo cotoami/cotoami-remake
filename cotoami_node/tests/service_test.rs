@@ -378,6 +378,44 @@ where
     );
 
     /////////////////////////////////////////////////////////////////////////////
+    // Command: PostSubcoto
+    /////////////////////////////////////////////////////////////////////////////
+
+    let request = Command::PostSubcoto {
+        source_coto: posted_coto.uuid,
+        input: CotoInput::new("Subcoto"),
+        post_to: Some(backend_root_cotonoma.uuid),
+    }
+    .into_request();
+    let (subcoto, subito) = service.call(request).await?.content::<(Coto, Ito)>()?;
+
+    assert_that!(
+        subcoto,
+        pat!(Coto {
+            node_id: eq(&backend_node.uuid),
+            posted_in_id: some(eq(&backend_root_cotonoma.uuid)),
+            posted_by_id: eq(&operator_node_id),
+            content: some(eq("Subcoto")),
+            summary: none(),
+            is_cotonoma: eq(&false),
+            repost_of_id: none(),
+            reposted_in_ids: none(),
+        }),
+    );
+    assert_that!(
+        subito,
+        pat!(Ito {
+            node_id: eq(&backend_node.uuid),
+            created_by_id: eq(&operator_node_id),
+            source_coto_id: eq(&posted_coto.uuid),
+            target_coto_id: eq(&subcoto.uuid),
+            description: none(),
+            details: none(),
+            order: eq(&1),
+        }),
+    );
+
+    /////////////////////////////////////////////////////////////////////////////
     // Command: Promote
     /////////////////////////////////////////////////////////////////////////////
 

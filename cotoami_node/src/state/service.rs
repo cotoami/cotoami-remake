@@ -151,6 +151,11 @@ impl NodeState {
                     format.serialize(self.mark_all_as_read(opr?).await)
                 }
             }
+            Command::PostSubcoto {
+                source_coto,
+                input,
+                post_to,
+            } => format.serialize(self.post_subcoto(source_coto, input, post_to, opr?).await),
         }
     }
 }

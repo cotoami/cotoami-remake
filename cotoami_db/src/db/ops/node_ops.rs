@@ -1,6 +1,6 @@
 //! Node related operations
 
-use std::ops::DerefMut;
+use std::{collections::HashMap, ops::DerefMut};
 
 use anyhow::bail;
 use chrono::NaiveDateTime;
@@ -40,6 +40,20 @@ pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Node>> {
             .order(nodes::rowid.asc())
             .load::<Node>(conn)
             .map_err(anyhow::Error::from)
+    })
+}
+
+pub(crate) fn map_from_ids<'a, Conn: AsReadableConn>(
+    ids: impl IntoIterator<Item = &'a Id<Node>>,
+) -> impl Operation<Conn, HashMap<Id<Node>, Node>> {
+    read_op(move |conn| {
+        let map: HashMap<Id<Node>, Node> = nodes::table
+            .filter(nodes::uuid.eq_any(ids))
+            .load::<Node>(conn)?
+            .into_iter()
+            .map(|c| (c.uuid, c))
+            .collect();
+        Ok(map)
     })
 }
 

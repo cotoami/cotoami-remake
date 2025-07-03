@@ -1,4 +1,17 @@
+use std::collections::HashMap;
+
 use extism_pdk::*;
+
+/////////////////////////////////////////////////////////////////////////////
+// Node
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(derive_more::Debug, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
+#[encoding(Json)]
+pub struct Node {
+    pub uuid: String,
+    pub name: String,
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // Coto
@@ -14,11 +27,9 @@ pub struct Coto {
     pub content: Option<String>,
     pub summary: Option<String>,
     #[debug(skip)]
-    pub media_content: Option<bytes::Bytes>,
-    pub media_type: Option<String>,
+    pub media_content: Option<(bytes::Bytes, String)>,
     pub is_cotonoma: bool,
-    pub longitude: Option<f64>,
-    pub latitude: Option<f64>,
+    pub geolocation: Option<Geolocation>,
     pub datetime_start: Option<String>,
     pub datetime_end: Option<String>,
     pub repost_of_id: Option<String>,
@@ -26,11 +37,27 @@ pub struct Coto {
     pub updated_at: String,
 }
 
+#[derive(derive_more::Debug, Default, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
+#[encoding(Json)]
+pub struct Geolocation {
+    pub longitude: f64,
+    pub latitude: f64,
+}
+
+#[derive(derive_more::Debug, Default, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
+#[encoding(Json)]
+pub struct CotoInput {
+    pub content: String,
+    pub summary: Option<String>,
+    #[debug(skip)]
+    pub media_content: Option<(bytes::Bytes, String)>,
+    pub geolocation: Option<Geolocation>,
+}
+
 impl CotoInput {
-    pub fn new(content: impl Into<String>, post_to: Option<String>) -> Self {
+    pub fn new(content: impl Into<String>) -> Self {
         Self {
             content: content.into(),
-            post_to,
             ..Default::default()
         }
     }
@@ -38,15 +65,12 @@ impl CotoInput {
 
 #[derive(derive_more::Debug, Default, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
 #[encoding(Json)]
-pub struct CotoInput {
-    pub post_to: Option<String>,
-    pub content: String,
+pub struct CotoContentDiff {
+    pub content: Option<String>,
     pub summary: Option<String>,
     #[debug(skip)]
-    pub media_content: Option<bytes::Bytes>,
-    pub media_type: Option<String>,
-    pub longitude: Option<f64>,
-    pub latitude: Option<f64>,
+    pub media_content: Option<(bytes::Bytes, String)>,
+    pub geolocation: Option<Geolocation>,
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -90,6 +114,8 @@ impl ItoInput {
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(derive_more::Debug, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
-#[serde(transparent)]
 #[encoding(Json)]
-pub struct Ancestors(pub Vec<(Vec<Ito>, Vec<Coto>)>);
+pub struct Ancestors {
+    pub ancestors: Vec<(Vec<Ito>, Vec<Coto>)>,
+    pub authors: HashMap<String, Node>,
+}

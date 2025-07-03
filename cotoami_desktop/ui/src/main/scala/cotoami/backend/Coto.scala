@@ -1,11 +1,28 @@
 package cotoami.backend
 
 import scala.scalajs.js
+import scala.scalajs.js.Dynamic.{literal => jso}
 
 import marubinotto.fui.{Browser, Cmd}
 import marubinotto.facade.Nullable
 
-import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Id}
+import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Id, Ito}
+
+case class CotoInput(
+    content: String,
+    summary: Option[String],
+    mediaContent: Option[(String, String)],
+    location: Option[Geolocation],
+    timeRange: Option[DateTimeRange]
+) {
+  def toJson = jso(
+    content = content,
+    summary = summary.getOrElse(null),
+    media_content = mediaContent.map(js.Tuple2.fromScalaTuple2).getOrElse(null),
+    geolocation = location.map(geolocationJson).getOrElse(null),
+    datetime_range = timeRange.map(dateTimeRangeJson).getOrElse(null)
+  )
+}
 
 @js.native
 trait CotoJson extends js.Object {
@@ -30,23 +47,10 @@ trait CotoJson extends js.Object {
 
 object CotoJson {
   def post(
-      content: String,
-      summary: Option[String],
-      mediaContent: Option[(String, String)],
-      location: Option[Geolocation],
-      timeRange: Option[DateTimeRange],
+      input: CotoInput,
       postTo: Id[Cotonoma]
   ): Cmd.One[Either[ErrorJson, CotoJson]] =
-    Commands.send(
-      Commands.PostCoto(
-        content,
-        summary,
-        mediaContent,
-        location,
-        timeRange,
-        postTo
-      )
-    )
+    Commands.send(Commands.PostCoto(input, postTo))
 
   def edit(
       id: Id[Coto],
@@ -80,6 +84,13 @@ object CotoJson {
       dest: Id[Cotonoma]
   ): Cmd.One[Either[ErrorJson, js.Tuple2[CotoJson, CotoJson]]] =
     Commands.send(Commands.Repost(id, dest))
+
+  def postSubcoto(
+      sourceCotoId: Id[Coto],
+      input: CotoInput,
+      postTo: Id[Cotonoma]
+  ): Cmd.One[Either[ErrorJson, js.Tuple2[CotoJson, ItoJson]]] =
+    Commands.send(Commands.PostSubcoto(sourceCotoId, input, postTo))
 }
 
 object CotoBackend {
@@ -119,14 +130,10 @@ object CotoBackend {
     )
 
   def post(
-      content: String,
-      summary: Option[String],
-      mediaContent: Option[(String, String)],
-      location: Option[Geolocation],
-      timeRange: Option[DateTimeRange],
+      input: CotoInput,
       postTo: Id[Cotonoma]
   ): Cmd.One[Either[ErrorJson, Coto]] =
-    CotoJson.post(content, summary, mediaContent, location, timeRange, postTo)
+    CotoJson.post(input, postTo)
       .map(_.map(CotoBackend.toModel))
 
   def edit(
@@ -160,5 +167,14 @@ object CotoBackend {
       _.map(pair =>
         (CotoBackend.toModel(pair._1), CotoBackend.toModel(pair._2))
       )
+    )
+
+  def postSubcoto(
+      sourceCotoId: Id[Coto],
+      input: CotoInput,
+      postTo: Id[Cotonoma]
+  ): Cmd.One[Either[ErrorJson, (Coto, Ito)]] =
+    CotoJson.postSubcoto(sourceCotoId, input, postTo).map(
+      _.map(pair => (CotoBackend.toModel(pair._1), ItoBackend.toModel(pair._2)))
     )
 }

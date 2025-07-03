@@ -7,4 +7,5 @@ use crate::models::*;
 #[encoding(Json)]
 pub enum Event {
     CotoPosted { coto: Coto, local_node_id: String },
+    CotoUpdated { coto: Coto, local_node_id: String },
 }

@@ -1,7 +1,8 @@
-use std::str::FromStr;
+use std::{collections::HashSet, str::FromStr};
 
 use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
+use cotoami_plugin_api::Ancestors;
 use extism::UserData;
 
 use crate::state::{
@@ -22,12 +23,28 @@ impl HostFnContext {
     pub fn post_coto(
         &self,
         input: cotoami_plugin_api::CotoInput,
+        post_to: Option<String>,
     ) -> Result<cotoami_plugin_api::Coto> {
         let opr = self.try_get_agent()?;
         let db_input: CotoInput<'_> = as_db_coto_input(&input)?;
-        let post_to = self.target_cotonoma_id(input.post_to.as_deref())?;
+        let post_to = self.target_cotonoma_id(post_to.as_deref())?;
         let ds = self.node_state.db().new_session()?;
         let (coto, log) = ds.post_coto(&db_input, &post_to, &opr)?;
+        self.node_state.pubsub().publish_change(log);
+        Ok(into_plugin_coto(coto).unwrap())
+    }
+
+    #[allow(dead_code)]
+    pub fn edit_coto(
+        &self,
+        id: String,
+        diff: cotoami_plugin_api::CotoContentDiff,
+    ) -> Result<cotoami_plugin_api::Coto> {
+        let opr = self.try_get_agent()?;
+        let coto_id: Id<Coto> = Id::from_str(&id)?;
+        let db_diff = as_db_coto_content_diff(diff);
+        let ds = self.node_state.db().new_session()?;
+        let (coto, log) = ds.edit_coto(&coto_id, db_diff, &opr)?;
         self.node_state.pubsub().publish_change(log);
         Ok(into_plugin_coto(coto).unwrap())
     }
@@ -46,14 +63,26 @@ impl HostFnContext {
     }
 
     #[allow(dead_code)]
-    pub fn ancestors_of(
-        &mut self,
-        coto_id: String,
-    ) -> Result<Vec<(Vec<cotoami_plugin_api::Ito>, Vec<cotoami_plugin_api::Coto>)>> {
+    pub fn ancestors_of(&mut self, coto_id: String) -> Result<Ancestors> {
         let coto_id: Id<Coto> = Id::from_str(&coto_id)?;
         let mut ds = self.node_state.db().new_session()?;
-        let ancestors = ds
-            .ancestors_of(&coto_id)?
+        let ancestors = ds.ancestors_of(&coto_id)?;
+        let author_ids: HashSet<Id<Node>> = ancestors
+            .iter()
+            .map(|(itos, cotos)| {
+                itos.iter()
+                    .map(|ito| ito.created_by_id)
+                    .chain(cotos.iter().map(|coto| coto.posted_by_id))
+                    .collect::<Vec<Id<Node>>>()
+            })
+            .flatten()
+            .collect();
+        let authors = ds
+            .nodes_map(&author_ids)?
+            .into_iter()
+            .map(|(id, node)| (id.to_string(), into_plugin_node(node)))
+            .collect();
+        let ancestors = ancestors
             .into_iter()
             .map(|(itos, cotos)| {
                 (
@@ -62,7 +91,7 @@ impl HostFnContext {
                 )
             })
             .collect();
-        Ok(ancestors)
+        Ok(Ancestors { ancestors, authors })
     }
 
     fn try_get_agent(&self) -> Result<Operator> {

@@ -6,7 +6,6 @@ import slinky.web.html._
 
 import marubinotto.optionalClasses
 import marubinotto.fui.Cmd
-import marubinotto.fui.Cmd.One.pure
 import marubinotto.facade.Nullable
 import marubinotto.Validation
 import marubinotto.components.{materialSymbol, ScrollArea, Select}
@@ -14,7 +13,7 @@ import marubinotto.components.{materialSymbol, ScrollArea, Select}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Ito}
 import cotoami.repository.Root
-import cotoami.backend.{CotoBackend, ErrorJson, ItoBackend}
+import cotoami.backend.{CotoBackend, ErrorJson}
 import cotoami.subparts.{Modal, PartsCoto, PartsIto, PartsNode}
 import cotoami.subparts.EditorCoto._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
@@ -47,32 +46,20 @@ object ModalSubcoto {
     def readyToPost: Boolean =
       !posting && postTo.isDefined && cotoForm.hasValidContents && !validateDescription.failed
 
-    def postAndConnect: (Model, Cmd.One[AppMsg]) =
+    def post: (Model, Cmd.One[AppMsg]) =
       (
         copy(posting = true),
-        post.flatMap(_ match {
-          case Right(coto) => connect(coto)
-          case Left(e)     => pure(Left(e))
-        }).map(Msg.Posted(_).into)
+        postTo
+          .map(target =>
+            CotoBackend.postSubcoto(
+              sourceCotoId,
+              cotoForm.toBackendInput,
+              target.cotonoma.id
+            )
+          )
+          .getOrElse(Cmd.none)
+          .map(Msg.Posted(_).into)
       )
-
-    private def post: Cmd.One[Either[ErrorJson, Coto]] =
-      postTo.map(target =>
-        CotoBackend.post(
-          cotoForm.content,
-          cotoForm.summary,
-          cotoForm.mediaBase64,
-          cotoForm.geolocation,
-          cotoForm.dateTimeRange,
-          target.cotonoma.id
-        )
-      ).getOrElse(Cmd.none)
-
-    private def connect(
-        targetCoto: Coto
-    ): Cmd.One[Either[ErrorJson, (Ito, Coto)]] =
-      ItoBackend.create(sourceCotoId, targetCoto.id, description, None, order)
-        .map(_.map(_ -> targetCoto))
   }
 
   class TargetCotonoma(
@@ -96,6 +83,10 @@ object ModalSubcoto {
       val postedInIds =
         repo.cotos.get(sourceCotoId).map(_.postedInIds).getOrElse(Seq.empty)
 
+      // Target cotonoma choices:
+      //   1. the current cotonoma
+      //   2. the cotonomas of the source coto
+      //   3. the source cotonoma (if the source coto is a cotonoma)
       var targetCotonomaIds =
         repo.cotonomas.getByCotoId(sourceCotoId) match {
           // If the source coto is a cotonoma, it's the first candidate.
@@ -148,7 +139,7 @@ object ModalSubcoto {
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
     case class TargetCotonomaSelected(dest: Option[TargetCotonoma]) extends Msg
     object Post extends Msg
-    case class Posted(result: Either[ErrorJson, (Ito, Coto)]) extends Msg
+    case class Posted(result: Either[ErrorJson, (Coto, Ito)]) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -172,7 +163,7 @@ object ModalSubcoto {
         default.copy(_1 = model.copy(postTo = target))
 
       case Msg.Post =>
-        model.postAndConnect.pipe { case (model, cmd) =>
+        model.post.pipe { case (model, cmd) =>
           default.copy(_1 = model, _3 = cmd)
         }
 

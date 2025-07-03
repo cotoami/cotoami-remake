@@ -80,19 +80,28 @@ pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Coto>> {
     })
 }
 
-pub(crate) fn get_by_ids<'a, Conn: AsReadableConn>(
-    ids: &'a [Id<Coto>],
-) -> impl Operation<Conn, Vec<Coto>> + 'a {
+pub(crate) fn map_from_ids<'a, Conn: AsReadableConn>(
+    ids: impl IntoIterator<Item = &'a Id<Coto>>,
+) -> impl Operation<Conn, HashMap<Id<Coto>, Coto>> {
     read_op(move |conn| {
-        let mut map: HashMap<Id<Coto>, Coto> = cotos::table
+        let map: HashMap<Id<Coto>, Coto> = cotos::table
             .filter(cotos::uuid.eq_any(ids))
             .load::<Coto>(conn)?
             .into_iter()
             .map(|c| (c.uuid, c))
             .collect();
+        Ok(map)
+    })
+}
+
+pub(crate) fn get_by_ids<'a, Conn: AsReadableConn>(
+    ids: &'a [Id<Coto>],
+) -> impl Operation<Conn, Vec<Coto>> + 'a {
+    composite_op::<Conn, _, _>(move |ctx| {
+        let mut map = map_from_ids(ids).run(ctx)?;
         // Sort the results in order of the `ids` param.
-        let cotonomas = ids.iter().filter_map(|id| map.remove(id)).collect();
-        Ok(cotonomas)
+        let cotos = ids.iter().filter_map(|id| map.remove(id)).collect();
+        Ok(cotos)
     })
 }
 
