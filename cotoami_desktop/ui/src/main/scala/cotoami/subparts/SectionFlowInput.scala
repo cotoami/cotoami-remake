@@ -309,14 +309,7 @@ object SectionFlowInput {
       form: CotoForm.Model,
       postTo: Id[Cotonoma]
   ): Cmd.One[AppMsg] =
-    CotoBackend.post(
-      form.content,
-      form.summary,
-      form.mediaBase64,
-      form.geolocation,
-      form.dateTimeRange,
-      postTo
-    )
+    CotoBackend.post(form.toBackendInput, postTo)
       .map(Msg.CotoPosted(postId, _).into)
 
   private def postCotonoma(

@@ -20,7 +20,7 @@ import marubinotto.components.{
 
 import cotoami.Context
 import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Id, Node}
-import cotoami.backend.{CotonomaBackend, ErrorJson}
+import cotoami.backend.{CotoInput, CotonomaBackend, ErrorJson}
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object EditorCoto {
@@ -108,6 +108,9 @@ object EditorCoto {
 
       def isGeomapLocationNotUsed(map: Geomap): Boolean =
         map.focusedLocation.isDefined && geolocation != map.focusedLocation
+
+      def toBackendInput: CotoInput =
+        CotoInput(content, summary, mediaBase64, geolocation, dateTimeRange)
     }
 
     object Model {

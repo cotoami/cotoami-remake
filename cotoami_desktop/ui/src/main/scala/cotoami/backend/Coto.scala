@@ -47,23 +47,10 @@ trait CotoJson extends js.Object {
 
 object CotoJson {
   def post(
-      content: String,
-      summary: Option[String],
-      mediaContent: Option[(String, String)],
-      location: Option[Geolocation],
-      timeRange: Option[DateTimeRange],
+      input: CotoInput,
       postTo: Id[Cotonoma]
   ): Cmd.One[Either[ErrorJson, CotoJson]] =
-    Commands.send(
-      Commands.PostCoto(
-        content,
-        summary,
-        mediaContent,
-        location,
-        timeRange,
-        postTo
-      )
-    )
+    Commands.send(Commands.PostCoto(input, postTo))
 
   def edit(
       id: Id[Coto],
@@ -143,14 +130,10 @@ object CotoBackend {
     )
 
   def post(
-      content: String,
-      summary: Option[String],
-      mediaContent: Option[(String, String)],
-      location: Option[Geolocation],
-      timeRange: Option[DateTimeRange],
+      input: CotoInput,
       postTo: Id[Cotonoma]
   ): Cmd.One[Either[ErrorJson, Coto]] =
-    CotoJson.post(content, summary, mediaContent, location, timeRange, postTo)
+    CotoJson.post(input, postTo)
       .map(_.map(CotoBackend.toModel))
 
   def edit(

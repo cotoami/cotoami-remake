@@ -58,14 +58,7 @@ object ModalSubcoto {
 
     private def post: Cmd.One[Either[ErrorJson, Coto]] =
       postTo.map(target =>
-        CotoBackend.post(
-          cotoForm.content,
-          cotoForm.summary,
-          cotoForm.mediaBase64,
-          cotoForm.geolocation,
-          cotoForm.dateTimeRange,
-          target.cotonoma.id
-        )
+        CotoBackend.post(cotoForm.toBackendInput, target.cotonoma.id)
       ).getOrElse(Cmd.none)
 
     private def connect(

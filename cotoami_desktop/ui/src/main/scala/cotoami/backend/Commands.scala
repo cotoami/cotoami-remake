@@ -226,24 +226,10 @@ object Commands {
   def GraphFromCotonoma(cotonoma: Id[Cotonoma]) =
     jso(GraphFromCotonoma = jso(cotonoma = cotonoma.uuid))
 
-  def PostCoto(
-      content: String,
-      summary: Option[String],
-      mediaContent: Option[(String, String)],
-      location: Option[Geolocation],
-      timeRange: Option[DateTimeRange],
-      postTo: Id[Cotonoma]
-  ) =
+  def PostCoto(input: CotoInput, postTo: Id[Cotonoma]) =
     jso(PostCoto =
       jso(
-        input = jso(
-          content = content,
-          summary = summary.getOrElse(null),
-          media_content =
-            mediaContent.map(js.Tuple2.fromScalaTuple2).getOrElse(null),
-          geolocation = location.map(geolocationJson).getOrElse(null),
-          datetime_range = timeRange.map(dateTimeRangeJson).getOrElse(null)
-        ),
+        input = input.toJson,
         post_to = postTo.uuid
       )
     )
