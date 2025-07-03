@@ -96,6 +96,10 @@ object ModalSubcoto {
       val postedInIds =
         repo.cotos.get(sourceCotoId).map(_.postedInIds).getOrElse(Seq.empty)
 
+      // Target cotonoma choices:
+      //   1. the current cotonoma
+      //   2. the cotonomas of the source coto
+      //   3. the source cotonoma (if the source coto is a cotonoma)
       var targetCotonomaIds =
         repo.cotonomas.getByCotoId(sourceCotoId) match {
           // If the source coto is a cotonoma, it's the first candidate.

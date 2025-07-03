@@ -2,11 +2,12 @@ use std::{slice, sync::Arc};
 
 use anyhow::Result;
 use cotoami_db::prelude::*;
+use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
     service::{
-        error::IntoServiceResult,
+        error::{IntoServiceResult, RequestError},
         models::{CotoDetails, CotosRelatedData, GeolocatedCotos, PaginatedCotos, Pagination},
         NodeServiceExt, ServiceError,
     },
@@ -197,5 +198,53 @@ impl NodeState {
             |parent, (id, cotonoma)| parent.repost(id, cotonoma.uuid),
         )
         .await
+    }
+
+    pub async fn post_subcoto(
+        self,
+        source_coto_id: Id<Coto>,
+        input: CotoInput<'static>,
+        post_to: Id<Cotonoma>,
+        operator: Arc<Operator>,
+    ) -> Result<(Coto, Ito), ServiceError> {
+        if let Err(errors) = input.validate() {
+            return errors.into_result();
+        }
+
+        let local_node_id = self.try_get_local_node_id()?;
+        let source_coto = self.coto(source_coto_id).await?;
+        let post_to = self.cotonoma(post_to).await?;
+        let ito_node_id =
+            Ito::determine_node(&source_coto.node_id, &post_to.node_id, &local_node_id);
+
+        // Ensure the coto and ito to be created in the same node.
+        if ito_node_id != post_to.node_id {
+            return RequestError::new(
+                "invalid-subcoto-destination",
+                "Invalid subcoto destination.",
+            )
+            .into_result();
+        }
+
+        if post_to.node_id == local_node_id {
+            spawn_blocking({
+                let this = self.clone();
+                move || {
+                    let (subcoto, logs) = this.db().new_session()?.post_subcoto(
+                        &source_coto_id,
+                        &input,
+                        &post_to.uuid,
+                        &operator,
+                    )?;
+                    for log in logs {
+                        this.pubsub().publish_change(log);
+                    }
+                    Ok(subcoto)
+                }
+            })
+            .await?
+        } else {
+            unimplemented!();
+        }
     }
 }
