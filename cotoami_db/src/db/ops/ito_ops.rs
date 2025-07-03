@@ -104,11 +104,7 @@ pub(crate) fn determine_node<'a, Conn: AsReadableConn>(
             .load::<Id<Node>>(conn)?;
 
         if let [node_id1, node_id2] = node_ids[..] {
-            if node_id1 == node_id2 {
-                Ok(node_id1)
-            } else {
-                Ok(*local_node_id)
-            }
+            Ok(Ito::determine_node(&node_id1, &node_id2, local_node_id))
         } else {
             bail!("Invalid source and target coto IDs.");
         }

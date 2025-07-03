@@ -59,6 +59,18 @@ impl Ito {
     pub const DESCRIPTION_MAX_LENGTH: u64 = 200;
     pub const DETAILS_MAX_LENGTH: u64 = 1_000_000;
 
+    pub fn determine_node(
+        node_at_one_end: &Id<Node>,
+        node_at_the_other_end: &Id<Node>,
+        local_node_id: &Id<Node>,
+    ) -> Id<Node> {
+        if node_at_one_end == node_at_the_other_end {
+            *node_at_one_end
+        } else {
+            *local_node_id
+        }
+    }
+
     pub fn created_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.created_at) }
 
     pub fn updated_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.updated_at) }
