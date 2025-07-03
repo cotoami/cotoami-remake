@@ -35,6 +35,21 @@ impl HostFnContext {
     }
 
     #[allow(dead_code)]
+    pub fn edit_coto(
+        &self,
+        id: String,
+        diff: cotoami_plugin_api::CotoContentDiff,
+    ) -> Result<cotoami_plugin_api::Coto> {
+        let opr = self.try_get_agent()?;
+        let coto_id: Id<Coto> = Id::from_str(&id)?;
+        let db_diff = as_db_coto_content_diff(diff);
+        let ds = self.node_state.db().new_session()?;
+        let (coto, log) = ds.edit_coto(&coto_id, db_diff, &opr)?;
+        self.node_state.pubsub().publish_change(log);
+        Ok(into_plugin_coto(coto).unwrap())
+    }
+
+    #[allow(dead_code)]
     pub fn create_ito(
         &self,
         input: cotoami_plugin_api::ItoInput,

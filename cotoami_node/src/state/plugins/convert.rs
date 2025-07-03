@@ -101,23 +101,24 @@ pub(crate) fn as_db_coto_input<'a>(
     })
 }
 
-pub(crate) fn as_db_coto_content_diff<'a>(
-    diff: &'a cotoami_plugin_api::CotoContentDiff,
-) -> Result<CotoContentDiff<'a>> {
+pub(crate) fn as_db_coto_content_diff(
+    diff: cotoami_plugin_api::CotoContentDiff,
+) -> CotoContentDiff<'static> {
     let mut db_diff = CotoContentDiff::default();
-    if let Some(content) = &diff.content {
-        db_diff = db_diff.content(content);
+    if let Some(content) = diff.content {
+        db_diff.content = FieldDiff::Change(Cow::from(content));
     }
-    if let Some(summary) = &diff.summary {
-        db_diff = db_diff.summary(Some(summary));
+    if let Some(summary) = diff.summary {
+        db_diff.summary = FieldDiff::Change(Cow::from(summary));
     }
-    if let Some((content, content_type)) = &diff.media_content {
-        db_diff = db_diff.media_content(Some((content.clone().into(), content_type)));
+    if let Some((content, content_type)) = diff.media_content {
+        db_diff.media_content =
+            FieldDiff::Change((content.clone().into(), Cow::from(content_type)));
     }
-    if let Some(location) = &diff.geolocation {
-        db_diff = db_diff.geolocation(Some(as_db_geolocation(location)));
+    if let Some(location) = diff.geolocation {
+        db_diff.geolocation = FieldDiff::Change(as_db_geolocation(&location));
     }
-    Ok(db_diff)
+    db_diff
 }
 
 pub(crate) fn as_db_ito_input<'a>(input: &'a cotoami_plugin_api::ItoInput) -> Result<ItoInput<'a>> {

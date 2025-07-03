@@ -78,6 +78,13 @@ impl Plugin {
                 ctx.new_user_data(),
                 post_coto,
             )
+            .with_function(
+                "edit_coto",
+                [PTR, PTR],
+                [PTR],
+                ctx.new_user_data(),
+                edit_coto,
+            )
             .with_function("create_ito", [PTR], [PTR], ctx.new_user_data(), create_ito)
             .with_function(
                 "ancestors_of",
@@ -133,6 +140,13 @@ host_fn!(post_coto(context: HostFnContext; input: CotoInput, post_to: Option<Str
     let context = context.get()?;
     let context = context.lock().unwrap();
     context.post_coto(input, post_to)
+});
+
+// fn edit_coto(id: String, diff: CotoContentDiff) -> Coto
+host_fn!(edit_coto(context: HostFnContext; id: String, diff: CotoContentDiff) -> Coto {
+    let context = context.get()?;
+    let context = context.lock().unwrap();
+    context.edit_coto(id, diff)
 });
 
 // fn create_ito(input: ItoInput) -> Ito
