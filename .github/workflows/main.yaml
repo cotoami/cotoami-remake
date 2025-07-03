@@ -16,7 +16,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Install Rust stable
-      uses: dtolnay/rust-toolchain@stable
+      uses: actions-rust-lang/setup-rust-toolchain@v1
 
     # Install system dependencies to build a Tauri app on Linux
     # https://github.com/tauri-apps/tauri-action
@@ -31,16 +31,8 @@ jobs:
 
     - name: Run cotoami_node tests
       working-directory: cotoami_node
-      # WARN: actions-rs has been unmaintained for quite a while
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --release --all-features
+      run: cargo test --release --all-features
 
     - name: Run cotoami_desktop tests
       working-directory: cotoami_desktop/tauri
-      # WARN: actions-rs has been unmaintained for quite a while
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --release --all-features
+      run: cargo test --release --all-features

@@ -20,7 +20,7 @@ jobs:
         fetch-depth: 2  # to detect version change in detect_version
 
     - name: Install Rust stable
-      uses: dtolnay/rust-toolchain@stable
+      uses: actions-rust-lang/setup-rust-toolchain@v1
 
     - name: Detect app version
       uses: salsify/action-detect-and-tag-new-version@v2
@@ -51,7 +51,7 @@ jobs:
         path: |
           usr-local-cargo-registry
           app-target
-        key: cache-${{ hashFiles('Dockerfile') }}
+        key: cache-${{ hashFiles('cotoami_node/Dockerfile') }}
 
     - name: Inject cache into docker
       uses: reproducible-containers/buildkit-cache-dance@v3.1.0
@@ -69,7 +69,7 @@ jobs:
       with:
         push: true
         file: Dockerfile
-        context: .
+        context: cotoami_node
         tags: |
           cotoami/cotoami-node:latest
           cotoami/cotoami-node:${{ steps.detect_version.outputs.current-version }}
