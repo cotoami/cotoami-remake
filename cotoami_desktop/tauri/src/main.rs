@@ -5,11 +5,13 @@
 
 use cotoami_desktop::commands;
 use log::LevelFilter;
+#[allow(unused_imports)]
 use tauri::Manager;
 use tauri_plugin_log::{Target, TargetKind};
 use tauri_plugin_window_state::StateFlags;
 
 fn main() {
+    #[allow(unused_variables)]
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
