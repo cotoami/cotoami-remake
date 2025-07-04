@@ -62,24 +62,23 @@ EOF
 FROM --platform=$TARGETPLATFORM debian:bookworm-slim
 
 # Create a non-privileged user that the app will run under.
-# See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/
+# (also create a home directory for the default wasmtime cache `~/.cache/wasmtime`).
 ARG UID=10001
 RUN adduser \
     --disabled-password \
     --gecos "" \
-    --home "/nonexistent" \
+    --home "/cotoami" \
     --shell "/sbin/nologin" \
-    --no-create-home \
     --uid "${UID}" \
     appuser
 USER appuser
 
 # Copy the executable from the "build" stage.
-COPY --from=build /cotoami_node /
+COPY --from=build /cotoami_node /cotoami/node
 
 # Expose the port that the application listens on.
 # 5103 is the default number, which can be change via COTOAMI_SERVER_PORT.
 EXPOSE 5103
 
 # What the container should run when it is started.
-CMD ["/cotoami_node"]
+CMD ["/cotoami/node"]
