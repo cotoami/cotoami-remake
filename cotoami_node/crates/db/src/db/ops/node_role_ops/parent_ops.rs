@@ -146,15 +146,6 @@ pub(crate) fn mark_as_read(
     })
 }
 
-pub(super) fn set_forked(id: &Id<Node>) -> impl Operation<WritableConn, ParentNode> + '_ {
-    composite_op::<WritableConn, _, _>(move |ctx| {
-        let mut update_parent = UpdateParentNode::new(id);
-        update_parent.forked = Some(true);
-        let parent = update(&update_parent).run(ctx)?;
-        Ok(parent)
-    })
-}
-
 /// Updates [parent_nodes::changes_received] with a number that must be the current value + 1.
 /// If the `incremented_number` is not an expected value, `Err(NotFound)` will be returned.
 pub(crate) fn increment_changes_received(

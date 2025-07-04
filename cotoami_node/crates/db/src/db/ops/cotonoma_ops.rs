@@ -381,16 +381,3 @@ pub(crate) fn update_timestamp(
         // NOTE: cotos::updated_at will also be updated by the trigger `cotonomas_cotos_sync`.
     })
 }
-
-pub(crate) fn change_owner_node<'a>(
-    from: &'a Id<Node>,
-    to: &'a Id<Node>,
-) -> impl Operation<WritableConn, usize> + 'a {
-    write_op(move |conn| {
-        diesel::update(cotonomas::table)
-            .filter(cotonomas::node_id.eq(from))
-            .set(cotonomas::node_id.eq(to))
-            .execute(conn.deref_mut())
-            .map_err(anyhow::Error::from)
-    })
-}

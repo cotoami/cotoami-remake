@@ -353,19 +353,6 @@ pub(crate) fn delete(
     })
 }
 
-pub(crate) fn change_owner_node<'a>(
-    from: &'a Id<Node>,
-    to: &'a Id<Node>,
-) -> impl Operation<WritableConn, usize> + 'a {
-    write_op(move |conn| {
-        diesel::update(cotos::table)
-            .filter(cotos::node_id.eq(from))
-            .set(cotos::node_id.eq(to))
-            .execute(conn.deref_mut())
-            .map_err(anyhow::Error::from)
-    })
-}
-
 const INDEX_TOKEN_LENGTH: usize = 3;
 
 pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(

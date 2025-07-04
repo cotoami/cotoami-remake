@@ -2,11 +2,11 @@
 
 use std::ops::DerefMut;
 
-use anyhow::{bail, ensure};
+use anyhow::ensure;
 use diesel::{dsl::max, prelude::*};
 use tracing::debug;
 
-use super::{coto_ops, cotonoma_ops, graph_ops, ito_ops, node_ops, node_role_ops::parent_ops};
+use super::{coto_ops, cotonoma_ops, ito_ops, node_ops, node_role_ops::parent_ops};
 use crate::{
     db::{error::*, op::*},
     models::{
@@ -263,21 +263,6 @@ fn apply_change<'a>(
             }
             Change::ChangeItoOrder { ito_id, new_order } => {
                 ito_ops::change_order(ito_id, *new_order).run(ctx)?;
-            }
-            Change::ChangeOwnerNode {
-                from,
-                to,
-                last_change_number,
-            } => {
-                let last_change_number_in_local = last_origin_serial_number(from)
-                    .run(ctx)?
-                    .unwrap_or_else(|| unreachable!());
-                if last_change_number_in_local == *last_change_number {
-                    graph_ops::change_owner_node(from, to).run(ctx)?;
-                } else {
-                    bail!("Couldn't change the owner node due to version mismatching (expected: {}, actual: {}).", 
-                        last_change_number, last_change_number_in_local);
-                }
             }
         }
         Ok(())

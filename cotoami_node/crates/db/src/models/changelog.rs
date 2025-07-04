@@ -125,7 +125,6 @@ pub enum Change {
         coto_id: Id<Coto>,
         promoted_at: NaiveDateTime,
     },
-    // Used to delete a coto or cotonoma
     DeleteCoto {
         coto_id: Id<Coto>,
         deleted_at: NaiveDateTime,
@@ -148,17 +147,6 @@ pub enum Change {
     ChangeItoOrder {
         ito_id: Id<Ito>,
         new_order: i32,
-    },
-    ChangeOwnerNode {
-        from: Id<Node>,
-        to: Id<Node>,
-        // When applying this change, the last number of the changelog entry of
-        // the `from` node must match the this number. Normally it's not possible that
-        // this value is larger than the actual last number at the time of applying this change,
-        // but if the value is smaller than the actual number, which means there are changes
-        // unknown to the `to` node, new changes in the `to` node will possibly cause conflicts
-        // with the unknown changes.
-        last_change_number: i64,
     },
 }
 

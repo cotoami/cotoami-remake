@@ -245,16 +245,3 @@ pub(crate) fn delete(id: &Id<Ito>) -> impl Operation<WritableConn, bool> + '_ {
         Ok(deleted.is_some())
     })
 }
-
-pub(crate) fn change_owner_node<'a>(
-    from: &'a Id<Node>,
-    to: &'a Id<Node>,
-) -> impl Operation<WritableConn, usize> + 'a {
-    write_op(move |conn| {
-        diesel::update(itos::table)
-            .filter(itos::node_id.eq(from))
-            .set(itos::node_id.eq(to))
-            .execute(conn.deref_mut())
-            .map_err(anyhow::Error::from)
-    })
-}

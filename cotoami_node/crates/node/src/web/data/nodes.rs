@@ -20,7 +20,6 @@ mod clients;
 mod cotonomas;
 mod cotos;
 mod local;
-mod parents;
 mod servers;
 
 pub(super) fn routes() -> Router<NodeState> {
@@ -34,7 +33,6 @@ pub(super) fn routes() -> Router<NodeState> {
         .nest("/local", local::routes())
         .nest("/servers", servers::routes())
         .nest("/clients", clients::routes())
-        .nest("/parents", parents::routes())
         .nest("/children", children::routes())
 }
 

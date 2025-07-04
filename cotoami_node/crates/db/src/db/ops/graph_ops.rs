@@ -5,10 +5,9 @@ use std::collections::HashSet;
 use diesel::{dsl::sql_query, prelude::*};
 use indoc::indoc;
 
-use super::{coto_ops, cotonoma_ops, ito_ops};
 use crate::{
     db::op::*,
-    models::{coto::Coto, graph::Graph, ito::Ito, node::Node, Id},
+    models::{coto::Coto, graph::Graph, ito::Ito, Id},
     schema::{cotos, itos},
 };
 
@@ -158,17 +157,5 @@ pub(crate) fn ancestors_of<Conn: AsReadableConn>(
             }
         }
         Ok(ancestors)
-    })
-}
-
-pub(crate) fn change_owner_node<'a>(
-    from: &'a Id<Node>,
-    to: &'a Id<Node>,
-) -> impl Operation<WritableConn, usize> + 'a {
-    composite_op::<WritableConn, _, _>(move |ctx| {
-        let cotos_updated = coto_ops::change_owner_node(from, to).run(ctx)?;
-        let cotonomas_updated = cotonoma_ops::change_owner_node(from, to).run(ctx)?;
-        let itos_updated = ito_ops::change_owner_node(from, to).run(ctx)?;
-        Ok(cotos_updated + cotonomas_updated + itos_updated)
     })
 }

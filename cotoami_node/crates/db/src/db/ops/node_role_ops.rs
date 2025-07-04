@@ -10,7 +10,7 @@ use crate::{
         node::{
             child::{ChildNodeInput, NewChildNode},
             client::{ClientNode, NewClientNode},
-            parent::{NewParentNode, ParentNode},
+            parent::NewParentNode,
             roles::{DatabaseRole, NetworkRole},
             server::{NewServerNode, ServerNode},
             Node,
@@ -163,16 +163,6 @@ pub(crate) fn set_database_role(
                 Ok(DatabaseRole::Child(role))
             }
         }
-    })
-}
-
-pub(crate) fn fork_from(
-    parent_node_id: &Id<Node>,
-) -> impl Operation<WritableConn, ParentNode> + '_ {
-    composite_op::<WritableConn, _, _>(move |ctx| {
-        let parent = parent_ops::set_forked(parent_node_id).run(ctx)?;
-        set_network_disabled(parent_node_id, true).run(ctx)?;
-        Ok(parent)
     })
 }
 
