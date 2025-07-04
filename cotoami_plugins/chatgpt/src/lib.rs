@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 use cotoami_plugin_api::*;
 use extism_pdk::*;
 use lazy_regex::*;
@@ -128,5 +128,11 @@ fn request_chat_completion(messages: Vec<InputMessage>) -> Result<ResponseBody> 
         messages,
     };
     let res = http::request::<RequestBody>(&req, Some(req_body))?;
-    res.json()
+    let status = res.status_code();
+    if 200 <= status && status < 300 {
+        res.json()
+    } else {
+        // For some reason, the response body will be empty here.
+        bail!("HTTP Status {status}");
+    }
 }
