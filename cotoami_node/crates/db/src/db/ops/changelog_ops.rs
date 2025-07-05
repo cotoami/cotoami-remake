@@ -228,8 +228,9 @@ fn apply_change<'a>(
             Change::Promote {
                 coto_id,
                 promoted_at,
+                cotonoma_id,
             } => {
-                coto_ops::promote(coto_id, Some(*promoted_at)).run(ctx)?;
+                coto_ops::promote(coto_id, Some(*promoted_at), *cotonoma_id).run(ctx)?;
             }
             Change::DeleteCoto {
                 coto_id,
