@@ -44,6 +44,11 @@ fn import_changes() -> Result<()> {
     let ((db1_cotonoma2, db1_cotonoma_coto2), db1_change6) =
         ds1.rename_cotonoma(&db1_cotonoma.uuid, "sunsun", &opr1)?;
 
+    // 7. promote
+    let (db1_coto2, db1_change7) =
+        ds1.post_coto(&CotoInput::new("moon"), &node1_root_cotonoma.uuid, &opr1)?;
+    let ((db1_cotonoma3, db1_cotonoma_coto3), db1_change8) = ds1.promote(&db1_coto2.uuid, &opr1)?;
+
     /////////////////////////////////////////////////////////////////////////////
     // Setup: prepare db2 to accept changes from db1
     /////////////////////////////////////////////////////////////////////////////
@@ -209,6 +214,32 @@ fn import_changes() -> Result<()> {
     assert_that!(
         ds2.cotonoma_pair(&db1_cotonoma.uuid),
         ok(some((eq(&db1_cotonoma2), eq(&db1_cotonoma_coto2))))
+    );
+
+    /////////////////////////////////////////////////////////////////////////////
+    // When: import change7 (promote)
+    /////////////////////////////////////////////////////////////////////////////
+
+    ds2.import_change(&via_serialization(&db1_change7)?, &node1.uuid)?;
+    assert_changes_received(7);
+    let changelog = ds2.import_change(&via_serialization(&db1_change8)?, &node1.uuid)?;
+    assert_changes_received(8);
+
+    assert_that!(
+        changelog.unwrap(),
+        pat!(ChangelogEntry {
+            serial_number: eq(&10),
+            origin_node_id: eq(&node1.uuid),
+            origin_serial_number: eq(&db1_change8.origin_serial_number),
+            change: eq(&db1_change8.change),
+            import_error: none(),
+        })
+    );
+
+    // db2 should have the promoted coto.
+    assert_that!(
+        ds2.cotonoma_pair(&db1_cotonoma3.uuid),
+        ok(some((eq(&db1_cotonoma3), eq(&db1_cotonoma_coto3))))
     );
 
     Ok(())
