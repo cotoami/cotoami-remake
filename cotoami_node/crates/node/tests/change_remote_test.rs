@@ -57,10 +57,31 @@ async fn change_remote() -> Result<()> {
     assert_that!(
         parent_ds.coto(&posted_coto.uuid),
         ok(some(eq(&Coto {
-            rowid: 2, // rowid is not necessarily the same
+            rowid: 2,
             ..posted_coto
         })))
     );
+
+    /////////////////////////////////////////////////////////////////////////////
+    // Command: PostSubcoto
+    /////////////////////////////////////////////////////////////////////////////
+
+    let request = Command::PostSubcoto {
+        source_coto: posted_coto.uuid,
+        input: CotoInput::new("I'm hanging onto you."),
+        post_to: Some(parent_root_cotonoma.uuid),
+    }
+    .into_request_from(child_owner.clone());
+    let (subcoto, subito) = child_state.call(request).await?.content::<(Coto, Ito)>()?;
+
+    assert_that!(
+        parent_ds.coto(&subcoto.uuid),
+        ok(some(eq(&Coto {
+            rowid: 3,
+            ..subcoto
+        })))
+    );
+    assert_that!(parent_ds.ito(&subito.uuid), ok(some(eq(&subito))));
 
     shutdown.send(()).ok();
 

@@ -101,6 +101,22 @@ pub trait NodeServiceExt: NodeService {
         let response = self.call(request).await?;
         response.content::<Ito>()
     }
+
+    async fn post_subcoto(
+        &self,
+        source_coto: Id<Coto>,
+        input: CotoInput<'static>,
+        post_to: Option<Id<Cotonoma>>,
+    ) -> Result<(Coto, Ito)> {
+        let request = Command::PostSubcoto {
+            source_coto,
+            input,
+            post_to,
+        }
+        .into_request();
+        let response = self.call(request).await?;
+        response.content::<(Coto, Ito)>()
+    }
 }
 
 impl<T> NodeServiceExt for T where T: NodeService + ?Sized {}

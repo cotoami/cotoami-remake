@@ -229,6 +229,7 @@ impl NodeState {
         }
 
         if post_to.node_id == local_node_id {
+            // Post to the local node.
             spawn_blocking({
                 let this = self.clone();
                 move || {
@@ -246,7 +247,15 @@ impl NodeState {
             })
             .await?
         } else {
-            unimplemented!();
+            // Send the change to a remote node.
+            if let Some(parent_service) = self.parent_services().get(&post_to.node_id) {
+                parent_service
+                    .post_subcoto(source_coto_id, input, Some(post_to.uuid))
+                    .await
+                    .map_err(ServiceError::from)
+            } else {
+                Err(ServiceError::Permission)
+            }
         }
     }
 
