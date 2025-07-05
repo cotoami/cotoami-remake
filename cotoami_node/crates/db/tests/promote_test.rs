@@ -47,9 +47,10 @@ fn promote() -> Result<()> {
         changelog,
         pat!(ChangelogEntry {
             origin_node_id: eq(&node.uuid),
-            change: pat!(Change::Promote {
+            change: pat!(Change::PromoteCoto {
                 coto_id: eq(&coto.uuid),
-                promoted_at: eq(&coto.updated_at)
+                promoted_at: eq(&coto.updated_at),
+                cotonoma_id: eq(&cotonoma.uuid)
             }),
         })
     );

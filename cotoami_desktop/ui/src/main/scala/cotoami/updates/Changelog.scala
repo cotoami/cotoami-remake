@@ -135,6 +135,9 @@ object Changelog {
     for (json <- change.Promote.toOption) {
       return (model, promote(Id(json.coto_id)))
     }
+    for (json <- change.PromoteCoto.toOption) {
+      return (model, promote(Id(json.coto_id)))
+    }
 
     // UpsertNode
     for (json <- change.UpsertNode.toOption) {

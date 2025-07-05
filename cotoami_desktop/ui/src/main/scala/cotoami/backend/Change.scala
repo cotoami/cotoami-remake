@@ -24,6 +24,7 @@ trait ChangeJson extends js.Object {
   val CreateCoto: js.UndefOr[CotoJson] = js.native
   val EditCoto: js.UndefOr[EditCotoJson] = js.native
   val Promote: js.UndefOr[PromoteJson] = js.native
+  val PromoteCoto: js.UndefOr[PromoteCotoJson] = js.native
   val DeleteCoto: js.UndefOr[DeleteCotoJson] = js.native
   val CreateCotonoma: js.UndefOr[js.Tuple2[CotonomaJson, CotoJson]] = js.native
   val RenameCotonoma: js.UndefOr[RenameCotonomaJson] = js.native
@@ -66,10 +67,19 @@ trait EditCotoJson extends js.Object {
   val updated_at: String = js.native
 }
 
+// The old version of PromoteCotoJson. It's a legacy design mistake,
+// but we keep it for backward compatibility.
 @js.native
 trait PromoteJson extends js.Object {
   val coto_id: String = js.native
   val promoted_at: String = js.native
+}
+
+@js.native
+trait PromoteCotoJson extends js.Object {
+  val coto_id: String = js.native
+  val promoted_at: String = js.native
+  val cotonoma_id: String = js.native
 }
 
 @js.native

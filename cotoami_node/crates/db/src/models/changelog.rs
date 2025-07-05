@@ -121,13 +121,10 @@ pub enum Change {
         diff: CotoContentDiff<'static>,
         updated_at: NaiveDateTime,
     },
-    Promote {
+    PromoteCoto {
         coto_id: Id<Coto>,
         promoted_at: NaiveDateTime,
-        // Before v0.8.0, cotonoma_id was not included in this change because of
-        // a wrong design decision, which caused cotonoma_id mismatch among nodes
-        // in a network.
-        cotonoma_id: Option<Id<Cotonoma>>,
+        cotonoma_id: Id<Cotonoma>,
     },
     DeleteCoto {
         coto_id: Id<Coto>,
@@ -151,6 +148,19 @@ pub enum Change {
     ChangeItoOrder {
         ito_id: Id<Ito>,
         new_order: i32,
+    },
+
+    // The old version of `PromoteCoto` used before version v0.8.0.
+    // It causes cotonoma_id mismatch between the node where the change occurred
+    // and its child nodes since it doesn't include cotonoma_id.
+    //
+    // Because rmp-serde doesn't handle enum variant field changes well and causes
+    // invalid length errors, we had no choice but to add a new variant `PromoteCoto`.
+    // In the future, we should probably migrate to a serialization format that
+    // better supports schema evolution.
+    Promote {
+        coto_id: Id<Coto>,
+        promoted_at: NaiveDateTime,
     },
 }
 

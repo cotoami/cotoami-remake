@@ -181,10 +181,10 @@ impl DatabaseSession<'_> {
             let (cotonoma, coto) = coto_ops::promote(coto_id, None, None).run(ctx)?;
 
             // Log change
-            let change = Change::Promote {
+            let change = Change::PromoteCoto {
                 coto_id: *coto_id,
                 promoted_at: cotonoma.created_at,
-                cotonoma_id: Some(cotonoma.uuid),
+                cotonoma_id: cotonoma.uuid,
             };
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
 
