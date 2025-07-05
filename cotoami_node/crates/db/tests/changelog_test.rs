@@ -36,6 +36,19 @@ fn import_changes() -> Result<()> {
     // 4. delete_coto
     let db1_change4 = ds1.delete_coto(&db1_coto.uuid, &opr1)?;
 
+    // 5. post_cotonoma
+    let ((db1_cotonoma, db1_cotonoma_coto), db1_change5) =
+        ds1.post_cotonoma(&CotonomaInput::new("sun"), &node1_root_cotonoma, &opr1)?;
+
+    // 6. rename_cotonoma
+    let ((db1_cotonoma2, db1_cotonoma_coto2), db1_change6) =
+        ds1.rename_cotonoma(&db1_cotonoma.uuid, "sunsun", &opr1)?;
+
+    // 7. promote
+    let (db1_coto2, db1_change7) =
+        ds1.post_coto(&CotoInput::new("moon"), &node1_root_cotonoma.uuid, &opr1)?;
+    let ((db1_cotonoma3, db1_cotonoma_coto3), db1_change8) = ds1.promote(&db1_coto2.uuid, &opr1)?;
+
     /////////////////////////////////////////////////////////////////////////////
     // Setup: prepare db2 to accept changes from db1
     /////////////////////////////////////////////////////////////////////////////
@@ -51,23 +64,24 @@ fn import_changes() -> Result<()> {
     let (_, parent) = ds2.register_server_node_as_parent(&node1.uuid, "https://node1", &opr2)?;
     assert_eq!(parent.changes_received, 0);
 
+    let assert_changes_received = |changes: i64| {
+        assert_that!(
+            db2.new_session().unwrap().parent_node(&node1.uuid, &opr2),
+            ok(some(pat!(ParentNode {
+                changes_received: eq(&changes)
+            })))
+        );
+    };
+
     /////////////////////////////////////////////////////////////////////////////
     // When: import change1 (init_as_node)
     /////////////////////////////////////////////////////////////////////////////
 
-    let db2_change3 = ds2.import_change(&via_serialization(&db1_change1)?, &node1.uuid)?;
+    let changelog = ds2.import_change(&via_serialization(&db1_change1)?, &node1.uuid)?;
 
-    // check if `ParentNode::changes_received` has been incremented
-    assert_eq!(
-        ds2.parent_node(&node1.uuid, &opr2)?
-            .unwrap()
-            .changes_received,
-        1
-    );
-
-    // check the content of the imported ChangelogEntry
+    assert_changes_received(1);
     assert_that!(
-        db2_change3.unwrap(),
+        changelog.unwrap(),
         pat!(ChangelogEntry {
             serial_number: eq(&3),
             origin_node_id: eq(&node1.uuid),
@@ -77,43 +91,29 @@ fn import_changes() -> Result<()> {
         })
     );
 
-    // check if the change is applied in db2
-    // 1. Node (node1)
-    // 2. A pair of Cotonoma and Coto (the root cotonoma of node1)
+    // db2 should have node1.
     assert_that!(
         ds2.node(&node1.uuid)?.unwrap(),
         eq(&Node {
-            rowid: 2, // rowid=1 is db2's local node
+            rowid: 2, // rowid is not necessarily the same
             ..node1.clone()
         })
     );
+
+    // db2 should have node1's root cotonoma/coto
     let (cotonoma, coto) = ds2.cotonoma_pair(&node1_root_cotonoma.uuid)?.unwrap();
     assert_that!(cotonoma, eq(&node1_root_cotonoma));
     assert_that!(coto, eq(&node1_root_coto));
-
-    assert_that!(
-        ds2.all_cotonomas()?,
-        elements_are![eq(&node1_root_cotonoma)]
-    );
-    assert_that!(ds2.all_cotos()?, elements_are![eq(&node1_root_coto)]);
 
     /////////////////////////////////////////////////////////////////////////////
     // When: import change2 (post_coto)
     /////////////////////////////////////////////////////////////////////////////
 
-    let db2_change4 = ds2.import_change(&via_serialization(&db1_change2)?, &node1.uuid)?;
+    let changelog = ds2.import_change(&via_serialization(&db1_change2)?, &node1.uuid)?;
 
-    // check if `ParentNode::changes_received` has been incremented
-    assert_eq!(
-        ds2.parent_node(&node1.uuid, &opr2)?
-            .unwrap()
-            .changes_received,
-        2
-    );
-
-    // check the content of the imported ChangelogEntry
+    assert_changes_received(2);
     assert_that!(
-        db2_change4.unwrap(),
+        changelog.unwrap(),
         pat!(ChangelogEntry {
             serial_number: eq(&4),
             origin_node_id: eq(&node1.uuid),
@@ -123,30 +123,18 @@ fn import_changes() -> Result<()> {
         })
     );
 
-    // check if the change is applied in db2
-    let (_, node1_root_coto) = ds1.local_node_root()?.unwrap();
-    assert_that!(
-        ds2.all_cotos()?,
-        elements_are![eq(&node1_root_coto), eq(&db1_coto)]
-    );
+    // db2 should have the posted coto.
+    assert_that!(ds2.coto(&db1_coto.uuid), ok(some(eq(&db1_coto))));
 
     /////////////////////////////////////////////////////////////////////////////
     // When: import change3 (edit_coto)
     /////////////////////////////////////////////////////////////////////////////
 
-    let db2_change5 = ds2.import_change(&via_serialization(&db1_change3)?, &node1.uuid)?;
+    let changelog = ds2.import_change(&via_serialization(&db1_change3)?, &node1.uuid)?;
 
-    // check if `ParentNode::changes_received` has been incremented
-    assert_eq!(
-        ds2.parent_node(&node1.uuid, &opr2)?
-            .unwrap()
-            .changes_received,
-        3
-    );
-
-    // check the content of the imported ChangelogEntry
+    assert_changes_received(3);
     assert_that!(
-        db2_change5.unwrap(),
+        changelog.unwrap(),
         pat!(ChangelogEntry {
             serial_number: eq(&5),
             origin_node_id: eq(&node1.uuid),
@@ -156,29 +144,18 @@ fn import_changes() -> Result<()> {
         })
     );
 
-    // check if the change is applied in db2
-    assert_that!(
-        ds2.all_cotos()?,
-        elements_are![eq(&node1_root_coto), eq(&db1_edited_coto)]
-    );
+    // db2 should have the edited post.
+    assert_that!(ds2.coto(&db1_coto.uuid), ok(some(eq(&db1_edited_coto))));
 
     /////////////////////////////////////////////////////////////////////////////
     // When: import change4 (delete_coto)
     /////////////////////////////////////////////////////////////////////////////
 
-    let db2_change6 = ds2.import_change(&via_serialization(&db1_change4)?, &node1.uuid)?;
+    let changelog = ds2.import_change(&via_serialization(&db1_change4)?, &node1.uuid)?;
 
-    // check if `ParentNode::changes_received` has been incremented
-    assert_eq!(
-        ds2.parent_node(&node1.uuid, &opr2)?
-            .unwrap()
-            .changes_received,
-        4
-    );
-
-    // check the content of the imported ChangelogEntry
+    assert_changes_received(4);
     assert_that!(
-        db2_change6.unwrap(),
+        changelog.unwrap(),
         pat!(ChangelogEntry {
             serial_number: eq(&6),
             origin_node_id: eq(&node1.uuid),
@@ -188,8 +165,82 @@ fn import_changes() -> Result<()> {
         })
     );
 
-    // check if the change is applied in db2
-    assert_that!(ds2.all_cotos()?, elements_are![eq(&node1_root_coto)]);
+    // db2 shouldn't have the deleted coto
+    assert_that!(ds2.coto(&db1_coto.uuid), ok(none()));
+
+    /////////////////////////////////////////////////////////////////////////////
+    // When: import change5 (post_cotonoma)
+    /////////////////////////////////////////////////////////////////////////////
+
+    let changelog = ds2.import_change(&via_serialization(&db1_change5)?, &node1.uuid)?;
+
+    assert_changes_received(5);
+    assert_that!(
+        changelog.unwrap(),
+        pat!(ChangelogEntry {
+            serial_number: eq(&7),
+            origin_node_id: eq(&node1.uuid),
+            origin_serial_number: eq(&db1_change5.origin_serial_number),
+            change: eq(&db1_change5.change),
+            import_error: none(),
+        })
+    );
+
+    // db2 should have the posted cotonoma.
+    assert_that!(
+        ds2.cotonoma_pair(&db1_cotonoma.uuid),
+        ok(some((eq(&db1_cotonoma), eq(&db1_cotonoma_coto))))
+    );
+
+    /////////////////////////////////////////////////////////////////////////////
+    // When: import change6 (rename_cotonoma)
+    /////////////////////////////////////////////////////////////////////////////
+
+    let changelog = ds2.import_change(&via_serialization(&db1_change6)?, &node1.uuid)?;
+
+    assert_changes_received(6);
+    assert_that!(
+        changelog.unwrap(),
+        pat!(ChangelogEntry {
+            serial_number: eq(&8),
+            origin_node_id: eq(&node1.uuid),
+            origin_serial_number: eq(&db1_change6.origin_serial_number),
+            change: eq(&db1_change6.change),
+            import_error: none(),
+        })
+    );
+
+    // db2 should have the renamed cotonoma.
+    assert_that!(
+        ds2.cotonoma_pair(&db1_cotonoma.uuid),
+        ok(some((eq(&db1_cotonoma2), eq(&db1_cotonoma_coto2))))
+    );
+
+    /////////////////////////////////////////////////////////////////////////////
+    // When: import change7 (promote)
+    /////////////////////////////////////////////////////////////////////////////
+
+    ds2.import_change(&via_serialization(&db1_change7)?, &node1.uuid)?;
+    assert_changes_received(7);
+    let changelog = ds2.import_change(&via_serialization(&db1_change8)?, &node1.uuid)?;
+    assert_changes_received(8);
+
+    assert_that!(
+        changelog.unwrap(),
+        pat!(ChangelogEntry {
+            serial_number: eq(&10),
+            origin_node_id: eq(&node1.uuid),
+            origin_serial_number: eq(&db1_change8.origin_serial_number),
+            change: eq(&db1_change8.change),
+            import_error: none(),
+        })
+    );
+
+    // db2 should have the promoted coto.
+    assert_that!(
+        ds2.cotonoma_pair(&db1_cotonoma3.uuid),
+        ok(some((eq(&db1_cotonoma3), eq(&db1_cotonoma_coto3))))
+    );
 
     Ok(())
 }

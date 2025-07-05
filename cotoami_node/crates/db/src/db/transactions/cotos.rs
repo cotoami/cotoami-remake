@@ -178,12 +178,13 @@ impl DatabaseSession<'_> {
             operator.can_update_coto(&coto)?;
 
             // Do promote
-            let (cotonoma, coto) = coto_ops::promote(coto_id, None).run(ctx)?;
+            let (cotonoma, coto) = coto_ops::promote(coto_id, None, None).run(ctx)?;
 
             // Log change
             let change = Change::Promote {
                 coto_id: *coto_id,
                 promoted_at: cotonoma.created_at,
+                cotonoma_id: Some(cotonoma.uuid),
             };
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
 

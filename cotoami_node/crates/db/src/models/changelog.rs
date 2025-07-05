@@ -124,6 +124,10 @@ pub enum Change {
     Promote {
         coto_id: Id<Coto>,
         promoted_at: NaiveDateTime,
+        // Before v0.8.0, cotonoma_id was not included in this change because of
+        // a wrong design decision, which caused cotonoma_id mismatch among nodes
+        // in a network.
+        cotonoma_id: Option<Id<Cotonoma>>,
     },
     DeleteCoto {
         coto_id: Id<Coto>,

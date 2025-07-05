@@ -275,9 +275,12 @@ pub(crate) fn edit<'a>(
     })
 }
 
+/// Promote the specified coto into a cotonoma.
+/// Pass `promoted_at` and `cotonoma_id` to import a change from another node.
 pub(crate) fn promote<'a>(
     id: &'a Id<Coto>,
     promoted_at: Option<NaiveDateTime>,
+    cotonoma_id: Option<Id<Cotonoma>>,
 ) -> impl Operation<WritableConn, (Cotonoma, Coto)> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let promoted_at = promoted_at.unwrap_or(crate::current_datetime());
@@ -289,12 +292,7 @@ pub(crate) fn promote<'a>(
         let coto = update(&update_coto).run(ctx)?;
 
         // Insert a cotonoma
-        let new_cotonoma = NewCotonoma::new(
-            &coto.node_id,
-            &coto.uuid,
-            coto.name_as_cotonoma().unwrap(),
-            promoted_at,
-        )?;
+        let new_cotonoma = NewCotonoma::promoted_from(&coto, promoted_at, cotonoma_id)?;
         let inserted_cotonoma = cotonoma_ops::insert(&new_cotonoma).run(ctx)?;
 
         Ok((inserted_cotonoma, coto))
