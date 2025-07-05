@@ -40,6 +40,10 @@ fn import_changes() -> Result<()> {
     let ((db1_cotonoma, db1_cotonoma_coto), db1_change5) =
         ds1.post_cotonoma(&CotonomaInput::new("sun"), &node1_root_cotonoma, &opr1)?;
 
+    // 6. rename_cotonoma
+    let ((db1_cotonoma2, db1_cotonoma_coto2), db1_change6) =
+        ds1.rename_cotonoma(&db1_cotonoma.uuid, "sunsun", &opr1)?;
+
     /////////////////////////////////////////////////////////////////////////////
     // Setup: prepare db2 to accept changes from db1
     /////////////////////////////////////////////////////////////////////////////
@@ -181,6 +185,30 @@ fn import_changes() -> Result<()> {
     assert_that!(
         ds2.cotonoma_pair(&db1_cotonoma.uuid),
         ok(some((eq(&db1_cotonoma), eq(&db1_cotonoma_coto))))
+    );
+
+    /////////////////////////////////////////////////////////////////////////////
+    // When: import change6 (rename_cotonoma)
+    /////////////////////////////////////////////////////////////////////////////
+
+    let changelog = ds2.import_change(&via_serialization(&db1_change6)?, &node1.uuid)?;
+
+    assert_changes_received(6);
+    assert_that!(
+        changelog.unwrap(),
+        pat!(ChangelogEntry {
+            serial_number: eq(&8),
+            origin_node_id: eq(&node1.uuid),
+            origin_serial_number: eq(&db1_change6.origin_serial_number),
+            change: eq(&db1_change6.change),
+            import_error: none(),
+        })
+    );
+
+    // db2 should have the renamed cotonoma.
+    assert_that!(
+        ds2.cotonoma_pair(&db1_cotonoma.uuid),
+        ok(some((eq(&db1_cotonoma2), eq(&db1_cotonoma_coto2))))
     );
 
     Ok(())
