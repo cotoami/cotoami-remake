@@ -140,6 +140,12 @@ impl Request {
 
 impl Command {
     pub fn into_request(self) -> Request { Request::new(self) }
+
+    pub fn into_request_from(self, from: Arc<Operator>) -> Request {
+        let mut request = Request::new(self);
+        request.set_from(from);
+        request
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
