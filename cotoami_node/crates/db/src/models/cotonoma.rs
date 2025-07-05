@@ -112,6 +112,21 @@ impl<'a> NewCotonoma<'a> {
         cotonoma.validate()?;
         Ok(cotonoma)
     }
+
+    pub fn promoted_from(
+        coto: &'a Coto,
+        promoted_at: NaiveDateTime,
+        cotonoma_id: Option<Id<Cotonoma>>,
+    ) -> Self {
+        Self {
+            uuid: cotonoma_id.unwrap_or(Id::generate()),
+            node_id: &coto.node_id,
+            coto_id: &coto.uuid,
+            name: coto.name_as_cotonoma().unwrap(),
+            created_at: promoted_at,
+            updated_at: promoted_at,
+        }
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
