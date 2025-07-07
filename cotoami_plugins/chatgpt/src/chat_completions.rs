@@ -1,6 +1,9 @@
 use extism_pdk::*;
 
 pub const ENDPOINT: &'static str = "https://api.openai.com/v1/chat/completions";
+pub const DEFAULT_DEVELOPER_INSTRUCTIONS: [&str; 1] = [
+    "`[User: Name]` is used for speaker tags. No need to add any prefix like `[Assistant]` in your responses."
+];
 
 #[derive(Debug, serde::Serialize, ToBytes)]
 #[encoding(Json)]
@@ -18,6 +21,13 @@ pub struct InputMessage {
 }
 
 impl InputMessage {
+    pub fn default_developer_instructions() -> Vec<InputMessage> {
+        DEFAULT_DEVELOPER_INSTRUCTIONS
+            .into_iter()
+            .map(|message| Self::by_developer(message.into()))
+            .collect()
+    }
+
     pub fn by_developer(message: String) -> Self {
         InputMessage {
             role: "developer".into(),
