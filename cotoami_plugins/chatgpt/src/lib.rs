@@ -2,6 +2,7 @@ use anyhow::{bail, Result};
 use cotoami_plugin_api::*;
 use extism_pdk::*;
 use lazy_regex::*;
+use std::collections::HashMap;
 
 pub use self::chat_completions::*;
 
@@ -12,6 +13,7 @@ const NAME: &'static str = "ChatGPT";
 
 const CONFIG_API_KEY: &'static str = "api_key";
 const CONFIG_MODEL: &'static str = "model";
+const CONFIG_DEVELOPER_MESSAGE: &'static str = "developer_message";
 
 static COMMAND_PREFIX: Lazy<Regex> = lazy_regex!(r"^\s*\#chatgpt\s");
 
@@ -74,10 +76,18 @@ fn reply_to(coto: Coto, local_node_id: String) -> Result<()> {
         let ito_input = ItoInput::new(coto.uuid.clone(), reply.uuid.clone());
         unsafe { create_ito(ito_input)? };
 
-        // Messages (ancestors cotos and target coto)
-        let mut messages: Vec<InputMessage> = base_messages(coto.uuid.clone())?;
+        // Base messages from the ancestor cotos.
+        let (mut messages, authors) = base_messages(coto.uuid.clone())?;
+
+        // Append the target coto as the last message.
+        // Embed the user name only if it's in the authors of the base messages.
         let message = COMMAND_PREFIX.replace(&content, "").trim().to_owned();
-        messages.push(InputMessage::by_user(message, coto.posted_by_id));
+        let author = authors.get(&coto.posted_by_id);
+        messages.push(InputMessage::by_user(
+            message,
+            coto.posted_by_id,
+            author.map(|node| node.name.clone()),
+        ));
 
         match request_chat_completion(messages) {
             Ok(res_body) => {
@@ -97,24 +107,36 @@ fn reply_to(coto: Coto, local_node_id: String) -> Result<()> {
     Ok(())
 }
 
-fn base_messages(coto_id: String) -> Result<Vec<InputMessage>> {
+fn base_messages(coto_id: String) -> Result<(Vec<InputMessage>, HashMap<String, Node>)> {
     let agent_node_id: String = var::get("agent_node_id")?.unwrap();
+    let mut messages = Vec::<InputMessage>::new();
+
+    // Developer-provided instructions
+    if let Some(message) = config::get(CONFIG_DEVELOPER_MESSAGE)? {
+        messages.push(InputMessage::by_developer(message));
+    }
+
+    // User and assistant messages
     let mut ancestors = unsafe { ancestors_of(coto_id)? };
-    ancestors.ancestors.reverse();
-    Ok(ancestors
-        .ancestors
-        .into_iter()
-        .map(|(_, cotos)| cotos)
-        .flatten()
-        .map(|coto| {
+    ancestors.ancestors.reverse(); // into the order of the Ito directions
+    for (_, cotos) in ancestors.ancestors.into_iter() {
+        for coto in cotos {
             let message = coto.content.unwrap_or_default();
             if coto.posted_by_id == agent_node_id {
-                InputMessage::by_assistant(message)
+                messages.push(InputMessage::by_assistant(message));
             } else {
-                InputMessage::by_user(message, coto.posted_by_id.clone())
+                let author_id = coto.posted_by_id.clone();
+                let author = ancestors.authors.get(&author_id);
+                messages.push(InputMessage::by_user(
+                    message,
+                    author_id,
+                    author.map(|node| node.name.clone()),
+                ));
             }
-        })
-        .collect())
+        }
+    }
+
+    Ok((messages, ancestors.authors))
 }
 
 fn request_chat_completion(messages: Vec<InputMessage>) -> Result<ResponseBody> {

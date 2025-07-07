@@ -18,18 +18,32 @@ pub struct InputMessage {
 }
 
 impl InputMessage {
-    pub fn by_user(content: String, name: String) -> Self {
+    pub fn by_developer(message: String) -> Self {
         InputMessage {
-            role: "user".into(),
-            content,
-            name: Some(name),
+            role: "developer".into(),
+            content: message,
+            name: None,
         }
     }
 
-    pub fn by_assistant(content: String) -> Self {
+    pub fn by_user(message: String, id: String, name: Option<String>) -> Self {
+        let content = if let Some(name) = name {
+            // Embed the user name in the content to help ChatGPT recognize the author.
+            format!("[User: {name}] {message}")
+        } else {
+            message
+        };
+        InputMessage {
+            role: "user".into(),
+            content,
+            name: Some(id),
+        }
+    }
+
+    pub fn by_assistant(message: String) -> Self {
         InputMessage {
             role: "assistant".into(),
-            content,
+            content: message,
             name: None,
         }
     }
