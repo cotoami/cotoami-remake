@@ -12,7 +12,9 @@ The Echo plugin is a simple plugin that mimics and reposts the content of any Co
 
 ## Install
 
-Copy the plugin file into the `<database-folder>/plugins` folder.
+* Cotoami v0.8.0 or later required.
+* Copy the plugin file into the `<database-folder>/plugins` folder.
+* Restart the application.
 
 
 ## Build
