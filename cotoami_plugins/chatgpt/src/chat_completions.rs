@@ -1,9 +1,6 @@
 use extism_pdk::*;
 
 pub const ENDPOINT: &'static str = "https://api.openai.com/v1/chat/completions";
-pub const DEFAULT_DEVELOPER_INSTRUCTIONS: [&str; 1] = [
-    "`[User: Name]` is used for speaker tags. No need to add any prefix like `[Assistant]` in your responses."
-];
 
 #[derive(Debug, serde::Serialize, ToBytes)]
 #[encoding(Json)]
@@ -21,11 +18,11 @@ pub struct InputMessage {
 }
 
 impl InputMessage {
-    pub fn default_developer_instructions() -> Vec<InputMessage> {
-        DEFAULT_DEVELOPER_INSTRUCTIONS
-            .into_iter()
-            .map(|message| Self::by_developer(message.into()))
-            .collect()
+    const SPEAKER_TAG_INSTRUCTION: &'static str = 
+    "`[User: Name]` is used for speaker tags. No need to add any prefix like `[Assistant]` in your responses.";
+
+    pub fn speaker_tag_instruction() -> Self {
+        Self::by_developer(Self::SPEAKER_TAG_INSTRUCTION.into())
     }
 
     pub fn by_developer(message: String) -> Self {
@@ -38,7 +35,7 @@ impl InputMessage {
 
     pub fn by_user(message: String, id: String, name: Option<String>) -> Self {
         let content = if let Some(name) = name {
-            // Embed the user name in the content to help ChatGPT recognize the author.
+            // Embed the user name in the content to help ChatGPT recognize the speaker.
             format!("[User: {name}] {message}")
         } else {
             message

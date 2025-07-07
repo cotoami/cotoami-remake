@@ -109,15 +109,21 @@ fn reply_to(coto: Coto, local_node_id: String) -> Result<()> {
 
 fn base_messages(coto_id: String) -> Result<(Vec<InputMessage>, HashMap<String, Node>)> {
     let agent_node_id: String = var::get("agent_node_id")?.unwrap();
-    let mut messages = InputMessage::default_developer_instructions();
+    let mut ancestors = unsafe { ancestors_of(coto_id)? };
 
-    // Additional developer-provided instruction from config
+    let mut messages = Vec::<InputMessage>::new();
+
+    // If there's preceding cotos, inject a speaker tag instruction.
+    if !ancestors.ancestors.is_empty() {
+        messages.push(InputMessage::speaker_tag_instruction());
+    }
+
+    // Additional developer-provided instruction from config.
     if let Some(message) = config::get(CONFIG_DEVELOPER_MESSAGE)? {
         messages.push(InputMessage::by_developer(message));
     }
 
     // User and assistant messages
-    let mut ancestors = unsafe { ancestors_of(coto_id)? };
     ancestors.ancestors.reverse(); // into the order of the Ito directions
     for (_, cotos) in ancestors.ancestors.into_iter() {
         for coto in cotos {
