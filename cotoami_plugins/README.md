@@ -7,7 +7,7 @@ The Cotoami Plugin is a WebAssembly module that extends the functionality of a C
 * Plugins are developed using the [Plugin API](/cotoami_node/crates/plugin_api).
 
 
-## Available Plugins
+## Official Plugins
 
 * [Echo Plugin](echo)
     * A simple plugin that mimics and reposts the content of any Coto that starts with `#echo`.
