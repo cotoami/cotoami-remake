@@ -2,6 +2,13 @@
 
 Cotoami (言編み・言網) is a standalone, cross-platform note-taking application designed to help you organize scattered information into meaningful knowledge—entirely on your own device, with full offline support.
 
+* **What Cotoami Offers**
+    * A personal database with a chat-like interface for entering data.
+    * You can freely assemble the information you've entered like LEGO blocks to create larger documents.
+    * Comes with a built-in world map, allowing you to register location-based information and build your own personalized map.
+    * With the [ChatGPT Plugin](cotoami_plugins/chatgpt), you can involve a ChatGPT agent in the process of building your knowledge.
+    * Primarily a personal app that works offline, but you can also connect multiple databases to form a [collaborative network](cotoami_node) with other people.
+
 Cotoami structures your input as “Cotos” (units of information) and connects them using “Itos” (links between Cotos). By building these connections, you transform isolated notes into an interconnected web of knowledge.
 
 <p align="center"><img src="docs/images/cotos-and-itos.png" width="500px" alt="Cotos and Itos"></p>
