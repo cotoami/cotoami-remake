@@ -150,6 +150,25 @@ By default, only the timeline is visible. Make sure to open the *stock* area as 
 ![](docs/images/official-node.gif)
 
 
+## Plugin System
+
+In Cotoami v0.8.0, a plugin system based on WebAssembly was introduced. This system makes it possible to extend the functionality of Cotoami Nodes through plugins.
+
+As the first official plugin, we have released the [ChatGPT Plugin](cotoami_plugins/chatgpt). It's more than just sending a message to ChatGPT and receiving a reply — it leverages Cotoami's unique structure to deliver powerful capabilities.
+
+![](cotoami_plugins/chatgpt/images/graph-as-context.gif)
+
+What you can do with the Cotoami × ChatGPT integration:
+
+* ChatGPT's responses are saved directly into your own database.
+* Since each response is just another Coto (Cotoami's unit of information), you can pin it, connect it to other Cotos, and use it freely as a part of your knowledge graph.
+* The ChatGPT plugin doesn't treat the message in isolation—it understands the surrounding knowledge graph as context. This means you can fully control and edit the context using Cotoami's features.
+* If you're sharing a remote node with others, you can bring ChatGPT into your team conversations as a participant.
+* The ChatGPT plugin is aware of the author of each Coto passed as context, so it can respond to questions that refer to specific participants by name.
+
+[Available Cotoami Plugins](cotoami_plugins)
+
+
 ## Why Use This Application?
 
 As of its initial release in 2025, there are already countless note-taking apps available—both online services and standalone applications, with some clear industry standards among them. So, why go out of your way to use this one? Honestly, I created this program simply because it was something I personally wanted to use. I can't say for certain whether it will be the best choice for everyone. However, in developing Cotoami Remake, I've paid special attention to the following points, beyond just the features themselves:
@@ -189,18 +208,6 @@ Updates about Cotoami are shared on the following platforms. In particular, the 
 
 Feedback and bug reports are welcome on [GitHub Discussions](https://github.com/cotoami/cotoami-remake/discussions).
 
-
-## Planned Features
-
-- [x] Inline cotonoma link syntax in Markdown
-    - The path displayed at the bottom-left of the window can be used as: `[label](/path)`
-- [x] Unread Notification
-- [ ] Application Auto Update
-- [ ] I18n
-- [ ] Terminal Node (converting to a lightweight node by deleting changelog)
-- [ ] Graph View
-- [ ] Browsing cotos by date
-- [ ] Map in another window
 
 ## Special Thanks
 
