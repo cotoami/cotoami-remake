@@ -69,6 +69,7 @@ impl Plugin {
             .with_allowed_hosts(config.allowed_hosts().into_iter());
         PluginBuilder::new(manifest)
             .with_wasi(true)
+            .with_http_response_headers(true)
             .with_function("log", [PTR], [], UserData::new(()), log)
             .with_function("version", [], [PTR], ctx.new_user_data(), version)
             .with_function(
