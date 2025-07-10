@@ -448,14 +448,16 @@ object SectionFlowInput {
         div(className := "post")(
           CotoForm.sectionValidationError(form),
           section(className := "post")(
-            div(className := "fold-button")(
-              button(
-                className := "default fold",
-                onClick := (_ => dispatch(Msg.SetFolded(true)))
-              )(
-                materialSymbol("arrow_drop_up")
+            Option.when(!form.inPreview) {
+              div(className := "fold-button")(
+                button(
+                  className := "default fold",
+                  onClick := (_ => dispatch(Msg.SetFolded(true)))
+                )(
+                  materialSymbol("arrow_drop_up")
+                )
               )
-            ),
+            },
             div(className := "buttons")(
               CotoForm.buttonPreview(form)(submsg =>
                 dispatch(Msg.CotoFormMsg(submsg))
