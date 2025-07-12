@@ -68,14 +68,6 @@ section.traversals {
       padding-top: 20px;
     }
 
-    article.traversed {
-      border: 2px dashed var(--traversed-border-color);
-
-      .body {
-        opacity: .5;
-      }
-    }
-
     article.sub-coto {
       ul.parents {
         padding-bottom: 10px;
