@@ -89,24 +89,7 @@ When you post one Cotonoma to the timeline of another, you can create a hierarch
 
 ![](docs/images/cotonoma-hierarchy.png)
 
-This allows you to build a traditional category hierarchy—but be careful not to lose what makes Cotoami special. As someone who uses a tool like Cotoami on a daily basis to organize thoughts and information, I've come to realize how deeply we hold certain assumptions about categories. One of the strongest is this: categories are somehow “above” the things that belong to them.
-
-We usually think of “fruit” as a category, and “apple” or “banana” as elements inside it. That seems natural. And because of this bias, when we try to organize information, we often start by thinking about the categories first—just like deciding on folder names before actually saving any files.
-
-In fact, the more interested someone is in organizing information, the more likely they are to try to set up a structure in advance.
-
-But when we reflect on specific things we've encountered in everyday life, categories often feel more like attributes than containers. That’s when I started to suspect: maybe this whole idea of “higher” and “lower” isn’t about structure at all—it’s just a matter of where our focus is at any given moment.
-
-When we focus on the category, we say: “An apple is a type of fruit.” But when our attention is on the apple itself, we might say: “It’s sweet, it’s red, and it’s a fruit.” In that case, “fruit” behaves like just another detail about the apple.
-
-This kind of role reversal happens all the time, but we don’t usually notice it. That’s the surprising part. We unconsciously believe that categories come first, as if there’s a natural order to things. But our minds aren’t so fixed—they shift perspective constantly, depending on what we’re paying attention to.
-
-From this perspective, the kind of emergent knowledge structure that Cotoami encourages probably won’t look like a neat hierarchy. Instead of a fixed tree with stable top-down relationships, it might look more like a web—where what appears “higher” in one moment becomes “lower” in another, depending on context.
-
-Some people may believe that if you keep organizing information long enough, you'll end up with a tidy, universal classification—like a library system. But Cotoami aims for the opposite: a structure where personal context, not universal order, comes through.
-
-In that sense, maybe “organization” isn’t even the right word. “Organization” implies making things easy to retrieve. But what Cotoami really aims for is discovery. And to get there, maybe we need to start by questioning our deep-rooted bias toward categories.
-
+This allows you to build a traditional category hierarchy—but [be careful not to lose what makes Cotoami special](https://cotoami.app/the-bias-of-categories-dd53507aa957). 
 
 ## Geolocated Cotos
 
