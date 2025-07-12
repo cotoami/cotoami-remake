@@ -112,6 +112,16 @@ object Itos {
 
     def all: Iterable[Id[Ito]] = byNode.values.map(_.values).flatten
 
+    def onlyOne: Option[Id[Ito]] =
+      if (byNode.size == 1)
+        byNode.values.headOption.flatMap { itos =>
+          if (itos.size == 1)
+            itos.values.headOption
+          else
+            None
+        }
+      else None
+
     def group(id: Id[Node]): Iterable[Id[Ito]] =
       byNode.get(id).map(_.values).getOrElse(Seq.empty)
 
