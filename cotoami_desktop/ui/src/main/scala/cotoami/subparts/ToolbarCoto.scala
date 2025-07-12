@@ -127,6 +127,18 @@ object ToolbarCoto {
           }
         )
       },
+      Option.when(repo.itos.anyFrom(coto.id)) {
+        toolButton(
+          classes = "traverse",
+          symbol = "graph_1",
+          tip = Some("Traverse"),
+          tipPlacement = "left",
+          onClick = e => {
+            e.stopPropagation()
+            dispatch(SectionTraversals.Msg.OpenTraversal(coto.id))
+          }
+        )
+      },
       Some(
         if (repo.cotos.isSelecting(coto.id))
           toolButton(
