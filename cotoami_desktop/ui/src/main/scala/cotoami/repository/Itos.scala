@@ -77,6 +77,9 @@ object Itos {
     def anyFrom(id: Id[Coto]): Boolean =
       from(id).map(!_.isEmpty).getOrElse(false)
 
+    def onlyOne(id: Id[Coto]): Option[Id[Ito]] =
+      from(id).flatMap(_.onlyOne)
+
     def hasDuplicateOrder(ito: Ito): Boolean =
       from(ito.sourceCotoId).map(_.hasDuplicateOrder(ito)).getOrElse(false)
 
