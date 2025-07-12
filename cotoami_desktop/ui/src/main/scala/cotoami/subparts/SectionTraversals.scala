@@ -31,10 +31,12 @@ object SectionTraversals {
   ) {
     def isEmpty: Boolean = traversals.isEmpty
 
-    def openTraversal(start: Id[Coto]): Model =
+    def openTraversal(start: Id[Coto])(implicit context: Context): Model =
       this.modify(_.traversals).using(_ :+ Traversal(start))
 
-    def step(traversalIndex: Int, stepIndex: Int, step: Id[Coto]): Model =
+    def step(traversalIndex: Int, stepIndex: Int, step: Id[Coto])(implicit
+        context: Context
+    ): Model =
       this.modify(_.traversals.index(traversalIndex)).using(
         _.step(stepIndex, step)
       )
@@ -58,8 +60,12 @@ object SectionTraversals {
       id: String =
         Instant.now().toEpochMilli().toString() // for react element's key
   ) {
-    def step(stepIndex: Int, step: Id[Coto]): Traversal =
-      this.modify(_.steps).using(_.take(stepIndex) :+ step)
+    def step(stepIndex: Int, step: Id[Coto])(implicit
+        context: Context
+    ): Traversal =
+      this
+        .modify(_.steps).using(_.take(stepIndex) :+ step)
+        .traverseSingleSuccessors
 
     def stepToParent(parentId: Id[Coto], itos: Itos): Traversal = {
       val oldStart = start
@@ -76,12 +82,45 @@ object SectionTraversals {
         )
     }
 
+    def lastStep: Id[Coto] = steps.headOption.getOrElse(start)
+
+    def nextStepIndex: Int = steps.size
+
     def traversed(stepIndex: Option[Int], subCotoId: Id[Coto]): Boolean =
       (stepIndex match {
         case Some(index) => steps.lift(index + 1).map(_ == subCotoId)
         // For the start coto of the traversal
         case None => steps.headOption.map(_ == subCotoId)
       }).getOrElse(false)
+
+    def traverseSingleSuccessors(implicit context: Context): Traversal = {
+      var traversal = this
+      var step = lastStep
+      var nextIndex = nextStepIndex
+      var continue = true
+      while (continue) {
+        context.repo.itos.onlyOneFrom(step) match {
+          case Some(next) => {
+            if (traversal.steps.contains(next.targetCotoId))
+              continue = false // prevent infinite loop
+            else {
+              traversal = traversal.step(nextIndex, next.targetCotoId)
+              step = next.targetCotoId
+              nextIndex = nextIndex + 1
+            }
+          }
+          case None => {
+            continue = false
+          }
+        }
+      }
+      traversal
+    }
+  }
+
+  object Traversal {
+    def apply(start: Id[Coto])(implicit context: Context): Traversal =
+      new Traversal(start).traverseSingleSuccessors
   }
 
   /////////////////////////////////////////////////////////////////////////////
