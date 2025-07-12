@@ -82,7 +82,7 @@ object SectionTraversals {
         )
     }
 
-    def lastStep: Id[Coto] = steps.headOption.getOrElse(start)
+    def lastStep: Id[Coto] = steps.lastOption.getOrElse(start)
 
     def nextStepIndex: Int = steps.size
 
@@ -298,6 +298,7 @@ object SectionTraversals {
       traversal: (Traversal, Int)
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val subCotos = context.repo.childrenOf(coto.id)
+    val subCotosCount = subCotos.map(_.count).getOrElse(0)
     div(
       key := s"${stepIndex}-${coto.id.uuid}",
       className := optionalClasses(
@@ -318,7 +319,9 @@ object SectionTraversals {
         dispatch,
         Seq(
           ("step-coto", true),
-          ("has-children", !subCotos.isEmpty)
+          // subCotosCount == 1 should be traversed (the sub-coto will be hidden)
+          // automatically by `traverseSingleSuccessors`
+          ("has-children", subCotosCount > 1)
         )
       )(
         ToolbarCoto(coto),
