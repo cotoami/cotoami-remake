@@ -58,6 +58,8 @@ case class Siblings(
       case None        => None
     }
 
+  def count: Int = groups.values.map(_.length).sum
+
   def otherGroups: Seq[SiblingGroup] =
     groups.filter { case (nodeId, _) =>
       nodeId != parent.nodeId && nodeId != selfNodeId
