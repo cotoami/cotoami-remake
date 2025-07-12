@@ -408,7 +408,7 @@ object SectionPins {
     Option.when(context.repo.itos.anyFrom(coto.id)) {
       div(className := "has-itos")(
         toolButton(
-          symbol = "view_headline",
+          symbol = "arrow_forward",
           classes = "open-traversal",
           onClick = e => {
             e.stopPropagation()
