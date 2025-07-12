@@ -51,6 +51,9 @@ case class Itos(
 
   def anyFrom(cotoId: Id[Coto]): Boolean = bySource.anyFrom(cotoId)
 
+  def onlyOneFrom(id: Id[Coto]): Option[Ito] =
+    bySource.onlyOneFrom(id).flatMap(get)
+
   def hasDuplicateOrder(ito: Ito): Boolean =
     bySource.hasDuplicateOrder(ito)
 
@@ -77,7 +80,7 @@ object Itos {
     def anyFrom(id: Id[Coto]): Boolean =
       from(id).map(!_.isEmpty).getOrElse(false)
 
-    def onlyOne(id: Id[Coto]): Option[Id[Ito]] =
+    def onlyOneFrom(id: Id[Coto]): Option[Id[Ito]] =
       from(id).flatMap(_.onlyOne)
 
     def hasDuplicateOrder(ito: Ito): Boolean =
