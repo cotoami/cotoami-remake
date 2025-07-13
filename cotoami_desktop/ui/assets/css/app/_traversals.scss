@@ -66,9 +66,28 @@ section.traversals {
 
     article.step-coto {
       padding-top: 20px;
+
+      >header {
+        padding: 0 20px;
+      }
+
+      div.content {
+        section.text-content {
+          padding: 0 20px;
+        }
+
+        section.media-content {
+          // fit to the left and right border
+          padding-left: 0;
+          padding-right: 0;
+        }
+      }
     }
 
     article.sub-coto {
+      padding-top: 4px;
+      padding-left: 8px;
+
       ul.parents {
         padding-bottom: 10px;
       }

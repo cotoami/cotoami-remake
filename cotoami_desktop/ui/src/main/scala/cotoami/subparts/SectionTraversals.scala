@@ -333,6 +333,9 @@ object SectionTraversals {
         )
       )(
         ToolbarCoto(coto),
+        header()(
+          PartsCoto.addressRemoteAuthor(coto)
+        ),
         div(className := "body")(
           PartsCoto.divContent(coto)
         ),

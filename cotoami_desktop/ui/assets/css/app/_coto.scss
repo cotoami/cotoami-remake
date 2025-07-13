@@ -2,14 +2,14 @@
 
 article.coto {
   position: relative;
+
   margin: 0;
   padding: 0;
+  padding-bottom: 1rem;
+
   border-radius: 0;
   border: 2px solid transparent; // for focus and selection
   box-shadow: none;
-
-  padding-left: 8px;
-  padding-bottom: 1rem;
 
   @include mixins.selectable;
 
