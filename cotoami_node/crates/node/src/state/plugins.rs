@@ -137,7 +137,12 @@ impl PluginSystem {
                     {
                         let event = Arc::new(event);
                         plugins.for_each_enabled(|plugin, config| {
-                            send_event_to_plugin(event.clone(), plugin, &config);
+                            send_event_to_plugin(
+                                event.clone(),
+                                plugin,
+                                &config,
+                                state.pubsub().events().clone(),
+                            );
                         });
                     }
                 }
@@ -244,7 +249,12 @@ impl Plugins {
     fn publish_event(&self, event: PluginEvent) { self.event_pubsub.publish(event.into(), None); }
 }
 
-fn send_event_to_plugin(event: Arc<Event>, plugin: &Plugin, config: &Config) {
+fn send_event_to_plugin(
+    event: Arc<Event>,
+    plugin: &Plugin,
+    config: &Config,
+    event_pubsub: EventPubsub,
+) {
     // Filter events.
     if let Some(agent_node_id) = config.agent_node_id() {
         match &*event {
@@ -262,7 +272,11 @@ fn send_event_to_plugin(event: Arc<Event>, plugin: &Plugin, config: &Config) {
         let plugin = plugin.clone();
         move || {
             if let Err(e) = plugin.on(&event) {
-                error!("{}: event handling error: {e}", plugin.identifier());
+                event_pubsub.publish(
+                    PluginEvent::error(plugin.identifier(), format!("Event handling error: {e}"))
+                        .into(),
+                    None,
+                );
             }
         }
     });
