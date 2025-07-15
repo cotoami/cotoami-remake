@@ -123,7 +123,10 @@ object LocalNodeEvent {
     for (pluginEvent <- event.PluginEvent.toOption) {
       for (json <- pluginEvent.Registered.toOption) {
         return (
-          model.info("Plugin registered.", Some(json.identifier)),
+          model.info(
+            "Plugin registered.",
+            Some(s"${json.identifier} v${json.version}")
+          ),
           Cmd.none
         )
       }

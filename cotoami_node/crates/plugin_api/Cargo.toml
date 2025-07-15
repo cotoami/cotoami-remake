@@ -4,7 +4,9 @@ edition.workspace = true
 license.workspace = true
 name = "cotoami_plugin_api"
 rust-version.workspace = true
-version.workspace = true
+
+# Update this version if this API or the set of host functions is changed.
+version = "0.1.0"
 
 [dependencies]
 anyhow.workspace = true

@@ -11,12 +11,15 @@ mod models;
 pub use event::*;
 pub use models::*;
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 #[derive(Debug, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
 #[encoding(Json)]
 pub struct Metadata {
     pub identifier: String,
     pub name: String,
     pub version: String,
+    pub api_version: Option<String>,
     pub agent_name: Option<String>,
     pub agent_icon: Option<Vec<u8>>,
 }
@@ -31,6 +34,7 @@ impl Metadata {
             identifier: identifier.into(),
             name: name.into(),
             version: version.into(),
+            api_version: Some(VERSION.to_owned()),
             agent_name: None,
             agent_icon: None,
         }
