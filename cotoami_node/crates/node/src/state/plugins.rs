@@ -60,25 +60,17 @@ impl PluginSystem {
                 Ok(plugin) => {
                     let identifier = plugin.identifier().to_owned();
                     if let Err(e) = self.register(plugin).await {
-                        node_state.pubsub().events().publish(
-                            PluginEvent::error(
-                                identifier,
-                                format!("Couldn't register a plugin {path:?}: {e}"),
-                            )
-                            .into(),
-                            None,
-                        );
+                        node_state.publish_plugin_event(PluginEvent::error(
+                            identifier,
+                            format!("Couldn't register a plugin {path:?}: {e}"),
+                        ));
                     }
                 }
                 Err(e) => {
-                    node_state.pubsub().events().publish(
-                        PluginEvent::InvalidFile {
-                            path: path.to_string_lossy().into_owned(),
-                            message: e.to_string(),
-                        }
-                        .into(),
-                        None,
-                    );
+                    node_state.publish_plugin_event(PluginEvent::InvalidFile {
+                        path: path.to_string_lossy().into_owned(),
+                        message: e.to_string(),
+                    });
                 }
             }
         }
@@ -264,4 +256,10 @@ fn send_event_to_plugin(event: Arc<Event>, plugin: &Plugin, config: &Config) {
             }
         }
     });
+}
+
+impl NodeState {
+    fn publish_plugin_event(&self, event: PluginEvent) {
+        self.pubsub().events().publish(event.into(), None);
+    }
 }
