@@ -16,6 +16,7 @@ object PluginEventJson {
   @js.native
   trait Registered extends js.Object {
     val identifier: String = js.native
+    val name: String = js.native
     val version: String = js.native
   }
 

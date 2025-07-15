@@ -215,6 +215,7 @@ impl Plugins {
         self.ensure_unregistered(&plugin)?;
 
         let identifier = plugin.identifier().to_owned();
+        let name = plugin.metadata().name.clone();
         let version = plugin.metadata().version.clone();
         let config = self.configs.config(&identifier);
 
@@ -240,6 +241,7 @@ impl Plugins {
         info!("{identifier}: registered.");
         self.publish_event(PluginEvent::Registered {
             identifier,
+            name,
             version,
         });
         Ok(())

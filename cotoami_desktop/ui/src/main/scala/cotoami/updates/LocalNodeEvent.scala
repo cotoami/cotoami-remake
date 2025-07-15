@@ -125,7 +125,7 @@ object LocalNodeEvent {
         return (
           model.info(
             "Plugin registered.",
-            Some(s"${json.identifier} v${json.version}")
+            Some(s"${json.name} v${json.version} (${json.identifier})")
           ),
           Cmd.none
         )
