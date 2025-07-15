@@ -58,12 +58,27 @@ impl PluginSystem {
             }
             match Plugin::new(&path, &self.plugins.configs, node_state.clone()) {
                 Ok(plugin) => {
+                    let identifier = plugin.identifier().to_owned();
                     if let Err(e) = self.register(plugin).await {
-                        error!("Couldn't register a plugin {path:?}: {e}");
+                        node_state.pubsub().events().publish(
+                            PluginEvent::error(
+                                identifier,
+                                format!("Couldn't register a plugin {path:?}: {e}"),
+                            )
+                            .into(),
+                            None,
+                        );
                     }
                 }
                 Err(e) => {
-                    error!("Invalid plugin {path:?}: {e}");
+                    node_state.pubsub().events().publish(
+                        PluginEvent::InvalidFile {
+                            path: path.to_string_lossy().into_owned(),
+                            message: e.to_string(),
+                        }
+                        .into(),
+                        None,
+                    );
                 }
             }
         }
