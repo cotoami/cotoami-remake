@@ -5,8 +5,10 @@ use lazy_regex::*;
 use std::collections::HashMap;
 
 pub use self::chat_completions::*;
+pub use self::error::*;
 
 mod chat_completions;
+mod error;
 
 const IDENTIFIER: &'static str = "app.cotoami.plugin.chatgpt";
 const NAME: &'static str = "ChatGPT";
@@ -99,7 +101,7 @@ fn reply_to(coto: Coto, local_node_id: String) -> Result<()> {
             }
             Err(e) => {
                 let mut reply_diff = CotoContentDiff::default();
-                reply_diff.content = Some(format!("[ERROR] {e}"));
+                reply_diff.content = Some(format!("**[ERROR]** {e}"));
                 unsafe { edit_coto(reply.uuid, reply_diff)? };
             }
         }
@@ -160,7 +162,7 @@ fn request_chat_completion(messages: Vec<InputMessage>) -> Result<ResponseBody> 
     if 200 <= status && status < 300 {
         res.json()
     } else {
-        // For some reason, the response body will be empty here.
-        bail!("HTTP Status {status}");
+        let error_body: ErrorResponseBody = res.json()?;
+        bail!("Status {status}: {}", error_body.error.message);
     }
 }
