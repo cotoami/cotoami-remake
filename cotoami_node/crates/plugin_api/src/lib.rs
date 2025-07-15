@@ -60,9 +60,10 @@ impl Metadata {
 pub struct Config(HashMap<String, Value>);
 
 impl Config {
-    const KEY_ALLOWED_HOSTS: &'static str = "allowed_hosts";
     const KEY_DISABLED: &'static str = "disabled";
     const KEY_AGENT_NODE_ID: &'static str = "agent_node_id";
+    const KEY_ALLOWED_HOSTS: &'static str = "allowed_hosts";
+    const KEY_ALLOW_EDIT_USER_CONTENT: &'static str = "allow_edit_user_content";
 
     pub fn to_string(value: &Value) -> String {
         match value {
@@ -73,14 +74,11 @@ impl Config {
 
     pub fn iter(&self) -> Iter<'_, String, Value> { self.0.iter() }
 
-    pub fn allowed_hosts(&self) -> Vec<String> {
-        match self.0.get(Self::KEY_ALLOWED_HOSTS) {
-            Some(Value::String(host)) => vec![host.clone()],
-            Some(Value::Array(hosts)) => hosts
-                .into_iter()
-                .map(|host| Self::to_string(host))
-                .collect(),
-            _ => Vec::new(),
+    pub fn require_key(&self, key: &str) -> Result<()> {
+        if self.0.contains_key(key) {
+            Ok(())
+        } else {
+            bail!(PluginError::MissingConfig(key.to_owned()));
         }
     }
 
@@ -109,11 +107,22 @@ impl Config {
             .insert(Self::KEY_AGENT_NODE_ID.into(), json!(id.into()));
     }
 
-    pub fn require_key(&self, key: &str) -> Result<()> {
-        if self.0.contains_key(key) {
-            Ok(())
+    pub fn allowed_hosts(&self) -> Vec<String> {
+        match self.0.get(Self::KEY_ALLOWED_HOSTS) {
+            Some(Value::String(host)) => vec![host.clone()],
+            Some(Value::Array(hosts)) => hosts
+                .into_iter()
+                .map(|host| Self::to_string(host))
+                .collect(),
+            _ => Vec::new(),
+        }
+    }
+
+    pub fn allow_edit_user_content(&self) -> bool {
+        if let Some(Value::Bool(allow)) = self.0.get(Self::KEY_ALLOW_EDIT_USER_CONTENT) {
+            *allow
         } else {
-            bail!(PluginError::MissingConfig(key.to_owned()));
+            false
         }
     }
 }

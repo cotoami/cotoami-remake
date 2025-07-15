@@ -74,7 +74,7 @@ async fn delete_session(
             ClientSession::Operator(Operator::ChildNode(child)) => {
                 db.clear_client_node_session(&child.node_id)?;
             }
-            ClientSession::Operator(Operator::Agent(_)) => {
+            ClientSession::Operator(Operator::Agent { .. }) => {
                 // No session data to be deleted
             }
             ClientSession::Operator(Operator::Anonymous) => {

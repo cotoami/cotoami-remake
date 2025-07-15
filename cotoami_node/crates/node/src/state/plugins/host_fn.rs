@@ -95,18 +95,22 @@ impl HostFnContext {
     }
 
     fn try_get_agent(&self) -> Result<Operator> {
-        if let Some(node_id) = self
+        if let Some(config) = self
             .node_state
             .read_plugins()
             .configs()
-            .agent_node_id(&self.plugin_identifier)
+            .read(&self.plugin_identifier)
         {
-            Ok(Operator::Agent(Id::from_str(&node_id)?))
-        } else {
-            bail!(PluginError::MissingAgentConfig(
-                self.plugin_identifier.clone()
-            ))
+            if let Some(node_id) = config.agent_node_id() {
+                return Ok(Operator::Agent {
+                    node_id: Id::from_str(&node_id)?,
+                    can_edit_user_content: config.allow_edit_user_content(),
+                });
+            }
         }
+        bail!(PluginError::MissingAgentConfig(
+            self.plugin_identifier.clone()
+        ))
     }
 
     fn target_cotonoma_id(&self, cotonoma_id: Option<&str>) -> Result<Id<Cotonoma>> {

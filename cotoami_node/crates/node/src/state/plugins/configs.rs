@@ -67,14 +67,14 @@ impl Configs {
             .unwrap_or(Config::default())
     }
 
-    pub fn agent_node_id(&self, identifier: &str) -> Option<String> {
-        self.read(identifier)
-            .and_then(|config| config.agent_node_id().map(ToOwned::to_owned))
-    }
-
     pub fn disabled(&self, identifier: &str) -> bool {
         self.read(identifier)
             .map(|config| config.disabled())
             .unwrap_or(false)
+    }
+
+    pub fn agent_node_id(&self, identifier: &str) -> Option<String> {
+        self.read(identifier)
+            .and_then(|config| config.agent_node_id().map(ToOwned::to_owned))
     }
 }
