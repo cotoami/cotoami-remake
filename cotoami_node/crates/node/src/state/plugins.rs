@@ -60,6 +60,7 @@ impl PluginSystem {
                 Ok(plugin) => {
                     let identifier = plugin.identifier().to_owned();
                     if let Err(e) = self.register(plugin).await {
+                        error!("Couldn't register a plugin {path:?}: {e}");
                         node_state.publish_plugin_event(PluginEvent::error(
                             identifier,
                             format!("Couldn't register a plugin {path:?}: {e}"),
@@ -67,6 +68,7 @@ impl PluginSystem {
                     }
                 }
                 Err(e) => {
+                    error!("Invalid plugin {path:?}: {e}");
                     node_state.publish_plugin_event(PluginEvent::InvalidFile {
                         path: path.to_string_lossy().into_owned(),
                         message: e.to_string(),
@@ -214,6 +216,7 @@ impl Plugins {
         }
 
         self.plugins.write().insert(identifier.clone(), plugin);
+        info!("{identifier}: registered.");
         self.publish_event(PluginEvent::Registered { identifier });
         Ok(())
     }
@@ -233,11 +236,13 @@ impl Plugins {
     fn destroy_all(&self) {
         self.for_each_enabled(|plugin, _| match plugin.destroy() {
             Ok(_) => {
+                info!("{}: destroyed.", plugin.identifier());
                 self.publish_event(PluginEvent::Destroyed {
                     identifier: plugin.identifier().to_owned(),
                 });
             }
             Err(e) => {
+                error!("{}: destroying error : {e}", plugin.identifier());
                 self.publish_event(PluginEvent::error(
                     plugin.identifier(),
                     format!("Destroying error : {e}"),
@@ -272,6 +277,7 @@ fn send_event_to_plugin(
         let plugin = plugin.clone();
         move || {
             if let Err(e) = plugin.on(&event) {
+                error!("{}: event handling error: {e}", plugin.identifier());
                 event_pubsub.publish(
                     PluginEvent::error(plugin.identifier(), format!("Event handling error: {e}"))
                         .into(),
