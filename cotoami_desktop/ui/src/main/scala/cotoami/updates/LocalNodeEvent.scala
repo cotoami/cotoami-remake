@@ -119,6 +119,40 @@ object LocalNodeEvent {
       )
     }
 
+    // PluginEvent
+    for (pluginEvent <- event.PluginEvent.toOption) {
+      for (json <- pluginEvent.Registered.toOption) {
+        return (
+          model.info("Plugin registered.", Some(json.identifier)),
+          Cmd.none
+        )
+      }
+      for (json <- pluginEvent.InvalidFile.toOption) {
+        return (
+          model.error(
+            "Invalid plugin file.",
+            Some(s"${json.path} - ${json.message}")
+          ),
+          Cmd.none
+        )
+      }
+      for (json <- pluginEvent.Error.toOption) {
+        return (
+          model.error(
+            s"Plugin error: ${json.identifier}",
+            Some(json.message)
+          ),
+          Cmd.none
+        )
+      }
+      for (json <- pluginEvent.Destroyed.toOption) {
+        return (
+          model.info("Plugin destroyed.", Some(json.identifier)),
+          Cmd.none
+        )
+      }
+    }
+
     (model, Cmd.none)
   }
 }

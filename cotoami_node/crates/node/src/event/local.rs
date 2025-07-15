@@ -1,6 +1,9 @@
 use cotoami_db::prelude::*;
 
-use crate::service::models::{ActiveClient, NotConnected};
+use crate::{
+    service::models::{ActiveClient, NotConnected},
+    state::plugins::PluginEvent,
+};
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum LocalNodeEvent {
@@ -34,4 +37,9 @@ pub enum LocalNodeEvent {
     ParentDisconnected {
         node_id: Id<Node>,
     },
+    PluginEvent(PluginEvent),
+}
+
+impl From<PluginEvent> for LocalNodeEvent {
+    fn from(event: PluginEvent) -> Self { LocalNodeEvent::PluginEvent(event) }
 }

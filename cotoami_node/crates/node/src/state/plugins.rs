@@ -15,11 +15,13 @@ use thiserror::Error;
 use tokio::task::{spawn_blocking, AbortHandle};
 use tracing::{error, info};
 
-use self::{configs::Configs, convert::*, plugin::Plugin};
-use crate::state::NodeState;
+use self::convert::*;
+pub use self::{configs::Configs, event::*, plugin::Plugin};
+use crate::state::{pubsub::EventPubsub, NodeState};
 
 mod configs;
 mod convert;
+mod event;
 mod host_fn;
 mod plugin;
 
@@ -31,13 +33,13 @@ pub struct PluginSystem {
 }
 
 impl PluginSystem {
-    pub fn new<P: AsRef<Path>>(plugins_dir: P) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(plugins_dir: P, event_pubsub: EventPubsub) -> Result<Self> {
         let plugins_dir = plugins_dir.as_ref().canonicalize()?;
         ensure!(
             plugins_dir.is_dir(),
             PluginError::InvalidPluginsDir(plugins_dir, None)
         );
-        let plugins = Plugins::new(&plugins_dir)?;
+        let plugins = Plugins::new(&plugins_dir, event_pubsub)?;
         Ok(Self {
             plugins_dir: plugins_dir,
             node_state: None,
@@ -56,12 +58,21 @@ impl PluginSystem {
             }
             match Plugin::new(&path, &self.plugins.configs, node_state.clone()) {
                 Ok(plugin) => {
+                    let identifier = plugin.identifier().to_owned();
                     if let Err(e) = self.register(plugin).await {
                         error!("Couldn't register a plugin {path:?}: {e}");
+                        node_state.publish_plugin_event(PluginEvent::error(
+                            identifier,
+                            format!("Couldn't register a plugin {path:?}: {e}"),
+                        ));
                     }
                 }
                 Err(e) => {
                     error!("Invalid plugin {path:?}: {e}");
+                    node_state.publish_plugin_event(PluginEvent::InvalidFile {
+                        path: path.to_string_lossy().into_owned(),
+                        message: e.to_string(),
+                    });
                 }
             }
         }
@@ -128,7 +139,12 @@ impl PluginSystem {
                     {
                         let event = Arc::new(event);
                         plugins.for_each_enabled(|plugin, config| {
-                            send_event_to_plugin(event.clone(), plugin, &config);
+                            send_event_to_plugin(
+                                event.clone(),
+                                plugin,
+                                &config,
+                                state.pubsub().events().clone(),
+                            );
                         });
                     }
                 }
@@ -165,13 +181,15 @@ pub enum PluginError {
 struct Plugins {
     plugins: Arc<RwLock<HashMap<String, Plugin>>>,
     configs: Configs,
+    event_pubsub: EventPubsub,
 }
 
 impl Plugins {
-    fn new<P: AsRef<Path>>(plugins_dir: P) -> Result<Self> {
+    fn new<P: AsRef<Path>>(plugins_dir: P, event_pubsub: EventPubsub) -> Result<Self> {
         Ok(Self {
             plugins: Default::default(),
             configs: Configs::new(plugins_dir)?,
+            event_pubsub,
         })
     }
 
@@ -199,6 +217,7 @@ impl Plugins {
 
         self.plugins.write().insert(identifier.clone(), plugin);
         info!("{identifier}: registered.");
+        self.publish_event(PluginEvent::Registered { identifier });
         Ok(())
     }
 
@@ -216,13 +235,31 @@ impl Plugins {
 
     fn destroy_all(&self) {
         self.for_each_enabled(|plugin, _| match plugin.destroy() {
-            Ok(_) => info!("{}: destroyed.", plugin.identifier()),
-            Err(e) => error!("{}: destroying error : {e}", plugin.identifier()),
+            Ok(_) => {
+                info!("{}: destroyed.", plugin.identifier());
+                self.publish_event(PluginEvent::Destroyed {
+                    identifier: plugin.identifier().to_owned(),
+                });
+            }
+            Err(e) => {
+                error!("{}: destroying error : {e}", plugin.identifier());
+                self.publish_event(PluginEvent::error(
+                    plugin.identifier(),
+                    format!("Destroying error : {e}"),
+                ));
+            }
         })
     }
+
+    fn publish_event(&self, event: PluginEvent) { self.event_pubsub.publish(event.into(), None); }
 }
 
-fn send_event_to_plugin(event: Arc<Event>, plugin: &Plugin, config: &Config) {
+fn send_event_to_plugin(
+    event: Arc<Event>,
+    plugin: &Plugin,
+    config: &Config,
+    event_pubsub: EventPubsub,
+) {
     // Filter events.
     if let Some(agent_node_id) = config.agent_node_id() {
         match &*event {
@@ -241,7 +278,18 @@ fn send_event_to_plugin(event: Arc<Event>, plugin: &Plugin, config: &Config) {
         move || {
             if let Err(e) = plugin.on(&event) {
                 error!("{}: event handling error: {e}", plugin.identifier());
+                event_pubsub.publish(
+                    PluginEvent::error(plugin.identifier(), format!("Event handling error: {e}"))
+                        .into(),
+                    None,
+                );
             }
         }
     });
+}
+
+impl NodeState {
+    fn publish_plugin_event(&self, event: PluginEvent) {
+        self.pubsub().events().publish(event.into(), None);
+    }
 }
