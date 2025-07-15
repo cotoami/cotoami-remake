@@ -9,6 +9,7 @@ trait PluginEventJson extends js.Object {
   val Registered: js.UndefOr[Registered] = js.native
   val InvalidFile: js.UndefOr[InvalidFile] = js.native
   val Error: js.UndefOr[Error] = js.native
+  val Destroyed: js.UndefOr[Destroyed] = js.native
 }
 
 object PluginEventJson {
@@ -27,5 +28,10 @@ object PluginEventJson {
   trait Error extends js.Object {
     val identifier: String = js.native
     val message: String = js.native
+  }
+
+  @js.native
+  trait Destroyed extends js.Object {
+    val identifier: String = js.native
   }
 }

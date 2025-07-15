@@ -145,6 +145,12 @@ object LocalNodeEvent {
           Cmd.none
         )
       }
+      for (json <- pluginEvent.Destroyed.toOption) {
+        return (
+          model.info("Plugin destroyed.", Some(json.identifier)),
+          Cmd.none
+        )
+      }
     }
 
     (model, Cmd.none)
