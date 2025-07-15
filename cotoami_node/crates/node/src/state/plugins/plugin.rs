@@ -4,6 +4,7 @@ use anyhow::Result;
 use cotoami_plugin_api::*;
 use extism::*;
 use parking_lot::Mutex;
+use semver::VersionReq;
 use tracing::info;
 
 use crate::state::{
@@ -111,6 +112,15 @@ impl Plugin {
     pub fn metadata(&self) -> &Metadata { &self.metadata }
 
     pub fn identifier(&self) -> &str { &self.metadata.identifier }
+
+    pub fn api_version_requirement(&self) -> Result<Option<VersionReq>> {
+        if let Some(ref version) = self.metadata().api_version {
+            let req = VersionReq::parse(&format!(">={version}"))?;
+            Ok(Some(req))
+        } else {
+            Ok(None)
+        }
+    }
 
     pub fn init(&self, config: &Config) -> Result<()> {
         self.plugin.lock().call::<&Config, ()>("init", config)

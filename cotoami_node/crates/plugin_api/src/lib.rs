@@ -11,7 +11,7 @@ mod models;
 pub use event::*;
 pub use models::*;
 
-const VERSION: &str = env!("CARGO_PKG_VERSION");
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, ToBytes, FromBytes)]
 #[encoding(Json)]

@@ -11,6 +11,7 @@ use cotoami_db::Id;
 use cotoami_plugin_api::*;
 use futures::StreamExt;
 use parking_lot::RwLock;
+use semver::Version;
 use thiserror::Error;
 use tokio::task::{spawn_blocking, AbortHandle};
 use tracing::{error, info};
@@ -173,6 +174,12 @@ pub enum PluginError {
     #[error("Duplicate plugin: {0}")]
     DuplicatePlugin(String),
 
+    #[error("The plugin requires {requirement}, but the runtime is v{runtime_version}")]
+    UnsupportedApiVersion {
+        requirement: String,
+        runtime_version: String,
+    },
+
     #[error("Missing agent config: {0}")]
     MissingAgentConfig(String),
 }
@@ -181,6 +188,7 @@ pub enum PluginError {
 struct Plugins {
     plugins: Arc<RwLock<HashMap<String, Plugin>>>,
     configs: Configs,
+    api_version: Version,
     event_pubsub: EventPubsub,
 }
 
@@ -189,6 +197,7 @@ impl Plugins {
         Ok(Self {
             plugins: Default::default(),
             configs: Configs::new(plugins_dir)?,
+            api_version: Version::parse(cotoami_plugin_api::VERSION).unwrap(),
             event_pubsub,
         })
     }
@@ -208,6 +217,17 @@ impl Plugins {
         let identifier = plugin.identifier().to_owned();
         let version = plugin.metadata().version.clone();
         let config = self.configs.config(&identifier);
+
+        // Check plugin's API version requirement
+        if let Some(version_req) = plugin.api_version_requirement()? {
+            ensure!(
+                version_req.matches(&self.api_version),
+                PluginError::UnsupportedApiVersion {
+                    requirement: version_req.to_string(),
+                    runtime_version: self.api_version.to_string()
+                }
+            )
+        }
 
         if config.disabled() {
             info!("{identifier}: disabled.");
