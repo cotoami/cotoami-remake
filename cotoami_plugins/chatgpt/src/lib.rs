@@ -66,11 +66,19 @@ pub fn destroy() -> FnResult<()> {
     Ok(())
 }
 
+fn extract_message(coto: &Coto, local_node_id: &str) -> Option<String> {
+    if let Some(ref content) = coto.content {
+        if coto.node_id == local_node_id && COMMAND_PREFIX.is_match(content) {
+            return Some(COMMAND_PREFIX.replace(content, "").trim().to_owned());
+        }
+    }
+    None
+}
+
 const CONTENT_LOADING: &'static str = "![](/images/loading.svg)";
 
 fn reply_to(coto: Coto, local_node_id: String) -> Result<()> {
-    let content = coto.content.unwrap_or_default();
-    if coto.node_id == local_node_id && COMMAND_PREFIX.is_match(&content) {
+    if let Some(message) = extract_message(&coto, &local_node_id) {
         // Post an empty reply with a loading icon.
         let post_to = coto.posted_in_id.clone();
         let coto_input = CotoInput::new(CONTENT_LOADING);
@@ -81,9 +89,8 @@ fn reply_to(coto: Coto, local_node_id: String) -> Result<()> {
         // Base messages from the ancestor cotos.
         let (mut messages, authors) = base_messages(coto.uuid.clone())?;
 
-        // Append the target coto as the last message.
+        // Append the message.
         // Embed the user name only if it's in the authors of the base messages.
-        let message = COMMAND_PREFIX.replace(&content, "").trim().to_owned();
         let author = authors.get(&coto.posted_by_id);
         messages.push(InputMessage::by_user(
             message,
