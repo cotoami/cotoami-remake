@@ -3,6 +3,7 @@ pub enum PluginEvent {
     Registered { identifier: String },
     InvalidFile { path: String, message: String },
     Error { identifier: String, message: String },
+    Destroyed { identifier: String },
 }
 
 impl PluginEvent {

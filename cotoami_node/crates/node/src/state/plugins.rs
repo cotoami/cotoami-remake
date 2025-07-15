@@ -209,8 +209,7 @@ impl Plugins {
         }
 
         self.plugins.write().insert(identifier.clone(), plugin);
-        self.event_pubsub
-            .publish(PluginEvent::Registered { identifier }.into(), None);
+        self.publish_event(PluginEvent::Registered { identifier });
         Ok(())
     }
 
@@ -228,10 +227,21 @@ impl Plugins {
 
     fn destroy_all(&self) {
         self.for_each_enabled(|plugin, _| match plugin.destroy() {
-            Ok(_) => info!("{}: destroyed.", plugin.identifier()),
-            Err(e) => error!("{}: destroying error : {e}", plugin.identifier()),
+            Ok(_) => {
+                self.publish_event(PluginEvent::Destroyed {
+                    identifier: plugin.identifier().to_owned(),
+                });
+            }
+            Err(e) => {
+                self.publish_event(PluginEvent::error(
+                    plugin.identifier(),
+                    format!("Destroying error : {e}"),
+                ));
+            }
         })
     }
+
+    fn publish_event(&self, event: PluginEvent) { self.event_pubsub.publish(event.into(), None); }
 }
 
 fn send_event_to_plugin(event: Arc<Event>, plugin: &Plugin, config: &Config) {
