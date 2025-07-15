@@ -119,6 +119,13 @@ object LocalNodeEvent {
       )
     }
 
+    // PluginEvent
+    for (pluginEvent <- event.PluginEvent.toOption) {
+      for (json <- pluginEvent.Registered.toOption) {
+        model.info(s"Plugin [${json.identifier}] registered.")
+      }
+    }
+
     (model, Cmd.none)
   }
 }

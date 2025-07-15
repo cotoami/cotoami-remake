@@ -15,11 +15,13 @@ use thiserror::Error;
 use tokio::task::{spawn_blocking, AbortHandle};
 use tracing::{error, info};
 
-use self::{configs::Configs, convert::*, plugin::Plugin};
-use crate::state::NodeState;
+use self::convert::*;
+pub use self::{configs::Configs, event::*, plugin::Plugin};
+use crate::state::{pubsub::EventPubsub, NodeState};
 
 mod configs;
 mod convert;
+mod event;
 mod host_fn;
 mod plugin;
 
@@ -31,13 +33,13 @@ pub struct PluginSystem {
 }
 
 impl PluginSystem {
-    pub fn new<P: AsRef<Path>>(plugins_dir: P) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(plugins_dir: P, event_pubsub: EventPubsub) -> Result<Self> {
         let plugins_dir = plugins_dir.as_ref().canonicalize()?;
         ensure!(
             plugins_dir.is_dir(),
             PluginError::InvalidPluginsDir(plugins_dir, None)
         );
-        let plugins = Plugins::new(&plugins_dir)?;
+        let plugins = Plugins::new(&plugins_dir, event_pubsub)?;
         Ok(Self {
             plugins_dir: plugins_dir,
             node_state: None,
@@ -165,13 +167,15 @@ pub enum PluginError {
 struct Plugins {
     plugins: Arc<RwLock<HashMap<String, Plugin>>>,
     configs: Configs,
+    event_pubsub: EventPubsub,
 }
 
 impl Plugins {
-    fn new<P: AsRef<Path>>(plugins_dir: P) -> Result<Self> {
+    fn new<P: AsRef<Path>>(plugins_dir: P, event_pubsub: EventPubsub) -> Result<Self> {
         Ok(Self {
             plugins: Default::default(),
             configs: Configs::new(plugins_dir)?,
+            event_pubsub,
         })
     }
 
@@ -198,7 +202,8 @@ impl Plugins {
         }
 
         self.plugins.write().insert(identifier.clone(), plugin);
-        info!("{identifier}: registered.");
+        self.event_pubsub
+            .publish(PluginEvent::Registered { identifier }.into(), None);
         Ok(())
     }
 

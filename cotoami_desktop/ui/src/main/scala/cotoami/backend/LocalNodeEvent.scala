@@ -14,6 +14,7 @@ trait LocalNodeEventJson extends js.Object {
   val ParentSyncProgress: js.UndefOr[ParentSyncProgressJson] = js.native
   val ParentSyncEnd: js.UndefOr[ParentSyncEndJson] = js.native
   val ParentDisconnected: js.UndefOr[ParentDisconnectedJson] = js.native
+  val PluginEvent: js.UndefOr[PluginEventJson] = js.native
 }
 
 @js.native

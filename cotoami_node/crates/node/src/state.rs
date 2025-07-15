@@ -29,12 +29,13 @@ use crate::{
 mod client_conn;
 mod error;
 mod internal;
-mod plugins;
+pub mod plugins;
 mod pubsub;
 mod server_conn;
 mod service;
 
-pub use self::{client_conn::*, error::*, plugins::*, pubsub::*, server_conn::*};
+use self::plugins::*;
+pub use self::{client_conn::*, error::*, pubsub::*, server_conn::*};
 
 #[derive(Clone)]
 pub struct NodeState {
@@ -67,23 +68,27 @@ impl NodeState {
         crate::create_dir_if_not_exist(&db_dir)?;
         let db = Database::new(db_dir)?;
 
-        // Plugins directory
+        // Pubsub
+        let pubsub = Pubsub::default();
+
+        // Plugins
         let plugins_dir = config.plugins_dir();
         crate::create_dir_if_not_exist(&plugins_dir)?;
+        let plugins = PluginSystem::new(plugins_dir, pubsub.events().clone())?;
 
         let inner = State {
             version: env!("CARGO_PKG_VERSION").into(),
             client_version_requirement: VersionReq::parse(Self::CLIENT_VERSION_REQUIREMENT)?,
             config: Arc::new(RwLock::new(config)),
             db: Arc::new(db),
-            pubsub: Pubsub::default(),
+            pubsub,
             server_conns: ServerConnections::default(),
             client_conns: ClientConnections::default(),
             anonymous_conns: AnonymousConnections::default(),
             parent_services: ParentServices::default(),
             abortables: Abortables::default(),
             local_server_config: RwLock::new(None),
-            plugins: RwLock::new(PluginSystem::new(plugins_dir)?),
+            plugins: RwLock::new(plugins),
         };
         let state = Self {
             inner: Arc::new(inner),
