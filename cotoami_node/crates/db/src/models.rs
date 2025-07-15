@@ -472,7 +472,7 @@ impl ClientSession {
         match self {
             Self::Operator(Operator::LocalNode(local_node_id)) => Some(*local_node_id),
             Self::Operator(Operator::ChildNode(child)) => Some(child.node_id),
-            Self::Operator(Operator::Agent(_)) => None,
+            Self::Operator(Operator::Agent { .. }) => None,
             Self::Operator(Operator::Anonymous) => None,
             Self::ParentNode(parent) => Some(parent.node_id),
         }

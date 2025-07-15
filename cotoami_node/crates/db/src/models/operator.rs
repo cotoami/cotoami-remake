@@ -13,7 +13,10 @@ use crate::{
 pub enum Operator {
     LocalNode(Id<Node>),
     ChildNode(ChildNode),
-    Agent(Id<Node>),
+    Agent {
+        node_id: Id<Node>,
+        can_edit_user_content: bool,
+    },
     Anonymous,
 }
 
@@ -22,7 +25,7 @@ impl Operator {
         match self {
             Operator::LocalNode(node_id) => Some(*node_id),
             Operator::ChildNode(child_node) => Some(child_node.node_id),
-            Operator::Agent(node_id) => Some(*node_id),
+            Operator::Agent { node_id, .. } => Some(*node_id),
             Operator::Anonymous => None,
         }
     }
@@ -35,7 +38,7 @@ impl Operator {
         match self {
             Operator::LocalNode(_) => true,
             Operator::ChildNode(child_node) => child_node.as_owner,
-            Operator::Agent(_) => false,
+            Operator::Agent { .. } => false,
             Operator::Anonymous => false,
         }
     }
@@ -65,7 +68,7 @@ impl Operator {
                 can_post_cotonomas: true,
                 ..
             }) => Ok(()),
-            Operator::Agent(_) => Ok(()),
+            Operator::Agent { .. } => Ok(()),
             _ => Err(DatabaseError::PermissionDenied),
         }
     }
@@ -73,6 +76,15 @@ impl Operator {
     /// Checks if this operator can update the given coto.
     /// The coto must belong to the local node.
     pub fn can_update_coto(&self, coto: &Coto) -> Result<(), DatabaseError> {
+        // Agent with a special privilege
+        if let Operator::Agent {
+            can_edit_user_content: true,
+            ..
+        } = self
+        {
+            return Ok(());
+        }
+
         // Basically only the poster can update a coto,
         if self.node_id() == Some(coto.posted_by_id)
             // but if a coto is a cotonoma, owners can update it, too.
@@ -87,6 +99,15 @@ impl Operator {
     /// Checks if this operator can delete the given local coto.
     /// The coto must belong to the local node.
     pub fn can_delete_coto(&self, coto: &Coto) -> Result<(), DatabaseError> {
+        // Agent with a special privilege
+        if let Operator::Agent {
+            can_edit_user_content: true,
+            ..
+        } = self
+        {
+            return Ok(());
+        }
+
         if self.can_update_coto(coto).is_ok() || self.has_owner_permission() {
             Ok(())
         } else {
@@ -103,7 +124,7 @@ impl Operator {
                 can_edit_itos: true,
                 ..
             }) => Ok(()),
-            Operator::Agent(_) => Ok(()),
+            Operator::Agent { .. } => Ok(()),
             _ => Err(DatabaseError::PermissionDenied),
         }
     }
