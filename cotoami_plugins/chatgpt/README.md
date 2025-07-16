@@ -23,6 +23,12 @@ The ChatGPT plugin recognizes the author of each Coto provided as context. This 
 
 <p><img src="images/user-names.png" width="500px"></p>
 
+### Auto Summarization
+
+The plugin can automatically generate and attach summaries to cotos posted on the node where the plugin is installed, as long as the coto’s content exceeds the configured length threshold.
+
+![](images/auto-summarization.gif)
+
 
 ## Download
 
@@ -31,7 +37,7 @@ The ChatGPT plugin recognizes the author of each Coto provided as context. This 
 
 ## Install
 
-* Cotoami v0.8.0 or later required.
+* Cotoami v0.9.0 or later required.
 * Copy the plugin file into the `<database-folder>/plugins` folder.
 * Add the following configuration to `<database-folder>/plugins/configs.toml`.
     * If `configs.toml` does not exist, create a new file.
@@ -46,13 +52,18 @@ api_key = "your api key"
 model = "gpt-4o"
 
 # developer-provided instruction (optional)
-developer_message = "You are a helpful assistant."  
+developer_message = "You are a helpful assistant."
+
+# automatic summarization (optional)
+allow_edit_user_content = true
+min_length_to_summarize = 500
 ```
 
 * `api_key` - You need to sign up for the [OpenAI API](https://platform.openai.com/) and obtain an API key.
 * `model` - Refer to <https://platform.openai.com/docs/models>
 * `developer_message` (optional) - Developer-provided instructions that the model should follow, regardless of messages sent by users.
-
+* `allow_edit_user_content` - Allow this plugin to edit user content (required when using automatic summarization).
+* `min_length_to_summarize` -　Minimum length of a coto to trigger summarization. If a coto's content is shorter than this value, the plugin will not attempt to summarize it.
 
 ## Build
 
