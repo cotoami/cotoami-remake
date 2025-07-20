@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, bail, Result};
 use cotoami_plugin_api::*;
 use extism_pdk::*;
 use lazy_regex::*;
@@ -51,11 +51,45 @@ pub fn destroy() -> FnResult<()> {
     Ok(())
 }
 
+/// Nominatim API response structure
+/// Maps the API field names to our internal structure
+#[derive(Debug, serde::Deserialize)]
+struct NominatimResult {
+    lat: String,
+    lon: String,
+    display_name: String,
+}
+
+impl NominatimResult {
+    fn convert_to_geolocation(&self) -> Result<Geolocation> {
+        let latitude: f64 = self
+            .lat
+            .parse()
+            .map_err(|e| anyhow!("Invalid latitude value '{}': {}", self.lat, e))?;
+        let longitude: f64 = self
+            .lon
+            .parse()
+            .map_err(|e| anyhow!("Invalid longitude value '{}': {}", self.lon, e))?;
+        if latitude < -90.0 || latitude > 90.0 {
+            bail!("Latitude {} is out of valid range.", latitude);
+        }
+        if longitude < -180.0 || longitude > 180.0 {
+            bail!("Longitude {} is out of valid range.", longitude);
+        }
+        Ok(Geolocation {
+            latitude,
+            longitude,
+        })
+    }
+}
+
 fn geocode(coto: &Coto, local_node_id: &str) -> Result<()> {
     let Some(query) = extract_query(&coto, &local_node_id) else {
         return Ok(());
     };
     unsafe { info(format!("query: {query:?}"))? };
+    let results = send_request_to_nominatim(&query)?;
+    unsafe { info(format!("results: {results:?}"))? };
     Ok(())
 }
 
@@ -72,4 +106,23 @@ fn extract_query(coto: &Coto, local_node_id: &str) -> Option<String> {
         }
     }
     None
+}
+
+const USER_AGENT: &'static str = concat!("cotoami-plugin-geocoder/", env!("CARGO_PKG_VERSION"));
+
+fn send_request_to_nominatim(query: &str) -> Result<Vec<NominatimResult>> {
+    let req = HttpRequest::new(format!(
+        "https://nominatim.openstreetmap.org/search?q={}&format=json&limit=1",
+        urlencoding::encode(query)
+    ))
+    .with_method("GET")
+    .with_header("User-Agent", USER_AGENT)
+    .with_header("Accept", "application/json");
+    let res = http::request::<()>(&req, None)?;
+    let status = res.status_code();
+    if 200 <= status && status < 300 {
+        res.json()
+    } else {
+        bail!("Status {status}");
+    }
 }
