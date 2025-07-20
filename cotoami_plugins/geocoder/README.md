@@ -2,6 +2,8 @@
 
 The Geocoder plugin queries the Nominatim API using the place name written in a Coto to obtain location information, sets that data on the Coto, and makes it visible on the map.
 
+![](demo.gif)
+
 * The Geocoder plugin interprets a line starting with `#location` as a query to the Nominatim API, using the content following the tag.
 * If a Coto already has location information set, the plugin will not update it even if a `#location` tag is present.
 
