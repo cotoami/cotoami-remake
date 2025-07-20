@@ -87,9 +87,13 @@ fn geocode(coto: &Coto, local_node_id: &str) -> Result<()> {
     let Some(query) = extract_query(&coto, &local_node_id) else {
         return Ok(());
     };
-    unsafe { info(format!("query: {query:?}"))? };
     let results = send_request_to_nominatim(&query)?;
-    unsafe { info(format!("results: {results:?}"))? };
+    if let Some(result) = results.first() {
+        unsafe { info(format!("{query:?} => {}", result.display_name))? };
+        let mut diff = CotoContentDiff::default();
+        diff.geolocation = Some(result.convert_to_geolocation()?);
+        unsafe { edit_coto(coto.uuid.clone(), diff)? };
+    }
     Ok(())
 }
 
