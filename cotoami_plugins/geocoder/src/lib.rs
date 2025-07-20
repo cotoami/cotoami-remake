@@ -84,6 +84,9 @@ impl NominatimResult {
 }
 
 fn geocode(coto: &Coto, local_node_id: &str) -> Result<()> {
+    if coto.geolocation.is_some() {
+        return Ok(()); // Don't modify the existing geolocation
+    }
     let Some(query) = extract_query(&coto, &local_node_id) else {
         return Ok(());
     };
