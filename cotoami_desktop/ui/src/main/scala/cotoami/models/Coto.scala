@@ -126,6 +126,8 @@ object Coto {
 
   def stripMarkdown(content: String): String =
     Coto.stripMarkdown.processSync(content).toString()
+      // StripMarkdown escapes markdown syntaxes in the stripped text
+      // https://github.com/remarkjs/strip-markdown/issues/28#issuecomment-1290847745
       .pipe(unescapeMarkdown)
 
   def unescapeMarkdown(text: String): String = {
