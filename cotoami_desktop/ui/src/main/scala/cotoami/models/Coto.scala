@@ -1,5 +1,6 @@
 package cotoami.models
 
+import scala.util.chaining._
 import org.scalajs.dom
 import java.time.Instant
 
@@ -24,7 +25,7 @@ trait CotoContent {
   lazy val abbreviate: Option[String] =
     summary.orElse(
       content.map(content => {
-        val text = Coto.stripMarkdown.processSync(content).toString()
+        val text = Coto.stripMarkdown(content)
         if (text.size > Cotonoma.NameMaxLength)
           s"${text.substring(0, Cotonoma.NameMaxLength)}…"
         else
@@ -77,7 +78,7 @@ case class Coto(
       case (Some(summary), _) =>
         copy(summary = Some(summary.take(Cotonoma.NameMaxLength)))
       case (None, Some(content)) => {
-        val text = Coto.stripMarkdown.processSync(content).toString()
+        val text = Coto.stripMarkdown(content)
         if (content.length() <= Cotonoma.NameMaxLength)
           copy(summary = Some(text), content = None)
         else
@@ -96,10 +97,11 @@ case class Coto(
 object Coto {
   final val IconName = "text_snippet"
   final val RepostIconName = "repeat"
+  final val MarkdownSpecials = """\`*_{}\[\]()#+\-\.!"""
 
   final val SummaryMaxLength = 200
 
-  final val stripMarkdown = Remark.remark().use(StripMarkdown)
+  private final val stripMarkdown = Remark.remark().use(StripMarkdown)
 
   def validateSummary(summary: String): Seq[Validation.Error] = {
     val fieldName = "summary"
@@ -120,6 +122,15 @@ object Coto {
       Vector(
         Validation.nonBlank(fieldName, content)
       ).flatten
+  }
+
+  def stripMarkdown(content: String): String =
+    Coto.stripMarkdown.processSync(content).toString()
+      .pipe(unescapeMarkdown)
+
+  def unescapeMarkdown(text: String): String = {
+    val pattern = raw"""\\([$MarkdownSpecials])""".r
+    pattern.replaceAllIn(text, _.group(1))
   }
 
   def centerOrBoundsOf(cotos: Seq[Coto]): Option[CenterOrBounds] =
