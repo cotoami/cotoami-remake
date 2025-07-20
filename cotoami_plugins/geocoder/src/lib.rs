@@ -6,7 +6,7 @@ use lazy_regex::*;
 const IDENTIFIER: &'static str = "app.cotoami.plugin.geocoder";
 const NAME: &'static str = "Geocoder";
 
-static QUERY_PATTERN: Lazy<Regex> = lazy_regex!(r"(?m)^#geocode\s(.*)$");
+static QUERY_PATTERN: Lazy<Regex> = lazy_regex!(r"(?m)^#location\s(.*)$");
 
 #[host_fn]
 extern "ExtismHost" {
@@ -93,6 +93,8 @@ fn geocode(coto: &Coto, local_node_id: &str) -> Result<()> {
         let mut diff = CotoContentDiff::default();
         diff.geolocation = Some(result.convert_to_geolocation()?);
         unsafe { edit_coto(coto.uuid.clone(), diff)? };
+    } else {
+        unsafe { info(format!("No results for: {query:?}"))? };
     }
     Ok(())
 }
