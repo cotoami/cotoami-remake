@@ -72,6 +72,7 @@ impl Plugin {
             .with_wasi(true)
             .with_http_response_headers(true)
             .with_function("log", [PTR], [], UserData::new(()), log)
+            .with_function("info", [PTR], [], ctx.new_user_data(), info)
             .with_function("version", [], [PTR], ctx.new_user_data(), version)
             .with_function(
                 "post_coto",
@@ -136,6 +137,14 @@ impl Plugin {
 // fn log(message: String)
 host_fn!(log(_user_data: (); message: String) {
     info!(message);
+    Ok(())
+});
+
+// fn info(message: String)
+host_fn!(info(context: HostFnContext; message: String) {
+    let context = context.get()?;
+    let context = context.lock().unwrap();
+    context.info(message);
     Ok(())
 });
 

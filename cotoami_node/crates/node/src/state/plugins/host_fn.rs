@@ -6,7 +6,7 @@ use cotoami_plugin_api::Ancestors;
 use extism::UserData;
 
 use crate::state::{
-    plugins::{convert::*, PluginError},
+    plugins::{convert::*, event::PluginEvent, PluginError},
     NodeState,
 };
 
@@ -18,6 +18,15 @@ pub(crate) struct HostFnContext {
 
 impl HostFnContext {
     pub fn new_user_data(&self) -> UserData<HostFnContext> { UserData::new(self.clone()) }
+
+    #[allow(dead_code)]
+    pub fn info(&self, message: String) {
+        let event = PluginEvent::info(self.plugin_identifier.clone(), message);
+        self.node_state
+            .pubsub()
+            .events()
+            .publish(event.into(), None);
+    }
 
     #[allow(dead_code)]
     pub fn post_coto(

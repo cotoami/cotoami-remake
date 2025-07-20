@@ -139,10 +139,16 @@ object LocalNodeEvent {
           Cmd.none
         )
       }
+      for (json <- pluginEvent.Info.toOption) {
+        return (
+          model.info(s"Plugin(${json.identifier}): ${json.message}", None),
+          Cmd.none
+        )
+      }
       for (json <- pluginEvent.Error.toOption) {
         return (
           model.error(
-            s"Plugin error: ${json.identifier}",
+            s"Plugin(${json.identifier}): an error occurred",
             Some(json.message)
           ),
           Cmd.none

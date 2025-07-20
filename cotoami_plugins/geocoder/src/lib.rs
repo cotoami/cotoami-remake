@@ -11,6 +11,7 @@ static QUERY_PATTERN: Lazy<Regex> = lazy_regex!(r"(?m)^#geocode\s(.*)$");
 #[host_fn]
 extern "ExtismHost" {
     fn log(message: String);
+    fn info(message: String);
     fn edit_coto(id: String, diff: CotoContentDiff) -> Coto;
 }
 
@@ -54,7 +55,7 @@ fn geocode(coto: &Coto, local_node_id: &str) -> Result<()> {
     let Some(query) = extract_query(&coto, &local_node_id) else {
         return Ok(());
     };
-    unsafe { log(format!("{IDENTIFIER}: query: {query:?}"))? };
+    unsafe { info(format!("query: {query:?}"))? };
     Ok(())
 }
 
