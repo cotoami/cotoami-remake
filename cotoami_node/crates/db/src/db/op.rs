@@ -52,7 +52,7 @@ pub trait Operation<Conn, T> {
 ///
 /// Since it doesn't have public constructors, a client of this module has to use
 /// the functions such as [run_read()] or [run_write()] to invoke an [Operation].
-pub struct Context<'a, Conn: 'a> {
+pub struct Context<'a, Conn> {
     conn: &'a mut Conn,
 }
 
