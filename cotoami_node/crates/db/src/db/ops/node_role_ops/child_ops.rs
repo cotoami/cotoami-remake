@@ -18,9 +18,7 @@ use crate::{
 };
 
 /// Returns a [ChildNode] by its ID.
-pub(crate) fn get<Conn: AsReadableConn>(
-    id: &Id<Node>,
-) -> impl Operation<Conn, Option<ChildNode>> + '_ {
+pub(crate) fn get<Conn: ReadConn>(id: &Id<Node>) -> impl Operation<Conn, Option<ChildNode>> + '_ {
     read_op(move |conn| {
         child_nodes::table
             .find(id)
@@ -31,13 +29,13 @@ pub(crate) fn get<Conn: AsReadableConn>(
 }
 
 /// Returns a [ChildNode] by its ID or a [DatabaseError::EntityNotFound].
-pub(crate) fn try_get<Conn: AsReadableConn>(
+pub(crate) fn try_get<Conn: ReadConn>(
     id: &Id<Node>,
 ) -> impl Operation<Conn, Result<ChildNode, DatabaseError>> + '_ {
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::ChildNode, *id)))
 }
 
-pub(crate) fn get_by_node_ids<Conn: AsReadableConn>(
+pub(crate) fn get_by_node_ids<Conn: ReadConn>(
     node_ids: &Vec<Id<Node>>,
 ) -> impl Operation<Conn, Vec<ChildNode>> + '_ {
     read_op(move |conn| {
@@ -49,7 +47,7 @@ pub(crate) fn get_by_node_ids<Conn: AsReadableConn>(
 }
 
 /// Returns paginated results of recently inserted [ChildNode]s with their [Node]s.
-pub(crate) fn recent_pairs<'a, Conn: AsReadableConn>(
+pub(crate) fn recent_pairs<'a, Conn: ReadConn>(
     page_size: i64,
     page_index: i64,
 ) -> impl Operation<Conn, Page<(ChildNode, Node)>> + 'a {

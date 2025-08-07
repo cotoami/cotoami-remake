@@ -29,7 +29,7 @@ pub mod server_ops;
 // network role
 /////////////////////////////////////////////////////////////////////////////
 
-pub(crate) fn network_role_of<Conn: AsReadableConn>(
+pub(crate) fn network_role_of<Conn: ReadConn>(
     node_id: &Id<Node>,
 ) -> impl Operation<Conn, Option<NetworkRole>> + '_ {
     composite_op::<Conn, _, _>(move |ctx| {
@@ -107,7 +107,7 @@ pub(crate) fn set_network_disabled(
 // database role
 /////////////////////////////////////////////////////////////////////////////
 
-pub(crate) fn database_role_of<Conn: AsReadableConn>(
+pub(crate) fn database_role_of<Conn: ReadConn>(
     node_id: &Id<Node>,
 ) -> impl Operation<Conn, Option<DatabaseRole>> + '_ {
     composite_op::<Conn, _, _>(move |ctx| {
@@ -121,7 +121,7 @@ pub(crate) fn database_role_of<Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn database_roles_of<Conn: AsReadableConn>(
+pub(crate) fn database_roles_of<Conn: ReadConn>(
     node_ids: &Vec<Id<Node>>,
 ) -> impl Operation<Conn, HashMap<Id<Node>, DatabaseRole>> + '_ {
     composite_op::<Conn, _, _>(move |ctx| {

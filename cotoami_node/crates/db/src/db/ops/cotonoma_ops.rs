@@ -21,7 +21,7 @@ use crate::{
     schema::{cotonomas, cotos},
 };
 
-pub(crate) fn contains<Conn: AsReadableConn>(id: &Id<Cotonoma>) -> impl Operation<Conn, bool> + '_ {
+pub(crate) fn contains<Conn: ReadConn>(id: &Id<Cotonoma>) -> impl Operation<Conn, bool> + '_ {
     read_op(move |conn| {
         let count: i64 = cotonomas::table
             .select(diesel::dsl::count_star())
@@ -31,7 +31,7 @@ pub(crate) fn contains<Conn: AsReadableConn>(id: &Id<Cotonoma>) -> impl Operatio
     })
 }
 
-pub(crate) fn get<Conn: AsReadableConn>(
+pub(crate) fn get<Conn: ReadConn>(
     id: &Id<Cotonoma>,
 ) -> impl Operation<Conn, Option<Cotonoma>> + '_ {
     read_op(move |conn| {
@@ -43,13 +43,13 @@ pub(crate) fn get<Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn try_get<Conn: AsReadableConn>(
+pub(crate) fn try_get<Conn: ReadConn>(
     id: &Id<Cotonoma>,
 ) -> impl Operation<Conn, Result<Cotonoma, DatabaseError>> + '_ {
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, *id)))
 }
 
-pub(crate) fn pair<Conn: AsReadableConn>(
+pub(crate) fn pair<Conn: ReadConn>(
     id: &Id<Cotonoma>,
 ) -> impl Operation<Conn, Option<(Cotonoma, Coto)>> + '_ {
     read_op(move |conn| {
@@ -63,13 +63,13 @@ pub(crate) fn pair<Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn try_get_pair<Conn: AsReadableConn>(
+pub(crate) fn try_get_pair<Conn: ReadConn>(
     id: &Id<Cotonoma>,
 ) -> impl Operation<Conn, Result<(Cotonoma, Coto), DatabaseError>> + '_ {
     pair(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, *id)))
 }
 
-pub(crate) fn get_by_coto_id<Conn: AsReadableConn>(
+pub(crate) fn get_by_coto_id<Conn: ReadConn>(
     id: &Id<Coto>,
 ) -> impl Operation<Conn, Option<(Cotonoma, Coto)>> + '_ {
     read_op(move |conn| {
@@ -83,14 +83,14 @@ pub(crate) fn get_by_coto_id<Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn try_get_by_coto_id<Conn: AsReadableConn>(
+pub(crate) fn try_get_by_coto_id<Conn: ReadConn>(
     id: &Id<Coto>,
 ) -> impl Operation<Conn, Result<(Cotonoma, Coto), DatabaseError>> + '_ {
     get_by_coto_id(id)
         .map(move |opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, *id)))
 }
 
-pub(crate) fn get_by_name<'a, Conn: AsReadableConn>(
+pub(crate) fn get_by_name<'a, Conn: ReadConn>(
     name: &'a str,
     node_id: &'a Id<Node>,
 ) -> impl Operation<Conn, Option<(Cotonoma, Coto)>> + 'a {
@@ -106,7 +106,7 @@ pub(crate) fn get_by_name<'a, Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn try_get_by_name<'a, Conn: AsReadableConn>(
+pub(crate) fn try_get_by_name<'a, Conn: ReadConn>(
     name: &'a str,
     node_id: &'a Id<Node>,
 ) -> impl Operation<Conn, Result<(Cotonoma, Coto), DatabaseError>> + 'a {
@@ -114,7 +114,7 @@ pub(crate) fn try_get_by_name<'a, Conn: AsReadableConn>(
         .map(move |opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, name)))
 }
 
-pub(crate) fn search_by_prefix<Conn: AsReadableConn>(
+pub(crate) fn search_by_prefix<Conn: ReadConn>(
     prefix: &str,
     node_ids: Option<Vec<Id<Node>>>,
     limit: i64,
@@ -155,7 +155,7 @@ pub(crate) fn search_by_prefix<Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn get_by_ids<'a, Conn: AsReadableConn>(
+pub(crate) fn get_by_ids<'a, Conn: ReadConn>(
     ids: &'a [Id<Cotonoma>],
 ) -> impl Operation<Conn, Vec<Cotonoma>> + 'a {
     read_op(move |conn| {
@@ -171,7 +171,7 @@ pub(crate) fn get_by_ids<'a, Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn get_pairs_by_ids<'a, Conn: AsReadableConn>(
+pub(crate) fn get_pairs_by_ids<'a, Conn: ReadConn>(
     ids: &'a [Id<Cotonoma>],
 ) -> impl Operation<Conn, Vec<(Cotonoma, Coto)>> + 'a {
     read_op(move |conn| {
@@ -189,7 +189,7 @@ pub(crate) fn get_pairs_by_ids<'a, Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn get_by_coto_ids<Conn: AsReadableConn>(
+pub(crate) fn get_by_coto_ids<Conn: ReadConn>(
     ids: Vec<Id<Coto>>,
 ) -> impl Operation<Conn, Vec<Cotonoma>> {
     read_op(move |conn| {
@@ -205,7 +205,7 @@ pub(crate) fn get_by_coto_ids<Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Cotonoma>> {
+pub(crate) fn all<Conn: ReadConn>() -> impl Operation<Conn, Vec<Cotonoma>> {
     read_op(move |conn| {
         cotonomas::table
             .order(cotonomas::created_at.asc())
@@ -214,7 +214,7 @@ pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Cotonoma>>
     })
 }
 
-pub(crate) fn recently_updated<Conn: AsReadableConn>(
+pub(crate) fn recently_updated<Conn: ReadConn>(
     node_id: Option<&Id<Node>>,
     page_size: i64,
     page_index: i64,
@@ -236,9 +236,7 @@ pub(crate) fn recently_updated<Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn count_posts<Conn: AsReadableConn>(
-    id: &Id<Cotonoma>,
-) -> impl Operation<Conn, i64> + '_ {
+pub(crate) fn count_posts<Conn: ReadConn>(id: &Id<Cotonoma>) -> impl Operation<Conn, i64> + '_ {
     read_op(move |conn| {
         cotos::table
             .select(diesel::dsl::count_star())
@@ -248,7 +246,7 @@ pub(crate) fn count_posts<Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn subs<Conn: AsReadableConn>(
+pub(crate) fn subs<Conn: ReadConn>(
     id: &Id<Cotonoma>,
     page_size: i64,
     page_index: i64,
@@ -256,7 +254,7 @@ pub(crate) fn subs<Conn: AsReadableConn>(
     composite_op::<Conn, _, _>(move |ctx| {
         // Recently updated cotonoma-cotos including reposts.
         let cotonoma_cotos: Page<Coto> =
-            super::paginate(ctx.conn().readable(), page_size, page_index, || {
+            super::paginate(ctx.conn().read(), page_size, page_index, || {
                 cotos::table
                     .filter(cotos::is_cotonoma.eq(true))
                     .filter(cotos::posted_in_id.eq(id))

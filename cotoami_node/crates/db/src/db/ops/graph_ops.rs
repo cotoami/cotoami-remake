@@ -15,7 +15,7 @@ use crate::{
 ///
 /// The traversal starts at a given [Coto] and only traverses [Coto]s reachable from it.
 /// It won't traverse beyond other [Cotonoma]s if `until_cotonoma` is set to `true`.
-pub(crate) fn traverse_by_level_queries<Conn: AsReadableConn>(
+pub(crate) fn traverse_by_level_queries<Conn: ReadConn>(
     root: Coto,
     until_cotonoma: bool,
 ) -> impl Operation<Conn, Graph> {
@@ -61,7 +61,7 @@ pub(crate) fn traverse_by_level_queries<Conn: AsReadableConn>(
 }
 
 /// Experimental implementation of graph traversal by recursive CTE (Common Table Expression).
-pub(crate) fn traverse_by_recursive_cte<Conn: AsReadableConn>(
+pub(crate) fn traverse_by_recursive_cte<Conn: ReadConn>(
     root: Coto,
     until_cotonoma: bool,
 ) -> impl Operation<Conn, Graph> {
@@ -117,7 +117,7 @@ struct TraversedIto {
     target: Id<Coto>,
 }
 
-pub(crate) fn ancestors_of<Conn: AsReadableConn>(
+pub(crate) fn ancestors_of<Conn: ReadConn>(
     coto_id: &Id<Coto>,
 ) -> impl Operation<Conn, Vec<(Vec<Ito>, Vec<Coto>)>> + '_ {
     read_op(move |conn| {

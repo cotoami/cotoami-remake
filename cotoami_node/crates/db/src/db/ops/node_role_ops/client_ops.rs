@@ -20,9 +20,7 @@ use crate::{
 };
 
 /// Returns a [ClientNode] by its ID.
-pub(crate) fn get<Conn: AsReadableConn>(
-    id: &Id<Node>,
-) -> impl Operation<Conn, Option<ClientNode>> + '_ {
+pub(crate) fn get<Conn: ReadConn>(id: &Id<Node>) -> impl Operation<Conn, Option<ClientNode>> + '_ {
     read_op(move |conn| {
         client_nodes::table
             .find(id)
@@ -33,14 +31,14 @@ pub(crate) fn get<Conn: AsReadableConn>(
 }
 
 /// Returns a [ClientNode] by its ID or a [DatabaseError::EntityNotFound].
-pub(crate) fn try_get<Conn: AsReadableConn>(
+pub(crate) fn try_get<Conn: ReadConn>(
     id: &Id<Node>,
 ) -> impl Operation<Conn, Result<ClientNode, DatabaseError>> + '_ {
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::ClientNode, *id)))
 }
 
 /// Returns a [ClientNode] by its session token.
-pub(crate) fn get_by_session_token<Conn: AsReadableConn>(
+pub(crate) fn get_by_session_token<Conn: ReadConn>(
     token: &str,
 ) -> impl Operation<Conn, Option<ClientNode>> + '_ {
     read_op(move |conn| {
@@ -53,7 +51,7 @@ pub(crate) fn get_by_session_token<Conn: AsReadableConn>(
 }
 
 /// Returns all [ClientNode]/[Node] pairs in arbitrary order.
-pub(crate) fn all_pairs<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<(ClientNode, Node)>> {
+pub(crate) fn all_pairs<Conn: ReadConn>() -> impl Operation<Conn, Vec<(ClientNode, Node)>> {
     read_op(move |conn| {
         client_nodes::table
             .inner_join(nodes::table)
@@ -64,7 +62,7 @@ pub(crate) fn all_pairs<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<(Cli
 }
 
 /// Returns paginated results of recently inserted [ClientNode]s with their [Node]s.
-pub(crate) fn recent_pairs<'a, Conn: AsReadableConn>(
+pub(crate) fn recent_pairs<'a, Conn: ReadConn>(
     page_size: i64,
     page_index: i64,
 ) -> impl Operation<Conn, Page<(ClientNode, Node)>> + 'a {

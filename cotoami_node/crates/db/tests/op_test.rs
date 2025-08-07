@@ -3,7 +3,7 @@ use std::ops::DerefMut;
 use anyhow::{bail, Result};
 use cotoami_db::db::{
     self, op,
-    op::{AsReadableConn, Context, Operation, WritableConn},
+    op::{Context, Operation, ReadConn, WritableConn},
 };
 use derive_new::new;
 use diesel::prelude::*;
@@ -113,7 +113,7 @@ fn insert<T: Into<String>>(value: T) -> impl Operation<WritableConn, TestRow> {
     })
 }
 
-fn get<Conn: AsReadableConn>(rowid: i64) -> impl Operation<Conn, Option<TestRow>> {
+fn get<Conn: ReadConn>(rowid: i64) -> impl Operation<Conn, Option<TestRow>> {
     op::read_op(move |conn| {
         test::table
             .find(rowid)

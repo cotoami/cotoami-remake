@@ -17,7 +17,7 @@ use crate::{
     schema::changelog,
 };
 
-pub(crate) fn last_serial_number<Conn: AsReadableConn>() -> impl Operation<Conn, Option<i64>> {
+pub(crate) fn last_serial_number<Conn: ReadConn>() -> impl Operation<Conn, Option<i64>> {
     read_op(move |conn| {
         changelog::table
             .select(max(changelog::serial_number))
@@ -26,7 +26,7 @@ pub(crate) fn last_serial_number<Conn: AsReadableConn>() -> impl Operation<Conn,
     })
 }
 
-fn last_origin_serial_number<Conn: AsReadableConn>(
+fn last_origin_serial_number<Conn: ReadConn>(
     node_id: &Id<Node>,
 ) -> impl Operation<Conn, Option<i64>> + '_ {
     read_op(move |conn| {
@@ -38,7 +38,7 @@ fn last_origin_serial_number<Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn chunk<Conn: AsReadableConn>(
+pub(crate) fn chunk<Conn: ReadConn>(
     from: i64,
     limit: i64,
 ) -> impl Operation<Conn, (Vec<ChangelogEntry>, i64)> {
@@ -50,7 +50,7 @@ pub(crate) fn chunk<Conn: AsReadableConn>(
                     .filter(changelog::serial_number.ge(from))
                     .order(changelog::serial_number.asc())
                     .limit(limit)
-                    .load::<ChangelogEntry>(ctx.conn().readable())
+                    .load::<ChangelogEntry>(ctx.conn().read())
                     .map_err(anyhow::Error::from)?,
                 last,
             ))
@@ -87,7 +87,7 @@ pub(crate) fn insert<'a>(
     })
 }
 
-pub(crate) fn contains_change<Conn: AsReadableConn>(
+pub(crate) fn contains_change<Conn: ReadConn>(
     log: &ChangelogEntry,
 ) -> impl Operation<Conn, bool> + '_ {
     read_op(move |conn| {

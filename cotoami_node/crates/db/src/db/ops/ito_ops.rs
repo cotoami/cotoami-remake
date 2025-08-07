@@ -15,7 +15,7 @@ use crate::{
     schema::{cotos, itos},
 };
 
-pub(crate) fn get<Conn: AsReadableConn>(id: &Id<Ito>) -> impl Operation<Conn, Option<Ito>> + '_ {
+pub(crate) fn get<Conn: ReadConn>(id: &Id<Ito>) -> impl Operation<Conn, Option<Ito>> + '_ {
     read_op(move |conn| {
         itos::table
             .find(id)
@@ -25,15 +25,13 @@ pub(crate) fn get<Conn: AsReadableConn>(id: &Id<Ito>) -> impl Operation<Conn, Op
     })
 }
 
-pub(crate) fn try_get<Conn: AsReadableConn>(
+pub(crate) fn try_get<Conn: ReadConn>(
     id: &Id<Ito>,
 ) -> impl Operation<Conn, Result<Ito, DatabaseError>> + '_ {
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Ito, *id)))
 }
 
-pub(crate) fn incoming<Conn: AsReadableConn>(
-    coto_id: &Id<Coto>,
-) -> impl Operation<Conn, Vec<Ito>> + '_ {
+pub(crate) fn incoming<Conn: ReadConn>(coto_id: &Id<Coto>) -> impl Operation<Conn, Vec<Ito>> + '_ {
     read_op(move |conn| {
         itos::table
             .filter(itos::target_coto_id.eq(coto_id))
@@ -42,7 +40,7 @@ pub(crate) fn incoming<Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn outgoing<Conn: AsReadableConn>(
+pub(crate) fn outgoing<Conn: ReadConn>(
     coto_ids: &[Id<Coto>],
 ) -> impl Operation<Conn, Vec<Ito>> + '_ {
     read_op(move |conn| {
@@ -53,7 +51,7 @@ pub(crate) fn outgoing<Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn siblings<'a, Conn: AsReadableConn>(
+pub(crate) fn siblings<'a, Conn: ReadConn>(
     source_coto_id: &'a Id<Coto>,
     node_id: Option<&'a Id<Node>>,
 ) -> impl Operation<Conn, Vec<Ito>> + 'a {
@@ -71,7 +69,7 @@ pub(crate) fn siblings<'a, Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn recent<'a, Conn: AsReadableConn>(
+pub(crate) fn recent<'a, Conn: ReadConn>(
     node_id: Option<&'a Id<Node>>,
     page_size: i64,
     page_index: i64,
@@ -87,7 +85,7 @@ pub(crate) fn recent<'a, Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn determine_node<'a, Conn: AsReadableConn>(
+pub(crate) fn determine_node<'a, Conn: ReadConn>(
     source: &'a Id<Coto>,
     target: &'a Id<Coto>,
     local_node_id: &'a Id<Node>,
@@ -139,9 +137,7 @@ pub(crate) fn insert(mut new_ito: NewIto<'_>) -> impl Operation<WritableConn, It
     })
 }
 
-fn last_order_number<Conn: AsReadableConn>(
-    coto_id: &Id<Coto>,
-) -> impl Operation<Conn, Option<i32>> + '_ {
+fn last_order_number<Conn: ReadConn>(coto_id: &Id<Coto>) -> impl Operation<Conn, Option<i32>> + '_ {
     read_op(move |conn| {
         itos::table
             .select(max(itos::order))

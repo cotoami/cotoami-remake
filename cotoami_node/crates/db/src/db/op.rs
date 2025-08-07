@@ -146,16 +146,18 @@ impl WritableConn {
 // Read Operation
 /////////////////////////////////////////////////////////////////////////////
 
-pub trait AsReadableConn {
-    fn readable(&mut self) -> &mut SqliteConnection;
+pub trait ReadConn {
+    fn read(&mut self) -> &mut SqliteConnection;
 }
 
-impl AsReadableConn for SqliteConnection {
-    fn readable(&mut self) -> &mut SqliteConnection { self }
+/// Any SqliteConnection can be used for read operations.
+impl ReadConn for SqliteConnection {
+    fn read(&mut self) -> &mut SqliteConnection { self }
 }
 
-impl AsReadableConn for WritableConn {
-    fn readable(&mut self) -> &mut SqliteConnection { &mut self.0 }
+/// Any WriteConn can be used for read operations.
+impl ReadConn for WritableConn {
+    fn read(&mut self) -> &mut SqliteConnection { &mut self.0 }
 }
 
 pub struct ReadOp<F> {
@@ -164,10 +166,10 @@ pub struct ReadOp<F> {
 
 impl<Conn, T, F> Operation<Conn, T> for ReadOp<F>
 where
-    Conn: AsReadableConn,
+    Conn: ReadConn,
     F: FnOnce(&mut SqliteConnection) -> Result<T>,
 {
-    fn run(self, ctx: &mut Context<'_, Conn>) -> Result<T> { (self.f)(ctx.conn().readable()) }
+    fn run(self, ctx: &mut Context<'_, Conn>) -> Result<T> { (self.f)(ctx.conn().read()) }
 }
 
 /// Defines a read-only operation using a raw [SqliteConnection]

@@ -18,9 +18,7 @@ use crate::{
 };
 
 /// Returns a [ServerNode] by its ID.
-pub(crate) fn get<Conn: AsReadableConn>(
-    id: &Id<Node>,
-) -> impl Operation<Conn, Option<ServerNode>> + '_ {
+pub(crate) fn get<Conn: ReadConn>(id: &Id<Node>) -> impl Operation<Conn, Option<ServerNode>> + '_ {
     read_op(move |conn| {
         server_nodes::table
             .find(id)
@@ -31,14 +29,14 @@ pub(crate) fn get<Conn: AsReadableConn>(
 }
 
 /// Returns a [ServerNode] by its ID or a [DatabaseError::EntityNotFound].
-pub(crate) fn try_get<Conn: AsReadableConn>(
+pub(crate) fn try_get<Conn: ReadConn>(
     id: &Id<Node>,
 ) -> impl Operation<Conn, Result<ServerNode, DatabaseError>> + '_ {
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::ServerNode, *id)))
 }
 
 /// Returns all [ServerNode]/[Node] pairs in arbitrary order.
-pub(crate) fn all_pairs<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<(ServerNode, Node)>> {
+pub(crate) fn all_pairs<Conn: ReadConn>() -> impl Operation<Conn, Vec<(ServerNode, Node)>> {
     read_op(move |conn| {
         server_nodes::table
             .inner_join(nodes::table)

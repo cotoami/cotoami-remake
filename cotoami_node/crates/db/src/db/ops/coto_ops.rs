@@ -22,7 +22,7 @@ use crate::{
     schema::cotos,
 };
 
-pub(crate) fn get<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Conn, Option<Coto>> + '_ {
+pub(crate) fn get<Conn: ReadConn>(id: &Id<Coto>) -> impl Operation<Conn, Option<Coto>> + '_ {
     read_op(move |conn| {
         cotos::table
             .find(id)
@@ -32,13 +32,13 @@ pub(crate) fn get<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Conn, O
     })
 }
 
-pub(crate) fn try_get<Conn: AsReadableConn>(
+pub(crate) fn try_get<Conn: ReadConn>(
     id: &Id<Coto>,
 ) -> impl Operation<Conn, Result<Coto, DatabaseError>> + '_ {
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Coto, *id)))
 }
 
-pub(crate) fn get_original<Conn: AsReadableConn>(coto: Coto) -> impl Operation<Conn, Coto> {
+pub(crate) fn get_original<Conn: ReadConn>(coto: Coto) -> impl Operation<Conn, Coto> {
     composite_op::<Conn, _, _>(move |ctx| {
         if let Some(ref repost_of_id) = coto.repost_of_id {
             try_get(repost_of_id).run(ctx)?.map_err(anyhow::Error::from)
@@ -48,7 +48,7 @@ pub(crate) fn get_original<Conn: AsReadableConn>(coto: Coto) -> impl Operation<C
     })
 }
 
-pub(crate) fn contains<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Conn, bool> + '_ {
+pub(crate) fn contains<Conn: ReadConn>(id: &Id<Coto>) -> impl Operation<Conn, bool> + '_ {
     read_op(move |conn| {
         let count: i64 = cotos::table
             .select(diesel::dsl::count_star())
@@ -58,7 +58,7 @@ pub(crate) fn contains<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Co
     })
 }
 
-pub(crate) fn any_reposts_in<'a, Conn: AsReadableConn>(
+pub(crate) fn any_reposts_in<'a, Conn: ReadConn>(
     ids: &'a [Id<Coto>],
 ) -> impl Operation<Conn, bool> + 'a {
     read_op(move |conn| {
@@ -71,7 +71,7 @@ pub(crate) fn any_reposts_in<'a, Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Coto>> {
+pub(crate) fn all<Conn: ReadConn>() -> impl Operation<Conn, Vec<Coto>> {
     read_op(move |conn| {
         cotos::table
             .order(cotos::rowid.asc())
@@ -80,7 +80,7 @@ pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Coto>> {
     })
 }
 
-pub(crate) fn map_from_ids<'a, Conn: AsReadableConn>(
+pub(crate) fn map_from_ids<'a, Conn: ReadConn>(
     ids: impl IntoIterator<Item = &'a Id<Coto>>,
 ) -> impl Operation<Conn, HashMap<Id<Coto>, Coto>> {
     read_op(move |conn| {
@@ -94,7 +94,7 @@ pub(crate) fn map_from_ids<'a, Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn get_by_ids<'a, Conn: AsReadableConn>(
+pub(crate) fn get_by_ids<'a, Conn: ReadConn>(
     ids: &'a [Id<Coto>],
 ) -> impl Operation<Conn, Vec<Coto>> + 'a {
     composite_op::<Conn, _, _>(move |ctx| {
@@ -105,7 +105,7 @@ pub(crate) fn get_by_ids<'a, Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn recently_inserted<'a, Conn: AsReadableConn>(
+pub(crate) fn recently_inserted<'a, Conn: ReadConn>(
     node_id: Option<&'a Id<Node>>,
     posted_in_id: Option<&'a Id<Cotonoma>>,
     only_cotonomas: bool,
@@ -128,7 +128,7 @@ pub(crate) fn recently_inserted<'a, Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn geolocated<'a, Conn: AsReadableConn>(
+pub(crate) fn geolocated<'a, Conn: ReadConn>(
     node_id: Option<&'a Id<Node>>,
     posted_in_id: Option<&'a Id<Cotonoma>>,
     limit: i64,
@@ -153,7 +153,7 @@ pub(crate) fn geolocated<'a, Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn in_geo_bounds<'a, Conn: AsReadableConn>(
+pub(crate) fn in_geo_bounds<'a, Conn: ReadConn>(
     southwest: &'a Geolocation,
     northeast: &'a Geolocation,
     limit: i64,
@@ -170,7 +170,7 @@ pub(crate) fn in_geo_bounds<'a, Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn others_last_posted_at_in_local<Conn: AsReadableConn>(
+pub(crate) fn others_last_posted_at_in_local<Conn: ReadConn>(
     local_node_id: &Id<Node>,
 ) -> impl Operation<Conn, Option<NaiveDateTime>> + '_ {
     read_op(move |conn| {
@@ -183,7 +183,7 @@ pub(crate) fn others_last_posted_at_in_local<Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn unread_count_in_local<Conn: AsReadableConn>(
+pub(crate) fn unread_count_in_local<Conn: ReadConn>(
     local: &LocalNode,
 ) -> impl Operation<Conn, i64> + '_ {
     read_op(move |conn| {
@@ -353,7 +353,7 @@ pub(crate) fn delete(
 
 const INDEX_TOKEN_LENGTH: usize = 3;
 
-pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
+pub(crate) fn full_text_search<'a, Conn: ReadConn>(
     query: &'a str,
     filter_by_node_id: Option<&'a Id<Node>>,
     filter_by_posted_in_id: Option<&'a Id<Cotonoma>>,

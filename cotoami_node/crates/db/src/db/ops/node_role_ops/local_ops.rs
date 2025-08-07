@@ -16,7 +16,7 @@ use crate::{
     schema::{local_node, nodes},
 };
 
-pub(crate) fn get_pair<Conn: AsReadableConn>() -> impl Operation<Conn, Option<(LocalNode, Node)>> {
+pub(crate) fn get_pair<Conn: ReadConn>() -> impl Operation<Conn, Option<(LocalNode, Node)>> {
     read_op(move |conn| {
         local_node::table
             .inner_join(nodes::table)

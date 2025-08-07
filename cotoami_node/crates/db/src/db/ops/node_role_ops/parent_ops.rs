@@ -20,9 +20,7 @@ use crate::{
 };
 
 /// Returns a [ParentNode] by its ID.
-pub(crate) fn get<Conn: AsReadableConn>(
-    id: &Id<Node>,
-) -> impl Operation<Conn, Option<ParentNode>> + '_ {
+pub(crate) fn get<Conn: ReadConn>(id: &Id<Node>) -> impl Operation<Conn, Option<ParentNode>> + '_ {
     read_op(move |conn| {
         parent_nodes::table
             .find(id)
@@ -33,7 +31,7 @@ pub(crate) fn get<Conn: AsReadableConn>(
 }
 
 /// Returns all [ParentNode]s sorted by last_change_received_at and created_at.
-pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<ParentNode>> {
+pub(crate) fn all<Conn: ReadConn>() -> impl Operation<Conn, Vec<ParentNode>> {
     read_op(move |conn| {
         parent_nodes::table
             .order((
@@ -45,7 +43,7 @@ pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<ParentNode
     })
 }
 
-pub(crate) fn get_by_node_ids<Conn: AsReadableConn>(
+pub(crate) fn get_by_node_ids<Conn: ReadConn>(
     node_ids: &Vec<Id<Node>>,
 ) -> impl Operation<Conn, Vec<ParentNode>> + '_ {
     read_op(move |conn| {
@@ -58,7 +56,7 @@ pub(crate) fn get_by_node_ids<Conn: AsReadableConn>(
 
 /// Returns a map from parent node ID to the timestamp of the most recent post
 /// made by other nodes (excluding the local node).
-pub(crate) fn others_last_posted_at<Conn: AsReadableConn>(
+pub(crate) fn others_last_posted_at<Conn: ReadConn>(
     local_node_id: &Id<Node>,
 ) -> impl Operation<Conn, HashMap<Id<Node>, NaiveDateTime>> + '_ {
     read_op(move |conn| {
@@ -78,7 +76,7 @@ pub(crate) fn others_last_posted_at<Conn: AsReadableConn>(
 }
 
 /// Returns a map from parent node ID to the number of unread posts for that node
-pub(crate) fn unread_counts<Conn: AsReadableConn>(
+pub(crate) fn unread_counts<Conn: ReadConn>(
     local_node_id: &Id<Node>,
 ) -> impl Operation<Conn, HashMap<Id<Node>, i64>> + '_ {
     read_op(move |conn| {

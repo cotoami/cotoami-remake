@@ -18,7 +18,7 @@ use crate::{
     schema::nodes,
 };
 
-pub(crate) fn get<Conn: AsReadableConn>(id: &Id<Node>) -> impl Operation<Conn, Option<Node>> + '_ {
+pub(crate) fn get<Conn: ReadConn>(id: &Id<Node>) -> impl Operation<Conn, Option<Node>> + '_ {
     read_op(move |conn| {
         nodes::table
             .find(id)
@@ -28,13 +28,13 @@ pub(crate) fn get<Conn: AsReadableConn>(id: &Id<Node>) -> impl Operation<Conn, O
     })
 }
 
-pub(crate) fn try_get<Conn: AsReadableConn>(
+pub(crate) fn try_get<Conn: ReadConn>(
     id: &Id<Node>,
 ) -> impl Operation<Conn, Result<Node, DatabaseError>> + '_ {
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Node, *id)))
 }
 
-pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Node>> {
+pub(crate) fn all<Conn: ReadConn>() -> impl Operation<Conn, Vec<Node>> {
     read_op(move |conn| {
         nodes::table
             .order(nodes::rowid.asc())
@@ -43,7 +43,7 @@ pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Node>> {
     })
 }
 
-pub(crate) fn map_from_ids<'a, Conn: AsReadableConn>(
+pub(crate) fn map_from_ids<'a, Conn: ReadConn>(
     ids: impl IntoIterator<Item = &'a Id<Node>>,
 ) -> impl Operation<Conn, HashMap<Id<Node>, Node>> {
     read_op(move |conn| {
@@ -57,7 +57,7 @@ pub(crate) fn map_from_ids<'a, Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn root_cotonoma_ids<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Id<Cotonoma>>> {
+pub(crate) fn root_cotonoma_ids<Conn: ReadConn>() -> impl Operation<Conn, Vec<Id<Cotonoma>>> {
     read_op(move |conn| {
         let ids = nodes::table
             .filter(nodes::root_cotonoma_id.is_not_null())
