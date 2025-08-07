@@ -188,7 +188,7 @@ impl DatabaseSession<'_> {
 
         let local_node_id = self.globals.try_get_local_node_id()?;
         let posted_by_id = operator.try_get_node_id()?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
             let (cotonoma, coto) =
                 cotonoma_ops::create(&local_node_id, &posted_in.uuid, &posted_by_id, input)
                     .run(ctx)?;
@@ -206,7 +206,7 @@ impl DatabaseSession<'_> {
         assert_eq!(coto.uuid, cotonoma.coto_id);
 
         let local_node = self.globals.try_read_local_node()?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
             let new_coto = &coto.to_import(local_node.image_max_size())?;
             let (coto, _) = coto_ops::insert(new_coto).run(ctx)?;
             let cotonoma = cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;
@@ -228,7 +228,7 @@ impl DatabaseSession<'_> {
             Ok((cotonoma_pair, changelog))
         } else {
             let local_node_id = self.globals.try_get_local_node_id()?;
-            self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
                 let (cotonoma, coto) = cotonoma_ops::try_get_pair(id).run(ctx)??;
                 self.globals.ensure_local(&cotonoma)?;
                 operator.can_update_coto(&coto)?;

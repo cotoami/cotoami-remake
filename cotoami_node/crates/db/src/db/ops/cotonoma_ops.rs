@@ -286,8 +286,8 @@ pub(crate) fn subs<Conn: ReadConn>(
 pub(crate) fn create_root<'a>(
     node_id: &'a Id<Node>,
     name: &'a str,
-) -> impl Operation<WritableConn, (Cotonoma, Coto)> + 'a {
-    composite_op::<WritableConn, _, _>(|ctx| {
+) -> impl Operation<WriteConn, (Cotonoma, Coto)> + 'a {
+    composite_op::<WriteConn, _, _>(|ctx| {
         let new_coto = NewCoto::new_root_cotonoma(node_id, name)?;
         let (inserted_coto, _) = coto_ops::insert(&new_coto).run(ctx)?;
         let new_cotonoma =
@@ -302,8 +302,8 @@ pub(crate) fn create<'a>(
     posted_in_id: &'a Id<Cotonoma>,
     posted_by_id: &'a Id<Node>,
     input: &'a CotonomaInput<'a>,
-) -> impl Operation<WritableConn, (Cotonoma, Coto)> + 'a {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, (Cotonoma, Coto)> + 'a {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         let new_coto = NewCoto::new_cotonoma(node_id, posted_in_id, posted_by_id, input)?;
         let (inserted_coto, _) = coto_ops::insert(&new_coto).run(ctx)?;
         let new_cotonoma = NewCotonoma::new(
@@ -319,7 +319,7 @@ pub(crate) fn create<'a>(
 
 pub(crate) fn insert<'a>(
     new_cotonoma: &'a NewCotonoma<'a>,
-) -> impl Operation<WritableConn, Cotonoma> + 'a {
+) -> impl Operation<WriteConn, Cotonoma> + 'a {
     write_op(move |conn| {
         new_cotonoma.validate()?;
         diesel::insert_into(cotonomas::table)
@@ -331,7 +331,7 @@ pub(crate) fn insert<'a>(
 
 pub(crate) fn update<'a>(
     update_cotonoma: &'a UpdateCotonoma,
-) -> impl Operation<WritableConn, Cotonoma> + 'a {
+) -> impl Operation<WriteConn, Cotonoma> + 'a {
     write_op(move |conn| {
         update_cotonoma.validate()?;
         diesel::update(update_cotonoma)
@@ -345,8 +345,8 @@ pub(crate) fn rename<'a>(
     id: &'a Id<Cotonoma>,
     name: &'a str,
     updated_at: Option<NaiveDateTime>,
-) -> impl Operation<WritableConn, (Cotonoma, Coto)> + 'a {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, (Cotonoma, Coto)> + 'a {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         let updated_at = updated_at.unwrap_or(crate::current_datetime());
         let (cotonoma, coto) = try_get_pair(id).run(ctx)??;
 
@@ -369,7 +369,7 @@ pub(crate) fn rename<'a>(
 pub(crate) fn update_timestamp(
     id: &Id<Cotonoma>,
     updated_at: NaiveDateTime,
-) -> impl Operation<WritableConn, usize> + '_ {
+) -> impl Operation<WriteConn, usize> + '_ {
     write_op(move |conn| {
         diesel::update(cotonomas::table)
             .filter(cotonomas::uuid.eq(id))

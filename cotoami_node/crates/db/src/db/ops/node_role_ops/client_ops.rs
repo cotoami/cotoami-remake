@@ -82,7 +82,7 @@ pub(crate) fn recent_pairs<'a, Conn: ReadConn>(
 /// Inserts a new client node represented as a [NewClientNode].
 pub(super) fn insert<'a>(
     new_client_node: &'a NewClientNode<'a>,
-) -> impl Operation<WritableConn, ClientNode> + 'a {
+) -> impl Operation<WriteConn, ClientNode> + 'a {
     write_op(move |conn| {
         diesel::insert_into(client_nodes::table)
             .values(new_client_node)
@@ -94,7 +94,7 @@ pub(super) fn insert<'a>(
 /// Updates a client node row with a [UpdateClientNode].
 pub(crate) fn update<'a>(
     update_client: &'a UpdateClientNode,
-) -> impl Operation<WritableConn, ClientNode> + 'a {
+) -> impl Operation<WriteConn, ClientNode> + 'a {
     write_op(move |conn| {
         update_client.validate()?;
         diesel::update(update_client)
@@ -107,7 +107,7 @@ pub(crate) fn update<'a>(
 /// Updates a client node row with a [ClientNodeAsPrincipal].
 pub(crate) fn update_as_principal<'a>(
     principal: &'a ClientNodeAsPrincipal,
-) -> impl Operation<WritableConn, ClientNode> + 'a {
+) -> impl Operation<WriteConn, ClientNode> + 'a {
     write_op(move |conn| {
         diesel::update(principal)
             .set(principal)
@@ -119,8 +119,8 @@ pub(crate) fn update_as_principal<'a>(
 pub(super) fn set_disabled(
     id: &Id<Node>,
     disabled: bool,
-) -> impl Operation<WritableConn, ClientNode> + '_ {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, ClientNode> + '_ {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         let mut update_client = UpdateClientNode::new(id);
         update_client.disabled = Some(disabled);
         let client = update(&update_client).run(ctx)?;
@@ -132,8 +132,8 @@ pub(crate) fn start_session<'a>(
     id: &'a Id<Node>,
     password: &'a str,
     duration: Duration,
-) -> impl Operation<WritableConn, ClientNode> + 'a {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, ClientNode> + 'a {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         let client = try_get(id)
             .run(ctx)?
             // The specified client not found
@@ -152,8 +152,8 @@ pub(crate) fn start_session<'a>(
     })
 }
 
-pub(crate) fn clear_session(id: &Id<Node>) -> impl Operation<WritableConn, ClientNode> + '_ {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+pub(crate) fn clear_session(id: &Id<Node>) -> impl Operation<WriteConn, ClientNode> + '_ {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         let client = try_get(id).run(ctx)??;
         let mut principal = client.as_principal();
         principal.clear_session();
@@ -165,8 +165,8 @@ pub(crate) fn clear_session(id: &Id<Node>) -> impl Operation<WritableConn, Clien
 pub fn change_password<'a>(
     id: &'a Id<Node>,
     new_password: &'a str,
-) -> impl Operation<WritableConn, ClientNode> + 'a {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, ClientNode> + 'a {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         let client = try_get(id).run(ctx)??;
         let mut principal = client.as_principal();
         principal.update_password(new_password)?;

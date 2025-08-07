@@ -202,8 +202,8 @@ pub(crate) fn unread_count_in_local<Conn: ReadConn>(
 
 pub(crate) fn insert<'a>(
     new_coto: &'a NewCoto<'a>,
-) -> impl Operation<WritableConn, (Coto, Option<Coto>)> + 'a {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, (Coto, Option<Coto>)> + 'a {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         new_coto.validate()?;
         let coto: Coto = diesel::insert_into(cotos::table)
             .values(new_coto)
@@ -234,8 +234,8 @@ pub(crate) fn repost<'a>(
     dest: &'a Id<Cotonoma>,
     reposted_by: &'a Id<Node>,
     reposted_at: Option<NaiveDateTime>,
-) -> impl Operation<WritableConn, (Coto, Coto)> + 'a {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, (Coto, Coto)> + 'a {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         let coto = try_get(id).run(ctx)??;
         let original = get_original(coto).run(ctx)?;
         let dest = cotonoma_ops::try_get(dest).run(ctx)??;
@@ -251,7 +251,7 @@ pub(crate) fn repost<'a>(
     })
 }
 
-pub(crate) fn update<'a>(update_coto: &'a UpdateCoto) -> impl Operation<WritableConn, Coto> + 'a {
+pub(crate) fn update<'a>(update_coto: &'a UpdateCoto) -> impl Operation<WriteConn, Coto> + 'a {
     write_op(move |conn| {
         update_coto.validate()?;
         diesel::update(update_coto)
@@ -266,8 +266,8 @@ pub(crate) fn edit<'a>(
     diff: &'a CotoContentDiff<'a>,
     image_max_size: Option<u32>,
     updated_at: Option<NaiveDateTime>,
-) -> impl Operation<WritableConn, Coto> + 'a {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, Coto> + 'a {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         let mut update_coto = UpdateCoto::new(id);
         update_coto.edit_content(diff, image_max_size)?;
         update_coto.updated_at = updated_at.unwrap_or(crate::current_datetime());
@@ -281,8 +281,8 @@ pub(crate) fn promote<'a>(
     id: &'a Id<Coto>,
     promoted_at: Option<NaiveDateTime>,
     cotonoma_id: Option<Id<Cotonoma>>,
-) -> impl Operation<WritableConn, (Cotonoma, Coto)> + 'a {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, (Cotonoma, Coto)> + 'a {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         let promoted_at = promoted_at.unwrap_or(crate::current_datetime());
 
         // Update the coto
@@ -303,8 +303,8 @@ fn reposted<'a>(
     original: &'a Coto,
     dest: &'a Id<Cotonoma>,
     reposted_at: NaiveDateTime,
-) -> impl Operation<WritableConn, Coto> + 'a {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, Coto> + 'a {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         ensure!(
             original.repost_of_id.is_none(),
             "A coto to be reposted must not be a repost."
@@ -321,8 +321,8 @@ fn reposted<'a>(
 pub(crate) fn delete(
     id: &Id<Coto>,
     deleted_at: Option<NaiveDateTime>,
-) -> impl Operation<WritableConn, Option<NaiveDateTime>> + '_ {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, Option<NaiveDateTime>> + '_ {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         let deleted_at = deleted_at.unwrap_or(crate::current_datetime());
 
         // There are some related entities to be deleted by FOREIGN KEY ON DELETE CASCADE:

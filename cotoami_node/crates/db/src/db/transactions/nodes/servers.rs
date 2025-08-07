@@ -91,7 +91,7 @@ impl DatabaseSession<'_> {
             .context(DatabaseError::AuthenticationFailed)?;
 
         // Save the password to the server node
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
             let mut update_server = UpdateServerNode::new(id);
             update_server.set_password(password, owner_password)?;
             let server = server_ops::update(&update_server).run(ctx)?;

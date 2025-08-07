@@ -66,8 +66,8 @@ pub(crate) fn chunk<Conn: ReadConn>(
 pub(crate) fn log_change<'a>(
     change: &'a Change,
     local_node_id: &'a Id<Node>,
-) -> impl Operation<WritableConn, ChangelogEntry> + 'a {
-    composite_op::<WritableConn, _, _>(|ctx| {
+) -> impl Operation<WriteConn, ChangelogEntry> + 'a {
+    composite_op::<WriteConn, _, _>(|ctx| {
         let last_number = last_origin_serial_number(local_node_id)
             .run(ctx)?
             .unwrap_or(0);
@@ -78,7 +78,7 @@ pub(crate) fn log_change<'a>(
 
 pub(crate) fn insert<'a>(
     new_entry: &'a NewChangelogEntry<'a>,
-) -> impl Operation<WritableConn, ChangelogEntry> + 'a {
+) -> impl Operation<WriteConn, ChangelogEntry> + 'a {
     write_op(move |conn| {
         diesel::insert_into(changelog::table)
             .values(new_entry)
@@ -122,8 +122,8 @@ pub(crate) fn import_change<'a>(
     log: &'a ChangelogEntry,
     parent_node: &'a mut ParentNode,
     local_node: &'a LocalNode,
-) -> impl Operation<WritableConn, Option<ChangelogEntry>> + 'a {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, Option<ChangelogEntry>> + 'a {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         // Check if the local node has been forked from the parent
         ensure!(
             !parent_node.forked,
@@ -183,9 +183,9 @@ pub(crate) fn import_change<'a>(
 fn apply_change<'a>(
     change: &'a Change,
     local_node: &'a LocalNode,
-) -> impl Operation<WritableConn, ()> + 'a {
+) -> impl Operation<WriteConn, ()> + 'a {
     let image_max_size = local_node.image_max_size();
-    composite_op::<WritableConn, _, _>(move |ctx| {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         match change {
             Change::None => (),
             Change::CreateNode { node, root } => {

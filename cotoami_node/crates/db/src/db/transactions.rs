@@ -5,7 +5,7 @@ use parking_lot::MutexGuard;
 
 use crate::db::{
     op,
-    op::{Operation, WritableConn},
+    op::{Operation, WriteConn},
     Globals,
 };
 
@@ -25,14 +25,14 @@ pub struct DatabaseSession<'a> {
     // because of the trait bounds, which unnecessarily expose
     // the internal concerns (`SqliteConnection` and `WritableConn`) to users of the type.
     new_ro_conn: Box<dyn Fn() -> Result<SqliteConnection> + 'a>,
-    lock_rw_conn: Box<dyn Fn() -> MutexGuard<'a, WritableConn> + 'a>,
+    lock_rw_conn: Box<dyn Fn() -> MutexGuard<'a, WriteConn> + 'a>,
 }
 
 impl<'a> DatabaseSession<'a> {
     pub(super) fn new(
         globals: &'a Globals,
         new_ro_conn: Box<dyn Fn() -> Result<SqliteConnection> + 'a>,
-        lock_rw_conn: Box<dyn Fn() -> MutexGuard<'a, WritableConn> + 'a>,
+        lock_rw_conn: Box<dyn Fn() -> MutexGuard<'a, WriteConn> + 'a>,
     ) -> Self {
         Self {
             globals,
@@ -59,7 +59,7 @@ impl<'a> DatabaseSession<'a> {
     /// Runs a read/write operation.
     fn write_transaction<Op, T>(&self, op: Op) -> Result<T>
     where
-        Op: Operation<WritableConn, T>,
+        Op: Operation<WriteConn, T>,
     {
         op::run_write(&mut (self.lock_rw_conn)(), op)
     }

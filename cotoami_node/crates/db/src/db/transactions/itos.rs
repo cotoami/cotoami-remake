@@ -76,7 +76,7 @@ impl DatabaseSession<'_> {
     /// Changes originated in remote nodes should be imported via [Self::import_change()].
     fn insert_ito(&self, new_ito: NewIto) -> Result<(Ito, ChangelogEntry)> {
         let local_node_id = self.globals.try_get_local_node_id()?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
             ensure!(
                 new_ito.node_id() == &local_node_id,
                 "NewIto::node_id must be local."
@@ -97,7 +97,7 @@ impl DatabaseSession<'_> {
     ) -> Result<(Ito, ChangelogEntry)> {
         operator.can_edit_itos()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
             let ito = ito_ops::edit(id, &diff, None).run(ctx)?;
             self.globals.ensure_local(&ito)?;
             let change = Change::EditIto {
@@ -113,7 +113,7 @@ impl DatabaseSession<'_> {
     pub fn delete_ito(&self, id: &Id<Ito>, operator: &Operator) -> Result<ChangelogEntry> {
         operator.can_edit_itos()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
             let ito = ito_ops::try_get(id).run(ctx)??;
             self.globals.ensure_local(&ito)?;
             if ito_ops::delete(id).run(ctx)? {
@@ -134,7 +134,7 @@ impl DatabaseSession<'_> {
     ) -> Result<(Ito, ChangelogEntry)> {
         operator.can_edit_itos()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
             let ito = ito_ops::change_order(id, new_order).run(ctx)?;
             self.globals.ensure_local(&ito)?;
             let change = Change::ChangeItoOrder {

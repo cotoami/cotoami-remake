@@ -51,8 +51,8 @@ pub enum NewNetworkRole<'a> {
 pub(crate) fn set_network_role<'a>(
     node_id: &'a Id<Node>,
     role: NewNetworkRole<'a>,
-) -> impl Operation<WritableConn, NetworkRole> + 'a {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, NetworkRole> + 'a {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         if let Some(role) = network_role_of(node_id).run(ctx)? {
             bail!(DatabaseError::NodeRoleConflict {
                 with: role.to_string()
@@ -76,8 +76,8 @@ pub(crate) fn set_network_role<'a>(
 pub(crate) fn set_network_disabled(
     node_id: &Id<Node>,
     disabled: bool,
-) -> impl Operation<WritableConn, NetworkRole> + '_ {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, NetworkRole> + '_ {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         if !disabled {
             if let Some(DatabaseRole::Parent(parent)) = database_role_of(node_id).run(ctx)? {
                 // A forked parent can't be enabled
@@ -144,8 +144,8 @@ pub enum NewDatabaseRole {
 pub(crate) fn set_database_role(
     node_id: &Id<Node>,
     role: NewDatabaseRole,
-) -> impl Operation<WritableConn, DatabaseRole> + '_ {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, DatabaseRole> + '_ {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         if let Some(role) = database_role_of(node_id).run(ctx)? {
             bail!(DatabaseError::NodeRoleConflict {
                 with: role.to_string()
@@ -174,8 +174,8 @@ pub(crate) fn register_server_node<'a>(
     node_id: &'a Id<Node>,
     url_prefix: &'a str,
     database_role: NewDatabaseRole,
-) -> impl Operation<WritableConn, (ServerNode, DatabaseRole)> + 'a {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, (ServerNode, DatabaseRole)> + 'a {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         // Set a network role (server) to the node
         let network_role = NewNetworkRole::Server { url_prefix };
         let NetworkRole::Server(server) = set_network_role(node_id, network_role).run(ctx)? else {
@@ -193,8 +193,8 @@ pub(crate) fn register_client_node<'a>(
     node_id: &'a Id<Node>,
     password: &'a str,
     database_role: NewDatabaseRole,
-) -> impl Operation<WritableConn, (ClientNode, DatabaseRole)> + 'a {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, (ClientNode, DatabaseRole)> + 'a {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         // Set a network role (client) to the node
         let network_role = NewNetworkRole::Client { password };
         let NetworkRole::Client(client) = set_network_role(node_id, network_role).run(ctx)? else {

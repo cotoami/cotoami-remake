@@ -122,7 +122,7 @@ impl DatabaseSession<'_> {
     /// Changes originated in remote nodes should be imported via [Self::import_change()].
     fn create_coto(&self, new_coto: &NewCoto) -> Result<(Coto, ChangelogEntry)> {
         let local_node_id = self.globals.try_get_local_node_id()?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
             // The target cotonoma must belong to the local node.
             if let Some(posted_in_id) = new_coto.posted_in_id() {
                 let posted_in = cotonoma_ops::try_get(posted_in_id).run(ctx)??;
@@ -143,7 +143,7 @@ impl DatabaseSession<'_> {
         operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
         let local_node = self.globals.try_read_local_node()?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
             // Permission check
             let coto = coto_ops::try_get(id).run(ctx)??;
             self.globals.ensure_local(&coto)?;
@@ -171,7 +171,7 @@ impl DatabaseSession<'_> {
     ) -> Result<((Cotonoma, Coto), ChangelogEntry)> {
         operator.can_post_cotonomas()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
             // Permission check
             let coto = coto_ops::try_get(coto_id).run(ctx)??;
             self.globals.ensure_local(&coto)?;
@@ -194,7 +194,7 @@ impl DatabaseSession<'_> {
 
     pub fn delete_coto(&self, id: &Id<Coto>, operator: &Operator) -> Result<ChangelogEntry> {
         let local_node_id = self.globals.try_get_local_node_id()?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
             let coto = coto_ops::try_get(id).run(ctx)??;
             self.globals.ensure_local(&coto)?;
             operator.can_delete_coto(&coto)?;
@@ -220,7 +220,7 @@ impl DatabaseSession<'_> {
         self.globals.ensure_local(dest)?;
         let local_node_id = self.globals.try_get_local_node_id()?;
         let reposted_by = operator.try_get_node_id()?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
             let (repost, original) =
                 coto_ops::repost(id, &dest.uuid, &reposted_by, None).run(ctx)?;
             let change = Change::CreateCoto(repost.clone());
@@ -251,7 +251,7 @@ impl DatabaseSession<'_> {
             coto_input,
             local_node.image_max_size(),
         )?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
             let post_to = cotonoma_ops::try_get(post_to).run(ctx)??;
             self.globals.ensure_local(&post_to)?;
 

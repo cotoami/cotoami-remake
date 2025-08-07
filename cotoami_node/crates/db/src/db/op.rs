@@ -87,26 +87,26 @@ where
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// WritableConn
+// WriteConn
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(new)]
-pub struct WritableConn(SqliteConnection);
+pub struct WriteConn(SqliteConnection);
 
-impl Deref for WritableConn {
+impl Deref for WriteConn {
     type Target = SqliteConnection;
 
     fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-impl DerefMut for WritableConn {
+impl DerefMut for WriteConn {
     fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
 /// The following functions is copied-and-pasted from [SqliteConnection].
 /// It doesn't seem to be possible to use `immediate_transaction` of the inner [SqliteConnection]
 /// because it will cause mutable borrowing twice in one call.
-impl WritableConn {
+impl WriteConn {
     /// Runs a transaction with `BEGIN IMMEDIATE`
     ///
     /// Same implementation as [SqliteConnection]:
@@ -156,7 +156,7 @@ impl ReadConn for SqliteConnection {
 }
 
 /// Any WriteConn can be used for read operations.
-impl ReadConn for WritableConn {
+impl ReadConn for WriteConn {
     fn read(&mut self) -> &mut SqliteConnection { &mut self.0 }
 }
 
@@ -213,17 +213,17 @@ pub struct WriteOp<F> {
     f: F,
 }
 
-impl<T, F> Operation<WritableConn, T> for WriteOp<F>
+impl<T, F> Operation<WriteConn, T> for WriteOp<F>
 where
-    F: FnOnce(&mut WritableConn) -> Result<T>,
+    F: FnOnce(&mut WriteConn) -> Result<T>,
 {
-    fn run(self, ctx: &mut Context<'_, WritableConn>) -> Result<T> { (self.f)(ctx.conn()) }
+    fn run(self, ctx: &mut Context<'_, WriteConn>) -> Result<T> { (self.f)(ctx.conn()) }
 }
 
 /// Defines a read/write operation using a [WritableConn]
 pub fn write_op<T, F>(f: F) -> WriteOp<F>
 where
-    F: FnOnce(&mut WritableConn) -> Result<T>,
+    F: FnOnce(&mut WriteConn) -> Result<T>,
 {
     WriteOp { f }
 }
@@ -233,9 +233,9 @@ where
 /// The operation will be run in a `IMMEDIATE` transaction, which immediately
 /// starts a write transaction and prevents other database connections from writing
 /// the database.
-pub fn run_write<Op, T>(conn: &mut WritableConn, op: Op) -> Result<T>
+pub fn run_write<Op, T>(conn: &mut WriteConn, op: Op) -> Result<T>
 where
-    Op: Operation<WritableConn, T>,
+    Op: Operation<WriteConn, T>,
 {
     conn.immediate_transaction(|conn| op.run(&mut Context::new(conn)))
 }

@@ -53,7 +53,7 @@ impl DatabaseSession<'_> {
     ///    the given node is larger than the existing one (UPDATE).
     pub fn import_node(&self, node: &Node) -> Result<Option<(Node, ChangelogEntry)>> {
         let local_node_id = self.globals.try_get_local_node_id()?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
             if let Some(node) = node_ops::upsert(node).run(ctx)? {
                 let change = Change::UpsertNode(node);
                 let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
@@ -67,7 +67,7 @@ impl DatabaseSession<'_> {
 
     pub fn create_agent_node(&self, name: &str, icon: &[u8]) -> Result<(Node, ChangelogEntry)> {
         let local_node_id = self.globals.try_get_local_node_id()?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
             let new_agent = NewNode::new_agent(name, icon);
             let node = node_ops::insert(&new_agent).run(ctx)?;
             let change = Change::UpsertNode(node);

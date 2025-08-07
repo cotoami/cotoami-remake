@@ -99,7 +99,7 @@ pub(crate) fn unread_counts<Conn: ReadConn>(
 /// Inserts a new parent node represented as a [NewParentNode].
 pub(super) fn insert<'a>(
     new_parent_node: &'a NewParentNode<'a>,
-) -> impl Operation<WritableConn, ParentNode> + 'a {
+) -> impl Operation<WriteConn, ParentNode> + 'a {
     write_op(move |conn| {
         diesel::insert_into(parent_nodes::table)
             .values(new_parent_node)
@@ -111,7 +111,7 @@ pub(super) fn insert<'a>(
 /// Updates a parent node row with a [UpdateParentNode].
 pub(crate) fn update<'a>(
     update_parent: &'a UpdateParentNode,
-) -> impl Operation<WritableConn, ParentNode> + 'a {
+) -> impl Operation<WriteConn, ParentNode> + 'a {
     write_op(move |conn| {
         update_parent.validate()?;
         diesel::update(update_parent)
@@ -123,7 +123,7 @@ pub(crate) fn update<'a>(
 
 pub(crate) fn mark_all_as_read(
     read_at: NaiveDateTime,
-) -> impl Operation<WritableConn, Vec<ParentNode>> {
+) -> impl Operation<WriteConn, Vec<ParentNode>> {
     write_op(move |conn| {
         diesel::update(parent_nodes::table)
             .set(parent_nodes::last_read_at.eq(Some(read_at)))
@@ -135,8 +135,8 @@ pub(crate) fn mark_all_as_read(
 pub(crate) fn mark_as_read(
     id: &Id<Node>,
     read_at: NaiveDateTime,
-) -> impl Operation<WritableConn, ParentNode> + '_ {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, ParentNode> + '_ {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         let mut update_parent = UpdateParentNode::new(id);
         update_parent.last_read_at = Some(Some(read_at));
         let parent = update(&update_parent).run(ctx)?;
@@ -150,7 +150,7 @@ pub(crate) fn increment_changes_received(
     id: &Id<Node>,
     incremented_number: i64,
     received_at: Option<NaiveDateTime>,
-) -> impl Operation<WritableConn, ParentNode> + '_ {
+) -> impl Operation<WriteConn, ParentNode> + '_ {
     let received_at = received_at.unwrap_or(crate::current_datetime());
     write_op(move |conn| {
         diesel::update(parent_nodes::table)

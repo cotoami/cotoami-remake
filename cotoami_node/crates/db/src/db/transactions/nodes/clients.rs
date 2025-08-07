@@ -62,7 +62,7 @@ impl DatabaseSession<'_> {
             "The local node can't be a client."
         );
 
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
             let node = node_ops::get_or_insert_placeholder(id).run(ctx)?;
             let (client, database_role) =
                 node_role_ops::register_client_node(&node.uuid, password, database_role)

@@ -49,7 +49,7 @@ pub(crate) fn all_pairs<Conn: ReadConn>() -> impl Operation<Conn, Vec<(ServerNod
 /// Inserts a new server node represented as a [NewServerNode].
 pub(super) fn insert<'a>(
     new_server: &'a NewServerNode<'a>,
-) -> impl Operation<WritableConn, ServerNode> + 'a {
+) -> impl Operation<WriteConn, ServerNode> + 'a {
     write_op(move |conn| {
         new_server.validate()?;
         diesel::insert_into(server_nodes::table)
@@ -62,7 +62,7 @@ pub(super) fn insert<'a>(
 /// Updates a server node row with a [UpdateServerNode].
 pub(crate) fn update<'a>(
     update_server: &'a UpdateServerNode,
-) -> impl Operation<WritableConn, ServerNode> + 'a {
+) -> impl Operation<WriteConn, ServerNode> + 'a {
     write_op(move |conn| {
         update_server.validate()?;
         diesel::update(update_server)
@@ -75,8 +75,8 @@ pub(crate) fn update<'a>(
 pub(super) fn set_disabled(
     id: &Id<Node>,
     disabled: bool,
-) -> impl Operation<WritableConn, ServerNode> + '_ {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, ServerNode> + '_ {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         let mut update_server = UpdateServerNode::new(id);
         update_server.disabled = Some(disabled);
         let server = update(&update_server).run(ctx)?;
@@ -87,8 +87,8 @@ pub(super) fn set_disabled(
 pub(crate) fn reencrypt_all_passwords<'a>(
     new_encryption_password: &'a str,
     old_encryption_password: &'a str,
-) -> impl Operation<WritableConn, ()> + 'a {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, ()> + 'a {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         for (server, _) in all_pairs().run(ctx)? {
             if let Some(password) = server.password(old_encryption_password)? {
                 let mut update_server = server.to_update();
@@ -101,7 +101,7 @@ pub(crate) fn reencrypt_all_passwords<'a>(
 }
 
 /// Clears the password of every server node in this database.
-pub(crate) fn clear_all_passwords() -> impl Operation<WritableConn, usize> {
+pub(crate) fn clear_all_passwords() -> impl Operation<WriteConn, usize> {
     write_op(move |conn| {
         diesel::update(server_nodes::table)
             .set(server_nodes::encrypted_password.eq(None::<EncryptedPassword>))

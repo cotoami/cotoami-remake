@@ -3,7 +3,7 @@ use std::ops::DerefMut;
 use anyhow::{bail, Result};
 use cotoami_db::db::{
     self, op,
-    op::{Context, Operation, ReadConn, WritableConn},
+    op::{Context, Operation, ReadConn, WriteConn},
 };
 use derive_new::new;
 use diesel::prelude::*;
@@ -19,7 +19,7 @@ fn operation() -> Result<()> {
     create_table(&mut conn)?;
 
     // when: successful transaction
-    op::run_write(&mut conn, move |ctx: &mut Context<'_, WritableConn>| {
+    op::run_write(&mut conn, move |ctx: &mut Context<'_, WriteConn>| {
         insert("Cloud").run(ctx)?;
         insert("Aerith").run(ctx)?;
         Ok(())
@@ -30,12 +30,11 @@ fn operation() -> Result<()> {
     assert_eq!(into_values(&rows), vec!["Cloud", "Aerith"]);
 
     // when: failing transaction
-    let result: Result<()> =
-        op::run_write(&mut conn, move |ctx: &mut Context<'_, WritableConn>| {
-            insert("Tifa").run(ctx)?;
-            insert("Barret").run(ctx)?;
-            bail!("An error occurred during a transaction.");
-        });
+    let result: Result<()> = op::run_write(&mut conn, move |ctx: &mut Context<'_, WriteConn>| {
+        insert("Tifa").run(ctx)?;
+        insert("Barret").run(ctx)?;
+        bail!("An error occurred during a transaction.");
+    });
 
     // then
     let rows = op::run_read(conn.deref_mut(), all())?;
@@ -98,12 +97,12 @@ pub struct TestRow {
     pub value: String,
 }
 
-fn create_table(conn: &mut WritableConn) -> Result<()> {
+fn create_table(conn: &mut WriteConn) -> Result<()> {
     diesel::sql_query(TABLE_DDL).execute(conn.deref_mut())?;
     Ok(())
 }
 
-fn insert<T: Into<String>>(value: T) -> impl Operation<WritableConn, TestRow> {
+fn insert<T: Into<String>>(value: T) -> impl Operation<WriteConn, TestRow> {
     let new_row = NewTestRow::new(value.into());
     op::write_op(move |conn| {
         diesel::insert_into(test::table)

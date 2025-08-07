@@ -16,7 +16,7 @@ use url::Url;
 
 use crate::{
     db::{
-        error::*, globals::Globals, op::WritableConn, ops::node_role_ops::local_ops,
+        error::*, globals::Globals, op::WriteConn, ops::node_role_ops::local_ops,
         transactions::DatabaseSession,
     },
     models::node::{Node, Principal},
@@ -50,7 +50,7 @@ pub struct Database {
     /// To avoid handling possible SQLITE_BUSY on concurrent writes,
     /// it keeps hold of a single read-write connection in the process.
     #[debug(skip)]
-    rw_conn: Mutex<WritableConn>,
+    rw_conn: Mutex<WriteConn>,
 
     /// Globally shared information
     globals: Globals,
@@ -134,12 +134,12 @@ impl Database {
 
 const SQLITE_BUSY_TIMEOUT: Duration = Duration::from_millis(10_000);
 
-pub fn new_rw_conn(uri: &str) -> Result<WritableConn> {
+pub fn new_rw_conn(uri: &str) -> Result<WriteConn> {
     let mut rw_conn = SqliteConnection::establish(uri)?;
     sqlite::enable_foreign_key_constraints(&mut rw_conn)?;
     sqlite::enable_wal(&mut rw_conn)?;
     sqlite::set_busy_timeout(&mut rw_conn, SQLITE_BUSY_TIMEOUT)?;
-    Ok(WritableConn::new(rw_conn))
+    Ok(WriteConn::new(rw_conn))
 }
 
 pub fn new_ro_conn(uri: &str) -> Result<SqliteConnection> {

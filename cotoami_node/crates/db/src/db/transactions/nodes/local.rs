@@ -30,7 +30,7 @@ impl DatabaseSession<'_> {
         name: Option<&str>,
         password: Option<&str>,
     ) -> Result<((LocalNode, Node), ChangelogEntry)> {
-        let result = self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        let result = self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
             let (local_node, mut node) =
                 local_ops::create(name.unwrap_or_default(), password).run(ctx)?;
 
@@ -88,7 +88,7 @@ impl DatabaseSession<'_> {
     ) -> Result<(Node, ChangelogEntry)> {
         operator.requires_to_be_owner()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
             let updated_at = crate::current_datetime();
             let node = node_ops::rename(&local_node_id, name, Some(updated_at)).run(ctx)?;
             let change = Change::RenameNode {
@@ -108,7 +108,7 @@ impl DatabaseSession<'_> {
     ) -> Result<(Node, ChangelogEntry)> {
         operator.requires_to_be_owner()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
             let node = node_ops::set_icon(&local_node_id, icon).run(ctx)?;
             let change = Change::SetNodeIcon {
                 node_id: local_node_id,
@@ -126,7 +126,7 @@ impl DatabaseSession<'_> {
     ) -> Result<(Node, ChangelogEntry)> {
         operator.requires_to_be_owner()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
             let node = node_ops::set_root_cotonoma(&local_node_id, cotonoma_id).run(ctx)?;
             let change = Change::SetRootCotonoma {
                 node_id: local_node_id,
@@ -207,7 +207,7 @@ impl DatabaseSession<'_> {
                 "The local node already has a password."
             );
             principal.update_password(new_password)?;
-            self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
                 let local_node = local_ops::update_as_principal(&principal).run(ctx)?;
                 server_ops::clear_all_passwords().run(ctx)?;
                 Ok(local_node)
@@ -224,7 +224,7 @@ impl DatabaseSession<'_> {
             let mut principal = local_node.as_principal();
             principal.verify_password(old_password)?;
             principal.update_password(new_password)?;
-            self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            self.write_transaction(|ctx: &mut Context<'_, WriteConn>| {
                 let local_node = local_ops::update_as_principal(&principal).run(ctx)?;
                 server_ops::reencrypt_all_passwords(new_password, old_password).run(ctx)?;
                 Ok(local_node)

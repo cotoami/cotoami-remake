@@ -64,7 +64,7 @@ pub(crate) fn recent_pairs<'a, Conn: ReadConn>(
 /// Inserts a new child node represented as a [NewChildNode].
 pub(super) fn insert<'a>(
     new_child_node: &'a NewChildNode<'a>,
-) -> impl Operation<WritableConn, ChildNode> + 'a {
+) -> impl Operation<WriteConn, ChildNode> + 'a {
     write_op(move |conn| {
         diesel::insert_into(child_nodes::table)
             .values(new_child_node)
@@ -76,7 +76,7 @@ pub(super) fn insert<'a>(
 /// Updates a child node row with a [UpdateChildNode].
 pub(crate) fn update<'a>(
     update_child: &'a UpdateChildNode,
-) -> impl Operation<WritableConn, ChildNode> + 'a {
+) -> impl Operation<WriteConn, ChildNode> + 'a {
     write_op(move |conn| {
         update_child.validate()?;
         diesel::update(update_child)
@@ -89,8 +89,8 @@ pub(crate) fn update<'a>(
 pub(crate) fn edit<'a>(
     id: &'a Id<Node>,
     input: &'a ChildNodeInput,
-) -> impl Operation<WritableConn, ChildNode> + 'a {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, ChildNode> + 'a {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         let update_child = UpdateChildNode::new(id, input);
         let child = update(&update_child).run(ctx)?;
         Ok(child)

@@ -34,8 +34,8 @@ pub(crate) fn get_pair<Conn: ReadConn>() -> impl Operation<Conn, Option<(LocalNo
 pub(crate) fn create<'a>(
     name: &'a str,
     password: Option<&'a str>,
-) -> impl Operation<WritableConn, (LocalNode, Node)> + 'a {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, (LocalNode, Node)> + 'a {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         let node = node_ops::insert(&NewNode::new(name)?).run(ctx)?;
         let new_local_node = NewLocalNode::new(&node.uuid, password)?;
         let local_node: LocalNode = diesel::insert_into(local_node::table)
@@ -48,7 +48,7 @@ pub(crate) fn create<'a>(
 /// Updates the local node row with a [UpdateLocalNode].
 pub(crate) fn update<'a>(
     update_local: &'a UpdateLocalNode,
-) -> impl Operation<WritableConn, LocalNode> + 'a {
+) -> impl Operation<WriteConn, LocalNode> + 'a {
     write_op(move |conn| {
         update_local.validate()?;
         diesel::update(update_local)
@@ -60,7 +60,7 @@ pub(crate) fn update<'a>(
 
 pub(crate) fn update_as_principal<'a>(
     owner: &'a NodeOwner,
-) -> impl Operation<WritableConn, LocalNode> + 'a {
+) -> impl Operation<WriteConn, LocalNode> + 'a {
     write_op(move |conn| {
         diesel::update(owner)
             .set(owner)
@@ -73,8 +73,8 @@ pub(crate) fn start_session<'a>(
     local_node: &'a LocalNode,
     password: &'a str,
     duration: Duration,
-) -> impl Operation<WritableConn, LocalNode> + 'a {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, LocalNode> + 'a {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         let duration = chrono::Duration::from_std(duration)?;
         let mut principal = local_node.as_principal();
         principal
@@ -85,10 +85,8 @@ pub(crate) fn start_session<'a>(
     })
 }
 
-pub(crate) fn clear_session(
-    local_node: &LocalNode,
-) -> impl Operation<WritableConn, LocalNode> + '_ {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+pub(crate) fn clear_session(local_node: &LocalNode) -> impl Operation<WriteConn, LocalNode> + '_ {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         let mut principal = local_node.as_principal();
         principal.clear_session();
         let local_node = update_as_principal(&principal).run(ctx)?;

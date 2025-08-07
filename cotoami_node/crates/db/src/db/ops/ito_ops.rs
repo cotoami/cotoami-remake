@@ -109,8 +109,8 @@ pub(crate) fn determine_node<'a, Conn: ReadConn>(
     })
 }
 
-pub(crate) fn insert(mut new_ito: NewIto<'_>) -> impl Operation<WritableConn, Ito> + '_ {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+pub(crate) fn insert(mut new_ito: NewIto<'_>) -> impl Operation<WriteConn, Ito> + '_ {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         new_ito.validate()?;
 
         // Ensure both of cotos are not reposts
@@ -147,8 +147,8 @@ fn last_order_number<Conn: ReadConn>(coto_id: &Id<Coto>) -> impl Operation<Conn,
     })
 }
 
-pub(crate) fn change_order(id: &Id<Ito>, new_order: i32) -> impl Operation<WritableConn, Ito> + '_ {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+pub(crate) fn change_order(id: &Id<Ito>, new_order: i32) -> impl Operation<WriteConn, Ito> + '_ {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         let ito = try_get(id).run(ctx)??;
         ensure_space_at(&ito.node_id, &ito.source_coto_id, new_order).run(ctx)?;
         diesel::update(itos::table)
@@ -165,7 +165,7 @@ fn ensure_space_at<'a>(
     node_id: &'a Id<Node>,
     coto_id: &'a Id<Coto>,
     order: i32,
-) -> impl Operation<WritableConn, usize> + 'a {
+) -> impl Operation<WriteConn, usize> + 'a {
     write_op(move |conn| {
         let orders_onwards: Vec<i32> = itos::table
             .select(itos::order)
@@ -210,7 +210,7 @@ fn ensure_space_at<'a>(
     })
 }
 
-pub(crate) fn update<'a>(update_ito: &'a UpdateIto) -> impl Operation<WritableConn, Ito> + 'a {
+pub(crate) fn update<'a>(update_ito: &'a UpdateIto) -> impl Operation<WriteConn, Ito> + 'a {
     write_op(move |conn| {
         update_ito.validate()?;
         diesel::update(update_ito)
@@ -224,8 +224,8 @@ pub(crate) fn edit<'a>(
     id: &'a Id<Ito>,
     diff: &'a ItoContentDiff<'a>,
     updated_at: Option<NaiveDateTime>,
-) -> impl Operation<WritableConn, Ito> + 'a {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+) -> impl Operation<WriteConn, Ito> + 'a {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         let mut update_ito = UpdateIto::new(id);
         update_ito.edit_content(diff);
         update_ito.updated_at = updated_at.unwrap_or(crate::current_datetime());
@@ -233,8 +233,8 @@ pub(crate) fn edit<'a>(
     })
 }
 
-pub(crate) fn delete(id: &Id<Ito>) -> impl Operation<WritableConn, bool> + '_ {
-    composite_op::<WritableConn, _, _>(move |ctx| {
+pub(crate) fn delete(id: &Id<Ito>) -> impl Operation<WriteConn, bool> + '_ {
+    composite_op::<WriteConn, _, _>(move |ctx| {
         let deleted: Option<Ito> = diesel::delete(itos::table.find(id))
             .get_result(ctx.conn().deref_mut())
             .optional()?;
