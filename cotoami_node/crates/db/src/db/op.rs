@@ -22,13 +22,13 @@ use self::map::*;
 pub mod and_then;
 pub mod map;
 
-/// A runnable unit of database operation
+/// A runnable unit of database operation.
 #[must_use]
 pub trait Operation<Conn, T> {
-    /// Runs this operation with a `Context`
+    /// Runs this operation with a [Context].
     fn run(self, ctx: &mut Context<'_, Conn>) -> Result<T>;
 
-    /// Maps an `Operation<Conn, T>` to `Operation<Conn, U>` by applying a function
+    /// Maps an `Operation<Conn, T>` to `Operation<Conn, U>` by applying a function.
     fn map<U, F>(self, f: F) -> MappedOp<Self, T, F>
     where
         F: FnOnce(T) -> U,
@@ -37,7 +37,7 @@ pub trait Operation<Conn, T> {
         map(self, f)
     }
 
-    /// Creates a chain with another operation that depends on the result of this operation
+    /// Creates a chain with another operation that depends on the result of this operation.
     fn and_then<Op, U, F>(self, f: F) -> AndThenOp<Self, T, F>
     where
         F: FnOnce(T) -> Op,
@@ -57,7 +57,7 @@ pub struct Context<'a, Conn> {
 }
 
 impl<'a, Conn> Context<'a, Conn> {
-    /// Private constructor
+    /// Private constructor.
     fn new(conn: &'a mut Conn) -> Self { Context { conn } }
 
     pub fn conn(&mut self) -> &mut Conn { self.conn }
@@ -78,7 +78,7 @@ where
     fn run(self, ctx: &mut Context<'_, Conn>) -> Result<T> { (self.f)(ctx) }
 }
 
-/// Defines a composite operation sharing a single [Context]
+/// Defines a composite operation sharing a single [Context].
 pub fn composite_op<Conn, F, T>(f: F) -> CompositeOp<F>
 where
     F: FnOnce(&mut Context<'_, Conn>) -> Result<T>,
@@ -104,10 +104,10 @@ impl DerefMut for WriteConn {
 }
 
 /// The following functions is copied-and-pasted from [SqliteConnection].
-/// It doesn't seem to be possible to use `immediate_transaction` of the inner [SqliteConnection]
-/// because it will cause mutable borrowing twice in one call.
+/// It doesn't seem to be possible to call [SqliteConnection::immediate_transaction()] of
+/// the inner connection because it will cause mutable borrowing twice in one call.
 impl WriteConn {
-    /// Runs a transaction with `BEGIN IMMEDIATE`
+    /// Runs a transaction with `BEGIN IMMEDIATE`.
     ///
     /// Same implementation as [SqliteConnection]:
     /// <https://github.com/diesel-rs/diesel/blob/v2.1.0/diesel/src/sqlite/connection/mod.rs#L248-L254>
@@ -119,7 +119,7 @@ impl WriteConn {
         self.transaction_sql(f, "BEGIN IMMEDIATE")
     }
 
-    /// Runs `f` as a transaction activated by `sql`
+    /// Runs `f` as a transaction activated by `sql`.
     ///
     /// Same implementation as [SqliteConnection]:
     /// <https://github.com/diesel-rs/diesel/blob/v2.1.0/diesel/src/sqlite/connection/mod.rs#L285-L301>
@@ -172,7 +172,7 @@ where
     fn run(self, ctx: &mut Context<'_, Conn>) -> Result<T> { (self.f)(ctx.conn().read()) }
 }
 
-/// Defines a read-only operation using a raw [SqliteConnection]
+/// Defines a read-only operation using a raw [SqliteConnection].
 pub fn read_op<T, F>(f: F) -> ReadOp<F>
 where
     F: FnOnce(&mut SqliteConnection) -> Result<T>,
@@ -220,7 +220,7 @@ where
     fn run(self, ctx: &mut Context<'_, WriteConn>) -> Result<T> { (self.f)(ctx.conn()) }
 }
 
-/// Defines a read/write operation using a [WritableConn]
+/// Defines a read/write operation using a [WriteConn].
 pub fn write_op<T, F>(f: F) -> WriteOp<F>
 where
     F: FnOnce(&mut WriteConn) -> Result<T>,
