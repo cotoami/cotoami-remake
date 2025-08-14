@@ -26,6 +26,10 @@ dialog.selection {
             border-top: 1px solid var(--pane-border-color);
           }
 
+          header {
+            padding-left: 10px;
+          }
+
           button.deselect {
             font-size: 23px;
           }
