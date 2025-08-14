@@ -660,5 +660,5 @@ impl Service<Request> for OwnerOperatingService {
 }
 
 impl NodeService for OwnerOperatingService {
-    fn description(&self) -> Cow<str> { self.0.description() }
+    fn description(&self) -> Cow<'_, str> { self.0.description() }
 }
