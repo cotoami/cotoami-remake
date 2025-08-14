@@ -130,9 +130,9 @@ impl Coto {
 
     pub fn is_repost(&self) -> bool { self.repost_of_id.is_some() }
 
-    pub(crate) fn to_update(&self) -> UpdateCoto { UpdateCoto::new(&self.uuid) }
+    pub(crate) fn to_update(&self) -> UpdateCoto<'_> { UpdateCoto::new(&self.uuid) }
 
-    pub(crate) fn to_promote(&self) -> Result<UpdateCoto> {
+    pub(crate) fn to_promote(&self) -> Result<UpdateCoto<'_>> {
         ensure!(!self.is_cotonoma, "The coto is already a cotonoma.");
 
         let name_max_length = Cotonoma::NAME_MAX_LENGTH as usize;
@@ -164,7 +164,7 @@ impl Coto {
         }
     }
 
-    pub(crate) fn to_import(&self, image_max_size: Option<u32>) -> Result<NewCoto> {
+    pub(crate) fn to_import(&self, image_max_size: Option<u32>) -> Result<NewCoto<'_>> {
         // Since it can't import reposts before the originals and
         // `reposted_in_ids` will be updated when inserting a repost,
         // `reposted_in_ids` must be None for import.

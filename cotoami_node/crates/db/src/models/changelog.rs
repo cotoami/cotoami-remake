@@ -57,7 +57,7 @@ pub struct ChangelogEntry {
 impl ChangelogEntry {
     pub fn inserted_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.inserted_at) }
 
-    pub(crate) fn to_import(&self) -> NewChangelogEntry {
+    pub(crate) fn to_import(&self) -> NewChangelogEntry<'_> {
         NewChangelogEntry {
             origin_node_id: &self.origin_node_id,
             origin_serial_number: self.origin_serial_number,

@@ -68,7 +68,7 @@ impl ServerNode {
         }
     }
 
-    pub(crate) fn to_update(&self) -> UpdateServerNode { UpdateServerNode::new(&self.node_id) }
+    pub(crate) fn to_update(&self) -> UpdateServerNode<'_> { UpdateServerNode::new(&self.node_id) }
 }
 
 /////////////////////////////////////////////////////////////////////////////

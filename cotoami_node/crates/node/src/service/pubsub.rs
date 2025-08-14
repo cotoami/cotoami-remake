@@ -62,5 +62,5 @@ impl Service<Request> for PubsubService {
 }
 
 impl NodeService for PubsubService {
-    fn description(&self) -> Cow<str> { Cow::from(&self.description) }
+    fn description(&self) -> Cow<'_, str> { Cow::from(&self.description) }
 }

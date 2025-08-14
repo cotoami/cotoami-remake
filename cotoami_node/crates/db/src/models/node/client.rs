@@ -54,7 +54,7 @@ pub struct ClientNode {
 }
 
 impl ClientNode {
-    pub fn as_principal(&self) -> ClientNodeAsPrincipal {
+    pub fn as_principal(&self) -> ClientNodeAsPrincipal<'_> {
         ClientNodeAsPrincipal {
             node_id: &self.node_id,
             password_hash: Cow::from(&self.password_hash),

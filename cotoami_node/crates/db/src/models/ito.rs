@@ -75,7 +75,7 @@ impl Ito {
 
     pub fn updated_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.updated_at) }
 
-    pub(crate) fn to_import(&self) -> NewIto {
+    pub(crate) fn to_import(&self) -> NewIto<'_> {
         NewIto {
             uuid: self.uuid,
             node_id: &self.node_id,

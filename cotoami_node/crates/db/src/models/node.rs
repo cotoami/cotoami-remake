@@ -78,13 +78,15 @@ impl Node {
 
     pub fn created_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.created_at) }
 
-    pub(crate) fn to_update(&self) -> UpdateNode { UpdateNode::new(&self.uuid, self.version + 1) }
+    pub(crate) fn to_update(&self) -> UpdateNode<'_> {
+        UpdateNode::new(&self.uuid, self.version + 1)
+    }
 
     /// Converting a foreign node into an importable data.
     ///
     /// - It assumes the node data came from another node.
     /// - `created_at` is the original date of the node creation, so it should be kept.
-    pub(crate) fn to_import(&self) -> ImportNode {
+    pub(crate) fn to_import(&self) -> ImportNode<'_> {
         ImportNode {
             uuid: &self.uuid,
             icon: &self.icon,

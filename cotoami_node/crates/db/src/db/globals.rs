@@ -82,7 +82,7 @@ impl Globals {
         self.ensure_local(entity).is_ok()
     }
 
-    pub fn try_read_local_node(&self) -> Result<MappedRwLockReadGuard<LocalNode>> {
+    pub fn try_read_local_node(&self) -> Result<MappedRwLockReadGuard<'_, LocalNode>> {
         RwLockReadGuard::try_map(self.local_node.read(), |x| x.as_ref())
             .map_err(|_| anyhow!(DatabaseError::LocalNodeNotYetInitialized))
     }
@@ -91,7 +91,7 @@ impl Globals {
         *self.local_node.write() = local_node;
     }
 
-    pub(crate) fn try_write_local_node(&self) -> Result<MappedRwLockWriteGuard<LocalNode>> {
+    pub(crate) fn try_write_local_node(&self) -> Result<MappedRwLockWriteGuard<'_, LocalNode>> {
         RwLockWriteGuard::try_map(self.local_node.write(), |x| x.as_mut())
             .map_err(|_| anyhow!(DatabaseError::LocalNodeNotYetInitialized))
     }
@@ -135,7 +135,7 @@ impl Globals {
     pub(crate) fn try_write_parent_node(
         &self,
         id: &Id<Node>,
-    ) -> Result<MappedRwLockWriteGuard<ParentNode>> {
+    ) -> Result<MappedRwLockWriteGuard<'_, ParentNode>> {
         RwLockWriteGuard::try_map(self.parent_nodes.write(), |x| x.get_mut(id))
             .map_err(|_| anyhow!(DatabaseError::not_found(EntityKind::ParentNode, *id)))
     }

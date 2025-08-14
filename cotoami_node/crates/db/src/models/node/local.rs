@@ -60,7 +60,7 @@ pub struct LocalNode {
 impl LocalNode {
     pub fn image_max_size(&self) -> Option<u32> { self.image_max_size.map(|size| size as u32) }
 
-    pub fn as_principal(&self) -> NodeOwner {
+    pub fn as_principal(&self) -> NodeOwner<'_> {
         NodeOwner {
             node_id: &self.node_id,
             owner_password_hash: self.owner_password_hash.as_ref().map(Cow::from),
@@ -69,7 +69,7 @@ impl LocalNode {
         }
     }
 
-    pub(crate) fn to_update(&self) -> UpdateLocalNode { UpdateLocalNode::new(&self.node_id) }
+    pub(crate) fn to_update(&self) -> UpdateLocalNode<'_> { UpdateLocalNode::new(&self.node_id) }
 }
 
 /////////////////////////////////////////////////////////////////////////////

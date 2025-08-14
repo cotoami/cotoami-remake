@@ -60,7 +60,7 @@ impl HttpClient {
         self.headers.write().insert(name, value);
     }
 
-    pub(crate) fn read_headers(&self) -> RwLockReadGuard<HeaderMap> { self.headers.read() }
+    pub(crate) fn read_headers(&self) -> RwLockReadGuard<'_, HeaderMap> { self.headers.read() }
 
     fn url(&self, path: &str) -> Url {
         self.url_prefix
@@ -397,7 +397,7 @@ impl Service<Request> for HttpClient {
 }
 
 impl NodeService for HttpClient {
-    fn description(&self) -> Cow<str> {
+    fn description(&self) -> Cow<'_, str> {
         Cow::from(format!(
             "HTTP server-as-parent: {}",
             self.url_prefix().as_str()

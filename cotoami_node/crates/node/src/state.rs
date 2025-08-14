@@ -122,7 +122,7 @@ impl NodeState {
 
     pub fn config(&self) -> &Arc<RwLock<NodeConfig>> { &self.inner.config }
 
-    pub fn read_config(&self) -> RwLockReadGuard<NodeConfig> { self.inner.config.read() }
+    pub fn read_config(&self) -> RwLockReadGuard<'_, NodeConfig> { self.inner.config.read() }
 
     pub fn db(&self) -> &Arc<Database> { &self.inner.db }
 
@@ -232,7 +232,7 @@ impl NodeState {
         self.inner.local_server_config.read().clone()
     }
 
-    pub fn read_plugins(&self) -> RwLockReadGuard<PluginSystem> { self.inner.plugins.read() }
+    pub fn read_plugins(&self) -> RwLockReadGuard<'_, PluginSystem> { self.inner.plugins.read() }
 }
 
 impl Drop for State {

@@ -179,7 +179,7 @@ impl Service<Request> for NodeState {
 }
 
 impl NodeService for NodeState {
-    fn description(&self) -> Cow<str> { Cow::from("local-node") }
+    fn description(&self) -> Cow<'_, str> { Cow::from("local-node") }
 }
 
 /////////////////////////////////////////////////////////////////////////////

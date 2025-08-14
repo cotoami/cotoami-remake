@@ -59,9 +59,9 @@ impl Cotonoma {
 
     pub fn updated_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.updated_at) }
 
-    pub(crate) fn to_update(&self) -> UpdateCotonoma { UpdateCotonoma::new(&self.uuid) }
+    pub(crate) fn to_update(&self) -> UpdateCotonoma<'_> { UpdateCotonoma::new(&self.uuid) }
 
-    pub(crate) fn to_import(&self) -> NewCotonoma {
+    pub(crate) fn to_import(&self) -> NewCotonoma<'_> {
         NewCotonoma {
             uuid: self.uuid,
             node_id: &self.node_id,

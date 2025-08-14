@@ -49,11 +49,11 @@ impl Configs {
         Ok(())
     }
 
-    pub fn read(&self, identifier: &str) -> Option<MappedRwLockReadGuard<Config>> {
+    pub fn read(&self, identifier: &str) -> Option<MappedRwLockReadGuard<'_, Config>> {
         RwLockReadGuard::try_map(self.entries.read(), |entries| entries.get(identifier)).ok()
     }
 
-    pub fn write(&self, identifier: String) -> MappedRwLockWriteGuard<Config> {
+    pub fn write(&self, identifier: String) -> MappedRwLockWriteGuard<'_, Config> {
         RwLockWriteGuard::map(self.entries.write(), |entries| {
             entries.entry(identifier).or_insert(Config::default())
         })

@@ -77,7 +77,7 @@ pub trait NodeService:
     + Sync
     + DynClone
 {
-    fn description(&self) -> Cow<str>;
+    fn description(&self) -> Cow<'_, str>;
 }
 
 pub trait RemoteNodeService: NodeService {
