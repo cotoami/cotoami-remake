@@ -85,10 +85,9 @@ article.coto {
     position: relative;
     margin: 0;
     padding: 0;
+    padding-top: 20px; // empty header serves as padding-top of article.coto
     border-style: none;
     background-color: inherit;
-
-    min-height: 20px; // empty header serves as padding-top of article.coto
 
     address.author {
       margin-bottom: 1rem;
