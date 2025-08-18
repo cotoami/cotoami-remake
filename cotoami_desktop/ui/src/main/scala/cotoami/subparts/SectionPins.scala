@@ -102,12 +102,7 @@ object SectionPins {
     section(className := "pins header-and-body fill")(
       header(cotonoma, cotonomaCoto, layout),
       div(
-        className := optionalClasses(
-          Seq(
-            ("body", true),
-            (s"${layout.toString().toLowerCase()}-layout", true)
-          )
-        ),
+        className := s"body ${layout.toString().toLowerCase()}-layout",
         id := PinsBodyId
       )(
         ScrollArea(scrollableClassName = Some("scrollable-pins"))(
