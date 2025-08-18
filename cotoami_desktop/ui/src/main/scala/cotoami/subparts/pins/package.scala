@@ -4,7 +4,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import marubinotto.optionalClasses
-import marubinotto.components.{toolButton, ScrollArea}
+import marubinotto.components.toolButton
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Ito, Siblings}
@@ -14,9 +14,8 @@ package object pins {
 
   def elementIdOfPin(pin: Ito): String = s"pin-${pin.id.uuid}"
 
-  def sectionPinnedCotos(
-      pins: Siblings,
-      inColumns: Boolean
+  def sectionPinnedCotos(pins: Siblings)(
+      renderSubCotos: Siblings => ReactElement
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     PartsIto.sectionSiblings(pins, "pinned-cotos") { case (ito, coto, order) =>
       val subCotos = context.repo.childrenOf(coto.id)
@@ -69,24 +68,12 @@ package object pins {
             }
           )
         } else {
-          subCotos.map(sectionSubCotos(_, inColumns))
+          subCotos.map(renderSubCotos)
         }
       )
     }
 
-  private def sectionSubCotos(
-      subCotos: Siblings,
-      inColumn: Boolean
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    if (inColumn) {
-      ScrollArea(className = Some("scrollable-sub-cotos"))(
-        sectionSubCotos(subCotos)
-      )
-    } else {
-      sectionSubCotos(subCotos)
-    }
-
-  private def sectionSubCotos(
+  def sectionSubCotos(
       subCotos: Siblings
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     PartsIto.sectionSiblings(subCotos, "sub-cotos") { case (ito, coto, order) =>

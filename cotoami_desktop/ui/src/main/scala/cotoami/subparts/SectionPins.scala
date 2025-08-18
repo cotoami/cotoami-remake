@@ -102,7 +102,11 @@ object SectionPins {
       )(
         ScrollArea(scrollableClassName = Some("scrollable-pins"))(
           if (inColumns)
-            sectionPinnedCotos(pins, true)
+            sectionPinnedCotos(pins) { subCotos =>
+              ScrollArea(className = Some("scrollable-sub-cotos"))(
+                cotoami.subparts.pins.sectionSubCotos(subCotos)
+              )
+            }
           else
             DocumentView(
               cotonomaCoto = cotonomaCoto,

@@ -102,7 +102,7 @@ import cotoami.subparts.{PartsCoto, PartsIto, PartsNode, SectionPins}
         )(_)
       ),
       div(className := "pins-with-toc")(
-        sectionPinnedCotos(props.pins, false),
+        sectionPinnedCotos(props.pins)(sectionSubCotos),
         divToc(props.pins, tocRef)
       )
     )
