@@ -113,7 +113,7 @@ object SectionPins {
         ScrollArea(scrollableClassName = Some("scrollable-pins"))(
           layout match {
             case Layout.Document =>
-              DocumentView(
+              DocumentLayout(
                 cotonomaCoto = cotonomaCoto,
                 pins = pins,
                 viewportId = PinsBodyId,

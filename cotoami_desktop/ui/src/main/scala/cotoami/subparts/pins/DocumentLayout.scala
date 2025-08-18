@@ -17,7 +17,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Ito, Siblings}
 import cotoami.subparts.{PartsCoto, PartsIto, PartsNode, SectionPins}
 
-@react object DocumentView {
+@react object DocumentLayout {
   case class Props(
       cotonomaCoto: Coto,
       pins: Siblings,
@@ -92,7 +92,7 @@ import cotoami.subparts.{PartsCoto, PartsIto, PartsNode, SectionPins}
       Seq(props.pins.fingerprint)
     )
 
-    section(className := "document-view", ref := rootRef)(
+    section(className := "document-layout", ref := rootRef)(
       PartsCoto.sectionCotonomaContent(props.cotonomaCoto).map(
         div(
           className := "cotonoma-content",
