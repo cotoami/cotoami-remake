@@ -153,31 +153,47 @@ object SectionPins {
         )
       ),
       section(className := "layout-switch")(
-        toolButton(
-          symbol = "view_agenda",
-          tip = Some("Document"),
-          classes = optionalClasses(
-            Seq(
-              ("view-document", true),
-              ("selected", layout == Layout.Document)
-            )
-          ),
-          disabled = layout == Layout.Document,
-          onClick =
-            _ => dispatch(Msg.SwitchLayout(cotonoma.id, Layout.Document))
+        buttonLayout(
+          cotonoma.id,
+          Layout.Document,
+          layout,
+          "view_agenda",
+          "Document"
         ),
-        toolButton(
-          symbol = "view_column",
-          tip = Some("Columns"),
-          classes = optionalClasses(
-            Seq(
-              ("view-columns", true),
-              ("selected", layout == Layout.Columns)
-            )
-          ),
-          disabled = layout == Layout.Columns,
-          onClick = _ => dispatch(Msg.SwitchLayout(cotonoma.id, Layout.Columns))
+        buttonLayout(
+          cotonoma.id,
+          Layout.Columns,
+          layout,
+          "view_column",
+          "Columns"
+        ),
+        buttonLayout(
+          cotonoma.id,
+          Layout.Masonry,
+          layout,
+          "browse",
+          "Masonry"
         )
       )
+    )
+
+  private def buttonLayout(
+      cotonomaId: Id[Cotonoma],
+      layout: Layout,
+      currentLayout: Layout,
+      symbol: String,
+      tip: String
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+    toolButton(
+      symbol = symbol,
+      tip = Some(tip),
+      classes = optionalClasses(
+        Seq(
+          (s"layout-${layout.toString().toLowerCase()}", true),
+          ("selected", layout == currentLayout)
+        )
+      ),
+      disabled = layout == currentLayout,
+      onClick = _ => dispatch(Msg.SwitchLayout(cotonomaId, layout))
     )
 }
