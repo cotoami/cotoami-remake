@@ -124,7 +124,7 @@ object SectionPins {
               }
 
             case Layout.Masonry =>
-              div()()
+              MasonryLayout(pins)
           }
         )
       )
