@@ -20,6 +20,18 @@ import cotoami.subparts.pins._
 
 object SectionPins {
 
+  sealed trait Layout
+  object Layout {
+    case object Document extends Layout
+    case object Columns extends Layout
+    case object Masonry extends Layout
+
+    val variants = Seq(Document, Columns, Masonry)
+
+    def fromString(s: String): Option[Layout] =
+      variants.find(_.toString == s)
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   // Update
   /////////////////////////////////////////////////////////////////////////////
@@ -29,8 +41,7 @@ object SectionPins {
   }
 
   object Msg {
-    case class SwitchView(cotonoma: Id[Cotonoma], inColumns: Boolean)
-        extends Msg
+    case class SwitchLayout(cotonoma: Id[Cotonoma], layout: Layout) extends Msg
     case class ScrollToPin(pin: Ito) extends Msg
   }
 
@@ -39,9 +50,9 @@ object SectionPins {
   ): (Option[UiState], Cmd[AppMsg]) = {
     val default = (context.uiState, Cmd.none)
     msg match {
-      case Msg.SwitchView(cotonoma, inColumns) =>
+      case Msg.SwitchLayout(cotonoma, layout) =>
         context.uiState
-          .map(_.setPinsInColumns(cotonoma, inColumns).pipe { state =>
+          .map(_.setPinsLayout(cotonoma, layout).pipe { state =>
             default.copy(_1 = Some(state), _2 = state.save)
           })
           .getOrElse(default)
@@ -87,34 +98,39 @@ object SectionPins {
       currentCotonoma: (Cotonoma, Coto)
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val (cotonoma, cotonomaCoto) = currentCotonoma
-    val inColumns = uiState.arePinsInColumns(cotonoma.id)
+    val layout = uiState.pinsLayout(cotonoma.id).getOrElse(Layout.Document)
     section(className := "pins header-and-body fill")(
-      header(cotonoma, cotonomaCoto, inColumns),
+      header(cotonoma, cotonomaCoto, layout),
       div(
         className := optionalClasses(
           Seq(
             ("body", true),
-            ("document-view", !inColumns),
-            ("column-view", inColumns)
+            (s"${layout.toString().toLowerCase()}-layout", true)
           )
         ),
         id := PinsBodyId
       )(
         ScrollArea(scrollableClassName = Some("scrollable-pins"))(
-          if (inColumns)
-            sectionPinnedCotos(pins) { subCotos =>
-              ScrollArea(className = Some("scrollable-sub-cotos"))(
-                cotoami.subparts.pins.sectionSubCotos(subCotos)
+          layout match {
+            case Layout.Document =>
+              DocumentView(
+                cotonomaCoto = cotonomaCoto,
+                pins = pins,
+                viewportId = PinsBodyId,
+                context = context,
+                dispatch = dispatch
               )
-            }
-          else
-            DocumentView(
-              cotonomaCoto = cotonomaCoto,
-              pins = pins,
-              viewportId = PinsBodyId,
-              context = context,
-              dispatch = dispatch
-            )
+
+            case Layout.Columns =>
+              sectionPinnedCotos(pins) { subCotos =>
+                ScrollArea(className = Some("scrollable-sub-cotos"))(
+                  cotoami.subparts.pins.sectionSubCotos(subCotos)
+                )
+              }
+
+            case Layout.Masonry =>
+              div()()
+          }
         )
       )
     )
@@ -123,7 +139,7 @@ object SectionPins {
   private def header(
       cotonoma: Cotonoma,
       cotonomaCoto: Coto,
-      inColumns: Boolean
+      layout: Layout
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     slinky.web.html.header()(
       ToolbarCoto(cotonomaCoto),
@@ -136,18 +152,19 @@ object SectionPins {
           cotonoma.name
         )
       ),
-      section(className := "view-switch")(
+      section(className := "layout-switch")(
         toolButton(
           symbol = "view_agenda",
           tip = Some("Document"),
           classes = optionalClasses(
             Seq(
               ("view-document", true),
-              ("selected", !inColumns)
+              ("selected", layout == Layout.Document)
             )
           ),
-          disabled = !inColumns,
-          onClick = _ => dispatch(Msg.SwitchView(cotonoma.id, false))
+          disabled = layout == Layout.Document,
+          onClick =
+            _ => dispatch(Msg.SwitchLayout(cotonoma.id, Layout.Document))
         ),
         toolButton(
           symbol = "view_column",
@@ -155,11 +172,11 @@ object SectionPins {
           classes = optionalClasses(
             Seq(
               ("view-columns", true),
-              ("selected", inColumns)
+              ("selected", layout == Layout.Columns)
             )
           ),
-          disabled = inColumns,
-          onClick = _ => dispatch(Msg.SwitchView(cotonoma.id, true))
+          disabled = layout == Layout.Columns,
+          onClick = _ => dispatch(Msg.SwitchLayout(cotonoma.id, Layout.Columns))
         )
       )
     )

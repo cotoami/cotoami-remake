@@ -1,6 +1,5 @@
 package cotoami.models
 
-import scala.collection.immutable.HashSet
 import org.scalajs.dom
 import com.softwaremill.quicklens._
 import cats.effect.IO
@@ -13,7 +12,7 @@ import io.circe.parser._
 import marubinotto.fui.Cmd
 import cotoami.Msg
 import cotoami.models.Cotonoma
-import cotoami.subparts.PaneStock
+import cotoami.subparts.{PaneStock, SectionPins}
 
 case class UiState(
     theme: String = UiState.DefaultTheme,
@@ -22,7 +21,7 @@ case class UiState(
     ),
     paneSizes: Map[String, Int] = Map(),
     reverseMainPanes: Boolean = false,
-    pinsInColumns: HashSet[String] = HashSet.empty,
+    pinsLayout: Map[String, String] = Map.empty,
     mapVertical: Boolean = false,
     geomapOpened: Boolean = false
 ) {
@@ -39,16 +38,14 @@ case class UiState(
 
   def swapPane: UiState = copy(reverseMainPanes = !reverseMainPanes)
 
-  def setPinsInColumns(cotonoma: Id[Cotonoma], inColumns: Boolean): UiState =
-    this.modify(_.pinsInColumns).using(
-      if (inColumns)
-        _ + cotonoma.uuid
-      else
-        _ - cotonoma.uuid
-    )
+  def setPinsLayout(
+      cotonoma: Id[Cotonoma],
+      layout: SectionPins.Layout
+  ): UiState =
+    this.modify(_.pinsLayout).using(_ + (cotonoma.uuid -> layout.toString()))
 
-  def arePinsInColumns(cotonoma: Id[Cotonoma]): Boolean =
-    pinsInColumns.contains(cotonoma.uuid)
+  def pinsLayout(cotonoma: Id[Cotonoma]): Option[SectionPins.Layout] =
+    pinsLayout.get(cotonoma.uuid).flatMap(SectionPins.Layout.fromString)
 
   def setMapOrientation(vertical: Boolean): UiState =
     copy(mapVertical = vertical)
