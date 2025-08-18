@@ -7,7 +7,7 @@ import marubinotto.optionalClasses
 import marubinotto.components.toolButton
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, Ito, Siblings}
+import cotoami.models.{Coto, Ito, OrderContext, Siblings}
 import cotoami.repository.Root
 
 package object pins {
@@ -17,61 +17,71 @@ package object pins {
   def sectionPinnedCotos(pins: Siblings)(
       renderSubCotos: Siblings => ReactElement
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    PartsIto.sectionSiblings(pins, "pinned-cotos") { case (ito, coto, order) =>
-      val subCotos = context.repo.childrenOf(coto.id)
-      section(
-        className := optionalClasses(
-          Seq(
-            ("pin", true),
-            ("with-description", ito.description.isDefined)
-          )
-        ),
-        id := elementIdOfPin(ito)
-      )(
-        PartsCoto.article(
-          coto,
-          dispatch,
-          Seq(
-            ("pinned-coto", true),
-            ("has-children", context.repo.itos.anyFrom(coto.id))
-          )
-        )(
-          PartsIto.buttonPin(ito),
-          ToolbarCoto(coto),
-          ToolbarReorder(ito, order),
-          PartsCoto.ulParents(
-            context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
-            SectionTraversals.Msg.OpenTraversal(_).into
-          ),
-          div(className := "body")(
-            PartsCoto.divContent(coto)
-          ),
-          footer()(
-            PartsCoto.divAttributes(coto)
-          )
-        ),
-        if (coto.isCotonoma && !context.repo.alreadyLoadedGraphFrom(coto.id)) {
-          div(className := "itos-not-yet-loaded")(
-            if (context.repo.graphLoading.contains(coto.id)) {
-              div(
-                className := "loading",
-                aria - "busy" := "true"
-              )()
-            } else {
-              toolButton(
-                symbol = "more_horiz",
-                tip = Some(context.i18n.text.LoadItos),
-                tipPlacement = "bottom",
-                classes = "fetch-itos",
-                onClick = _ => dispatch(Root.Msg.FetchGraphFromCoto(coto.id))
-              )
-            }
-          )
-        } else {
-          subCotos.map(renderSubCotos)
-        }
-      )
+    PartsIto.sectionSiblings(pins, "pinned-cotos") { case (pin, coto, order) =>
+      sectionPinnedCoto(pin, coto, order)(renderSubCotos)
     }
+
+  def sectionPinnedCoto(
+      pin: Ito,
+      coto: Coto,
+      order: OrderContext
+  )(
+      renderSubCotos: Siblings => ReactElement
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+    val subCotos = context.repo.childrenOf(coto.id)
+    section(
+      className := optionalClasses(
+        Seq(
+          ("pin", true),
+          ("with-description", pin.description.isDefined)
+        )
+      ),
+      id := elementIdOfPin(pin)
+    )(
+      PartsCoto.article(
+        coto,
+        dispatch,
+        Seq(
+          ("pinned-coto", true),
+          ("has-children", context.repo.itos.anyFrom(coto.id))
+        )
+      )(
+        PartsIto.buttonPin(pin),
+        ToolbarCoto(coto),
+        ToolbarReorder(pin, order),
+        PartsCoto.ulParents(
+          context.repo.parentsOf(coto.id).filter(_._2.id != pin.id),
+          SectionTraversals.Msg.OpenTraversal(_).into
+        ),
+        div(className := "body")(
+          PartsCoto.divContent(coto)
+        ),
+        footer()(
+          PartsCoto.divAttributes(coto)
+        )
+      ),
+      if (coto.isCotonoma && !context.repo.alreadyLoadedGraphFrom(coto.id)) {
+        div(className := "itos-not-yet-loaded")(
+          if (context.repo.graphLoading.contains(coto.id)) {
+            div(
+              className := "loading",
+              aria - "busy" := "true"
+            )()
+          } else {
+            toolButton(
+              symbol = "more_horiz",
+              tip = Some(context.i18n.text.LoadItos),
+              tipPlacement = "bottom",
+              classes = "fetch-itos",
+              onClick = _ => dispatch(Root.Msg.FetchGraphFromCoto(coto.id))
+            )
+          }
+        )
+      } else {
+        subCotos.map(renderSubCotos)
+      }
+    )
+  }
 
   def sectionSubCotos(
       subCotos: Siblings
