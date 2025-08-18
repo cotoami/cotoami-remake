@@ -432,4 +432,19 @@ section.pins {
       }
     }
   }
+
+  div.masonry-layout {
+    section.pinned-cotos {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+
+    section.pin {
+      border: 1px solid var(--pane-border-color);
+    }
+
+    div.sub-coto div.content section.text-content * {
+      font-size: 90%;
+    }
+  }
 }

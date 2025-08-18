@@ -1,11 +1,14 @@
 package cotoami.subparts.pins
 
+import scala.scalajs.js.JSConverters._
+
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import marubinotto.optionalClasses
+import marubinotto.components.MasonicMasonry
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.Siblings
+import cotoami.models.{Coto, Ito, OrderContext, Siblings}
 import cotoami.subparts.PartsNode
 
 object MasonryLayout {
@@ -28,10 +31,26 @@ object MasonryLayout {
               div(className := "ito-node")(PartsNode.spanNode(node))
             }
           },
-          group.eachWithOrderContext.map { case (ito, coto, order) =>
-            sectionPinnedCoto(ito, coto, order)(sectionSubCotos)
-          }
+          MasonicMasonry(
+            items = group.eachWithOrderContext.map { case (ito, coto, order) =>
+              PinnedCoto(ito, coto, order).asInstanceOf[scala.Any]
+            }.toSeq.toJSArray,
+            render = props => {
+              val data = props.data.asInstanceOf[PinnedCoto]
+              sectionPinnedCoto(data.ito, data.coto, data.order)(
+                sectionSubCotos
+              )
+            },
+            columnWidth = Some(300),
+            columnGutter = Some(16)
+          )
         )
       }: _*
     )
+
+  case class PinnedCoto(
+      ito: Ito,
+      coto: Coto,
+      order: OrderContext
+  )
 }
