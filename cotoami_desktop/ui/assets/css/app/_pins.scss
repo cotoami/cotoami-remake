@@ -455,6 +455,10 @@ section.pins {
           right: 0;
         }
       }
+
+      section.reorder-toolbar {
+        display: none;
+      }
     }
   }
 }
