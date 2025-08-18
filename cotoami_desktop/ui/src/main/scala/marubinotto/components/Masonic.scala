@@ -12,7 +12,8 @@ import slinky.core.facade.ReactElement
       items: js.Array[scala.Any],
       render: RenderComponentProps => ReactElement,
       columnWidth: Option[Int] = Some(240),
-      columnGutter: Option[Int] = Some(0)
+      columnGutter: Option[Int] = Some(0),
+      rowGutter: Option[Int] = None
   )
   override val component = masonic.Masonry
 }

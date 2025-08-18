@@ -446,5 +446,15 @@ section.pins {
     div.sub-coto div.content section.text-content * {
       font-size: 90%;
     }
+
+    article.pinned-coto {
+      >div.ito-container {
+        &.with-description {
+          top: -15px;
+          left: -3px;
+          right: 0;
+        }
+      }
+    }
   }
 }

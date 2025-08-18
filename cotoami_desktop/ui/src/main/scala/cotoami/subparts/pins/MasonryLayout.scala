@@ -42,7 +42,8 @@ object MasonryLayout {
               )
             },
             columnWidth = Some(300),
-            columnGutter = Some(16)
+            columnGutter = Some(16),
+            rowGutter = Some(20)
           )
         )
       }: _*
