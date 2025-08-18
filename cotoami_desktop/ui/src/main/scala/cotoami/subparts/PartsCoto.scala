@@ -36,6 +36,13 @@ object PartsCoto {
         ) ++ classes
       ),
       onMouseEnter := (_ => dispatch(AppMsg.Highlight(coto.id))),
+      onMouseOver := (e => {
+        // onMouseLeave may fail to fire when the mouse is moved quickly.
+        // To mitigate this, we also make parent.onMouseOver trigger Unhighlight.
+        // We call stopPropagation here to ensure that hovering anywhere in the
+        // parent element, except this element itself, triggers Unhighlight.
+        e.stopPropagation()
+      }),
       onMouseLeave := (_ => dispatch(AppMsg.Unhighlight)),
       onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
     )(children: _*)
