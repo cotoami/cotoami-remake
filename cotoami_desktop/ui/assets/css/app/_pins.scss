@@ -40,8 +40,7 @@ section.pins {
       }
     }
 
-    section.view-switch {
-      width: var(--padding-horizontal);
+    section.layout-switch {
       padding-right: 20px;
 
       button {
@@ -178,7 +177,7 @@ section.pins {
     }
   }
 
-  div.document-view {
+  div.document-layout {
     --toc-width: 200px;
     container-type: inline-size;
     padding-left: 16px;
@@ -214,7 +213,7 @@ section.pins {
       }
     }
 
-    // Disable card-background-color in document-view
+    // Disable card-background-color in document-layout
     article.coto,
     div.itos-not-yet-loaded,
     section.sub-cotos {
@@ -356,7 +355,7 @@ section.pins {
     }
   }
 
-  .column-view {
+  .columns-layout {
     padding-right: 16px;
 
     .simplebar-content-wrapper {
