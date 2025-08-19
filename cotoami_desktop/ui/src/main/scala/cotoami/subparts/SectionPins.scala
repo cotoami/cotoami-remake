@@ -65,6 +65,8 @@ object SectionPins {
 
   object Msg {
     case class SwitchLayout(cotonoma: Id[Cotonoma], layout: Layout) extends Msg
+    case class SetMasonryColumnWidth(cotonoma: Id[Cotonoma], columnWidth: Int)
+        extends Msg
     case class ScrollToPin(pin: Ito) extends Msg
   }
 
@@ -77,6 +79,13 @@ object SectionPins {
         context.uiState
           .map(_.setPinsLayout(cotonoma, layout).pipe { state =>
             default.copy(_1 = Some(state), _2 = state.save)
+          })
+          .getOrElse(default)
+
+      case Msg.SetMasonryColumnWidth(cotonoma, columnWidth) =>
+        context.uiState
+          .map(_.setPinsLayout(cotonoma, Layout.Masonry(columnWidth)).pipe {
+            state => default.copy(_1 = Some(state), _2 = state.save)
           })
           .getOrElse(default)
 
