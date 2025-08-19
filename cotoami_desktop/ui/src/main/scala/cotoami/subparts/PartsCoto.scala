@@ -15,7 +15,7 @@ import marubinotto.libs.unified.{rehypePlugins, remarkPlugins}
 import marubinotto.components.{materialSymbol, toolButton, Markdown}
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, CotoContent, Cotonoma, Id, Ito, WaitingPost}
+import cotoami.models.{Coto, CotoContent, Cotonoma, Id, Ito, Node, WaitingPost}
 import cotoami.subparts.SectionGeomap
 
 object PartsCoto {
@@ -152,6 +152,22 @@ object PartsCoto {
       )
     )
 
+  def sectionCotonomaLabel(
+      cotonoma: Cotonoma
+  )(implicit context: Context): ReactElement =
+    sectionCotonomaLabel(cotonoma.name, cotonoma.nodeId)
+
+  def sectionCotonomaLabel(
+      cotonomaName: String,
+      nodeId: Id[Node]
+  )(implicit context: Context): ReactElement =
+    section(className := "cotonoma-label")(
+      span(className := "cotonoma")(
+        context.repo.nodes.get(nodeId).map(PartsNode.imgNode(_)),
+        cotonomaName
+      )
+    )
+
   def divContentPreview(
       coto: Coto,
       collapsibleContentOpened: Boolean = false
@@ -160,13 +176,7 @@ object PartsCoto {
       context.repo.cotonomas.asCotonoma(coto) match {
         case Some(cotonoma) =>
           Fragment(
-            section(className := "cotonoma-label")(
-              span(className := "cotonoma")(
-                context.repo.nodes.get(cotonoma.nodeId)
-                  .map(PartsNode.imgNode(_)),
-                cotonoma.name
-              )
-            ),
+            sectionCotonomaLabel(cotonoma),
             sectionCotonomaContent(coto)
           )
 
@@ -178,15 +188,9 @@ object PartsCoto {
       post: WaitingPost
   )(implicit context: Context): ReactElement =
     div(className := "content")(
-      post.nameAsCotonoma.map(name =>
-        section(className := "cotonoma-label")(
-          span(className := "cotonoma")(
-            context.repo.nodes.get(post.postedIn.nodeId)
-              .map(PartsNode.imgNode(_)),
-            name
-          )
-        )
-      ).getOrElse(sectionCotoContent(post, true))
+      post.nameAsCotonoma
+        .map(sectionCotonomaLabel(_, post.postedIn.nodeId))
+        .getOrElse(sectionCotoContent(post, true))
     )
 
   private def sectionCotoContent(
