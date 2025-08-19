@@ -439,6 +439,15 @@ section.pins {
       padding-right: 16px;
     }
 
+    div.column-width-slider {
+      margin-bottom: 10px;
+      text-align: right;
+
+      input {
+        width: 150px;
+      }
+    }
+
     section.pin {
       border: 1px solid var(--pane-border-color);
     }
