@@ -28,7 +28,8 @@ package object components {
       data - "tooltip" := tip,
       data - "placement" := tipPlacement,
       slinky.web.html.disabled := disabled,
-      slinky.web.html.onClick := onClick
+      slinky.web.html.onClick := onClick,
+      onMouseOver := (_.stopPropagation())
     )(
       materialSymbol(symbol)
     )
