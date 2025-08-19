@@ -61,9 +61,12 @@ object MasonryLayout {
                   sectionSubCotos
                 )
               },
-              columnWidth = Some(columnWidth),
+              columnWidth = columnWidth,
               columnGutter = Some(16),
-              rowGutter = Some(20)
+              rowGutter = Some(20),
+              // Disable the virtualization to ensure to display all the cotos
+              // https://github.com/jaredLunde/masonic/issues/120
+              overscanBy = Double.PositiveInfinity
             )
           )
         }: _*
