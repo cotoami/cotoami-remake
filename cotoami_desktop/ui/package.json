@@ -31,7 +31,8 @@
     "simplebar-react": "^3.3.0",
     "strip-markdown": "^6.0.0",
     "react-flip-toolkit": "^7.2.4",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "masonic": "^4.1.0"
   },
   "devDependencies": {
     "@scala-js/vite-plugin-scalajs": "^1.0.0",

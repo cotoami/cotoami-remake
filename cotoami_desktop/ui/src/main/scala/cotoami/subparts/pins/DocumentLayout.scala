@@ -14,12 +14,11 @@ import marubinotto.optionalClasses
 import marubinotto.components.ScrollArea
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, Ito, Siblings}
-import cotoami.subparts.{PartsCoto, PartsIto, PartsNode, SectionPins}
+import cotoami.models.{Ito, Siblings}
+import cotoami.subparts.{PartsIto, PartsNode, SectionPins}
 
 @react object DocumentLayout {
   case class Props(
-      cotonomaCoto: Coto,
       pins: Siblings,
       viewportId: String,
       context: Context,
@@ -93,14 +92,6 @@ import cotoami.subparts.{PartsCoto, PartsIto, PartsNode, SectionPins}
     )
 
     section(className := "document-layout", ref := rootRef)(
-      PartsCoto.sectionCotonomaContent(props.cotonomaCoto).map(
-        div(
-          className := "cotonoma-content",
-          onDoubleClick := (_ =>
-            props.dispatch(AppMsg.FocusCoto(props.cotonomaCoto.id))
-          )
-        )(_)
-      ),
       div(className := "pins-with-toc")(
         sectionPinnedCotos(props.pins)(sectionSubCotos),
         divToc(props.pins, tocRef)

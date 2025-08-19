@@ -106,10 +106,12 @@ object SectionPins {
         id := PinsBodyId
       )(
         ScrollArea(scrollableClassName = Some("scrollable-pins"))(
+          Option.when(layout == Layout.Document || layout == Layout.Masonry) {
+            sectionCotonomaContent(cotonomaCoto)
+          },
           layout match {
             case Layout.Document =>
               DocumentLayout(
-                cotonomaCoto = cotonomaCoto,
                 pins = pins,
                 viewportId = PinsBodyId,
                 context = context,
@@ -124,7 +126,7 @@ object SectionPins {
               }
 
             case Layout.Masonry =>
-              div()()
+              MasonryLayout(pins)
           }
         )
       )
@@ -170,6 +172,16 @@ object SectionPins {
           "Masonry"
         )
       )
+    )
+
+  private def sectionCotonomaContent(
+      cotonomaCoto: Coto
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+    PartsCoto.sectionCotonomaContent(cotonomaCoto).map(
+      div(
+        className := "cotonoma-content",
+        onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(cotonomaCoto.id)))
+      )(_)
     )
 
   private def buttonLayout(
