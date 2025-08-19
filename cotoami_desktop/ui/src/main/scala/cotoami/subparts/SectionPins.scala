@@ -20,16 +20,39 @@ import cotoami.subparts.pins._
 
 object SectionPins {
 
-  sealed trait Layout
+  sealed trait Layout {
+    def name: String
+    def displaysCotonomaContent: Boolean
+  }
+
   object Layout {
-    case object Document extends Layout
-    case object Columns extends Layout
-    case object Masonry extends Layout
+    case object Document extends Layout {
+      override def name = toString()
+      override def displaysCotonomaContent: Boolean = true
+    }
 
-    val variants = Seq(Document, Columns, Masonry)
+    case object Columns extends Layout {
+      override def name = toString()
+      override def displaysCotonomaContent: Boolean = false
+    }
 
-    def fromString(s: String): Option[Layout] =
-      variants.find(_.toString == s)
+    case class Masonry(columnWidth: Int = 300) extends Layout {
+      override def name = "Masonry"
+      override def toString(): String = s"$name:$columnWidth"
+      override def displaysCotonomaContent: Boolean = true
+    }
+
+    val variantNames =
+      Seq(Document.toString, Columns.toString, classOf[Masonry].getSimpleName)
+
+    def fromString(s: String): Option[Layout] = s match {
+      case "Document" => Some(Document)
+      case "Columns"  => Some(Columns)
+      case "Masonry"  => Some(Masonry())
+      case m if m.startsWith("Masonry:") =>
+        m.stripPrefix("Masonry:").toIntOption.map(Masonry(_))
+      case _ => None
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -102,11 +125,11 @@ object SectionPins {
     section(className := "pins header-and-body fill")(
       header(cotonoma, cotonomaCoto, layout),
       div(
-        className := s"body ${layout.toString().toLowerCase()}-layout",
+        className := s"body ${layout.name.toLowerCase()}-layout",
         id := PinsBodyId
       )(
         ScrollArea(scrollableClassName = Some("scrollable-pins"))(
-          Option.when(layout == Layout.Document || layout == Layout.Masonry) {
+          Option.when(layout.displaysCotonomaContent) {
             sectionCotonomaContent(cotonomaCoto)
           },
           layout match {
@@ -125,8 +148,8 @@ object SectionPins {
                 )
               }
 
-            case Layout.Masonry =>
-              MasonryLayout(pins)
+            case Layout.Masonry(columnWidth) =>
+              MasonryLayout(pins, columnWidth)
           }
         )
       )
@@ -166,7 +189,7 @@ object SectionPins {
         ),
         buttonLayout(
           cotonoma.id,
-          Layout.Masonry,
+          Layout.Masonry(),
           layout,
           "browse",
           "Masonry"
@@ -190,17 +213,19 @@ object SectionPins {
       currentLayout: Layout,
       symbol: String,
       tip: String
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement = {
+    val selected = layout.name == currentLayout.name
     toolButton(
       symbol = symbol,
       tip = Some(tip),
       classes = optionalClasses(
         Seq(
-          (s"layout-${layout.toString().toLowerCase()}", true),
-          ("selected", layout == currentLayout)
+          (s"layout-${layout.name.toLowerCase()}", true),
+          ("selected", selected)
         )
       ),
-      disabled = layout == currentLayout,
+      disabled = selected,
       onClick = _ => dispatch(Msg.SwitchLayout(cotonomaId, layout))
     )
+  }
 }

@@ -14,7 +14,8 @@ import cotoami.subparts.PartsNode
 object MasonryLayout {
 
   def apply(
-      pins: Siblings
+      pins: Siblings,
+      columnWidth: Int
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "pinned-cotos siblings")(
       pins.groupsInOrder.map { group =>
@@ -41,7 +42,7 @@ object MasonryLayout {
                 sectionSubCotos
               )
             },
-            columnWidth = Some(300),
+            columnWidth = Some(columnWidth),
             columnGutter = Some(16),
             rowGutter = Some(20)
           )
