@@ -157,14 +157,21 @@ object PartsCoto {
       collapsibleContentOpened: Boolean = false
   )(implicit context: Context): ReactElement =
     div(className := "content")(
-      context.repo.cotonomas.asCotonoma(coto).map(cotonoma =>
-        section(className := "cotonoma-label")(
-          span(className := "cotonoma")(
-            context.repo.nodes.get(cotonoma.nodeId).map(PartsNode.imgNode(_)),
-            cotonoma.name
+      context.repo.cotonomas.asCotonoma(coto) match {
+        case Some(cotonoma) =>
+          Fragment(
+            section(className := "cotonoma-label")(
+              span(className := "cotonoma")(
+                context.repo.nodes.get(cotonoma.nodeId)
+                  .map(PartsNode.imgNode(_)),
+                cotonoma.name
+              )
+            ),
+            sectionCotonomaContent(coto)
           )
-        )
-      ).getOrElse(sectionCotoContent(coto, collapsibleContentOpened))
+
+        case None => sectionCotoContent(coto, collapsibleContentOpened)
+      }
     )
 
   def divWaitingPostContent(
