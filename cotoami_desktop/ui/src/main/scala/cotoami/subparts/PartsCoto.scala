@@ -5,7 +5,7 @@ import scala.scalajs.js.Dynamic.{literal => jso}
 
 import slinky.core._
 import slinky.core.annotations.react
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
@@ -125,9 +125,14 @@ object PartsCoto {
       collapsibleContentOpened: Boolean = false
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "content")(
-      context.repo.cotonomas.asCotonoma(coto)
-        .map(sectionCotonomaLabel)
-        .getOrElse(sectionCotoContent(coto, collapsibleContentOpened))
+      context.repo.cotonomas.asCotonoma(coto) match {
+        case Some(cotonoma) =>
+          Fragment(
+            sectionCotonomaLabel(cotonoma),
+            sectionCotonomaContent(coto)
+          )
+        case None => sectionCotoContent(coto, collapsibleContentOpened)
+      }
     )
 
   def sectionCotonomaLabel(

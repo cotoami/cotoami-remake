@@ -78,10 +78,7 @@ object SectionCotoDetails {
         PartsCoto.addressAuthor(coto)
       ),
       div(className := "body")(
-        PartsCoto.divContent(coto, true),
-        Option.when(coto.isCotonoma) {
-          PartsCoto.sectionCotonomaContent(coto)
-        }
+        PartsCoto.divContent(coto, true)
       ),
       PartsCoto.articleFooter(coto)
     )
