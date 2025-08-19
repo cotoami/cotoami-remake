@@ -458,6 +458,8 @@ section.pins {
 
     article.pinned-coto {
       >div.ito-container {
+        padding-left: 0;
+
         &.with-description {
           top: -15px;
           left: -3px;
@@ -468,6 +470,22 @@ section.pins {
       section.reorder-toolbar {
         display: none;
       }
+
+      section.media-content {
+        margin-top: 1rem; // to avoid overlapping with the pin icon
+      }
+    }
+
+    div.ito-container {
+      padding-left: 8px;
+    }
+
+    section.media-content {
+      padding: 0;
+    }
+
+    article.sub-coto {
+      padding-left: 0;
     }
   }
 }
