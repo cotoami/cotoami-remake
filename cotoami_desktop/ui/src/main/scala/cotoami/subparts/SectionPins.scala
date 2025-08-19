@@ -158,7 +158,7 @@ object SectionPins {
               }
 
             case Layout.Masonry(columnWidth) =>
-              MasonryLayout(pins, columnWidth)
+              MasonryLayout(pins, cotonoma.id, columnWidth)
           }
         )
       )
