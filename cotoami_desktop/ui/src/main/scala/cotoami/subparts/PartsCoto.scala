@@ -128,14 +128,14 @@ object PartsCoto {
       context.repo.cotonomas.asCotonoma(coto) match {
         case Some(cotonoma) =>
           Fragment(
-            sectionCotonomaLabel(cotonoma),
+            sectionCotonomaLinkLabel(cotonoma),
             sectionCotonomaContent(coto)
           )
         case None => sectionCotoContent(coto, collapsibleContentOpened)
       }
     )
 
-  def sectionCotonomaLabel(
+  def sectionCotonomaLinkLabel(
       cotonoma: Cotonoma
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "cotonoma-label")(
