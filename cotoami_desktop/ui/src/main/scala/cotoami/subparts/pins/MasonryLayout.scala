@@ -35,7 +35,7 @@ object MasonryLayout {
           })
         )
       ),
-      div()(
+      div(className := "pinned-sibling-groups")(
         pins.groupsInOrder.map { group =>
           section(
             className := optionalClasses(

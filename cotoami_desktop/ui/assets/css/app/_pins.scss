@@ -80,6 +80,22 @@ section.pins {
   section.pinned-cotos {
     padding-top: 20px;
 
+    section.sibling-group.in-other-nodes {
+      div.ito-node {
+        img.node-icon {
+          width: 16px;
+          height: 16px;
+          border-radius: 4px;
+          margin-right: 5px;
+        }
+
+        .name {
+          vertical-align: -1px;
+          font-size: 15px;
+        }
+      }
+    }
+
     section.pin {
       background-color: var(--card-background-color);
 
@@ -240,18 +256,6 @@ section.pins {
           text-align: right;
           padding-right: 8px;
           padding-bottom: 8px;
-
-          img.node-icon {
-            width: 16px;
-            height: 16px;
-            border-radius: 4px;
-            margin-right: 5px;
-          }
-
-          .name {
-            vertical-align: middle;
-            font-size: 15px;
-          }
         }
       }
     }
@@ -284,7 +288,7 @@ section.pins {
             margin-bottom: 4px;
             padding: 8px 15px 10px 15px;
             background-color: var(--embedded-cotobackground-color);
-            border-radius: 0 18px 18px 0;
+            border-radius: 10px 10px 0 0;
 
             text-align: center;
             white-space: nowrap;
@@ -295,10 +299,11 @@ section.pins {
               width: 15px;
               height: 15px;
               border-radius: 3px;
+              margin-right: 5px;
             }
 
             .name {
-              vertical-align: middle;
+              vertical-align: baseline;
               font-size: 14px;
             }
           }
@@ -382,18 +387,6 @@ section.pins {
 
           div.ito-node {
             padding-bottom: 8px;
-
-            img.node-icon {
-              width: 16px;
-              height: 16px;
-              border-radius: 4px;
-              margin-right: 5px;
-            }
-
-            .name {
-              vertical-align: middle;
-              font-size: 15px;
-            }
           }
         }
 
@@ -437,6 +430,20 @@ section.pins {
     section.pinned-cotos {
       padding-left: 16px;
       padding-right: 16px;
+    }
+
+    div.pinned-sibling-groups>.sibling-group.in-other-nodes {
+      margin-top: 3rem;
+      padding: 10px;
+      padding-top: 8px;
+
+      background-color: var(--embedded-cotobackground-color);
+
+      div.ito-node {
+        text-align: right;
+        padding-right: 8px;
+        padding-bottom: 8px;
+      }
     }
 
     div.column-width-slider {
