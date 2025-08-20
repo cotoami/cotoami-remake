@@ -242,7 +242,7 @@ object ModalRepost {
           options = model.options,
           placeholder = Some("Repost to..."),
           inputValue = model.query,
-          value = model.dest.getOrElse(null),
+          value = model.dest,
           onInputChange =
             Some(input => dispatch(Msg.CotonomaQueryInput(input))),
           noOptionsMessage = Some(_ => NoOptionsMessage),

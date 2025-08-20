@@ -110,7 +110,7 @@ object ModalSubcoto {
       Model(
         sourceCotoId = sourceCotoId,
         targetCotonomas = targetCotonomas,
-        postTo = targetCotonomas.headOption,
+        postTo = targetCotonomas.find(!_.isDisabled),
         order = order
       )
     }
@@ -235,7 +235,7 @@ object ModalSubcoto {
           menuPlacement = "top",
           options = model.targetCotonomas,
           formatOptionLabel = Some(divSelectOption(_, context.repo)),
-          value = model.postTo.getOrElse(null),
+          value = model.postTo,
           onChange = Some(option => {
             dispatch(
               Msg.TargetCotonomaSelected(
