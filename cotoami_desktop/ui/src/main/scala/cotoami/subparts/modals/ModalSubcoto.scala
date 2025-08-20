@@ -7,14 +7,13 @@ import slinky.web.html._
 import marubinotto.optionalClasses
 import marubinotto.fui.Cmd
 import marubinotto.facade.Nullable
-import marubinotto.Validation
 import marubinotto.components.{materialSymbol, ScrollArea, Select}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Ito}
 import cotoami.repository.Root
 import cotoami.backend.{CotoBackend, ErrorJson}
-import cotoami.subparts.{Modal, PartsCoto, PartsIto, PartsNode}
+import cotoami.subparts.{Modal, PartsCoto, PartsNode}
 import cotoami.subparts.EditorCoto._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
@@ -28,23 +27,13 @@ object ModalSubcoto {
       sourceCotoId: Id[Coto],
       targetCotonomas: Seq[TargetCotonoma],
       postTo: Option[TargetCotonoma],
-      descriptionInput: String = "",
       order: Option[Int] = None,
       cotoForm: CotoForm.Model = CotoForm.Model(),
       posting: Boolean = false,
       error: Option[String] = None
   ) {
-    def description: Option[String] =
-      Option.when(!descriptionInput.isBlank())(descriptionInput.trim)
-
-    val validateDescription: Validation.Result =
-      description
-        .map(Ito.validateDescription)
-        .map(Validation.Result(_))
-        .getOrElse(Validation.Result.notYetValidated)
-
     def readyToPost: Boolean =
-      !posting && postTo.isDefined && cotoForm.hasValidContents && !validateDescription.failed
+      !posting && postTo.isDefined && cotoForm.hasValidContents
 
     def post: (Model, Cmd.One[AppMsg]) =
       (
@@ -135,7 +124,6 @@ object ModalSubcoto {
   }
 
   object Msg {
-    case class DescriptionInput(description: String) extends Msg
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
     case class TargetCotonomaSelected(dest: Option[TargetCotonoma]) extends Msg
     object Post extends Msg
@@ -147,9 +135,6 @@ object ModalSubcoto {
   ): (Model, Geomap, Cmd[AppMsg]) = {
     val default = (model, context.geomap, Cmd.none)
     msg match {
-      case Msg.DescriptionInput(description) =>
-        default.copy(_1 = model.copy(descriptionInput = description))
-
       case Msg.CotoFormMsg(submsg) => {
         val (form, geomap, subcmd) = CotoForm.update(submsg, model.cotoForm)
         default.copy(
@@ -208,7 +193,11 @@ object ModalSubcoto {
       section(className := "source")(
         sourceCoto.map(articleCoto)
       ),
-      sectionIto(model),
+      section(className := "ito")(
+        div(className := "ito-icon")(
+          materialSymbol("arrow_downward")
+        )
+      ),
       CotoForm(
         form = model.cotoForm,
         vertical = true,
@@ -230,20 +219,6 @@ object ModalSubcoto {
         ScrollArea()(
           PartsCoto.divContentPreview(coto)
         )
-      )
-    )
-
-  private def sectionIto(
-      model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    section(className := "ito")(
-      div(className := "ito-icon")(
-        materialSymbol("arrow_downward")
-      ),
-      PartsIto.inputDescription(
-        model.descriptionInput,
-        model.validateDescription,
-        value => dispatch(Msg.DescriptionInput(value))
       )
     )
 

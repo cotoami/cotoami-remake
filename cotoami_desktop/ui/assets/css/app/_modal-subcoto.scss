@@ -24,10 +24,18 @@ dialog.subcoto {
 
   section.source {
     article.coto {
+      header {
+        padding-top: 0;
+      }
+
       div.body div.scroll-area {
         max-height: 150px;
       }
     }
+  }
+
+  section.ito {
+    padding: 5px 0;
   }
 
   section.post {
