@@ -10,6 +10,8 @@ import slinky.core.facade.ReactElement
 @react object MasonicMasonry extends ExternalComponent {
   case class Props(
       items: js.Array[scala.Any],
+      itemKey: js.Function2[js.Any, Int, String] = (item, index) =>
+        index.toString(),
       render: RenderComponentProps => ReactElement,
       columnWidth: Int = 240,
       columnGutter: Option[Int] = Some(0),
