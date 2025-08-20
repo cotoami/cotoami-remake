@@ -74,8 +74,8 @@ object ModalSubcoto {
 
       // Target cotonoma choices:
       //   1. the current cotonoma
-      //   2. the cotonomas of the source coto
-      //   3. the source cotonoma (if the source coto is a cotonoma)
+      //   2. the cotonomas of the source coto (sourcCoto.postedInIds)
+      //   3. the source coto as a cotonoma
       var targetCotonomaIds =
         repo.cotonomas.getByCotoId(sourceCotoId) match {
           // If the source coto is a cotonoma, it's the first candidate.
@@ -102,7 +102,8 @@ object ModalSubcoto {
         targetCotonomaIds.map(repo.cotonomas.get).flatten.map(cotonoma =>
           new TargetCotonoma(
             cotonoma,
-            !repo.nodes.canEditItosIn(cotonoma.nodeId)
+            !repo.canPostCotoTo(cotonoma) ||
+              !repo.nodes.canEditItosIn(cotonoma.nodeId)
           )
         )
 

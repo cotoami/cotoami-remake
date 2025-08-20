@@ -374,6 +374,9 @@ case class Root(
       case None           => false
     }
 
+  def canPostCotoTo(cotonoma: Cotonoma): Boolean =
+    nodes.isWritable(cotonoma.nodeId)
+
   lazy val canPostCotonoma: Boolean =
     currentCotonoma match {
       case Some(cotonoma) => nodes.canPostCotonoma(cotonoma.nodeId)
