@@ -993,7 +993,7 @@ dependencies = [
 
 [[package]]
 name = "cotoami_db"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -1030,7 +1030,7 @@ dependencies = [
 
 [[package]]
 name = "cotoami_desktop"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -1065,7 +1065,7 @@ dependencies = [
 
 [[package]]
 name = "cotoami_node"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "anyhow",
  "async-stream",
