@@ -7,7 +7,7 @@ import org.scalajs.dom.HTMLElement
 
 import cats.effect.IO
 
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import marubinotto.optionalClasses
@@ -139,7 +139,10 @@ object SectionPins {
       )(
         ScrollArea(scrollableClassName = Some("scrollable-pins"))(
           Option.when(layout.displaysCotonomaContent) {
-            sectionCotonomaContent(cotonomaCoto)
+            Fragment(
+              sectionSuperCotonomas(cotonomaCoto),
+              sectionCotonomaContent(cotonomaCoto)
+            )
           },
           layout match {
             case Layout.Document =>
@@ -203,6 +206,38 @@ object SectionPins {
           "browse",
           "Masonry"
         )
+      )
+    )
+
+  private def sectionSuperCotonomas(
+      cotonomaCoto: Coto
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+    val (ofFocused, ofPinned) = context.repo.superCotonomasOfStock
+    Option.when(!ofFocused.isEmpty || !ofPinned.isEmpty) {
+      section(className := "super-cotonomas")(
+        ul(className := "of-focused")(
+          ofFocused.map(liSuperCotonoma): _*
+        ),
+        ul(className := "of-pinned")(
+          ofPinned.map(liSuperCotonoma): _*
+        )
+      )
+    }
+  }
+
+  private def liSuperCotonoma(
+      cotonoma: Cotonoma
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    li(key := cotonoma.id.uuid)(
+      a(
+        className := "cotonoma",
+        title := cotonoma.name,
+        onClick := (e => {
+          e.preventDefault()
+          dispatch(AppMsg.FocusCotonoma(cotonoma))
+        })
+      )(
+        PartsCotonoma.cotonomaLabel(cotonoma)
       )
     )
 

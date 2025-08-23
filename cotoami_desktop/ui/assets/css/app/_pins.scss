@@ -2,7 +2,7 @@
 
 section.pins {
   >header {
-    --padding-horizontal: 100px;
+    --padding-horizontal: 140px;
 
     position: relative;
     display: flex;
@@ -74,6 +74,76 @@ section.pins {
   &:hover {
     >header section.coto-toolbar {
       display: inline-block;
+    }
+  }
+
+  section.super-cotonomas {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    text-align: center;
+
+    a.cotonoma {
+      color: var(--default-text-color);
+
+      &:hover {
+        text-decoration: none;
+      }
+    }
+
+    li {
+      display: inline;
+      margin-left: 4px;
+      margin-right: 4px;
+      border: 1px solid var(--pane-border-color);
+      border-radius: 12px;
+      padding: 4px 10px;
+      white-space: nowrap;
+    }
+
+    ul.of-focused {
+      li {
+        line-height: 30px;
+      }
+
+      img.node-icon {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        vertical-align: text-bottom;
+        margin-right: 5px;
+      }
+    }
+
+    ul.of-pinned {
+      margin-top: 8px;
+      font-size: 0.8rem;
+
+      li {
+        line-height: 28px;
+      }
+
+      img.node-icon {
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
+        vertical-align: text-bottom;
+        margin-right: 5px;
+      }
+    }
+  }
+
+  div.cotonoma-content {
+    max-width: var(--max-article-width);
+    margin-top: 8px;
+    margin-bottom: 1rem;
+    margin-right: auto;
+    margin-left: auto;
+    padding: 1rem;
+    background-color: var(--card-background-color);
+
+    section.media-content {
+      margin-bottom: 8px;
+      text-align: center;
     }
   }
 
@@ -190,21 +260,6 @@ section.pins {
           }
         }
       }
-    }
-  }
-
-  div.cotonoma-content {
-    max-width: var(--max-article-width);
-    margin-top: 8px;
-    margin-bottom: 1rem;
-    margin-right: auto;
-    margin-left: auto;
-    padding: 1rem;
-    background-color: var(--card-background-color);
-
-    section.media-content {
-      margin-bottom: 8px;
-      text-align: center;
     }
   }
 

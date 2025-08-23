@@ -68,6 +68,9 @@ case class Siblings(
   def groupsInOrder: Seq[SiblingGroup] =
     (mainGroup +: otherGroups.map(Some.apply) :+ selfGroup).flatten
 
+  def cotos: Seq[Coto] =
+    groups.values.map(_.siblings.map(_._2)).flatten.toSeq
+
   def fingerprint: String = groupsInOrder.map(_.fingerprint).mkString
 }
 

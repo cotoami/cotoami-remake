@@ -2,7 +2,7 @@ package cotoami.subparts
 
 import scala.util.chaining._
 
-import slinky.core.facade.{Fragment, ReactElement}
+import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import marubinotto.optionalClasses
@@ -137,7 +137,7 @@ object NavCotonomas {
       currentNode: Node
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val repo = context.repo
-    val recentCotonomas = context.repo.recentCotonomasWithoutRoot
+    val recentCotonomas = context.repo.recentCotonomas
     nav(className := "cotonomas header-and-body fill")(
       header()(
         if (repo.cotonomas.focused.isEmpty) {
@@ -182,7 +182,7 @@ object NavCotonomas {
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val repo = context.repo
-    val superCotonomas = repo.superCotonomasWithoutRoot
+    val superCotonomas = repo.superCotonomas
     section(className := "current")(
       h2()(context.i18n.text.NavCotonomas_current),
       ul(
@@ -198,7 +198,7 @@ object NavCotonomas {
           )
         ),
         li(key := "current", className := "current-cotonoma cotonoma focused")(
-          cotonomaLabel(focusedCotonoma)
+          PartsCotonoma.cotonomaLabel(focusedCotonoma)
         ),
         li(key := "sub")(
           ul(className := "sub-cotonomas")(
@@ -248,7 +248,7 @@ object NavCotonomas {
       key := cotonoma.id.uuid
     )(
       if (context.repo.cotonomas.isFocusing(cotonoma.id)) {
-        span(className := "cotonoma")(cotonomaLabel(cotonoma))
+        span(className := "cotonoma")(PartsCotonoma.cotonomaLabel(cotonoma))
       } else {
         a(
           className := optionalClasses(
@@ -265,16 +265,8 @@ object NavCotonomas {
             dispatch(AppMsg.FocusCotonoma(cotonoma))
           })
         )(
-          cotonomaLabel(cotonoma)
+          PartsCotonoma.cotonomaLabel(cotonoma)
         )
       }
-    )
-
-  private def cotonomaLabel(
-      cotonoma: Cotonoma
-  )(implicit context: Context): ReactElement =
-    Fragment(
-      context.repo.nodes.get(cotonoma.nodeId).map(PartsNode.imgNode(_)),
-      cotonoma.name
     )
 }

@@ -172,12 +172,33 @@ case class Root(
   def rootOf(nodeId: Id[Node]): Option[(Cotonoma, Coto)] =
     nodes.get(nodeId).flatMap(_.rootCotonomaId.flatMap(cotonoma))
 
-  val recentCotonomasWithoutRoot: Seq[Cotonoma] = {
-    cotonomas.recent.filter(c => Some(c.id) != nodes.currentNodeRootCotonomaId)
-  }
+  val recentCotonomas: Seq[Cotonoma] =
+    cotonomas.recent.filterNot(c =>
+      nodes.currentNodeRootCotonomaId.contains(c.id)
+    )
 
-  val superCotonomasWithoutRoot: Seq[Cotonoma] = {
-    cotonomas.supers.filter(c => Some(c.id) != nodes.currentNodeRootCotonomaId)
+  val superCotonomas: Seq[Cotonoma] =
+    cotonomas.supers.filterNot(c =>
+      nodes.currentNodeRootCotonomaId.contains(c.id)
+    )
+
+  val superCotonomasOfStock: (Seq[Cotonoma], Seq[Cotonoma]) = {
+    (
+      // of the focused cotonoma
+      superCotonomas,
+      // of the pinned cotos
+      pinnedCotos
+        .map(_.postedInIds)
+        .flatten
+        .distinct
+        .filterNot(id =>
+          nodes.currentNodeRootCotonomaId.contains(id) ||
+            currentCotonomaId.contains(id) ||
+            superCotonomas.map(_.id).contains(id)
+        )
+        .map(cotonomas.get)
+        .flatten
+    )
   }
 
   def touchCotonoma(
@@ -227,6 +248,9 @@ case class Root(
 
   lazy val pins: Option[Siblings] =
     currentCotonoma.flatMap(cotonoma => childrenOf(cotonoma.cotoId))
+
+  lazy val pinnedCotos: Seq[Coto] =
+    pins.map(_.cotos).getOrElse(Seq.empty)
 
   def childrenOf(parentId: Id[Coto]): Option[Siblings] =
     (cotos.get(parentId), nodes.selfId) match {
