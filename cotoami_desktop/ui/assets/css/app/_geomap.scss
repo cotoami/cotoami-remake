@@ -14,6 +14,12 @@ section.geomap {
     }
   }
 
+  div.marker-root {
+    &.focused-marker div.geomap-marker {
+      background-color: #ffa500;
+    }
+  }
+
   div.geomap-marker {
     width: var(--marker-size);
     height: var(--marker-size);
@@ -22,10 +28,6 @@ section.geomap {
 
     &:hover {
       cursor: pointer;
-    }
-
-    &.focused-marker {
-      background-color: #ffa500;
     }
 
     div.icons {
