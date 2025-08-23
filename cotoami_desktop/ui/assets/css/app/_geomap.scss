@@ -192,6 +192,10 @@ section.geomap {
     &:has(> .cotonoma-marker.in-focus) {
       z-index: 4;
     }
+
+    &.focused-marker {
+      z-index: 5 !important;
+    }
   }
 
   // make space for pane-toggle
