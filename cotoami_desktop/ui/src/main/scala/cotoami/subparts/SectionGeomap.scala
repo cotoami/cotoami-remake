@@ -23,7 +23,7 @@ object SectionGeomap {
   // Model
   /////////////////////////////////////////////////////////////////////////////
 
-  val MoveToZoom = 14
+  val MoveToZoom = 15
 
   case class Model(
       // Center/Zoom

@@ -287,7 +287,6 @@ import marubinotto.libs.geomap.pmtiles
           _.flyTo(new FlyToOptions {
             override val center = props.center
             override val zoom = props.zoom
-            override val duration = 2000
           })
         )
       },
