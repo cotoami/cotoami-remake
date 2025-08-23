@@ -133,6 +133,9 @@ case class Root(
 
   def beingPinned(cotoId: Id[Coto]): Boolean = pinning.contains(cotoId)
 
+  def focusedCotoId: Option[Id[Coto]] =
+    cotos.focusedId.orElse(currentCotonoma.map(_.cotoId))
+
   /////////////////////////////////////////////////////////////////////////////
   // Cotonomas
   /////////////////////////////////////////////////////////////////////////////
