@@ -23,6 +23,8 @@ object SectionGeomap {
   // Model
   /////////////////////////////////////////////////////////////////////////////
 
+  val MoveToZoom = 14
+
   case class Model(
       // Center/Zoom
       center: Option[Geolocation] = None,
@@ -66,7 +68,7 @@ object SectionGeomap {
     def moveTo(location: Geolocation): Model =
       copy(
         center = Some(location),
-        zoom = Some(13)
+        zoom = Some(MoveToZoom)
       ).applyCenterZoom
 
     def moveTo(centerOrBounds: CenterOrBounds): Model =
