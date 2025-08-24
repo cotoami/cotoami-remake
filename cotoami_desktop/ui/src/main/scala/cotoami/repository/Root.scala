@@ -443,10 +443,11 @@ case class Root(
   def setCotonomaDetails(details: CotonomaDetails): Root =
     this
       .modify(_.nodes).using(nodes =>
-        if (nodes.focusedId.map(_ != details.cotonoma.nodeId).getOrElse(false))
-          nodes.focus(Some(details.cotonoma.nodeId))
-        else
-          nodes
+        nodes.focusedId match {
+          case Some(focusedNode) if focusedNode != details.cotonoma.nodeId =>
+            nodes.focus(Some(details.cotonoma.nodeId))
+          case _ => nodes
+        }
       )
       .modify(_.cotonomas).using(_.setCotonomaDetails(details))
       .modify(_.cotos).using(_.put(details.coto))
