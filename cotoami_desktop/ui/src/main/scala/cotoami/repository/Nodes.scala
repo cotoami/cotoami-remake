@@ -199,6 +199,9 @@ case class Nodes(
   def isOwnerOf(nodeId: Id[Node]): Boolean =
     childPrivilegesTo(nodeId).map(_.asOwner).getOrElse(false)
 
+  def rootCotonomaId(nodeId: Id[Node]): Option[Id[Cotonoma]] =
+    get(nodeId).flatMap(_.rootCotonomaId)
+
   def currentNodeRootCotonomaId: Option[Id[Cotonoma]] =
     current.flatMap(_.rootCotonomaId)
 

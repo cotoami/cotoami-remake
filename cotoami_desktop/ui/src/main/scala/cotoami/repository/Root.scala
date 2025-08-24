@@ -188,12 +188,15 @@ case class Root(
       superCotonomas,
       // of the pinned cotos
       pinnedCotos
-        .map(_.postedInIds)
+        .map { coto =>
+          // exclude the root cotonoma of the containing node
+          val root = nodes.rootCotonomaId(coto.nodeId)
+          coto.postedInIds.filterNot(id => root.contains(id))
+        }
         .flatten
         .distinct
         .filterNot(id =>
-          nodes.currentNodeRootCotonomaId.contains(id) ||
-            currentCotonomaId.contains(id) ||
+          currentCotonomaId.contains(id) ||
             superCotonomas.map(_.id).contains(id)
         )
         .map(cotonomas.get)
