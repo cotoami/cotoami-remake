@@ -226,6 +226,9 @@ case class Root(
         recent
     }
 
+  def refreshCurrentCotonoma: Cmd.One[AppMsg] =
+    currentCotonomaId.map(Root.fetchCotonomaDetails).getOrElse(Cmd.none)
+
   def fetchRecentCotonomas(
       pageIndex: Double
   ): Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =

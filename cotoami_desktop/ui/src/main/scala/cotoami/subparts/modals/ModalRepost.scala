@@ -207,7 +207,12 @@ object ModalRepost {
             query = "",
             options = Seq.empty,
             dest = None
-          )
+          ),
+          _3 =
+            if (context.repo.isCurrentCotonoma(original.id))
+              context.repo.refreshCurrentCotonoma
+            else
+              Cmd.none
         )
 
       case Msg.Reposted(Left(e)) =>
