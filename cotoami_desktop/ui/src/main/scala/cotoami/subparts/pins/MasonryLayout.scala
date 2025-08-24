@@ -27,7 +27,7 @@ object MasonryLayout {
       cotonomaId: Id[Cotonoma],
       columnWidth: Int
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    section(className := "pinned-cotos siblings")(
+    section(className := "pinned-cotos siblings masonry-layout")(
       div(className := "column-width-slider")(
         input(
           `type` := "range",
