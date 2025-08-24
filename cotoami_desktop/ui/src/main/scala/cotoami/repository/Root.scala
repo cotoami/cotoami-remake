@@ -530,6 +530,9 @@ object Root {
     case class UpdatedCotonomaFetched(
         result: Either[ErrorJson, (Cotonoma, Coto)]
     ) extends Msg
+    case class CotonomaDetailsFetched(
+        result: Either[ErrorJson, CotonomaDetails]
+    ) extends Msg
     case class CotoDetailsFetched(result: Either[ErrorJson, CotoDetails])
         extends Msg
     case class ItoFetched(result: Either[ErrorJson, Ito]) extends Msg
@@ -587,6 +590,12 @@ object Root {
 
       case Msg.UpdatedCotonomaFetched(Left(e)) =>
         (model, cotoami.error("Couldn't fetch a cotonoma.", e))
+
+      case Msg.CotonomaDetailsFetched(Right(details)) =>
+        (model.setCotonomaDetails(details), Cmd.none)
+
+      case Msg.CotonomaDetailsFetched(Left(e)) =>
+        (model, cotoami.error("Couldn't fetch cotonoma details.", e))
 
       case Msg.CotoDetailsFetched(Right(details)) =>
         (model.importFrom(details), Cmd.none)
@@ -708,6 +717,9 @@ object Root {
 
   def fetchUpdateCotonoma(id: Id[Cotonoma]): Cmd.One[AppMsg] =
     CotonomaBackend.fetch(id).map(Root.Msg.UpdatedCotonomaFetched(_).into)
+
+  def fetchCotonomaDetails(id: Id[Cotonoma]): Cmd.One[AppMsg] =
+    CotonomaDetails.fetch(id).map(Msg.CotonomaDetailsFetched(_).into)
 
   def fetchCotoDetails(id: Id[Coto]): Cmd.One[AppMsg] =
     CotoDetails.fetch(id).map(Msg.CotoDetailsFetched(_).into)
