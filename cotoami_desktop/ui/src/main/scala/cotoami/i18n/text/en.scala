@@ -29,7 +29,6 @@ object en extends Text {
 
   val DeleteCotonoma = "Delete Cotonoma"
   val WriteSubcoto = "Write Sub-coto"
-  val LoadItos = "Load Itos"
   val OpenMap = "Open Map"
   val CloseMap = "Close Map"
   val SwapPane = "Swap Pane"

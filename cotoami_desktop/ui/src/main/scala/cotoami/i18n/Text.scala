@@ -26,7 +26,6 @@ trait Text {
 
   val DeleteCotonoma: String
   val WriteSubcoto: String
-  val LoadItos: String
   val OpenMap: String
   val CloseMap: String
   val SwapPane: String
