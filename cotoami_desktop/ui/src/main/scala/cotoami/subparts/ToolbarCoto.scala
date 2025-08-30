@@ -127,7 +127,7 @@ object ToolbarCoto {
           }
         )
       },
-      Option.when(repo.itos.anyFrom(coto.id)) {
+      Option.when(repo.itos.anyIto(coto.id)) {
         toolButton(
           classes = "traverse",
           symbol = "graph_1",

@@ -40,7 +40,7 @@ case class Itos(
     }.getOrElse(this)
 
   def connected(from: Id[Coto], to: Id[Coto]): Boolean =
-    byTarget.get(to).map(
+    byTarget.to(to).map(
       _.exists(get(_).map(_.sourceCotoId == from).getOrElse(false))
     ).getOrElse(false)
 
@@ -58,8 +58,12 @@ case class Itos(
     bySource.hasDuplicateOrder(ito)
 
   def to(cotoId: Id[Coto]): Seq[Ito] =
-    byTarget.get(cotoId).map(_.map(get).flatten.toSeq)
+    byTarget.to(cotoId).map(_.map(get).flatten.toSeq)
       .getOrElse(Seq.empty)
+
+  def anyTo(cotoId: Id[Coto]): Boolean = byTarget.anyTo(cotoId)
+
+  def anyIto(cotoId: Id[Coto]): Boolean = anyFrom(cotoId) || anyTo(cotoId)
 
   def onCotoDelete(cotoId: Id[Coto]): Itos = {
     val itosFrom = from(cotoId).values.flatten
@@ -161,7 +165,10 @@ object Itos {
   // Ito IDs grouped by target coto IDs.
   case class ByTarget(map: Map[Id[Coto], HashSet[Id[Ito]]] = Map.empty)
       extends AnyVal {
-    def get(id: Id[Coto]): Option[HashSet[Id[Ito]]] = map.get(id)
+    def to(id: Id[Coto]): Option[HashSet[Id[Ito]]] = map.get(id)
+
+    def anyTo(id: Id[Coto]): Boolean =
+      to(id).map(!_.isEmpty).getOrElse(false)
 
     def put(ito: Ito): ByTarget =
       this.modify(_.map.atOrElse(ito.targetCotoId, HashSet(ito.id))).using(
