@@ -190,21 +190,21 @@ object SectionPins {
           Layout.Document,
           layout,
           "view_agenda",
-          "Document"
+          context.i18n.text.SectionPins_layout_document
         ),
         buttonLayout(
           cotonoma.id,
           Layout.Columns,
           layout,
           "view_column",
-          "Columns"
+          context.i18n.text.SectionPins_layout_columns
         ),
         buttonLayout(
           cotonoma.id,
           Layout.Masonry(),
           layout,
           "browse",
-          "Masonry"
+          context.i18n.text.SectionPins_layout_masonry
         )
       )
     )
