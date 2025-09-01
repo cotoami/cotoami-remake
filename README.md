@@ -1,6 +1,6 @@
 <p align="center"><img src="docs/images/logo.png" alt="Cotoami Remake" height="250px"></p>
 
-Cotoami (言編み・言網) is a concept-based note-taking application that helps your personal and team knowledge naturally grow into an encyclopedia-like knowledge base. It's a standalone, cross-platform application with offline support.
+Cotoami (言編み・言網) is a note-taking application that helps your personal and team knowledge naturally evolve into a concept-based knowledge base. It's a standalone, cross-platform application with offline support.
 
 Cotoami structures your input as “Cotos” (units of information) and connects them using “Itos” (links between Cotos). By building these connections, you transform isolated notes into an interconnected web of knowledge.
 
