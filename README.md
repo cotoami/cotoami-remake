@@ -10,6 +10,10 @@ One unique feature is the built-in world map, allowing you to associate any info
 
 While Cotoami is designed for private, offline use, it also offers a powerful collaboration option: you can connect to other users' databases online and cooperatively edit knowledge as a team.
 
+The best way to understand what Cotoami is might be to experience it firsthand. The article below explains installation, basic usage, and the key concepts in an easy-to-follow way:
+
+* [Getting Started with Cotoami, a Personal Knowledge Base for Discovery](https://cotoami.app/getting-started-with-cotoami-a-personal-knowledge-base-for-discovery-f96c125d754c)
+
 > Cotoami Remake is a complete reimagining of the original [Cotoami](https://github.com/cotoami/cotoami) web application, rebuilt from the ground up as a standalone desktop app for individual users who want a simple, private note-taking experience. While it retains the core concept of its predecessor, Cotoami Remake introduces entirely new features—such as integration with a built-in map and the ability to connect databases across users—making it a fundamentally different application.
 
 <p align="center"><img src="docs/images/main.png" alt="Main screenshot"></p>
