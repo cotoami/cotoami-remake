@@ -69,6 +69,9 @@ trait Text {
   val NavCotonomas_current: String
   val NavCotonomas_recent: String
 
+  val PaneStock_map_dockLeft: String
+  val PaneStock_map_dockTop: String
+
   val SectionPins_layout_document: String
   val SectionPins_layout_columns: String
   val SectionPins_layout_masonry: String

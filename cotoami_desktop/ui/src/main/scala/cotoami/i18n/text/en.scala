@@ -80,6 +80,9 @@ object en extends Text {
   val NavCotonomas_current = "Current"
   val NavCotonomas_recent = "Recent"
 
+  val PaneStock_map_dockLeft = "Dock Left"
+  val PaneStock_map_dockTop = "Dock Top"
+
   val SectionPins_layout_document = "Document"
   val SectionPins_layout_columns = "Columns"
   val SectionPins_layout_masonry = "Masonry"

@@ -101,7 +101,7 @@ object PaneStock {
   def apply(
       model: Model,
       uiState: UiState
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(id := PaneId, className := "stock fill")(
       if (uiState.mapOpened)
         SplitPane(
@@ -126,6 +126,7 @@ object PaneStock {
     )
 
   private def divMap(model: Model, uiState: UiState)(implicit
+      context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     div(className := "map fill")(
@@ -141,9 +142,9 @@ object PaneStock {
             "splitscreen_left",
         tip =
           if (uiState.mapVertical)
-            Some("Switch to Top Pane")
+            Some(context.i18n.text.PaneStock_map_dockTop)
           else
-            Some("Switch to Left Pane"),
+            Some(context.i18n.text.PaneStock_map_dockLeft),
         onClick = _ => dispatch(Msg.SetMapOrientation(!uiState.mapVertical))
       ),
       button(
