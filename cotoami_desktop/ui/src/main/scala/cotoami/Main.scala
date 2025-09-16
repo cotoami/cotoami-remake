@@ -14,7 +14,6 @@ import cats.effect.IO
 import cats.syntax.all._
 
 import marubinotto.fui._
-import marubinotto.facade.Nullable
 import marubinotto.libs.tauri
 
 import cotoami.backend._
@@ -108,20 +107,10 @@ object Main {
             (model.error("Failed to display the app window.", e), Cmd.none)
         }
 
-      case Msg.SystemInfoFetched(Right(systemInfo)) =>
+      case Msg.SystemInfoFetched(Right(info)) =>
         (
-          model
-            .modify(_.systemInfo).setTo(Some(systemInfo))
-            .modify(_.time).using(
-              _.setZoneOffsetInSeconds(systemInfo.time_zone_offset_in_sec)
-            )
-            .modify(
-              _.modalStack.modals.each.when[Modal.Welcome].model.baseFolder
-            ).setTo(Nullable.toOption(systemInfo.app_data_dir).getOrElse(""))
-            .info(
-              "SystemInfo fetched.",
-              Some(SystemInfoJson.debug(systemInfo))
-            ),
+          model.setSystemInfo(info)
+            .info("SystemInfo fetched.", Some(SystemInfoJson.debug(info))),
           Cmd.none
         )
 

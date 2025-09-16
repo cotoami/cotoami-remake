@@ -13,6 +13,7 @@ trait SystemInfoJson extends js.Object {
   val app_config_dir: Nullable[String] = js.native
   val app_data_dir: Nullable[String] = js.native
   val time_zone_offset_in_sec: Int = js.native
+  val locale: Nullable[String] = js.native
   val os: String = js.native
   val recent_databases: js.Array[DatabaseOpenedJson] = js.native
 }
@@ -29,6 +30,7 @@ object SystemInfoJson {
     s ++= s", app_config_dir: ${info.app_config_dir}"
     s ++= s", app_data_dir: ${info.app_data_dir}"
     s ++= s", time_zone_offset_in_sec: ${info.time_zone_offset_in_sec}"
+    s ++= s", locale: ${info.locale}"
     s ++= s", os: ${info.os}"
     s ++= s", recent_databases: ${recent_databases}"
     s.result()

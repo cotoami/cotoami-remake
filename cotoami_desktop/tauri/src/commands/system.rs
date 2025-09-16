@@ -1,6 +1,7 @@
 use std::{env, path::PathBuf};
 
 use chrono::Local;
+use sys_locale::get_locale;
 use tauri::{Manager, Result};
 
 use crate::{commands::db::recent::RecentDatabases, message::MessageSink};
@@ -12,6 +13,7 @@ pub struct SystemInfo {
     app_config_dir: Option<String>,
     app_data_dir: Option<String>,
     time_zone_offset_in_sec: i32,
+    locale: Option<String>,
     os: String,
     recent_databases: RecentDatabases,
 }
@@ -41,6 +43,7 @@ pub fn system_info(app_handle: tauri::AppHandle) -> SystemInfo {
         app_config_dir,
         app_data_dir,
         time_zone_offset_in_sec,
+        locale: get_locale(),
         os: env::consts::OS.into(),
         recent_databases,
     }

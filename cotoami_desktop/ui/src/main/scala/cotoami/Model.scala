@@ -4,6 +4,7 @@ import scala.scalajs.js
 import org.scalajs.dom.URL
 import com.softwaremill.quicklens._
 
+import marubinotto.facade.Nullable
 import cotoami.backend._
 import cotoami.repository._
 import cotoami.models._
@@ -50,6 +51,21 @@ case class Model(
     geomap: SectionGeomap.Model = SectionGeomap.Model()
 ) extends Context {
   def path: String = url.pathname + url.search + url.hash
+
+  def setSystemInfo(info: SystemInfoJson): Model =
+    this
+      .modify(_.systemInfo).setTo(Some(info))
+      .modify(_.time).using(
+        _.setZoneOffsetInSeconds(info.time_zone_offset_in_sec)
+      )
+      .modify(_.i18n).using(i18n =>
+        Nullable.toOption(info.locale)
+          .map(I18n.fromLanguageTag)
+          .getOrElse(i18n)
+      )
+      .modify(
+        _.modalStack.modals.each.when[Modal.Welcome].model.baseFolder
+      ).setTo(Nullable.toOption(info.app_data_dir).getOrElse(""))
 
   def isHighlighting(cotoId: Id[Coto]): Boolean = highlight == Some(cotoId)
   def clearHighlight: Model = copy(highlight = None)
