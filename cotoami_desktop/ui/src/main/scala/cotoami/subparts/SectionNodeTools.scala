@@ -89,11 +89,10 @@ object SectionNodeTools {
             ),
             span(className := "separator")()
           )
-
         }),
         toolButton(
           symbol = "settings",
-          tip = Some("Node Settings"),
+          tip = Some(context.i18n.text.Node_settings),
           classes = "settings",
           onClick =
             _ => dispatch(Modal.Msg.OpenModal(Modal.NodeProfile(node.id)))

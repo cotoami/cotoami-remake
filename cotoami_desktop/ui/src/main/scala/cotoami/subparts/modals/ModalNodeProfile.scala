@@ -43,7 +43,9 @@ object ModalNodeProfile {
       if (isSelf)
         Some(
           context.i18n.text.ModalNodeProfile_selfNode ++
-            Option.when(!isLocal)(" (switched)").getOrElse("")
+            Option.when(!isLocal)(
+              s" (${context.i18n.text.ModalNodeProfile_switched})"
+            ).getOrElse("")
         )
       else if (asServer.isDefined)
         Some(context.i18n.text.Server)
@@ -272,7 +274,7 @@ object ModalNodeProfile {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     field(
-      name = "Description",
+      name = context.i18n.text.ModalNodeProfile_description,
       classes = "node-description"
     )(
       section(className := "node-description")(

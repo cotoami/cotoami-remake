@@ -25,6 +25,8 @@ package object subparts {
   def sectionClientNodesCount(
       clientCount: Double,
       nodes: Nodes
+  )(implicit
+      context: Context
   ): ReactElement = {
     val connecting = nodes.activeClients.count
     section(className := "client-nodes-count")(
@@ -33,12 +35,12 @@ package object subparts {
           code(className := "connecting")(
             nodes.activeClients.count
           ),
-          "connecting",
+          context.i18n.text.ModalClients_connecting,
           span(className := "separator")("/")
         )
       },
       code(className := "nodes")(clientCount),
-      "nodes"
+      context.i18n.text.ModalClients_nodes
     )
   }
 }

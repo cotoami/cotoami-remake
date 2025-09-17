@@ -8,13 +8,13 @@ trait Text {
   val Ito: String
   val Pin: String
   val Node: String
-  val NodeRoot: String
   val Owner: String
   val Server: String
   val Client: String
 
   val Id: String
   val Name: String
+  val Password: String
 
   val OK: String
   val Cancel: String
@@ -22,7 +22,15 @@ trait Text {
   val Insert: String
   val Save: String
   val Edit: String
+  val Preview: String
   val Delete: String
+  val Repost: String
+  val Promote: String
+  val Traverse: String
+  val Select: String
+  val Deselect: String
+  val Register: String
+  val Back: String
 
   val DeleteCotonoma: String
   val WriteSubcoto: String
@@ -32,10 +40,14 @@ trait Text {
   val LightMode: String
   val DarkMode: String
   val MarkAllAsRead: String
+  val PostTo: String
 
   def Coto_inRemoteNode(nodeName: String): String
 
+  val Node_id: String
+  val Node_root: String
   val Node_notYetConnected: String
+  val Node_settings: String
 
   val Ito_description_placeholder: String
   val Ito_editPin: String
@@ -134,9 +146,12 @@ trait Text {
   val ModalNewIto_clearSelection: String
   val ModalNewIto_connect: String
 
+  val ModalSubcoto_title: String
+
   val ModalNodeProfile_title: String
   val ModalNodeProfile_selfNode: String
   val ModalNodeProfile_switched: String
+  val ModalNodeProfile_description: String
 
   val FieldImageMaxSize: String
   val FieldImageMaxSize_placeholder: String
@@ -148,13 +163,13 @@ trait Text {
   val SelfNodeServer_clientNodes: String
   val SelfNodeServer_anonymousRead: String
   val SelfNodeServer_confirmEnableAnonymousRead: String
+  val SelfNodeServer_anonymousConnections: String
 
   val AsServer_title: String
   val AsServer_url: String
   val AsServer_connection: String
 
   val AsClient_title: String
-  val AsClient_password: String
   val AsClient_resetPassword: String
   val AsClient_confirmResetPassword: String
   val AsClient_lastLogin: String
@@ -163,22 +178,46 @@ trait Text {
   val AsChild_title: String
 
   val ModalIncorporate_title: String
+  val ModalIncorporate_nodeUrl: String
+  val ModalIncorporate_incorporate: String
 
+  val ModalPromote_title: String
   val ModalPromote_confirm: String
 
   val ModalEditIto_disconnect: String
   val ModalEditIto_confirmDisconnect: String
 
+  val ModalRepost_title: String
+  val ModalRepost_repostTo: String
+  val ModalRepost_typeCotonomaName: String
+  val ModalRepost_newCotonoma: String
+  val ModalRepost_root: String
+  val ModalRepost_alreadyPostedIn: String
+
   val ModalClients_title: String
   val ModalClients_add: String
+  val ModalClients_connecting: String
+  val ModalClients_nodes: String
+  val ModalClients_noClients: String
+  val ModalClients_column_name: String
+  val ModalClients_column_lastLogin: String
+  val ModalClients_column_status: String
+  val ModalClients_column_enabled: String
 
   val ModalNewClient_title: String
   val ModalNewClient_registered: String
 
   val ModalSwitchNode_title: String
+  val ModalSwitchNode_switch: String
   val ModalSwitchNode_message: String
+
+  val ModalNodeIcon_title: String
+  val ModalNodeIcon_inputImage: ReactElement
 }
 
 object Text {
-  def inLang(lang: String): Text = text.en
+  def inLang(lang: String): Text = lang match {
+    case "ja" => text.ja
+    case _    => text.en
+  }
 }

@@ -1,6 +1,6 @@
 package cotoami.i18n.text
 
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.i18n.Text
@@ -11,13 +11,13 @@ object en extends Text {
   val Ito = "Ito"
   val Pin = "Pin"
   val Node = "Node"
-  val NodeRoot = "Node Root"
   val Owner = "Owner"
   val Server = "Server"
   val Client = "Client"
 
   val Id = "ID"
   val Name = "Name"
+  val Password = "Password"
 
   val OK = "OK"
   val Cancel = "Cancel"
@@ -25,7 +25,15 @@ object en extends Text {
   val Insert = "Insert"
   val Save = "Save"
   val Edit = "Edit"
+  val Preview = "Preview"
   val Delete = "Delete"
+  val Repost = "Repost"
+  val Promote = "Promote"
+  val Traverse = "Traverse"
+  val Select = "Select"
+  val Deselect = "Deselect"
+  val Register = "Register"
+  val Back = "Back"
 
   val DeleteCotonoma = "Delete Cotonoma"
   val WriteSubcoto = "Write Sub-coto"
@@ -35,10 +43,14 @@ object en extends Text {
   val LightMode = "Light Mode"
   val DarkMode = "Dark Mode"
   val MarkAllAsRead = "Mark All as Read"
+  val PostTo = "Post to"
 
   def Coto_inRemoteNode(nodeName: String) = s"In ${nodeName} (remote)"
 
+  val Node_id = "Node ID"
+  val Node_root = "Node Root"
   val Node_notYetConnected = "Not yet connected"
+  val Node_settings = "Node Settings"
 
   val Ito_description_placeholder = "Ito description (optional)"
   val Ito_editPin = "Edit Pin"
@@ -171,9 +183,12 @@ object en extends Text {
   val ModalNewIto_clearSelection = "Clear selection on connect"
   val ModalNewIto_connect = "Connect"
 
+  val ModalSubcoto_title = "New Sub-coto"
+
   val ModalNodeProfile_title = "Node Profile"
   val ModalNodeProfile_selfNode = "You"
   val ModalNodeProfile_switched = "switched"
+  val ModalNodeProfile_description = "Description"
 
   val FieldImageMaxSize = "Image Resize Threshold (pixels)"
   val FieldImageMaxSize_placeholder = "No resizing"
@@ -189,13 +204,13 @@ object en extends Text {
     Are you sure you want to allow anonymous read-only access
     (anyone who knows this node's URL can view your content)?
     """
+  val SelfNodeServer_anonymousConnections = "Active connections"
 
   val AsServer_title = "As Server"
   val AsServer_url = "URL"
   val AsServer_connection = "Connection"
 
   val AsClient_title = "As Client"
-  val AsClient_password = "Password"
   val AsClient_resetPassword = "Reset Client Password"
   val AsClient_confirmResetPassword =
     """
@@ -208,7 +223,10 @@ object en extends Text {
   val AsChild_title = "As Child"
 
   val ModalIncorporate_title = "Incorporate Remote Node"
+  val ModalIncorporate_nodeUrl = "Node URL"
+  val ModalIncorporate_incorporate = "Incorporate"
 
+  val ModalPromote_title = "Promote to Cotonoma"
   val ModalPromote_confirm =
     """
     Are you sure you want to promote this coto to a cotonoma?
@@ -219,8 +237,22 @@ object en extends Text {
   val ModalEditIto_confirmDisconnect =
     "Are you sure you want to delete this ito?"
 
+  val ModalRepost_title = "Repost"
+  val ModalRepost_repostTo = "Repost to"
+  val ModalRepost_typeCotonomaName = "Type cotonoma name"
+  val ModalRepost_newCotonoma = "New cotonoma"
+  val ModalRepost_root = "root"
+  val ModalRepost_alreadyPostedIn = "Already posted in"
+
   val ModalClients_title = "Client Nodes"
   val ModalClients_add = "Add Client"
+  val ModalClients_connecting = "connecting"
+  val ModalClients_nodes = "nodes"
+  val ModalClients_noClients = "No client nodes registered yet."
+  val ModalClients_column_name = "Name"
+  val ModalClients_column_lastLogin = "Last Login"
+  val ModalClients_column_status = "Status"
+  val ModalClients_column_enabled = "Enabled"
 
   val ModalNewClient_title = "New Client"
   val ModalNewClient_registered =
@@ -230,8 +262,16 @@ object en extends Text {
     """
 
   val ModalSwitchNode_title = "Switch Node"
+  val ModalSwitchNode_switch = "Switch"
   val ModalSwitchNode_message =
     """
     You are about to switch the node to operate on as below.
     """
+
+  val ModalNodeIcon_title = "Change Node Icon"
+  val ModalNodeIcon_inputImage = Fragment(
+    "Drag and drop an image file here,",
+    br(),
+    "or click to select one"
+  )
 }

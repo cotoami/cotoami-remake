@@ -7,7 +7,7 @@ import org.scalajs.dom
 
 import slinky.core._
 import slinky.core.annotations.react
-import slinky.core.facade.{Fragment, ReactElement}
+import slinky.core.facade.ReactElement
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
@@ -115,23 +115,19 @@ object ModalNodeIcon {
 
   def apply(
       model: Model
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Modal.view(
       dialogClasses = "image",
       closeButton = Some((classOf[Modal.NodeIcon], dispatch)),
       error = model.error
     )(
-      "Change Node Icon"
+      context.i18n.text.ModalNodeIcon_title
     )(
       model.sourceImage.map(image => divPreview(image._2, model))
         .getOrElse(
           InputFile(
             accept = js.Dictionary("image/*" -> js.Array[String]()),
-            message = Fragment(
-              "Drag and drop an image file here,",
-              br(),
-              "or click to select one"
-            ),
+            message = context.i18n.text.ModalNodeIcon_inputImage,
             onSelect = file => dispatch(Msg.ImageInput(file))
           )
         )

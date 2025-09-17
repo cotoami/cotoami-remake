@@ -187,12 +187,12 @@ object ModalIncorporate {
 
   private def sectionConnect(
       model: Model
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "connect")(
       form()(
         // Node URL
         fieldInput(
-          name = "Node URL",
+          name = context.i18n.text.ModalIncorporate_nodeUrl,
           classes = "field-node-url",
           inputPlaceholder = Some("https://example.com"),
           inputValue = model.nodeUrlInput,
@@ -202,7 +202,7 @@ object ModalIncorporate {
 
         // Password
         fieldInput(
-          name = "Password",
+          name = context.i18n.text.Password,
           inputType = "password",
           inputValue = model.passwordInput,
           onInput = (input => dispatch(Msg.PasswordInput(input)))
@@ -244,13 +244,13 @@ object ModalIncorporate {
           `type` := "button",
           className := "cancel contrast outline",
           onClick := (e => dispatch(Msg.Cancel))
-        )("Cancel"),
+        )(context.i18n.text.Cancel),
         button(
           `type` := "button",
           disabled := !model.readyToIncorporate,
           aria - "busy" := model.incorporating.toString(),
           onClick := (e => dispatch(Msg.Incorporate))
-        )("Incorporate")
+        )(context.i18n.text.ModalIncorporate_incorporate)
       )
     )
 
@@ -258,7 +258,7 @@ object ModalIncorporate {
       nodeSession: ClientNodeSession
   )(implicit context: Context): ReactElement =
     section(className := "child-privileges")(
-      "Your privileges: ",
+      s"${context.i18n.text.ChildPrivileges}: ",
       span(className := "privileges")(
         PartsNode.childPrivileges(nodeSession.childPrivileges).mkString(", ")
       )

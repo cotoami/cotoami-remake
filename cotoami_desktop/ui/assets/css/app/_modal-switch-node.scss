@@ -1,4 +1,8 @@
 dialog.switch-node {
+  &>article {
+    min-width: 400px;
+  }
+
   section.preview {
     span.node {
       font-weight: 700;

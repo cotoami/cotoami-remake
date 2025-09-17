@@ -189,7 +189,7 @@ object ModalSubcoto {
         materialSymbol("subdirectory_arrow_right", "arrow"),
         materialSymbol(Coto.IconName)
       ),
-      "New sub-coto"
+      context.i18n.text.ModalSubcoto_title
     )(
       section(className := "source")(
         sourceCoto.map(articleCoto)
@@ -228,10 +228,10 @@ object ModalSubcoto {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "post")(
       div(className := "post-to")(
-        div(className := "label")("Post to:"),
+        div(className := "label")(s"${context.i18n.text.PostTo}:"),
         Select(
           className = "cotonoma-select",
-          placeholder = Some("Post to..."),
+          placeholder = Some(s"${context.i18n.text.PostTo}..."),
           menuPlacement = "top",
           options = model.targetCotonomas,
           formatOptionLabel = Some(divSelectOption(_, context.repo)),
@@ -246,8 +246,9 @@ object ModalSubcoto {
         ),
         div(className := "space")()
       ),
-      CotoForm.buttonPreview(model.cotoForm)(submsg =>
-        dispatch(Msg.CotoFormMsg(submsg))
+      CotoForm.buttonPreview(model.cotoForm)(
+        context,
+        submsg => dispatch(Msg.CotoFormMsg(submsg))
       ),
       button(
         className := "post",
@@ -255,7 +256,10 @@ object ModalSubcoto {
         disabled := !model.readyToPost,
         aria - "busy" := model.posting.toString(),
         onClick := (_ => dispatch(Msg.Post))
-      )("Post", span(className := "shortcut-help")("(Ctrl + Enter)"))
+      )(
+        context.i18n.text.Post,
+        span(className := "shortcut-help")("(Ctrl + Enter)")
+      )
     )
 
   private def divSelectOption(

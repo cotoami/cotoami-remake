@@ -357,16 +357,16 @@ object EditorCoto {
 
     def buttonPreview(
         form: Model
-    )(implicit dispatch: Msg => Unit): ReactElement =
+    )(implicit context: Context, dispatch: Msg => Unit): ReactElement =
       button(
         className := "preview contrast outline",
         disabled := !form.validate.validated,
         onClick := (_ => dispatch(Msg.TogglePreview))
       )(
         if (form.inPreview)
-          "Edit"
+          context.i18n.text.Edit
         else
-          "Preview"
+          context.i18n.text.Preview
       )
 
     def sectionMediaPreview(

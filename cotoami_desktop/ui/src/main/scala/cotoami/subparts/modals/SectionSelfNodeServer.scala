@@ -211,7 +211,7 @@ object SectionSelfNodeServer {
       Option.when(anonymousReadEnabled) {
         model.selfNodeServer.map(_.anonymousConnections).map(count =>
           span(className := "anonymous-connections")(
-            s"(Active connections: ${count})"
+            s"(${context.i18n.text.SelfNodeServer_anonymousConnections}: ${count})"
           )
         )
       }

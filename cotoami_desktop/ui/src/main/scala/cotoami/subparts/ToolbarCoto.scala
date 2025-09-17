@@ -80,7 +80,7 @@ object ToolbarCoto {
         toolButton(
           classes = "repost-coto",
           symbol = Coto.RepostIconName,
-          tip = Some("Repost"),
+          tip = Some(context.i18n.text.Repost),
           tipPlacement = "left",
           onClick = e => {
             e.stopPropagation()
@@ -95,7 +95,7 @@ object ToolbarCoto {
         toolButton(
           classes = "promote-to-cotonoma",
           symbol = "drive_folder_upload",
-          tip = Some("Promote to Cotonoma"),
+          tip = Some(context.i18n.text.Promote),
           tipPlacement = "left",
           onClick = e => {
             e.stopPropagation()
@@ -131,7 +131,7 @@ object ToolbarCoto {
         toolButton(
           classes = "traverse",
           symbol = "graph_1",
-          tip = Some("Traverse"),
+          tip = Some(context.i18n.text.Traverse),
           tipPlacement = "left",
           onClick = e => {
             e.stopPropagation()
@@ -144,7 +144,7 @@ object ToolbarCoto {
           toolButton(
             classes = "select-check-box",
             symbol = "check_box",
-            tip = Some("Deselect"),
+            tip = Some(context.i18n.text.Deselect),
             tipPlacement = "left",
             onClick = e => {
               e.stopPropagation()
@@ -155,7 +155,7 @@ object ToolbarCoto {
           toolButton(
             classes = "select-check-box",
             symbol = "check_box_outline_blank",
-            tip = Some("Select"),
+            tip = Some(context.i18n.text.Select),
             tipPlacement = "left",
             onClick = e => {
               e.stopPropagation()

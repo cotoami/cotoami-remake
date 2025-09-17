@@ -177,7 +177,7 @@ object ModalNewClient {
       form()(
         // Node ID
         fieldInput(
-          name = "Node ID",
+          name = context.i18n.text.Node_id,
           classes = "node-id",
           inputPlaceholder = Some("00000000-0000-0000-0000-000000000000"),
           inputValue = model.nodeId,
@@ -227,7 +227,7 @@ object ModalNewClient {
                 e.preventDefault()
                 dispatch(Msg.Register)
               })
-            )("Register")
+            )(context.i18n.text.Register)
         )
       )
     )

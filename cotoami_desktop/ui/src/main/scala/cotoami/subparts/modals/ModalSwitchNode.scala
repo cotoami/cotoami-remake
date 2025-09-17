@@ -107,13 +107,13 @@ object ModalSwitchNode {
           `type` := "button",
           className := "cancel contrast outline",
           onClick := (_ => dispatch(Modal.Msg.CloseModal(modalType)))
-        )("Cancel"),
+        )(context.i18n.text.Cancel),
         button(
           `type` := "button",
           disabled := !model.readyToSwitch,
           aria - "busy" := model.switching.toString(),
           onClick := (e => dispatch(Msg.Switch))
-        )("Switch")
+        )(context.i18n.text.ModalSwitchNode_switch)
       )
     )
   }

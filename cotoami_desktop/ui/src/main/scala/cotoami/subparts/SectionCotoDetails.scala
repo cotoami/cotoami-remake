@@ -20,15 +20,13 @@ object SectionCotoDetails {
         toolButton(
           classes = "back",
           symbol = "arrow_back",
-          tip = Some("Back"),
+          tip = Some(context.i18n.text.Back),
           tipPlacement = "right",
           onClick = _ => dom.window.history.back()
         ),
         toolButton(
           classes = "close",
           symbol = "close",
-          tip = Some("Close"),
-          tipPlacement = "left",
           onClick = _ => dispatch(AppMsg.UnfocusCoto)
         )
       ),

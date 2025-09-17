@@ -148,7 +148,7 @@ object ModalPromote {
         materialSymbol("arrow_right_alt"),
         materialSymbol(Cotonoma.IconName)
       ),
-      "Promote to Cotonoma"
+      context.i18n.text.ModalPromote_title
     )(
       div(className := "cotonoma-form")(
         CotonomaForm.inputName(model = model.cotonomaForm)(
@@ -162,8 +162,9 @@ object ModalPromote {
         submsg => dispatch(Msg.CotoFormMsg(submsg))
       ),
       div(className := "buttons")(
-        CotoForm.buttonPreview(model.cotoForm)(submsg =>
-          dispatch(Msg.CotoFormMsg(submsg))
+        CotoForm.buttonPreview(model.cotoForm)(
+          context,
+          submsg => dispatch(Msg.CotoFormMsg(submsg))
         ),
         button(
           className := "promote",
@@ -179,7 +180,7 @@ object ModalPromote {
               )
             )
           )
-        )("Promote")
+        )(context.i18n.text.Promote)
       )
     )
 

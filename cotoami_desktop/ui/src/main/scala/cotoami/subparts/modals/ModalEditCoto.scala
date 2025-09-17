@@ -201,7 +201,7 @@ object ModalEditCoto {
         if (context.repo.isNodeRoot(model.original.id))
           Fragment(
             Modal.spanTitleIcon(Node.IconName),
-            context.i18n.text.NodeRoot
+            context.i18n.text.Node_root
           )
         else
           Fragment(
@@ -228,8 +228,9 @@ object ModalEditCoto {
         onCtrlEnter = Some(() => dispatch(Msg.Save))
       )(context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
       div(className := "buttons")(
-        CotoForm.buttonPreview(model.cotoForm)(submsg =>
-          dispatch(Msg.CotoFormMsg(submsg))
+        CotoForm.buttonPreview(model.cotoForm)(
+          context,
+          submsg => dispatch(Msg.CotoFormMsg(submsg))
         ),
         button(
           className := "save",

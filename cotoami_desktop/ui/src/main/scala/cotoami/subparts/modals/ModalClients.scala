@@ -156,15 +156,23 @@ object ModalClients {
     model.clients(context.repo.nodes) match {
       case Seq() =>
         section(className := "client-nodes empty")(
-          "No client nodes registered yet."
+          context.i18n.text.ModalClients_noClients
         )
       case clients =>
         section(className := "client-nodes table")(
           div(className := "table-header")(
-            div(className := "column name")("Name"),
-            div(className := "column last-login")("Last Login"),
-            div(className := "column status")("Status"),
-            div(className := "column enabled")("Enabled"),
+            div(className := "column name")(
+              context.i18n.text.ModalClients_column_name
+            ),
+            div(className := "column last-login")(
+              context.i18n.text.ModalClients_column_lastLogin
+            ),
+            div(className := "column status")(
+              context.i18n.text.ModalClients_column_status
+            ),
+            div(className := "column enabled")(
+              context.i18n.text.ModalClients_column_enabled
+            ),
             div(className := "column settings")()
           ),
           div(className := "table-body")(
@@ -215,7 +223,7 @@ object ModalClients {
         if (client.active.isDefined)
           span(
             className := "status connected",
-            data - "tooltip" := "Connected",
+            data - "tooltip" := context.i18n.text.Connection_connected,
             data - "placement" := "right"
           )(
             materialSymbol("link")
@@ -223,7 +231,7 @@ object ModalClients {
         else
           span(
             className := "status disconnected",
-            data - "tooltip" := "Disconnected",
+            data - "tooltip" := context.i18n.text.Connection_disconnected,
             data - "placement" := "right"
           )(
             materialSymbol("do_not_disturb_on")

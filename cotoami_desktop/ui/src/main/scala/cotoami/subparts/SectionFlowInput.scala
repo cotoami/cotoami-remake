@@ -459,8 +459,9 @@ object SectionFlowInput {
               )
             },
             div(className := "buttons")(
-              CotoForm.buttonPreview(form)(submsg =>
-                dispatch(Msg.CotoFormMsg(submsg))
+              CotoForm.buttonPreview(form)(
+                context,
+                submsg => dispatch(Msg.CotoFormMsg(submsg))
               ),
               buttonPost(model, currentCotonoma)
             )

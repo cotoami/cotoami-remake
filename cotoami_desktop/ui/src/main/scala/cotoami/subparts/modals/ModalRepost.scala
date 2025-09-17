@@ -239,18 +239,19 @@ object ModalRepost {
       error = model.error
     )(
       Modal.spanTitleIcon(Coto.RepostIconName),
-      "Repost"
+      context.i18n.text.ModalRepost_title
     )(
       section(className := "repost-form")(
         Select(
           className = "cotonoma-select",
           options = model.options,
-          placeholder = Some("Repost to..."),
+          placeholder = Some(s"${context.i18n.text.ModalRepost_repostTo}..."),
           inputValue = model.query,
           value = model.dest,
           onInputChange =
             Some(input => dispatch(Msg.CotonomaQueryInput(input))),
-          noOptionsMessage = Some(_ => NoOptionsMessage),
+          noOptionsMessage =
+            Some(_ => div()(context.i18n.text.ModalRepost_typeCotonomaName)),
           formatOptionLabel = Some(divSelectOption(_, context.repo.nodes)),
           isLoading = model.optionsLoading,
           isClearable = true,
@@ -275,12 +276,10 @@ object ModalRepost {
       sectionAlreadyPostedIn(model)
     )
 
-  private val NoOptionsMessage = div()("Type cotonoma name...")
-
   private def divSelectOption(
       option: Select.SelectOption,
       nodes: Nodes
-  ): ReactElement = {
+  )(implicit context: Context): ReactElement = {
     val dest = option.asInstanceOf[Destination]
     dest match {
       case dest: ExistingCotonoma =>
@@ -292,7 +291,9 @@ object ModalRepost {
 
       case dest: NewCotonoma =>
         div(className := "new-cotonoma")(
-          span(className := "description")("New cotonoma:"),
+          span(className := "description")(
+            s"${context.i18n.text.ModalRepost_newCotonoma}:"
+          ),
           nodes.get(Id(dest.targetNodeId)).map(PartsNode.imgNode(_)),
           span(className := "cotonoma-name")(dest.name)
         )
@@ -317,7 +318,7 @@ object ModalRepost {
       context: Context
   ): ReactElement =
     section(className := "already-posted-in")(
-      h2()("Already posted in:"),
+      h2()(s"${context.i18n.text.ModalRepost_alreadyPostedIn}:"),
       ScrollArea()(
         ul()(
           model.alreadyPostedIn.reverse.map(cotonoma =>
@@ -334,8 +335,8 @@ object ModalRepost {
   private def spanRootCotonomaMark(
       cotonoma: Cotonoma,
       nodes: Nodes
-  ): ReactElement =
+  )(implicit context: Context): ReactElement =
     Option.when(nodes.isNodeRoot(cotonoma)) {
-      span(className := "root-mark")("(root)")
+      span(className := "root-mark")(s"(${context.i18n.text.ModalRepost_root})")
     }
 }

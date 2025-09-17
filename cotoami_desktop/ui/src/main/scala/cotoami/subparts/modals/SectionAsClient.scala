@@ -129,7 +129,7 @@ object SectionAsClient {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     field(
-      name = context.i18n.text.AsClient_password,
+      name = context.i18n.text.Password,
       classes = "password"
     )(
       button(
