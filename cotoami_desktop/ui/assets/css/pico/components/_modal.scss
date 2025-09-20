@@ -47,13 +47,12 @@ dialog {
       }
     }
 
-    > header,
-    > footer {
-      padding: calc(var(--block-spacing-vertical) * 0.5)
-        var(--block-spacing-horizontal);
+    >header,
+    >footer {
+      padding: calc(var(--block-spacing-vertical) * 0.5) var(--block-spacing-horizontal);
     }
 
-    > header {
+    >header {
       #{$close-selector} {
         margin: 0;
         margin-left: var(--spacing);
@@ -61,7 +60,7 @@ dialog {
       }
     }
 
-    > footer {
+    >footer {
       text-align: right;
 
       [role="button"] {
@@ -70,12 +69,6 @@ dialog {
         &:not(:first-of-type) {
           margin-left: calc(var(--spacing) * 0.5);
         }
-      }
-    }
-
-    p {
-      &:last-of-type {
-        margin: 0;
       }
     }
 
@@ -129,8 +122,9 @@ dialog {
   $animation-duration: 0.2s;
 
   :where(.modal-is-opening, .modal-is-closing) {
+
     dialog,
-    dialog > article {
+    dialog>article {
       animation-duration: $animation-duration;
       animation-timing-function: ease-in-out;
       animation-fill-mode: both;
@@ -138,9 +132,9 @@ dialog {
 
     dialog {
       animation-duration: ($animation-duration * 4);
-      animation-name: modal-overlay ;
+      animation-name: modal-overlay;
 
-      > article {
+      >article {
         animation-delay: $animation-duration;
         animation-name: modal;
       }
@@ -148,8 +142,9 @@ dialog {
   }
 
   .modal-is-closing {
+
     dialog,
-    dialog > article {
+    dialog>article {
       animation-delay: 0s;
       animation-direction: reverse;
     }
