@@ -7,9 +7,9 @@ section.text-content {
     overflow-wrap: anywhere;
   }
 
-  >p,
-  >ul,
-  >ol {
+  p,
+  ul,
+  ol {
     &:last-child {
       margin-bottom: 0;
     }
@@ -44,7 +44,8 @@ section.text-content {
     list-style: decimal inside;
   }
 
-  li {
+  li,
+  li>p {
     margin-bottom: calc(var(--typography-spacing-vertical) * 0.25);
   }
 }
