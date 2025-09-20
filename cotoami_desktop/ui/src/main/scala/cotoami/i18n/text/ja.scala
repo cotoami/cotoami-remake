@@ -125,8 +125,8 @@ object ja extends Text {
   val ModalWelcome_new_folderName = "作成するフォルダの名前"
   val ModalWelcome_new_create = "作成"
   val ModalWelcome_open = "フォルダを選択して開く"
-  val ModalWelcome_open_folder = "データベース・フォルダ"
-  val ModalWelcome_open_selectFolder = "データベース・フォルダの選択"
+  val ModalWelcome_open_folder = "データベースフォルダ"
+  val ModalWelcome_open_selectFolder = "データベースフォルダの選択"
   val ModalWelcome_open_open = "開く"
   def ModalWelcome_update_message(newVersion: String) =
     span()(
