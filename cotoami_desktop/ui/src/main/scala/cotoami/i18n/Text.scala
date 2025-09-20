@@ -216,8 +216,15 @@ trait Text {
 }
 
 object Text {
-  def inLang(lang: String): Text = lang match {
-    case "ja" => text.ja
-    case _    => text.en
-  }
+  def inLang(lang: String, script: String): Text =
+    (lang, script) match {
+      case ("de", _)                   => text.de
+      case ("es", _)                   => text.es
+      case ("fr", _)                   => text.fr
+      case ("ja", _)                   => text.ja
+      case ("ko", _)                   => text.ko
+      case ("zh", "Hans") | ("zh", "") => text.zh_cn
+      case ("zh", "Hant")              => text.zh_tw
+      case _                           => text.en
+    }
 }

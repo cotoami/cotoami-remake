@@ -6,14 +6,15 @@ import cotoami.i18n.Text
 
 case class I18n(locale: Locale = Locale.US) {
   val lang = locale.getLanguage()
+  val script = locale.getScript()
 
-  lazy val text: Text = Text.inLang(lang)
+  lazy val text: Text = Text.inLang(lang, script)
   lazy val numberFormat: NumberFormat = NumberFormat.getIntegerInstance
 
   def format(number: Double): String = numberFormat.format(number)
 }
 
 object I18n {
-  def fromLanguageTag(tag: String): I18n =
+  def fromBcp47(tag: String): I18n =
     I18n(Locale.forLanguageTag(tag))
 }

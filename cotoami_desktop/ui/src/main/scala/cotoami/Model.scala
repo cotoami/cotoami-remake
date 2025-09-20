@@ -60,7 +60,7 @@ case class Model(
       )
       .modify(_.i18n).using(i18n =>
         Nullable.toOption(info.locale)
-          .map(I18n.fromLanguageTag)
+          .map(I18n.fromBcp47)
           .getOrElse(i18n)
       )
       .modify(
