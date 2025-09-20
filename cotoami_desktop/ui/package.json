@@ -17,6 +17,7 @@
     "exifr": "^7.1.3",
     "maplibre-gl": "^4.5.1",
     "pmtiles": "^4.3.0",
+    "@protomaps/basemaps": "^5.5.1",
     "react": "16.14.0",
     "react-dom": "16.14.0",
     "react-dropzone": "14.2.3",
