@@ -218,7 +218,7 @@ object ModalIncorporate {
               e.preventDefault()
               dispatch(Msg.Connect)
             })
-          )("Preview")
+          )(context.i18n.text.Preview)
         )
       )
     )
