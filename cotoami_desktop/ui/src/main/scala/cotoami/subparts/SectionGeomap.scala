@@ -248,6 +248,7 @@ object SectionGeomap {
     MapLibre(
       id = "main-geomap",
       resolveResource = context.resolveResource,
+      lang = context.i18n.lang,
       center = model.center.getOrElse(Geolocation.default).toMapLibre,
       zoom = model.zoom.getOrElse(4),
       detectZoomClass = Some(zoom =>

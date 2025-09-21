@@ -13,6 +13,7 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import marubinotto.Action
+import marubinotto.libs.geomap
 import marubinotto.libs.geomap.maplibre
 import marubinotto.libs.geomap.maplibre._
 import marubinotto.libs.geomap.pmtiles
@@ -34,6 +35,8 @@ import marubinotto.libs.geomap.pmtiles
       id: String,
       resolveResource: String => Option[String],
       disableRotation: Boolean = true,
+      flavor: String = "light",
+      lang: String,
 
       // Center/Zoom
       center: LngLat,
@@ -70,6 +73,16 @@ import marubinotto.libs.geomap.pmtiles
       onMarkerClick: Option[String => Unit] = None,
       onFocusedLocationClick: Option[() => Unit] = None
   ) {
+    val pmtilesFullUrl: String = PmtilesUrlPrefix + pmtilesUrl.getOrElse(
+      resolveResource(PathDefaultPmtiles).get
+    )
+
+    val glyphsUrl: String =
+      s"${resolveResource(PathDefaultGlyphsDir).get}/{fontstack}/{range}.pbf"
+
+    val spriteUrl: String =
+      s"${resolveResource(PathDefaultSpritesDir).get}/v4/${flavor}"
+
     def markerToUpdate: Option[MarkerDef] =
       updateMarker.parameter.flatMap(markerDefs.get)
   }
@@ -82,30 +95,6 @@ import marubinotto.libs.geomap.pmtiles
 
     // To track the map state to detect change
     val boundsRef = useRef[Option[LngLatBounds]](None)
-
-    val _transformRequest: js.Function2[String, String, RequestParameters] =
-      useCallback(
-        (location: String, resourceType: String) => {
-          val absoluteUrl =
-            if (resourceType == "Source")
-              if (location == VectorTilesUrlPlaceHolder) {
-                val pmtilesUrl = props.pmtilesUrl.getOrElse(
-                  props.resolveResource(PathDefaultPmtiles).get
-                )
-                PmtilesUrlPrefix + pmtilesUrl
-              } else
-                PmtilesUrlPrefix + location
-            else
-              location
-
-          println(s"resourceType: $resourceType, absoluteUrl: $absoluteUrl")
-
-          new RequestParameters {
-            val url = absoluteUrl
-          }
-        },
-        Seq.empty
-      )
 
     // createMap
     useEffect(
@@ -145,14 +134,20 @@ import marubinotto.libs.geomap.pmtiles
         }
 
         val initMap = () => {
+          val mapStyle = geomap.basemapsStyle(
+            props.pmtilesFullUrl,
+            props.flavor,
+            props.lang,
+            props.glyphsUrl,
+            props.spriteUrl
+          )
+
           val map = new ExtendedMap(
             options = new MapOptions {
               override val container = props.id
               override val zoom = props.zoom
               override val center = props.center
-              override val style =
-                props.resolveResource(props.styleLocation).get
-              override val transformRequest = _transformRequest
+              override val style = mapStyle
             },
             onMarkerClick = props.onMarkerClick,
             onFocusedLocationClick = props.onFocusedLocationClick
