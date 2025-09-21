@@ -31,7 +31,7 @@ import marubinotto.libs.geomap.pmtiles
       disableRotation: Boolean = true,
 
       // style
-      style: () => js.Object,
+      style: () => js.Object, // generate only when it's needed
 
       // Center/Zoom
       center: LngLat,
