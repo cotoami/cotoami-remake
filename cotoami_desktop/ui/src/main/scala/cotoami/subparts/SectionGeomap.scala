@@ -274,7 +274,12 @@ object SectionGeomap {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     MapLibre(
       id = "main-geomap",
-      style = () => generateStyle(None, DefaultFlavor, context.i18n.lang),
+      style = () =>
+        generateStyle(
+          None,
+          DefaultFlavor,
+          context.i18n.langWithScript
+        ),
       center = model.center.getOrElse(Geolocation.default).toMapLibre,
       zoom = model.zoom.getOrElse(4),
       detectZoomClass = Some(zoom =>
