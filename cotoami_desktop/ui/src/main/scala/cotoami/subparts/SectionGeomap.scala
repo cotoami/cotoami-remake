@@ -242,13 +242,32 @@ object SectionGeomap {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
+  val DefaultFlavor = "light"
+  val PathDefaultPmtiles = "/geomap/planet.pmtiles"
+  val PathGlyphsDir = "/geomap/fonts"
+  val PathSpritesDir = "/geomap/sprites"
+
+  def pmtilesUrl(url: Option[String])(implicit context: Context): String =
+    url.getOrElse(
+      context.resolveResource(PathDefaultPmtiles).get
+    )
+
+  def glyphsUrl(implicit context: Context): String =
+    s"${context.resolveResource(PathGlyphsDir).get}/{fontstack}/{range}.pbf"
+
+  def spriteUrl(flavor: String)(implicit context: Context): String =
+    s"${context.resolveResource(PathSpritesDir).get}/v4/${flavor}"
+
   def apply(
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     MapLibre(
       id = "main-geomap",
-      resolveResource = context.resolveResource,
+      flavor = DefaultFlavor,
       lang = context.i18n.lang,
+      pmtilesUrl = pmtilesUrl(None),
+      glyphsUrl = glyphsUrl,
+      spriteUrl = spriteUrl(DefaultFlavor),
       center = model.center.getOrElse(Geolocation.default).toMapLibre,
       zoom = model.zoom.getOrElse(4),
       detectZoomClass = Some(zoom =>

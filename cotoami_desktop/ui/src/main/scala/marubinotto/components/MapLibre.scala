@@ -20,10 +20,6 @@ import marubinotto.libs.geomap.pmtiles
 
 @react object MapLibre {
 
-  val PathDefaultPmtiles = "/geomap/planet.pmtiles"
-  val PathDefaultGlyphsDir = "/geomap/fonts"
-  val PathDefaultSpritesDir = "/geomap/sprites"
-
   // Enable to load PMTiles files.
   //
   // addProtocol works best if it is only called once in the lifecycle of your application.
@@ -33,10 +29,14 @@ import marubinotto.libs.geomap.pmtiles
 
   case class Props(
       id: String,
-      resolveResource: String => Option[String],
       disableRotation: Boolean = true,
       flavor: String = "light",
       lang: String,
+
+      // Map resources
+      pmtilesUrl: String,
+      glyphsUrl: String,
+      spriteUrl: String,
 
       // Center/Zoom
       center: LngLat,
@@ -60,9 +60,6 @@ import marubinotto.libs.geomap.pmtiles
       refreshMarkers: Action[Unit] = Action.default,
       updateMarker: Action[String] = Action.default,
 
-      // Map resources
-      pmtilesUrl: Option[String] = None,
-
       // Event handlers (which will be registered during map or marker initialization)
       onInit: Option[LngLatBounds => Unit] = None,
       onClick: Option[MapMouseEvent => Unit] = None,
@@ -72,16 +69,6 @@ import marubinotto.libs.geomap.pmtiles
       onMarkerClick: Option[String => Unit] = None,
       onFocusedLocationClick: Option[() => Unit] = None
   ) {
-    val pmtilesFullUrl: String = PmtilesUrlPrefix + pmtilesUrl.getOrElse(
-      resolveResource(PathDefaultPmtiles).get
-    )
-
-    val glyphsUrl: String =
-      s"${resolveResource(PathDefaultGlyphsDir).get}/{fontstack}/{range}.pbf"
-
-    val spriteUrl: String =
-      s"${resolveResource(PathDefaultSpritesDir).get}/v4/${flavor}"
-
     def markerToUpdate: Option[MarkerDef] =
       updateMarker.parameter.flatMap(markerDefs.get)
   }
@@ -134,7 +121,7 @@ import marubinotto.libs.geomap.pmtiles
 
         val initMap = () => {
           val mapStyle = geomap.basemapsStyle(
-            props.pmtilesFullUrl,
+            PmtilesUrlPrefix + props.pmtilesUrl,
             props.flavor,
             props.lang,
             props.glyphsUrl,
