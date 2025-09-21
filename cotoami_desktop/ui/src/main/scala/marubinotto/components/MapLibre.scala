@@ -61,7 +61,6 @@ import marubinotto.libs.geomap.pmtiles
       updateMarker: Action[String] = Action.default,
 
       // Map resources
-      styleLocation: String = "/geomap/style.json",
       pmtilesUrl: Option[String] = None,
 
       // Event handlers (which will be registered during map or marker initialization)
