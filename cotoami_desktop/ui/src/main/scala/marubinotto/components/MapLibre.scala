@@ -13,7 +13,6 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import marubinotto.Action
-import marubinotto.libs.geomap
 import marubinotto.libs.geomap.maplibre
 import marubinotto.libs.geomap.maplibre._
 import marubinotto.libs.geomap.pmtiles
@@ -30,13 +29,9 @@ import marubinotto.libs.geomap.pmtiles
   case class Props(
       id: String,
       disableRotation: Boolean = true,
-      flavor: String = "light",
-      lang: String,
 
-      // Map resources
-      pmtilesUrl: String,
-      glyphsUrl: String,
-      spriteUrl: String,
+      // style
+      style: () => js.Object,
 
       // Center/Zoom
       center: LngLat,
@@ -120,20 +115,12 @@ import marubinotto.libs.geomap.pmtiles
         }
 
         val initMap = () => {
-          val mapStyle = geomap.basemapsStyle(
-            PmtilesUrlPrefix + props.pmtilesUrl,
-            props.flavor,
-            props.lang,
-            props.glyphsUrl,
-            props.spriteUrl
-          )
-
           val map = new ExtendedMap(
             options = new MapOptions {
               override val container = props.id
               override val zoom = props.zoom
               override val center = props.center
-              override val style = mapStyle
+              override val style = props.style()
             },
             onMarkerClick = props.onMarkerClick,
             onFocusedLocationClick = props.onFocusedLocationClick
@@ -303,7 +290,6 @@ import marubinotto.libs.geomap.pmtiles
   }
 
   private val UrlRegex = "^([a-z][a-z0-9+\\-.]*):".r
-  private val PmtilesUrlPrefix = "pmtiles://"
   private val VectorTilesUrlPlaceHolder = "$mainVectorTilesUrl"
   private val FocusedLocationMarkerClassName = "focused-location-marker"
   private val FocusedMarkerClassName = "focused-marker"
