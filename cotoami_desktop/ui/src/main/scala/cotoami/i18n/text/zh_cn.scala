@@ -6,9 +6,9 @@ import slinky.web.html._
 import cotoami.i18n.Text
 
 object zh_cn extends Text {
-  val Coto = "事"
-  val Cotonoma = "事间"
-  val Ito = "线"
+  val Coto = "Coto"
+  val Cotonoma = "Cotonoma"
+  val Ito = "Ito"
   val Pin = "固定"
   val Node = "节点"
   val Owner = "所有者"
@@ -35,8 +35,8 @@ object zh_cn extends Text {
   val Register = "注册"
   val Back = "返回"
 
-  val DeleteCotonoma = "删除事间"
-  val WriteSubcoto = "写子事"
+  val DeleteCotonoma = "删除 Cotonoma"
+  val WriteSubcoto = "写子 Coto"
   val OpenMap = "打开地图"
   val CloseMap = "关闭地图"
   val SwapPane = "交换面板"
@@ -52,9 +52,9 @@ object zh_cn extends Text {
   val Node_notYetConnected = "尚未连接"
   val Node_settings = "节点设置"
 
-  val Ito_description_placeholder = "线描述 (可选)"
+  val Ito_description_placeholder = "Ito 描述 (可选)"
   val Ito_editPin = "编辑固定"
-  val Ito_editIto = "编辑线"
+  val Ito_editIto = "编辑 Ito"
 
   val Owner_resetPassword = "重置所有者密码"
   val Owner_confirmResetPassword =
@@ -73,18 +73,18 @@ object zh_cn extends Text {
 
   val ChildPrivileges = "权限"
   val ChildPrivileges_asOwner = "所有者 (完全权限)"
-  val ChildPrivileges_canPostCotos = "发布事"
-  val ChildPrivileges_canEditItos = "编辑线"
-  val ChildPrivileges_canPostCotonomas = "发布事间"
+  val ChildPrivileges_canPostCotos = "发布 Coto"
+  val ChildPrivileges_canEditItos = "编辑 Ito"
+  val ChildPrivileges_canPostCotonomas = "发布 Cotonoma"
   val ChildPrivileges_readOnly = "只读"
 
-  val ConfirmDeleteCoto = "您确定要删除这个事吗？"
+  val ConfirmDeleteCoto = "您确定要删除这个 Coto 吗？"
   def ConfirmDeleteOthersCoto(someoneElse: ReactElement): ReactElement =
     span(className := "delete-others-coto")(
-      "作为所有者，您即将删除由以下用户发布的事：",
+      "作为所有者，您即将删除由以下用户发布的 Coto：",
       someoneElse
     )
-  val ConfirmDeleteCotonoma = "您确定要删除这个事间吗？"
+  val ConfirmDeleteCotonoma = "您确定要删除这个 Cotonoma 吗？"
 
   val NavNodes_allNodes = "所有节点"
   val NavNodes_addNode = "添加节点"
@@ -102,18 +102,18 @@ object zh_cn extends Text {
   val SectionNodeTools_enableSync = "启用同步"
   val SectionNodeTools_disableSync = "禁用同步"
 
-  val EditorCoto_placeholder_coto = "用 Markdown 写您的事"
+  val EditorCoto_placeholder_coto = "用 Markdown 写您的 Coto"
   val EditorCoto_placeholder_summary = "摘要 (可选)"
-  val EditorCoto_placeholder_newCotonomaName = "新事间名称"
-  val EditorCoto_placeholder_cotonomaName = "事间名称"
+  val EditorCoto_placeholder_newCotonomaName = "新 Cotonoma 名称"
+  val EditorCoto_placeholder_cotonomaName = "Cotonoma 名称"
   val EditorCoto_placeholder_cotonomaContent =
-    "用 Markdown 写事间描述"
+    "用 Markdown 写 Cotonoma 描述"
   val EditorCoto_inputImage = "将图片文件拖到这里，或点击选择一个"
   val EditorCoto_date = "日期"
   val EditorCoto_location = "位置"
   val EditorCoto_help_selectLocation = "点击地图上的位置"
   def EditorCoto_cotonomaAlreadyExists(cotonomaName: String) =
-    s"事间 \"${cotonomaName}\" 在此节点中已存在。"
+    s"Cotonoma \"${cotonomaName}\" 在此节点中已存在。"
 
   val ModalConfirm_title = "确认"
 
@@ -175,15 +175,15 @@ object zh_cn extends Text {
     请使用安全方法将此密码发送给节点所有者。
     """
 
-  val ModalSelection_title = "已选择的事"
+  val ModalSelection_title = "已选择的 Coto"
   val ModalSelection_clear = "清除选择"
 
-  val ModalNewIto_title = "新线"
+  val ModalNewIto_title = "新 Ito"
   val ModalNewIto_reverse = "反转"
   val ModalNewIto_clearSelection = "连接时清除选择"
   val ModalNewIto_connect = "连接"
 
-  val ModalSubcoto_title = "新子事"
+  val ModalSubcoto_title = "新子 Coto"
 
   val ModalNodeProfile_title = "节点配置文件"
   val ModalNodeProfile_selfNode = "您"
@@ -226,21 +226,21 @@ object zh_cn extends Text {
   val ModalIncorporate_nodeUrl = "节点URL"
   val ModalIncorporate_incorporate = "合并"
 
-  val ModalPromote_title = "提升为事间"
+  val ModalPromote_title = "提升为 Cotonoma"
   val ModalPromote_confirm =
     """
-    您确定要将此事提升为事间吗？
+    您确定要将此 Coto 提升为 Cotonoma 吗？
     此操作无法撤销。
     """
 
   val ModalEditIto_disconnect = "断开"
   val ModalEditIto_confirmDisconnect =
-    "您确定要删除此线吗？"
+    "您确定要删除此 Ito 吗？"
 
   val ModalRepost_title = "转发"
   val ModalRepost_repostTo = "转发到"
-  val ModalRepost_typeCotonomaName = "输入事间名称"
-  val ModalRepost_newCotonoma = "新事间"
+  val ModalRepost_typeCotonomaName = "输入 Cotonoma 名称"
+  val ModalRepost_newCotonoma = "新 Cotonoma"
   val ModalRepost_root = "根"
   val ModalRepost_alreadyPostedIn = "已发布在"
 
