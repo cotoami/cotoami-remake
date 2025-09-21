@@ -75,6 +75,10 @@ class Map(options: MapOptions) extends js.Object {
       options: js.UndefOr[FitBoundsOptions] = js.undefined
   ): Map = js.native
 
+  /** Updates the map's MapLibre style object with a new value.
+    */
+  def setStyle(style: js.Object | String): Unit = js.native
+
   /** Adds a listener for events of a specified type, optionally limited to
     * features in a specified style layer.
     *
@@ -140,7 +144,7 @@ trait MapOptions extends js.Object {
     * MapLibre Style Specification, or a URL to such JSON. When the style is not
     * specified, calling Map#setStyle is required to render the map.
     */
-  val style: js.UndefOr[String] = js.undefined
+  val style: js.UndefOr[js.Object | String] = js.undefined
 
   /** The initial zoom level of the map.
     *
