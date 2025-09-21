@@ -23,6 +23,10 @@ import marubinotto.libs.geomap.pmtiles
 
 @react object MapLibre {
 
+  val PathDefaultPmtiles = "/geomap/planet.pmtiles"
+  val PathDefaultGlyphsDir = "/geomap/fonts"
+  val PathDefaultSpritesDir = "/geomap/sprites"
+
   // Enable to load PMTiles files.
   //
   // addProtocol works best if it is only called once in the lifecycle of your application.
@@ -58,7 +62,7 @@ import marubinotto.libs.geomap.pmtiles
 
       // Map resources
       styleLocation: String = "/geomap/style.json",
-      vectorTilesLocation: String = "/geomap/planet.pmtiles",
+      pmtilesUrl: Option[String] = None,
 
       // Event handlers (which will be registered during map or marker initialization)
       onInit: Option[LngLatBounds => Unit] = None,
@@ -113,10 +117,10 @@ import marubinotto.libs.geomap.pmtiles
     val toVectorTilesUrl: js.Function1[String, String] = useCallback(
       (location: String) =>
         if (
-          !location.startsWith(PMTilesUrlPrefix) &&
+          !location.startsWith(PmtilesUrlPrefix) &&
           location.endsWith(".pmtiles")
         )
-          PMTilesUrlPrefix + toAbsoluteUrl(location)
+          PmtilesUrlPrefix + toAbsoluteUrl(location)
         else
           toAbsoluteUrl(location),
       Seq.empty
@@ -128,7 +132,7 @@ import marubinotto.libs.geomap.pmtiles
           val absoluteUrl =
             if (resourceType == "Source")
               if (location == VectorTilesUrlPlaceHolder)
-                toVectorTilesUrl(props.vectorTilesLocation)
+                toVectorTilesUrl(props.pmtilesUrl.getOrElse(PathDefaultPmtiles))
               else
                 toVectorTilesUrl(location)
             else if (resourceType == "Tile")
@@ -368,7 +372,7 @@ import marubinotto.libs.geomap.pmtiles
   }
 
   private val UrlRegex = "^([a-z][a-z0-9+\\-.]*):".r
-  private val PMTilesUrlPrefix = "pmtiles://"
+  private val PmtilesUrlPrefix = "pmtiles://"
   private val VectorTilesUrlPlaceHolder = "$mainVectorTilesUrl"
   private val FocusedLocationMarkerClassName = "focused-location-marker"
   private val FocusedMarkerClassName = "focused-marker"
