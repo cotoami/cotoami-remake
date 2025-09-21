@@ -52,7 +52,7 @@
       "icons/icon.ico"
     ],
     "resources": [
-      "geomap/*"
+      "geomap/**/*"
     ],
     "macOS": {
       "entitlements": "./Entitlements.plist",

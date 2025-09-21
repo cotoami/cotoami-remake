@@ -5,6 +5,8 @@ import org.scalajs.dom.URL
 import com.softwaremill.quicklens._
 
 import marubinotto.facade.Nullable
+import marubinotto.libs.tauri
+
 import cotoami.backend._
 import cotoami.repository._
 import cotoami.models._
@@ -14,10 +16,26 @@ import cotoami.subparts.Modal
 trait Context {
   def time: Time
   def i18n: I18n
+  def resourceDir: Option[String]
   def uiState: Option[UiState]
   def repo: Root
   def geomap: SectionGeomap.Model
   def isHighlighting(cotoId: Id[Coto]): Boolean
+
+  // Synchronously convert a device file path to an URL that can be loaded by the webview.
+  def resolveResource(path: String): Option[String] = {
+    val platformPath =
+      path
+        .replace("/", tauri.path.sep())
+        .stripPrefix(tauri.path.sep())
+    resourceDir match {
+      case Some(dir) => {
+        val absPath = dir + tauri.path.sep() + platformPath
+        Some(tauri.core.convertFileSrc(absPath))
+      }
+      case None => None
+    }
+  }
 }
 
 case class Model(
@@ -27,6 +45,7 @@ case class Model(
 
     // Initial data to be loaded in Main.init()
     systemInfo: Option[SystemInfoJson] = None,
+    resourceDir: Option[String] = None,
     databaseFolder: Option[String] = None, // saved in sessionStorage
     uiState: Option[UiState] = None, // saved in localStorage
 
@@ -63,6 +82,7 @@ case class Model(
           .map(I18n.fromBcp47)
           .getOrElse(i18n)
       )
+      .modify(_.resourceDir).setTo(Nullable.toOption(info.resource_dir))
       .modify(
         _.modalStack.modals.each.when[Modal.Welcome].model.baseFolder
       ).setTo(Nullable.toOption(info.app_data_dir).getOrElse(""))

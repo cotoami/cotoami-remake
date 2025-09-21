@@ -2,6 +2,7 @@ package cotoami.subparts
 
 import scala.util.chaining._
 import scala.collection.immutable.TreeMap
+import scala.scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.document.createElement
 import com.softwaremill.quicklens._
@@ -10,6 +11,7 @@ import slinky.core.facade.ReactElement
 import marubinotto.optionalClasses
 import marubinotto.Action
 import marubinotto.fui.{Browser, Cmd}
+import marubinotto.libs.geomap
 import marubinotto.components.MapLibre
 
 import cotoami.{Context, Into, Msg => AppMsg}
@@ -242,11 +244,37 @@ object SectionGeomap {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
+  private val DefaultFlavor = "light"
+  private val PathDefaultPmtiles = "/geomap/planet.pmtiles"
+  private val PathGlyphsDir = "/geomap/fonts"
+  private val PathSpritesDir = "/geomap/sprites"
+  private val PmtilesUrlPrefix = "pmtiles://"
+
+  def generateStyle(pmtilesUrl: Option[String], flavor: String, lang: String)(
+      implicit context: Context
+  ): js.Object =
+    geomap.basemapsStyle(
+      PmtilesUrlPrefix + pmtilesUrl.getOrElse(
+        context.resolveResource(PathDefaultPmtiles).get
+      ),
+      flavor,
+      lang,
+      glyphsUrl,
+      spriteUrl(flavor)
+    )
+
+  def glyphsUrl(implicit context: Context): String =
+    s"${context.resolveResource(PathGlyphsDir).get}/{fontstack}/{range}.pbf"
+
+  def spriteUrl(flavor: String)(implicit context: Context): String =
+    s"${context.resolveResource(PathSpritesDir).get}/v4/${flavor}"
+
   def apply(
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     MapLibre(
       id = "main-geomap",
+      style = () => generateStyle(None, DefaultFlavor, context.i18n.lang),
       center = model.center.getOrElse(Geolocation.default).toMapLibre,
       zoom = model.zoom.getOrElse(4),
       detectZoomClass = Some(zoom =>

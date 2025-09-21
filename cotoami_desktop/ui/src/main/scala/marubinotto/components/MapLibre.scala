@@ -2,13 +2,10 @@ package marubinotto.components
 
 import scala.collection.immutable.TreeMap
 import scala.collection.mutable.{Map => MutableMap}
-import scala.util.{Failure, Success}
 import scala.scalajs.js
-import scala.scalajs.js.Thenable.Implicits._
 
 import org.scalajs.dom
 import org.scalajs.dom.document.createElement
-import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 import slinky.core._
 import slinky.core.annotations.react
@@ -16,7 +13,6 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import marubinotto.Action
-import marubinotto.libs.tauri
 import marubinotto.libs.geomap.maplibre
 import marubinotto.libs.geomap.maplibre._
 import marubinotto.libs.geomap.pmtiles
@@ -33,6 +29,9 @@ import marubinotto.libs.geomap.pmtiles
   case class Props(
       id: String,
       disableRotation: Boolean = true,
+
+      // style
+      style: () => js.Object, // generate only when it's needed
 
       // Center/Zoom
       center: LngLat,
@@ -56,10 +55,6 @@ import marubinotto.libs.geomap.pmtiles
       refreshMarkers: Action[Unit] = Action.default,
       updateMarker: Action[String] = Action.default,
 
-      // Map resources
-      styleLocation: String = "/geomap/style.json",
-      vectorTilesLocation: String = "/geomap/planet.pmtiles",
-
       // Event handlers (which will be registered during map or marker initialization)
       onInit: Option[LngLatBounds => Unit] = None,
       onClick: Option[MapMouseEvent => Unit] = None,
@@ -77,77 +72,16 @@ import marubinotto.libs.geomap.pmtiles
     val (mapInitialized, setMapInitialized) = useState[Boolean](false)
     val (zoomClass, setZoomClass) = useState[Option[String]](None)
 
-    val resourceDirRef = useRef("")
     val mapRef = useRef[Option[ExtendedMap]](None)
 
     // To track the map state to detect change
     val boundsRef = useRef[Option[LngLatBounds]](None)
 
-    // Resolve a path as an absolute URL.
-    //
-    // If the given location is a local file path, this function converts it
-    // into an absolute URL of Tauri's asset protocol, otherwise it returns the
-    // location as is.
-    val toAbsoluteUrl: js.Function1[String, String] = useCallback(
-      (location: String) =>
-        if (isUrl(location))
-          location
-        else {
-          // Can't use Tauri's `resolveResource` here since it returns Promise/Future,
-          // which doesn't suit to the synchronous `maplibre.MapOptions.transformRequest`.
-          // Instead, we manually join the `resourceDir` and the given path with
-          // its separators replaced with the platform-specific ones.
-          // https://github.com/tauri-apps/tauri/issues/8599#issuecomment-1890982596
-          val resourcePath =
-            location
-              .replace("/", tauri.path.sep())
-              .stripPrefix(tauri.path.sep())
-          val absolutePath =
-            resourceDirRef.current + tauri.path.sep() + resourcePath
-          tauri.core.convertFileSrc(absolutePath)
-        },
-      Seq.empty
-    )
-
-    // Resolve a path as a vector tiles URL.
-    val toVectorTilesUrl: js.Function1[String, String] = useCallback(
-      (location: String) =>
-        if (
-          !location.startsWith(PMTilesUrlPrefix) &&
-          location.endsWith(".pmtiles")
-        )
-          PMTilesUrlPrefix + toAbsoluteUrl(location)
-        else
-          toAbsoluteUrl(location),
-      Seq.empty
-    )
-
-    val _transformRequest: js.Function2[String, String, RequestParameters] =
-      useCallback(
-        (location: String, resourceType: String) => {
-          val absoluteUrl =
-            if (resourceType == "Source")
-              if (location == VectorTilesUrlPlaceHolder)
-                toVectorTilesUrl(props.vectorTilesLocation)
-              else
-                toVectorTilesUrl(location)
-            else if (resourceType == "Tile")
-              location
-            else
-              toAbsoluteUrl(location)
-
-          new RequestParameters {
-            val url = absoluteUrl
-          }
-        },
-        Seq.empty
-      )
-
     // createMap
     useEffect(
       () => {
-        // Since initMap() will be called via tauri.path.resourceDir() and
-        // js.timers.setTimeout(), cleanup() can be called before or during initMap().
+        // Since initMap() will be called via js.timers.setTimeout(),
+        // cleanup() can be called before or during initMap().
         // The effectCancelled flag allows us to detect this early cleanup(), and
         // stop executing initMap() or re-cleanup() after initMap() has finished.
         var effectCancelled = false
@@ -186,8 +120,7 @@ import marubinotto.libs.geomap.pmtiles
               override val container = props.id
               override val zoom = props.zoom
               override val center = props.center
-              override val style = toAbsoluteUrl(props.styleLocation)
-              override val transformRequest = _transformRequest
+              override val style = props.style()
             },
             onMarkerClick = props.onMarkerClick,
             onFocusedLocationClick = props.onFocusedLocationClick
@@ -236,24 +169,13 @@ import marubinotto.libs.geomap.pmtiles
           }
         }
 
-        tauri.path.resourceDir().onComplete {
-          case Success(dir) => {
-            // The tauri resource dir where local map resources are located.
-            // Remove the trailing path separator of the path returned by `tauri.path.resourceDir()`.
-            resourceDirRef.current = dir.stripSuffix(tauri.path.sep())
-
-            // Delay rendering the map to ensure it to fit to the container section.
-            js.timers.setTimeout(10) {
-              if (effectCancelled) {
-                println("The effect has been cancelled before initMap()")
-              } else {
-                initMap()
-              }
-            }
+        // Delay rendering the map to ensure it to fit to the container section.
+        js.timers.setTimeout(10) {
+          if (effectCancelled) {
+            println("The effect has been cancelled before initMap()")
+          } else {
+            initMap()
           }
-
-          case Failure(t) =>
-            println(s"Couldn't get tauri.path.resourceDir: ${t.toString()}")
         }
 
         cleanup
@@ -368,7 +290,6 @@ import marubinotto.libs.geomap.pmtiles
   }
 
   private val UrlRegex = "^([a-z][a-z0-9+\\-.]*):".r
-  private val PMTilesUrlPrefix = "pmtiles://"
   private val VectorTilesUrlPlaceHolder = "$mainVectorTilesUrl"
   private val FocusedLocationMarkerClassName = "focused-location-marker"
   private val FocusedMarkerClassName = "focused-marker"
