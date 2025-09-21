@@ -98,8 +98,8 @@ import marubinotto.libs.geomap.pmtiles
     // createMap
     useEffect(
       () => {
-        // Since initMap() will be called via tauri.path.resourceDir() and
-        // js.timers.setTimeout(), cleanup() can be called before or during initMap().
+        // Since initMap() will be called via js.timers.setTimeout(),
+        // cleanup() can be called before or during initMap().
         // The effectCancelled flag allows us to detect this early cleanup(), and
         // stop executing initMap() or re-cleanup() after initMap() has finished.
         var effectCancelled = false
