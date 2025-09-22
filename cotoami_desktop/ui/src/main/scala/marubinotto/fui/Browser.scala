@@ -121,6 +121,26 @@ object Browser {
       }
     })
 
+  def ajaxHead(url: String): Cmd.One[Either[Throwable, dom.Response]] =
+    Cmd(IO.async { cb =>
+      IO {
+        dom.fetch(
+          url,
+          new dom.RequestInit {
+            method = dom.HttpMethod.HEAD
+          }
+        ).onComplete {
+          case Success(response) => {
+            cb(Right(Some(Right(response))))
+          }
+          case Failure(t) => {
+            cb(Right(Some(Left(t))))
+          }
+        }
+        None // no finalizer on cancellation
+      }
+    })
+
   def setHtmlTheme[Msg](theme: String): Cmd.One[Msg] =
     Cmd(IO {
       dom.window.document.documentElement.setAttribute("data-theme", theme)
