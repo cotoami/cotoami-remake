@@ -67,7 +67,7 @@ case class Model(
     flowInput: SectionFlowInput.Model,
     timeline: SectionTimeline.Model = SectionTimeline.Model(),
     traversals: SectionTraversals.Model = SectionTraversals.Model(),
-    geomap: SectionGeomap.Model = SectionGeomap.Model()
+    geomap: SectionGeomap.Model
 ) extends Context {
   def path: String = url.pathname + url.search + url.hash
 

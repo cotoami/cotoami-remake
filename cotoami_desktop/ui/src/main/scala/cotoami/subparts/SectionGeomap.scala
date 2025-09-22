@@ -25,9 +25,13 @@ object SectionGeomap {
   // Model
   /////////////////////////////////////////////////////////////////////////////
 
+  val DefaultRemotePmtilesUrl = "https://example.invalid/v4.pmtiles"
   val MoveToZoom = 15
 
   case class Model(
+      remotePmtilesUrl: String,
+      remotePmtilesAvailable: Option[Boolean] = None,
+
       // Center/Zoom
       center: Option[Geolocation] = None,
       zoom: Option[Double] = None,
@@ -60,6 +64,10 @@ object SectionGeomap {
           repo.cotonomas.focusedId
         ).map(Msg.CotosInFocusFetched(_).into)
       )
+
+    def checkRemotePmtiles: Cmd.One[AppMsg] =
+      Browser.ajaxHead(remotePmtilesUrl)
+        .map(Msg.RemotePmtilesChecked(_).into)
 
     def recreateMap: Model =
       this.modify(_._createMap).using(_.trigger)
@@ -115,6 +123,11 @@ object SectionGeomap {
       currentBounds.map(fetchCotosInBounds).getOrElse((this, Cmd.none))
   }
 
+  def init: (Model, Cmd.One[AppMsg]) = {
+    val model = Model(remotePmtilesUrl = DefaultRemotePmtilesUrl)
+    (model, model.checkRemotePmtiles)
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   // Update
   /////////////////////////////////////////////////////////////////////////////
@@ -124,6 +137,8 @@ object SectionGeomap {
   }
 
   object Msg {
+    case class RemotePmtilesChecked(result: Either[Throwable, dom.Response])
+        extends Msg
     case object RecreateMap extends Msg
     case class MapInitialized(bounds: GeoBounds) extends Msg
     case class FocusLocation(location: Option[Geolocation]) extends Msg
@@ -144,6 +159,33 @@ object SectionGeomap {
   ): (Model, Root, Cmd[AppMsg]) = {
     val default = (model, context.repo, Cmd.none)
     msg match {
+      case Msg.RemotePmtilesChecked(Right(response)) =>
+        if (response.ok)
+          default.copy(
+            _1 = model.copy(remotePmtilesAvailable = Some(true)),
+            _3 = cotoami.info(
+              s"Remote pmtiles available.",
+              Some(model.remotePmtilesUrl)
+            )
+          )
+        else
+          default.copy(
+            _1 = model.copy(remotePmtilesAvailable = Some(false)),
+            _3 = cotoami.info(
+              s"Remote pmtiles not available.",
+              Some(s"${response.status} - ${model.remotePmtilesUrl}")
+            )
+          )
+
+      case Msg.RemotePmtilesChecked(Left(t)) =>
+        default.copy(
+          _1 = model.copy(remotePmtilesAvailable = Some(false)),
+          _3 = cotoami.info(
+            s"Remote pmtiles not available.",
+            Some(s"${t.toString()} - ${model.remotePmtilesUrl}")
+          )
+        )
+
       case Msg.RecreateMap => default.copy(_1 = model.recreateMap)
 
       // When a geomap is opened:
@@ -272,51 +314,54 @@ object SectionGeomap {
   def apply(
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    MapLibre(
-      id = "main-geomap",
-      style = () =>
-        generateStyle(
-          None,
-          DefaultFlavor,
-          context.i18n.langWithScript
+    model.remotePmtilesAvailable.map(remotePmtiles =>
+      MapLibre(
+        id = "main-geomap",
+        style = () =>
+          generateStyle(
+            if (remotePmtiles) Some(model.remotePmtilesUrl) else None,
+            DefaultFlavor,
+            context.i18n.langWithScript
+          ),
+        center = model.center.getOrElse(Geolocation.default).toMapLibre,
+        zoom = model.zoom.getOrElse(4),
+        detectZoomClass = Some(zoom =>
+          if (zoom <= 7)
+            Some("hide-labels")
+          else
+            None
         ),
-      center = model.center.getOrElse(Geolocation.default).toMapLibre,
-      zoom = model.zoom.getOrElse(4),
-      detectZoomClass = Some(zoom =>
-        if (zoom <= 7)
-          Some("hide-labels")
-        else
-          None
-      ),
-      focusedLocation = model.focusedLocation.map(_.toMapLibre),
-      markerDefs = toMarkerDefs(context.repo.cotoMarkers),
-      focusedMarkerId = context.repo.focusedCotoId.map(_.uuid),
-      bounds = model.bounds.map(_.toMapLibre),
-      createMap = model._createMap,
-      applyCenterZoom = model._applyCenterZoom,
-      refreshMarkers = model._refreshMarkers,
-      updateMarker = model._updateMarker,
-      fitBounds = model._fitBounds,
-      onInit = Some(lngLatBounds => {
-        val bounds = GeoBounds.fromMapLibre(lngLatBounds)
-        dispatch(Msg.MapInitialized(bounds))
-      }),
-      onClick = Some(e => {
-        val location = Geolocation.fromMapLibre(e.lngLat)
-        dispatch(Msg.FocusLocation(Some(location)))
-      }),
-      onZoomChanged = Some(zoom => dispatch(Msg.ZoomChanged(zoom))),
-      onCenterMoved = Some(center => {
-        val location = Geolocation.fromMapLibre(center)
-        dispatch(Msg.CenterMoved(location))
-      }),
-      onBoundsChanged = Some(lngLatBounds => {
-        val bounds = GeoBounds.fromMapLibre(lngLatBounds)
-        dispatch(Msg.BoundsChanged(bounds))
-      }),
-      onMarkerClick = Some(id => dispatch(Msg.MarkerClicked(id))),
-      onFocusedLocationClick = Some(() => dispatch(Msg.FocusLocation(None)))
+        focusedLocation = model.focusedLocation.map(_.toMapLibre),
+        markerDefs = toMarkerDefs(context.repo.cotoMarkers),
+        focusedMarkerId = context.repo.focusedCotoId.map(_.uuid),
+        bounds = model.bounds.map(_.toMapLibre),
+        createMap = model._createMap,
+        applyCenterZoom = model._applyCenterZoom,
+        refreshMarkers = model._refreshMarkers,
+        updateMarker = model._updateMarker,
+        fitBounds = model._fitBounds,
+        onInit = Some(lngLatBounds => {
+          val bounds = GeoBounds.fromMapLibre(lngLatBounds)
+          dispatch(Msg.MapInitialized(bounds))
+        }),
+        onClick = Some(e => {
+          val location = Geolocation.fromMapLibre(e.lngLat)
+          dispatch(Msg.FocusLocation(Some(location)))
+        }),
+        onZoomChanged = Some(zoom => dispatch(Msg.ZoomChanged(zoom))),
+        onCenterMoved = Some(center => {
+          val location = Geolocation.fromMapLibre(center)
+          dispatch(Msg.CenterMoved(location))
+        }),
+        onBoundsChanged = Some(lngLatBounds => {
+          val bounds = GeoBounds.fromMapLibre(lngLatBounds)
+          dispatch(Msg.BoundsChanged(bounds))
+        }),
+        onMarkerClick = Some(id => dispatch(Msg.MarkerClicked(id))),
+        onFocusedLocationClick = Some(() => dispatch(Msg.FocusLocation(None)))
+      )
     )
+
   }
 
   private def toMarkerDefs(

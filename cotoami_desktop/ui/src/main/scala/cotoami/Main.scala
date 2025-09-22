@@ -59,8 +59,9 @@ object Main {
 
   def init(url: URL): (Model, Cmd[Msg]) = {
     val (flowInput, flowInputCmd) = SectionFlowInput.init
+    val (geomap, geomapCmd) = SectionGeomap.init
     (
-      Model(url = url, flowInput = flowInput),
+      Model(url = url, flowInput = flowInput, geomap = geomap),
       Cmd.Batch(
         showAppWindow,
         UiState.restore.map(Msg.UiStateRestored),
@@ -69,7 +70,8 @@ object Main {
           _.map(DatabaseInfo.openDatabase(_).map(Msg.DatabaseOpened))
             .getOrElse(Modal.open(Modal.Welcome()))
         ),
-        flowInputCmd
+        flowInputCmd,
+        geomapCmd
       )
     )
   }

@@ -31,9 +31,6 @@ import cotoami.subparts.SectionGeomap.{Model => Geomap}
 object SectionFlowInput {
   final val StorageKey = "FlowInput"
 
-  def init: (Model, Cmd.One[AppMsg]) =
-    Model().pipe(model => (model, model.restore))
-
   /////////////////////////////////////////////////////////////////////////////
   // Model
   /////////////////////////////////////////////////////////////////////////////
@@ -96,6 +93,11 @@ object SectionFlowInput {
     private def restoreTextContent: Cmd.One[Option[String]] = Cmd(IO {
       Some(Option(dom.window.localStorage.getItem(StorageKey)))
     })
+  }
+
+  def init: (Model, Cmd.One[AppMsg]) = {
+    val model = Model()
+    (model, model.restore)
   }
 
   /////////////////////////////////////////////////////////////////////////////
