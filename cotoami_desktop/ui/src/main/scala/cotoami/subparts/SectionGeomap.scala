@@ -25,7 +25,7 @@ object SectionGeomap {
   // Model
   /////////////////////////////////////////////////////////////////////////////
 
-  val DefaultRemotePmtilesUrl = "https://example.invalid/v4.pmtiles"
+  val DefaultRemotePmtilesUrl = "https://maps.cotoami.app/v4.pmtiles"
   val MoveToZoom = 15
 
   case class Model(
