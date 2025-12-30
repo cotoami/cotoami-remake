@@ -82,9 +82,10 @@ import slinky.core.facade.Hooks._
 
     // onUnmounted
     useEffect(
-      () => { () =>
-        {
-          props.onUnmounted.map(_(scrollableNodeRef.current.scrollTop))
+      () => {
+        val scrollable = scrollableNodeRef.current
+        () => {
+          props.onUnmounted.map(_(scrollable.scrollTop))
         }
       },
       Seq.empty
