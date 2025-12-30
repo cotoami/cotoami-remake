@@ -5,7 +5,7 @@ description = "Cotoami Desktop"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 name = "cotoami_desktop"
-rust-version = "1.89"
+rust-version = "1.92"
 version = "0.11.0"
 
 [build-dependencies]

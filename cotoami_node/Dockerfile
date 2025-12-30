@@ -1,6 +1,6 @@
 # Dockerfile to build a multi-arch image of Cotoami Node Server (cotoami_node) 
 
-ARG RUST_VERSION=1.89.0
+ARG RUST_VERSION=1.92.0
 
 
 ################################################################################

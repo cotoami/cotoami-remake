@@ -24,7 +24,6 @@ use diesel::{
     FromSqlRow,
 };
 use serde::{de, ser, Deserializer};
-use tracing::debug;
 use uuid::Uuid;
 use validator::Validate;
 

@@ -11,7 +11,6 @@ use chrono::{DateTime, Duration, Local, NaiveDateTime, TimeZone};
 use derive_new::new;
 use diesel::prelude::*;
 use identicon_rs::Identicon;
-use tracing::debug;
 use validator::Validate;
 
 use crate::{
