@@ -10,13 +10,14 @@ version.workspace = true
 anyhow.workspace = true 
 async-stream = "0.3.6" 
 async-trait = "0.1.80" 
-axum = {version = "0.8.1", features = ["tokio", "ws"]} 
-axum-extra = {version = "0.10.0", features = ["cookie", "typed-header"]} 
+axum = {version = "0.8.8", features = ["tokio", "ws"]} 
+axum-extra = {version = "0.12.5", features = ["cookie", "typed-header"]} 
 axum-macros = "0.5.0" 
 bytes.workspace = true 
 chrono.workspace = true 
 const_format = "0.2.32" 
 cotoami_db.workspace = true 
+cotoami_plugin_api.workspace = true 
 derive-new.workspace = true 
 derive_more.workspace = true 
 dirs = "5.0.1" 
@@ -24,6 +25,7 @@ dotenvy = "0.15.7"
 dyn-clone = "1.0.16" 
 envy = "0.4" # seems unmaintained
 eventsource-stream = "0.2.3" 
+extism = "1.12.0" 
 futures-util.workspace = true 
 futures.workspace = true 
 googletest.workspace = true 
@@ -32,8 +34,6 @@ mime = "0.3.17"
 parking_lot.workspace = true 
 percent-encoding = "2.3.1" 
 # reqwest without openssl - https://github.com/seanmonstar/reqwest/issues/495
-cotoami_plugin_api.workspace = true
-extism = "1.12.0"
 reqwest = {version = "0.12", default-features = false, features = ["json", "rustls-tls", "charset", "http2", "macos-system-configuration"]}
 reqwest-eventsource = "0.6.0"
 semver = "1.0"
