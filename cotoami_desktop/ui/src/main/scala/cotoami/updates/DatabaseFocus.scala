@@ -24,8 +24,7 @@ object DatabaseFocus {
           model.copy(
             navCotonomas = navCotonomas,
             timeline = timeline,
-            geomap = geomap,
-            highlight = None
+            geomap = geomap
           ),
           Cmd.Batch(
             fetchRecentCotonomas,
@@ -60,8 +59,7 @@ object DatabaseFocus {
         (
           model.copy(
             navCotonomas = navCotonomas,
-            timeline = timeline,
-            highlight = None
+            timeline = timeline
           ),
           Cmd.Batch(
             CotonomaDetails.fetch(cotonomaId)
@@ -79,7 +77,6 @@ object DatabaseFocus {
       moveTo: Boolean
   )(model: Model): (Model, Cmd.One[Msg]) = {
     model
-      .clearHighlight
       .modify(_.repo.cotos).using(_.focus(cotoId))
       .pipe { model =>
         model.repo.cotos.focused match {

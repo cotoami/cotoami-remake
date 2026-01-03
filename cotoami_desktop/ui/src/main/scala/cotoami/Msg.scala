@@ -59,10 +59,6 @@ object Msg {
   case class Select(id: Id[Coto]) extends Msg
   case class Deselect(id: Id[Coto]) extends Msg
 
-  // Highlight
-  case class Highlight(id: Id[Coto]) extends Msg
-  case object Unhighlight extends Msg
-
   // Repository
   case object ReloadRepository extends Msg
   case class RepositoryMsg(submsg: Root.Msg) extends Msg

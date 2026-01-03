@@ -251,15 +251,8 @@ object NavCotonomas {
         span(className := "cotonoma")(PartsCotonoma.cotonomaLabel(cotonoma))
       } else {
         a(
-          className := optionalClasses(
-            Seq(
-              ("cotonoma", true),
-              ("highlighted", context.isHighlighting(cotonoma.cotoId))
-            )
-          ),
+          className := "cotonoma",
           title := cotonoma.name,
-          onMouseEnter := (_ => dispatch(AppMsg.Highlight(cotonoma.cotoId))),
-          onMouseLeave := (_ => dispatch(AppMsg.Unhighlight)),
           onClick := ((e) => {
             e.preventDefault()
             dispatch(AppMsg.FocusCotonoma(cotonoma))

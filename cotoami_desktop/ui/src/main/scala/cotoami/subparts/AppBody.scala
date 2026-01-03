@@ -21,8 +21,7 @@ object AppBody {
           ("body", true),
           ("search-active", model.search.active)
         )
-      ),
-      onMouseOver := (_ => dispatch(AppMsg.Unhighlight))
+      )
     )(
       (model.uiState, model.repo.nodes.self) match {
         case (Some(uiState), Some(_)) => Some(content(model, uiState))

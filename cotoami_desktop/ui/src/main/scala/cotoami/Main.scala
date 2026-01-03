@@ -305,11 +305,6 @@ object Main {
           )
         }
 
-      case Msg.Highlight(cotoId) =>
-        (model.copy(highlight = Some(cotoId)), Cmd.none)
-
-      case Msg.Unhighlight => (model.copy(highlight = None), Cmd.none)
-
       case Msg.ReloadRepository => {
         (
           model.copy(repo = Root()),

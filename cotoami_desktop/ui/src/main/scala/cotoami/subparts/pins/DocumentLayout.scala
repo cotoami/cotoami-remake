@@ -10,7 +10,6 @@ import slinky.core.facade.{ReactElement, ReactRef}
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
-import marubinotto.optionalClasses
 import marubinotto.components.ScrollArea
 
 import cotoami.{Context, Into, Msg => AppMsg}
@@ -116,17 +115,10 @@ import cotoami.subparts.{PartsIto, PartsNode, SectionPins}
             id := elementIdOfTocEntry(ito),
             // This className will be modified directly by DocumentView to highlight
             // entries in the current viewport, so it must not be dynamic with the models.
-            className := "toc-entry",
-            onMouseEnter := (_ => dispatch(AppMsg.Highlight(coto.id))),
-            onMouseLeave := (_ => dispatch(AppMsg.Unhighlight))
+            className := "toc-entry"
           )(
             button(
-              className := optionalClasses(
-                Seq(
-                  ("default", true),
-                  ("highlighted", context.isHighlighting(coto.id))
-                )
-              ),
+              className := "default",
               onClick := (_ => dispatch(SectionPins.Msg.ScrollToPin(ito)))
             )(
               if (coto.isCotonoma)

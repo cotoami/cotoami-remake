@@ -20,7 +20,6 @@ trait Context {
   def uiState: Option[UiState]
   def repo: Root
   def geomap: SectionGeomap.Model
-  def isHighlighting(cotoId: Id[Coto]): Boolean
 
   // Synchronously convert a device file path to an URL that can be loaded by the webview.
   def resolveResource(path: String): Option[String] = {
@@ -51,9 +50,6 @@ case class Model(
 
     // Repository root
     repo: Root = Root(),
-
-    // Highlighted coto by hover
-    highlight: Option[Id[Coto]] = None,
 
     // Status of syncing with parent nodes
     parentSync: ParentSync = ParentSync(),
@@ -86,9 +82,6 @@ case class Model(
       .modify(
         _.modalStack.modals.each.when[Modal.Welcome].model.baseFolder
       ).setTo(Nullable.toOption(info.app_data_dir).getOrElse(""))
-
-  def isHighlighting(cotoId: Id[Coto]): Boolean = highlight == Some(cotoId)
-  def clearHighlight: Model = copy(highlight = None)
 
   def messages: SystemMessages = viewMessages.messages
 
