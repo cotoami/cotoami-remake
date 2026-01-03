@@ -1,6 +1,9 @@
 //! Cotonoma related operations
 
-use std::{collections::HashMap, ops::DerefMut};
+use std::{
+    collections::{HashMap, HashSet},
+    ops::DerefMut,
+};
 
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
@@ -280,6 +283,56 @@ pub(crate) fn subs<Conn: ReadConn>(
             index: cotonoma_cotos.index,
             total_rows: cotonoma_cotos.total_rows,
         })
+    })
+}
+
+pub(crate) fn sub_ids_recursive<Conn: ReadConn>(
+    id: &Id<Cotonoma>,
+    depth: Option<usize>, // None for unlimited
+) -> impl Operation<Conn, Vec<Id<Cotonoma>>> + '_ {
+    read_op(move |conn| {
+        let mut collected_ids = Vec::new();
+        let mut current_layer = vec![*id];
+
+        let mut visited = HashSet::new();
+        visited.insert(*id);
+
+        let mut current_depth = 0;
+        while !current_layer.is_empty() && depth.map(|d| current_depth < d).unwrap_or(true) {
+            // Collect sub cotonoma-cotos posted in any of the cotonomas in the current layer.
+            let coto_data: Vec<(Option<Id<Coto>>, Id<Coto>)> = cotos::table
+                .select((cotos::repost_of_id, cotos::uuid))
+                .filter(cotos::posted_in_id.eq_any(&current_layer))
+                .filter(cotos::is_cotonoma.eq(true))
+                .load(conn)?;
+            if coto_data.is_empty() {
+                break;
+            }
+
+            // Resolve to the original coto ids
+            let child_coto_ids: Vec<Id<Coto>> = coto_data
+                .into_iter()
+                .map(|(repost_id, uuid)| repost_id.unwrap_or(uuid))
+                .collect();
+
+            // Map the (original) coto ids to cotonoma ids.
+            let next_cotonoma_ids: Vec<Id<Cotonoma>> = cotonomas::table
+                .select(cotonomas::uuid)
+                .filter(cotonomas::coto_id.eq_any(&child_coto_ids))
+                .load(conn)?;
+
+            // Dedup & cycle-safe: only keep newly discovered cotonoma ids.
+            let new_ids: Vec<Id<Cotonoma>> = next_cotonoma_ids
+                .into_iter()
+                .filter(|id| visited.insert(*id))
+                .collect();
+
+            collected_ids.extend(&new_ids);
+            current_layer = new_ids;
+            current_depth += 1;
+        }
+
+        Ok(collected_ids)
     })
 }
 
