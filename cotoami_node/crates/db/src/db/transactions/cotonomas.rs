@@ -139,6 +139,15 @@ impl DatabaseSession<'_> {
         self.read_transaction(cotonoma_ops::subs(id, page_size, page_index))
     }
 
+    pub fn sub_cotonoma_ids_recursive(
+        &mut self,
+        id: &Id<Cotonoma>,
+        depth: Option<usize>, // None for unlimited
+    ) -> Result<HashSet<Id<Cotonoma>>> {
+        let ids = self.read_transaction(cotonoma_ops::sub_ids_recursive(id, depth))?;
+        Ok(ids.into_iter().collect())
+    }
+
     pub fn cotonomas_of<'b, I>(&mut self, cotos: I) -> Result<Vec<Cotonoma>>
     where
         I: IntoIterator<Item = &'b Coto>,
