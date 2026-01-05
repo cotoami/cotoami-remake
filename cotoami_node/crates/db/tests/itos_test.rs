@@ -49,6 +49,7 @@ fn crud_operations() -> Result<()> {
             order: eq(&1),
             created_at: eq(&mock_time),
             updated_at: eq(&mock_time),
+            ..
         })
     );
 
@@ -74,7 +75,8 @@ fn crud_operations() -> Result<()> {
             origin_node_id: eq(&node.uuid),
             origin_serial_number: eq(&6),
             change: pat!(Change::CreateIto(eq(&ito1))),
-            import_error: none()
+            import_error: none(),
+            ..
         })
     );
 
@@ -98,7 +100,8 @@ fn crud_operations() -> Result<()> {
             target_coto_id: eq(&coto3.uuid),
             description: some(eq("bye")),
             details: some(eq("some details")),
-            order: eq(&2)
+            order: eq(&2),
+            ..
         })
     );
 
@@ -143,7 +146,8 @@ fn crud_operations() -> Result<()> {
                 ito_id: eq(&ito2.uuid),
                 new_order: eq(&1)
             }),
-            import_error: none()
+            import_error: none(),
+            ..
         })
     );
     assert_eq!(ds.ito(&ito2.uuid)?.unwrap().order, 1);
@@ -164,7 +168,8 @@ fn crud_operations() -> Result<()> {
         edited_ito1,
         pat!(Ito {
             description: some(eq("hello")),
-            details: some(eq("hello details"))
+            details: some(eq("hello details")),
+            ..
         })
     );
 
@@ -183,7 +188,8 @@ fn crud_operations() -> Result<()> {
                 }),
                 updated_at: eq(&edited_ito1.updated_at),
             }),
-            import_error: none()
+            import_error: none(),
+            ..
         })
     );
 
@@ -206,7 +212,8 @@ fn crud_operations() -> Result<()> {
             change: pat!(Change::DeleteIto {
                 ito_id: eq(&ito1.uuid)
             }),
-            import_error: none()
+            import_error: none(),
+            ..
         })
     );
 

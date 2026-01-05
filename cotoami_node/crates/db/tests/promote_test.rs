@@ -30,6 +30,7 @@ fn promote() -> Result<()> {
             coto_id: eq(&coto.uuid),
             created_at: eq(&coto.updated_at),
             updated_at: eq(&coto.updated_at),
+            ..
         })
     );
     assert_that!(
@@ -41,6 +42,7 @@ fn promote() -> Result<()> {
             content: none(), // the content should be moved to the summary
             summary: some(eq("Hello, world!")),
             is_cotonoma: eq(&true),
+            ..
         })
     );
     assert_that!(
@@ -50,8 +52,9 @@ fn promote() -> Result<()> {
             change: pat!(Change::PromoteCoto {
                 coto_id: eq(&coto.uuid),
                 promoted_at: eq(&coto.updated_at),
-                cotonoma_id: eq(&cotonoma.uuid)
+                cotonoma_id: eq(&cotonoma.uuid),
             }),
+            ..
         })
     );
 
@@ -84,6 +87,7 @@ fn promote() -> Result<()> {
         pat!(Cotonoma {
             name: eq("01234567890123456789012345678901234567890123456789"),
             coto_id: eq(&coto.uuid),
+            ..
         })
     );
     assert_that!(
@@ -92,6 +96,7 @@ fn promote() -> Result<()> {
             content: some(eq("012345678901234567890123456789012345678901234567890")),
             summary: some(eq("01234567890123456789012345678901234567890123456789")),
             is_cotonoma: eq(&true),
+            ..
         })
     );
 
@@ -111,6 +116,7 @@ fn promote() -> Result<()> {
         pat!(Cotonoma {
             name: eq("hello"),
             coto_id: eq(&coto.uuid),
+            ..
         })
     );
     assert_that!(
@@ -119,6 +125,7 @@ fn promote() -> Result<()> {
             content: some(eq("Hello, world!")),
             summary: some(eq("hello")),
             is_cotonoma: eq(&true),
+            ..
         })
     );
 
@@ -140,6 +147,7 @@ fn promote() -> Result<()> {
         pat!(Cotonoma {
             name: eq("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwx"),
             coto_id: eq(&coto.uuid),
+            ..
         })
     );
     assert_that!(
@@ -148,6 +156,7 @@ fn promote() -> Result<()> {
             content: some(eq("Hello, world!")),
             summary: some(eq("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwx")),
             is_cotonoma: eq(&true),
+            ..
         })
     );
 

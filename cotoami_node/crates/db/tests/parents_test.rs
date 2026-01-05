@@ -72,9 +72,11 @@ fn parents() -> Result<()> {
         elements_are![
             pat!(ParentNode {
                 node_id: eq(&moon_db.globals().try_get_local_node_id()?),
+                ..
             }),
             pat!(ParentNode {
-                node_id: eq(&sun_db.globals().try_get_local_node_id()?)
+                node_id: eq(&sun_db.globals().try_get_local_node_id()?),
+                ..
             })
         ]
     );
@@ -89,6 +91,7 @@ fn parents() -> Result<()> {
         some(pat!(ParentNode {
             node_id: eq(&sun_node.uuid),
             last_read_at: some(eq(&read_at)),
+            ..
         }))
     );
 

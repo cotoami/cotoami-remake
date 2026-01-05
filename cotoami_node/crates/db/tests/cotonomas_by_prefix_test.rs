@@ -21,7 +21,10 @@ fn cotonomas_by_prefix() -> Result<()> {
     let cotonomas = ds.cotonomas_by_prefix("abc", None, 1)?;
     assert_that!(
         cotonomas,
-        elements_are![pat!(Cotonoma { name: eq("abc") }),]
+        elements_are![pat!(Cotonoma {
+            name: eq("abc"),
+            ..
+        }),]
     );
 
     // When: limit 2 (both exact and prefix matches)
@@ -30,8 +33,14 @@ fn cotonomas_by_prefix() -> Result<()> {
         cotonomas,
         elements_are![
             // exact matches should come first
-            pat!(Cotonoma { name: eq("abc") }),
-            pat!(Cotonoma { name: eq("abcabc") }),
+            pat!(Cotonoma {
+                name: eq("abc"),
+                ..
+            }),
+            pat!(Cotonoma {
+                name: eq("abcabc"),
+                ..
+            }),
         ]
     );
 
@@ -41,15 +50,24 @@ fn cotonomas_by_prefix() -> Result<()> {
         cotonomas,
         elements_are![
             // exact matches should come first
-            pat!(Cotonoma { name: eq("abc") }),
-            pat!(Cotonoma { name: eq("abcabc") }),
-            pat!(Cotonoma { name: eq("abcdef") })
+            pat!(Cotonoma {
+                name: eq("abc"),
+                ..
+            }),
+            pat!(Cotonoma {
+                name: eq("abcabc"),
+                ..
+            }),
+            pat!(Cotonoma {
+                name: eq("abcdef"),
+                ..
+            })
         ]
     );
 
     // When: '%' should be escaped
     let cotonomas = ds.cotonomas_by_prefix("%cde", None, 5)?;
-    assert_that!(cotonomas, empty());
+    assert_that!(cotonomas, is_empty());
 
     Ok(())
 }

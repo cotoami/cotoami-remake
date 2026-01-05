@@ -68,7 +68,8 @@ fn import_changes() -> Result<()> {
         assert_that!(
             db2.new_session().unwrap().parent_node(&node1.uuid, &opr2),
             ok(some(pat!(ParentNode {
-                changes_received: eq(&changes)
+                changes_received: eq(&changes),
+                ..
             })))
         );
     };
@@ -88,6 +89,7 @@ fn import_changes() -> Result<()> {
             origin_serial_number: eq(&db1_change1.origin_serial_number),
             change: eq(&db1_change1.change),
             import_error: none(),
+            ..
         })
     );
 
@@ -120,6 +122,7 @@ fn import_changes() -> Result<()> {
             origin_serial_number: eq(&db1_change2.origin_serial_number),
             change: eq(&db1_change2.change),
             import_error: none(),
+            ..
         })
     );
 
@@ -141,6 +144,7 @@ fn import_changes() -> Result<()> {
             origin_serial_number: eq(&db1_change3.origin_serial_number),
             change: eq(&db1_change3.change),
             import_error: none(),
+            ..
         })
     );
 
@@ -162,6 +166,7 @@ fn import_changes() -> Result<()> {
             origin_serial_number: eq(&db1_change4.origin_serial_number),
             change: eq(&db1_change4.change),
             import_error: none(),
+            ..
         })
     );
 
@@ -183,6 +188,7 @@ fn import_changes() -> Result<()> {
             origin_serial_number: eq(&db1_change5.origin_serial_number),
             change: eq(&db1_change5.change),
             import_error: none(),
+            ..
         })
     );
 
@@ -207,6 +213,7 @@ fn import_changes() -> Result<()> {
             origin_serial_number: eq(&db1_change6.origin_serial_number),
             change: eq(&db1_change6.change),
             import_error: none(),
+            ..
         })
     );
 
@@ -233,6 +240,7 @@ fn import_changes() -> Result<()> {
             origin_serial_number: eq(&db1_change8.origin_serial_number),
             change: eq(&db1_change8.change),
             import_error: none(),
+            ..
         })
     );
 
@@ -284,7 +292,8 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
         pat!(ChangelogEntry {
             serial_number: eq(&4),
             origin_node_id: eq(&origin_node_id),
-            origin_serial_number: eq(&1)
+            origin_serial_number: eq(&1),
+            ..
         })
     );
     assert_eq!(
@@ -343,9 +352,11 @@ fn import_error() -> Result<()> {
             origin_node_id: eq(&parent_node.uuid),
             origin_serial_number: eq(&1),
             change: pat!(Change::RenameNode {
-                node_id: anything()
+                node_id: anything(),
+                ..
             }),
-            import_error: some(eq("NotFound"))
+            import_error: some(eq("NotFound")),
+            ..
         }))
     );
 

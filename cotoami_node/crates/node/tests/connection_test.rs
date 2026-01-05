@@ -70,7 +70,8 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
         unordered_elements_are![
             some(pat!(LocalNodeEvent::ServerStateChanged {
                 node_id: eq(&server_id),
-                not_connected: none() // It means "connected".
+                not_connected: none(), // It means "connected".
+                ..
             })),
             some(pat!(LocalNodeEvent::ParentRegistered {
                 node_id: eq(&server_id),
@@ -88,6 +89,7 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
         wait_get(client_events.next(), "ParentSyncStart event").await,
         some(pat!(LocalNodeEvent::ParentSyncStart {
             node_id: eq(&server_id),
+            ..
         }))
     );
     assert_that!(
@@ -136,7 +138,8 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
         wait_get(client_events.next(), "ServerStateChanged event").await,
         some(pat!(LocalNodeEvent::ServerStateChanged {
             node_id: eq(&server_id),
-            not_connected: some(pat!(NotConnected::Connecting(some(anything()))))
+            not_connected: some(pat!(NotConnected::Connecting(some(anything())))),
+            ..
         })),
         "Client should try to reconnect after manual disconnection."
     );

@@ -30,10 +30,12 @@ fn cotonoma_tree() -> Result<()> {
         subs.rows,
         elements_are![
             pat!(Cotonoma {
-                name: eq("Functional")
+                name: eq("Functional"),
+                ..
             }),
             pat!(Cotonoma {
-                name: eq("Object-Oriented")
+                name: eq("Object-Oriented"),
+                ..
             }),
         ],
     );
@@ -78,8 +80,14 @@ fn cotonoma_tree() -> Result<()> {
     assert_that!(
         subs.rows,
         elements_are![
-            pat!(Cotonoma { name: eq("Scala") }),
-            pat!(Cotonoma { name: eq("Java") }),
+            pat!(Cotonoma {
+                name: eq("Scala"),
+                ..
+            }),
+            pat!(Cotonoma {
+                name: eq("Java"),
+                ..
+            }),
         ]
     );
 

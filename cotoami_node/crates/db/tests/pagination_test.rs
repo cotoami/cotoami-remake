@@ -22,7 +22,7 @@ fn pagination() -> Result<()> {
             size: eq(&2),
             index: eq(&0),
             total_rows: eq(&0),
-            rows: empty(),
+            rows: is_empty(),
         })
     );
     assert_eq!(paginated.total_pages(), 0);
@@ -39,7 +39,8 @@ fn pagination() -> Result<()> {
             index: eq(&0),
             total_rows: eq(&1),
             rows: elements_are![pat!(Coto {
-                content: some(eq("1"))
+                content: some(eq("1")),
+                ..
             })],
         })
     );
@@ -58,10 +59,12 @@ fn pagination() -> Result<()> {
             total_rows: eq(&2),
             rows: elements_are![
                 pat!(Coto {
-                    content: some(eq("2"))
+                    content: some(eq("2")),
+                    ..
                 }),
                 pat!(Coto {
-                    content: some(eq("1"))
+                    content: some(eq("1")),
+                    ..
                 })
             ],
         })
@@ -81,10 +84,12 @@ fn pagination() -> Result<()> {
             total_rows: eq(&3),
             rows: elements_are![
                 pat!(Coto {
-                    content: some(eq("3"))
+                    content: some(eq("3")),
+                    ..
                 }),
                 pat!(Coto {
-                    content: some(eq("2"))
+                    content: some(eq("2")),
+                    ..
                 })
             ],
         })
@@ -102,7 +107,8 @@ fn pagination() -> Result<()> {
             index: eq(&1),
             total_rows: eq(&3),
             rows: elements_are![pat!(Coto {
-                content: some(eq("1"))
+                content: some(eq("1")),
+                ..
             })],
         })
     );

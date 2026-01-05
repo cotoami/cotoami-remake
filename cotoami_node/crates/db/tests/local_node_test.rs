@@ -17,7 +17,7 @@ fn default_state() -> Result<()> {
 
     // then
     assert_that!(db.globals().has_local_node(), eq(false));
-    assert_that!(session.all_nodes()?, empty());
+    assert_that!(session.all_nodes()?, is_empty());
 
     Ok(())
 }
@@ -42,6 +42,7 @@ fn init_as_empty_node() -> Result<()> {
             root_cotonoma_id: none(),
             version: eq(&1),
             created_at: eq(&mock_time),
+            ..
         })
     );
     assert_icon_generated(&node)?;
@@ -53,7 +54,8 @@ fn init_as_empty_node() -> Result<()> {
             rowid: eq(&1),
             owner_password_hash: none(),
             owner_session_token: none(),
-            owner_session_expires_at: none()
+            owner_session_expires_at: none(),
+            ..
         })
     );
 
@@ -75,6 +77,7 @@ fn init_as_empty_node() -> Result<()> {
                 node: eq(&Node { rowid: 0, ..node }),
                 root: none()
             }),
+            ..
         })
     );
 
@@ -179,6 +182,7 @@ fn init_as_node() -> Result<()> {
             name: eq("My Node"),
             version: eq(&2), // root_cotonoma_id has been updated,
             created_at: eq(&mock_time),
+            ..
         })
     );
     assert_icon_generated(&node)?;
@@ -190,7 +194,8 @@ fn init_as_node() -> Result<()> {
             rowid: eq(&1),
             owner_password_hash: none(),
             owner_session_token: none(),
-            owner_session_expires_at: none()
+            owner_session_expires_at: none(),
+            ..
         })
     );
 
@@ -228,6 +233,7 @@ fn init_as_node() -> Result<()> {
             reposted_in_ids: none(),
             created_at: eq(&mock_time),
             updated_at: eq(&mock_time),
+            ..
         })
     );
     assert_that!(ds.all_cotos(), ok(elements_are![eq(&root_coto)]));
@@ -247,7 +253,8 @@ fn init_as_node() -> Result<()> {
                         ..root_coto
                     }
                 )))
-            })
+            }),
+            ..
         })
     );
 

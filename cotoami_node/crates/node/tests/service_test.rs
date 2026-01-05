@@ -112,13 +112,15 @@ where
                 node_id: eq(&new_client_id),
                 password_hash: eq(""), // should not be exposed
                 session_token: none(), // should not be exposed
-                disabled: eq(&false)
+                disabled: eq(&false),
+                ..
             }),
             // some fields will be set after the first login
             node: pat!(Node {
                 name: eq(""),
                 icon: eq(&Bytes::default()),
-                version: eq(&0)
+                version: eq(&0),
+                ..
             })
         }),
     );
@@ -130,7 +132,8 @@ where
             node_id: eq(&new_client_id),
             as_owner: eq(&false),
             can_edit_itos: eq(&false),
-            can_post_cotonomas: eq(&false)
+            can_post_cotonomas: eq(&false),
+            ..
         })
     );
 
@@ -151,7 +154,8 @@ where
         updated_client,
         pat!(ClientNode {
             node_id: eq(&new_client_id),
-            disabled: eq(&true)
+            disabled: eq(&true),
+            ..
         }),
     );
 
@@ -185,7 +189,8 @@ where
             node_id: eq(&new_client_id),
             as_owner: eq(&false),
             can_edit_itos: eq(&true),
-            can_post_cotonomas: eq(&false)
+            can_post_cotonomas: eq(&false),
+            ..
         }),
     );
 
@@ -230,6 +235,7 @@ where
             is_cotonoma: eq(&false),
             repost_of_id: none(),
             reposted_in_ids: none(),
+            ..
         }),
     );
     assert_that!(
@@ -239,7 +245,8 @@ where
             change: pat!(Change::CreateCoto(eq(&Coto {
                 rowid: 0,
                 ..posted_coto
-            })))
+            }))),
+            ..
         })),
     );
 
@@ -262,6 +269,7 @@ where
             description: some(eq("The first ito")),
             details: none(),
             order: eq(&1),
+            ..
         }),
     );
 
@@ -292,10 +300,12 @@ where
             pat!(Ito {
                 description: some(eq("The first ito")),
                 order: eq(&1),
+                ..
             }),
             pat!(Ito {
                 description: some(eq("The second ito")),
                 order: eq(&2),
+                ..
             })
         ]
     );
@@ -316,6 +326,7 @@ where
         pat!(Ito {
             uuid: eq(&ito2.uuid),
             order: eq(&1),
+            ..
         }),
     );
 
@@ -326,10 +337,12 @@ where
             pat!(Ito {
                 description: some(eq("The second ito")),
                 order: eq(&1),
+                ..
             }),
             pat!(Ito {
                 description: some(eq("The first ito")),
                 order: eq(&2),
+                ..
             })
         ]
     );
@@ -353,6 +366,7 @@ where
         pat!(Ito {
             description: some(eq("Updated phrase")),
             details: some(eq("Added details")),
+            ..
         }),
     );
 
@@ -374,6 +388,7 @@ where
         unordered_elements_are![pat!(Ito {
             description: some(eq("The second ito")),
             order: eq(&1),
+            ..
         })]
     );
 
@@ -400,6 +415,7 @@ where
             is_cotonoma: eq(&false),
             repost_of_id: none(),
             reposted_in_ids: none(),
+            ..
         }),
     );
     assert_that!(
@@ -412,6 +428,7 @@ where
             description: none(),
             details: none(),
             order: eq(&1),
+            ..
         }),
     );
 
@@ -433,6 +450,7 @@ where
             coto_id: eq(&coto.uuid),
             created_at: eq(&coto.updated_at),
             updated_at: eq(&coto.updated_at),
+            ..
         }),
     );
     assert_that!(
@@ -441,6 +459,7 @@ where
             content: none(),
             summary: some(eq("Hello, Cotoami!")),
             is_cotonoma: eq(&true),
+            ..
         }),
     );
 

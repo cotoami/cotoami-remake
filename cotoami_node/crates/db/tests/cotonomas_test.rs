@@ -31,6 +31,7 @@ fn crud_operations() -> Result<()> {
             coto_id: eq(&coto.uuid),
             created_at: eq(&mock_time),
             updated_at: eq(&mock_time),
+            ..
         })
     );
     assert_eq!(cotonoma.created_at, cotonoma.updated_at);
@@ -44,6 +45,7 @@ fn crud_operations() -> Result<()> {
             content: none(),
             summary: some(eq("test")),
             is_cotonoma: eq(&true),
+            ..
         })
     );
     assert_eq!(coto.created_at, coto.updated_at);
@@ -60,6 +62,7 @@ fn crud_operations() -> Result<()> {
                 eq(&cotonoma),
                 eq(&Coto { rowid: 0, ..coto })
             )),
+            ..
         })
     );
 
@@ -78,6 +81,7 @@ fn crud_operations() -> Result<()> {
             posted_in_id: some(eq(&cotonoma.uuid)),
             posted_by_id: eq(&node.uuid),
             content: some(eq("hello")),
+            ..
         })
     );
 
@@ -98,6 +102,7 @@ fn crud_operations() -> Result<()> {
         pat!(Cotonoma {
             name: eq("test2"),
             updated_at: eq(&mock_time),
+            ..
         })
     );
     assert_that!(
@@ -105,6 +110,7 @@ fn crud_operations() -> Result<()> {
         pat!(Coto {
             summary: some(eq("test2")),
             updated_at: eq(&mock_time),
+            ..
         })
     );
     assert_that!(
@@ -116,6 +122,7 @@ fn crud_operations() -> Result<()> {
                 name: eq("test2"),
                 updated_at: eq(&mock_time)
             }),
+            ..
         })
     );
 
@@ -145,7 +152,9 @@ fn crud_operations() -> Result<()> {
             origin_node_id: eq(&node.uuid),
             change: pat!(Change::DeleteCoto {
                 coto_id: eq(&coto.uuid),
-            })
+                ..
+            }),
+            ..
         })
     );
     assert_that!(ds.coto(&coto.uuid), ok(none()));
@@ -164,6 +173,7 @@ fn crud_operations() -> Result<()> {
         pat!(Cotonoma {
             name: eq("Our Node"),
             updated_at: eq(&mock_time),
+            ..
         })
     );
     assert_that!(
@@ -171,6 +181,7 @@ fn crud_operations() -> Result<()> {
         pat!(Coto {
             summary: some(eq("Our Node")),
             updated_at: eq(&mock_time),
+            ..
         })
     );
     assert_that!(
@@ -182,6 +193,7 @@ fn crud_operations() -> Result<()> {
                 name: eq("Our Node"),
                 updated_at: eq(&mock_time)
             }),
+            ..
         })
     );
     assert_that!(ds.local_node()?.name, eq("Our Node"));

@@ -687,7 +687,8 @@ mod tests {
                 content: pat!(FieldDiff::Change(eq("hello"))),
                 summary: eq(&FieldDiff::Delete),
                 media_content: eq(&FieldDiff::None),
-                geolocation: eq(&FieldDiff::None)
+                geolocation: eq(&FieldDiff::None),
+                ..
             })
         );
 

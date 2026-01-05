@@ -48,10 +48,12 @@ fn graph() -> Result<()> {
         elements_are![(
             unordered_elements_are![pat!(Ito {
                 uuid: eq(&ito1.uuid),
-                description: some(eq(&"foo"))
+                description: some(eq(&"foo")),
+                ..
             })],
             unordered_elements_are![pat!(Coto {
-                uuid: eq(&root_coto.uuid)
+                uuid: eq(&root_coto.uuid),
+                ..
             })]
         )]
     );
@@ -91,19 +93,23 @@ fn graph() -> Result<()> {
         elements_are![
             (
                 unordered_elements_are![pat!(Ito {
-                    uuid: eq(&ito2.uuid)
+                    uuid: eq(&ito2.uuid),
+                    ..
                 })],
                 unordered_elements_are![pat!(Coto {
-                    uuid: eq(&coto1.uuid)
+                    uuid: eq(&coto1.uuid),
+                    ..
                 })]
             ),
             (
                 unordered_elements_are![pat!(Ito {
                     uuid: eq(&ito1.uuid),
-                    description: some(eq(&"foo"))
+                    description: some(eq(&"foo")),
+                    ..
                 })],
                 unordered_elements_are![pat!(Coto {
-                    uuid: eq(&root_coto.uuid)
+                    uuid: eq(&root_coto.uuid),
+                    ..
                 })]
             )
         ]
@@ -139,32 +145,39 @@ fn graph() -> Result<()> {
         elements_are![
             (
                 unordered_elements_are![pat!(Ito {
-                    uuid: eq(&ito4.uuid)
+                    uuid: eq(&ito4.uuid),
+                    ..
                 })],
                 unordered_elements_are![pat!(Coto {
-                    uuid: eq(&coto2.uuid)
+                    uuid: eq(&coto2.uuid),
+                    ..
                 })]
             ),
             (
                 unordered_elements_are![pat!(Ito {
-                    uuid: eq(&ito2.uuid)
+                    uuid: eq(&ito2.uuid),
+                    ..
                 })],
                 unordered_elements_are![pat!(Coto {
-                    uuid: eq(&coto1.uuid)
+                    uuid: eq(&coto1.uuid),
+                    ..
                 })]
             ),
             (
                 unordered_elements_are![
                     pat!(Ito {
                         uuid: eq(&ito1.uuid),
-                        description: some(eq(&"foo"))
+                        description: some(eq(&"foo")),
+                        ..
                     }),
                     pat!(Ito {
-                        uuid: eq(&ito5.uuid)
+                        uuid: eq(&ito5.uuid),
+                        ..
                     })
                 ],
                 unordered_elements_are![pat!(Coto {
-                    uuid: eq(&root_coto.uuid)
+                    uuid: eq(&root_coto.uuid),
+                    ..
                 })]
             )
         ]

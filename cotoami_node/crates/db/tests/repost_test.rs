@@ -36,7 +36,8 @@ fn repost() -> Result<()> {
             summary: none(),
             is_cotonoma: eq(&false),
             repost_of_id: some(eq(&coto.uuid)),
-            reposted_in_ids: none()
+            reposted_in_ids: none(),
+            ..
         })
     );
 
@@ -47,7 +48,8 @@ fn repost() -> Result<()> {
             change: pat!(Change::CreateCoto(eq(&Coto {
                 rowid: 0,
                 ..repost1
-            })))
+            }))),
+            ..
         })
     );
 
@@ -63,7 +65,8 @@ fn repost() -> Result<()> {
             is_cotonoma: eq(&false),
             repost_of_id: none(),
             reposted_in_ids: some(pat!(Ids(elements_are![eq(&cotonoma1.uuid)]))),
-            updated_at: eq(&repost1.created_at)
+            updated_at: eq(&repost1.created_at),
+            ..
         })
     );
 
@@ -96,7 +99,8 @@ fn repost() -> Result<()> {
             is_cotonoma: eq(&false),
             // The original should be the `coto`, not the `repost1`.
             repost_of_id: some(eq(&coto.uuid)),
-            reposted_in_ids: none()
+            reposted_in_ids: none(),
+            ..
         })
     );
 
@@ -107,7 +111,8 @@ fn repost() -> Result<()> {
             change: pat!(Change::CreateCoto(eq(&Coto {
                 rowid: 0,
                 ..repost2
-            })))
+            }))),
+            ..
         })
     );
 
@@ -121,7 +126,8 @@ fn repost() -> Result<()> {
                 eq(&cotonoma1.uuid),
                 eq(&cotonoma2.uuid)
             ]))),
-            updated_at: eq(&repost2.created_at)
+            updated_at: eq(&repost2.created_at),
+            ..
         })
     );
 
@@ -145,7 +151,8 @@ fn repost() -> Result<()> {
             content: some(eq("Cargo")),
             repost_of_id: none(),
             reposted_in_ids: some(pat!(Ids(elements_are![eq(&cotonoma1.uuid)]))),
-            updated_at: eq(&deleted_at)
+            updated_at: eq(&deleted_at),
+            ..
         }))
     );
 
@@ -174,6 +181,7 @@ fn repost() -> Result<()> {
         some(pat!(Coto {
             content: some(eq("Hello")),
             reposted_in_ids: none(),
+            ..
         }))
     );
 

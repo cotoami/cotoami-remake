@@ -36,6 +36,7 @@ fn crud_operations() -> Result<()> {
             reposted_in_ids: none(),
             created_at: eq(&mock_time),
             updated_at: eq(&mock_time),
+            ..
         })
     );
 
@@ -68,7 +69,8 @@ fn crud_operations() -> Result<()> {
             serial_number: eq(&2),
             origin_node_id: eq(&node.uuid),
             origin_serial_number: eq(&2),
-            change: pat!(Change::CreateCoto(eq(&Coto { rowid: 0, ..coto })))
+            change: pat!(Change::CreateCoto(eq(&Coto { rowid: 0, ..coto }))),
+            ..
         })
     );
 
@@ -95,6 +97,7 @@ fn crud_operations() -> Result<()> {
             repost_of_id: none(),
             reposted_in_ids: none(),
             updated_at: eq(&mock_time),
+            ..
         })
     );
 
@@ -114,10 +117,12 @@ fn crud_operations() -> Result<()> {
                     content: pat!(FieldDiff::Change(eq("bar"))),
                     summary: pat!(FieldDiff::Change(eq("foo"))),
                     media_content: eq(&FieldDiff::None),
-                    geolocation: eq(&FieldDiff::None)
+                    geolocation: eq(&FieldDiff::None),
+                    ..
                 }),
                 updated_at: eq(&edited_coto.updated_at),
-            })
+            }),
+            ..
         })
     );
 
@@ -133,6 +138,7 @@ fn crud_operations() -> Result<()> {
             summary: eq(&FieldDiff::Delete),
             media_content: eq(&FieldDiff::None),
             geolocation: eq(&FieldDiff::None),
+            ..
         })
     );
     let (edited_coto, changelog) = ds.edit_coto(&coto.uuid, diff, &opr)?;
@@ -149,6 +155,7 @@ fn crud_operations() -> Result<()> {
             is_cotonoma: eq(&false),
             repost_of_id: none(),
             reposted_in_ids: none(),
+            ..
         })
     );
 
@@ -169,9 +176,11 @@ fn crud_operations() -> Result<()> {
                     summary: eq(&FieldDiff::Delete),
                     media_content: eq(&FieldDiff::None),
                     geolocation: eq(&FieldDiff::None),
+                    ..
                 }),
                 updated_at: eq(&edited_coto.updated_at),
-            })
+            }),
+            ..
         })
     );
 
@@ -189,7 +198,8 @@ fn crud_operations() -> Result<()> {
         pat!(Page {
             size: eq(&5),
             index: eq(&0),
-            total_rows: eq(&0)
+            total_rows: eq(&0),
+            ..
         })
     );
 
@@ -202,8 +212,9 @@ fn crud_operations() -> Result<()> {
             origin_serial_number: eq(&5),
             change: pat!(Change::DeleteCoto {
                 coto_id: eq(&coto.uuid),
-                // deleted_at:
-            })
+                ..
+            }),
+            ..
         })
     );
 
