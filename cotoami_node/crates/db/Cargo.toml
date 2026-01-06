@@ -7,9 +7,9 @@ rust-version.workspace = true
 version.workspace = true
 
 [dependencies]
-aes-gcm = {version = "0.10.3", features = ["std"]}
+aes-gcm = { version = "0.10.3", features = ["std"] }
 anyhow.workspace = true
-argon2 = {version = "0.5.0", features = ["std"]}
+argon2 = { version = "0.5.0", features = ["std"] }
 base64.workspace = true
 bytes.workspace = true
 chrono.workspace = true
@@ -35,16 +35,20 @@ url.workspace = true
 uuid.workspace = true
 validator.workspace = true
 
-# Add support for RETURNING expressions for Sqlite via the returning_clauses_for_sqlite_3_35 feature
-diesel = {version = "2.3.5", features = ["sqlite", "chrono", "returning_clauses_for_sqlite_3_35"]}
-diesel_migrations = {version = "2.3.1", features = ["sqlite"]}
+diesel = { version = "2.3.5", features = [
+    "sqlite",
+    "chrono",
+    # Add support for RETURNING expressions for Sqlite via the returning_clauses_for_sqlite_3_35 feature
+    "returning_clauses_for_sqlite_3_35",
+] }
+diesel_migrations = { version = "2.3.1", features = ["sqlite"] }
 
 # diesel 2.3.5 depends on libsqlite3-sys >=0.17.2, <0.36.0
 # https://github.com/diesel-rs/diesel/blob/v2.3.5/diesel/Cargo.toml#L53
 #
 # libsqlite3-sys 0.35.0 contains SQLite version 3.49.1
 # https://github.com/rusqlite/rusqlite/blob/v0.35.0/libsqlite3-sys/sqlite3/sqlite3.h#L149
-libsqlite3-sys = {version = "0.35.0", features = ["bundled"]}
+libsqlite3-sys = { version = "0.35.0", features = ["bundled"] }
 
 # Fixed version of MessagePack + Serde
 #
