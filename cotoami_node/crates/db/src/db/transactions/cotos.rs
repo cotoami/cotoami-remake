@@ -49,7 +49,7 @@ impl DatabaseSession<'_> {
     ) -> Result<Page<Coto>> {
         self.read_transaction(coto_ops::recently_inserted(
             node_id,
-            posted_in_id,
+            posted_in_id.map(std::slice::from_ref),
             only_cotonomas,
             page_size,
             page_index,
