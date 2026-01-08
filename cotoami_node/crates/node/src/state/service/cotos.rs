@@ -31,7 +31,7 @@ impl NodeState {
         self.get(move |ds| {
             let page = ds.recent_cotos(
                 node.as_ref(),
-                cotonoma.as_ref(),
+                cotonoma.map(|c| (c, CotonomaScope::Local)),
                 only_cotonomas,
                 pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
                 pagination.page,

@@ -15,7 +15,7 @@ pub mod prelude {
         db::{
             error::*,
             ops::{node_role_ops::*, Page},
-            transactions::DatabaseSession,
+            transactions::{cotos::CotonomaScope, DatabaseSession},
             Database,
         },
         models::prelude::*,

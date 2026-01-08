@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
+use diesel::sqlite::SqliteConnection;
 
 use crate::{
     db::{
@@ -11,6 +12,13 @@ use crate::{
     },
     models::prelude::*,
 };
+
+#[derive(derive_more::Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub enum CotonomaScope {
+    Local,
+    Recursive,
+    Depth(usize),
+}
 
 impl DatabaseSession<'_> {
     pub fn coto(&mut self, id: &Id<Coto>) -> Result<Option<Coto>> {
@@ -42,18 +50,32 @@ impl DatabaseSession<'_> {
     pub fn recent_cotos(
         &mut self,
         node_id: Option<&Id<Node>>,
-        posted_in_id: Option<&Id<Cotonoma>>,
+        posted_in: Option<(Id<Cotonoma>, CotonomaScope)>,
         only_cotonomas: bool,
         page_size: i64,
         page_index: i64,
     ) -> Result<Page<Coto>> {
-        self.read_transaction(coto_ops::recently_inserted(
-            node_id,
-            posted_in_id.map(std::slice::from_ref),
-            only_cotonomas,
-            page_size,
-            page_index,
-        ))
+        use cotonoma_ops::sub_ids_recursive;
+        self.read_transaction(|ctx: &mut Context<'_, SqliteConnection>| {
+            let posted_in_ids: Option<Vec<Id<Cotonoma>>> = if let Some((local, scope)) = posted_in {
+                let sub_ids = match scope {
+                    CotonomaScope::Local => vec![],
+                    CotonomaScope::Recursive => sub_ids_recursive(&local, None).run(ctx)?,
+                    CotonomaScope::Depth(d) => sub_ids_recursive(&local, Some(d)).run(ctx)?,
+                };
+                Some(std::iter::once(local).chain(sub_ids.into_iter()).collect())
+            } else {
+                None
+            };
+            coto_ops::recently_inserted(
+                node_id,
+                posted_in_ids.as_deref(),
+                only_cotonomas,
+                page_size,
+                page_index,
+            )
+            .run(ctx)
+        })
     }
 
     pub fn geolocated_cotos(
