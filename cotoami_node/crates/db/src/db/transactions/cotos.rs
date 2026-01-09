@@ -58,12 +58,13 @@ impl DatabaseSession<'_> {
         use cotonoma_ops::sub_ids_recursive;
         self.read_transaction(|ctx: &mut Context<'_, SqliteConnection>| {
             let posted_in_ids: Option<Vec<Id<Cotonoma>>> = if let Some((local, scope)) = posted_in {
-                let sub_ids = match scope {
+                let mut cotonoma_ids = match scope {
                     CotonomaScope::Local => vec![],
                     CotonomaScope::Recursive => sub_ids_recursive(&local, None).run(ctx)?,
                     CotonomaScope::Depth(d) => sub_ids_recursive(&local, Some(d)).run(ctx)?,
                 };
-                Some(std::iter::once(local).chain(sub_ids.into_iter()).collect())
+                cotonoma_ids.push(local); // order doesn't matter
+                Some(cotonoma_ids)
             } else {
                 None
             };
