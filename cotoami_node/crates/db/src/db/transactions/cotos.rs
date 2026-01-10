@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 use diesel::sqlite::SqliteConnection;
+use either::Either;
 
 use crate::{
     db::{
@@ -12,6 +13,13 @@ use crate::{
     },
     models::prelude::*,
 };
+
+#[derive(derive_more::Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub enum Scope {
+    All,
+    Node(Id<Node>),
+    Cotonoma((Id<Cotonoma>, CotonomaScope)),
+}
 
 #[derive(derive_more::Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum CotonomaScope {
@@ -49,28 +57,28 @@ impl DatabaseSession<'_> {
 
     pub fn recent_cotos(
         &mut self,
-        node_id: Option<&Id<Node>>,
-        posted_in: Option<(Id<Cotonoma>, CotonomaScope)>,
+        scope: Scope,
         only_cotonomas: bool,
         page_size: i64,
         page_index: i64,
     ) -> Result<Page<Coto>> {
         use cotonoma_ops::sub_ids_recursive;
         self.read_transaction(|ctx: &mut Context<'_, SqliteConnection>| {
-            let posted_in_ids: Option<Vec<Id<Cotonoma>>> = if let Some((local, scope)) = posted_in {
-                let mut cotonoma_ids = match scope {
-                    CotonomaScope::Local => vec![],
-                    CotonomaScope::Recursive => sub_ids_recursive(&local, None).run(ctx)?,
-                    CotonomaScope::Depth(d) => sub_ids_recursive(&local, Some(d)).run(ctx)?,
-                };
-                cotonoma_ids.push(local); // order doesn't matter
-                Some(cotonoma_ids)
-            } else {
-                None
+            let scope = match scope {
+                Scope::All => None,
+                Scope::Node(node_id) => Some(Either::Left(node_id)),
+                Scope::Cotonoma((local, cotonoma_scope)) => {
+                    let mut cotonoma_ids = match cotonoma_scope {
+                        CotonomaScope::Local => vec![],
+                        CotonomaScope::Recursive => sub_ids_recursive(&local, None).run(ctx)?,
+                        CotonomaScope::Depth(d) => sub_ids_recursive(&local, Some(d)).run(ctx)?,
+                    };
+                    cotonoma_ids.push(local); // order doesn't matter
+                    Some(Either::Right(cotonoma_ids))
+                }
             };
             coto_ops::recently_inserted(
-                node_id,
-                posted_in_ids.as_deref(),
+                scope.as_ref().map(|e| e.as_ref().map_right(Vec::as_slice)),
                 only_cotonomas,
                 page_size,
                 page_index,

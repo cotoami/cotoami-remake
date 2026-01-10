@@ -78,8 +78,7 @@ fn cotonoma_tree() -> Result<()> {
     // assert: recent_cotos in "Object-Oriented"
     assert_that!(
         ds.recent_cotos(
-            None,
-            Some((cotonoma1.uuid, CotonomaScope::Recursive)),
+            Scope::Cotonoma((cotonoma1.uuid, CotonomaScope::Recursive)),
             false,
             5,
             0
@@ -142,8 +141,7 @@ fn cotonoma_tree() -> Result<()> {
     // assert: recent_cotos in "Object-Oriented"
     assert_that!(
         ds.recent_cotos(
-            None,
-            Some((cotonoma1.uuid, CotonomaScope::Recursive)),
+            Scope::Cotonoma((cotonoma1.uuid, CotonomaScope::Recursive)),
             false,
             5,
             0

@@ -47,8 +47,7 @@ fn crud_operations() -> Result<()> {
     // check if `recent_cotos` contains it
     assert_that!(
         ds.recent_cotos(
-            None,
-            Some((root_cotonoma.uuid, CotonomaScope::Local)),
+            Scope::Cotonoma((root_cotonoma.uuid, CotonomaScope::Local)),
             false,
             5,
             0
@@ -201,8 +200,7 @@ fn crud_operations() -> Result<()> {
     assert_that!(ds.coto(&coto.uuid)?, none());
     assert_that!(
         ds.recent_cotos(
-            None,
-            Some((root_cotonoma.uuid, CotonomaScope::Local)),
+            Scope::Cotonoma((root_cotonoma.uuid, CotonomaScope::Local)),
             false,
             5,
             0

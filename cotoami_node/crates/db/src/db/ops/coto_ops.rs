@@ -5,6 +5,7 @@ use std::{borrow::Cow, collections::HashMap, ops::DerefMut};
 use anyhow::{ensure, Context, Result};
 use chrono::NaiveDateTime;
 use diesel::{dsl::max, prelude::*};
+use either::Either;
 use validator::Validate;
 
 use crate::{
@@ -106,8 +107,7 @@ pub(crate) fn get_by_ids<'a, Conn: ReadConn>(
 }
 
 pub(crate) fn recently_inserted<'a, Conn: ReadConn>(
-    node_id: Option<&'a Id<Node>>,
-    posted_in_ids: Option<&'a [Id<Cotonoma>]>,
+    scope: Option<Either<&'a Id<Node>, &'a [Id<Cotonoma>]>>,
     only_cotonomas: bool,
     page_size: i64,
     page_index: i64,
@@ -118,10 +118,12 @@ pub(crate) fn recently_inserted<'a, Conn: ReadConn>(
             if only_cotonomas {
                 query = query.filter(cotos::is_cotonoma.eq(true));
             }
-            match (node_id, posted_in_ids) {
-                (Some(node_id), None) => query.filter(cotos::node_id.eq(node_id)),
-                (_, Some(posted_in_ids)) => query.filter(cotos::posted_in_id.eq_any(posted_in_ids)),
-                _ => query,
+            match scope {
+                Some(Either::Left(node_id)) => query.filter(cotos::node_id.eq(node_id)),
+                Some(Either::Right(posted_in_ids)) => {
+                    query.filter(cotos::posted_in_id.eq_any(posted_in_ids))
+                }
+                None => query,
             }
             .order(cotos::created_at.desc())
         })

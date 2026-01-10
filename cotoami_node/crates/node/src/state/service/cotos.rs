@@ -28,10 +28,14 @@ impl NodeState {
         if let Err(errors) = pagination.validate() {
             return errors.into_result();
         }
+        let scope = match (node, cotonoma) {
+            (Some(node), None) => Scope::Node(node),
+            (_, Some(cotonoma)) => Scope::Cotonoma((cotonoma, CotonomaScope::Local)),
+            (None, None) => Scope::All,
+        };
         self.get(move |ds| {
             let page = ds.recent_cotos(
-                node.as_ref(),
-                cotonoma.map(|c| (c, CotonomaScope::Local)),
+                scope,
                 only_cotonomas,
                 pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
                 pagination.page,
