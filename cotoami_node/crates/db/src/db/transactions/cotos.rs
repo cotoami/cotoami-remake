@@ -21,6 +21,12 @@ pub enum Scope {
     Cotonoma((Id<Cotonoma>, CotonomaScope)),
 }
 
+impl Scope {
+    pub fn cotonoma_local(cotonoma_id: Id<Cotonoma>) -> Self {
+        Self::Cotonoma((cotonoma_id, CotonomaScope::Local))
+    }
+}
+
 #[derive(derive_more::Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum CotonomaScope {
     Local,

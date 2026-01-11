@@ -13,12 +13,7 @@ fn pagination() -> Result<()> {
     let (root_cotonoma, _) = ds.local_node_root()?.unwrap();
 
     // when
-    let paginated = ds.recent_cotos(
-        Scope::Cotonoma((root_cotonoma.uuid, CotonomaScope::Local)),
-        false,
-        2,
-        0,
-    )?;
+    let paginated = ds.recent_cotos(Scope::cotonoma_local(root_cotonoma.uuid), false, 2, 0)?;
 
     // then
     assert_that!(
@@ -34,12 +29,7 @@ fn pagination() -> Result<()> {
 
     // when
     let _ = ds.post_coto(&CotoInput::new("1"), &root_cotonoma.uuid, &opr)?;
-    let paginated = ds.recent_cotos(
-        Scope::Cotonoma((root_cotonoma.uuid, CotonomaScope::Local)),
-        false,
-        2,
-        0,
-    )?;
+    let paginated = ds.recent_cotos(Scope::cotonoma_local(root_cotonoma.uuid), false, 2, 0)?;
 
     // then
     assert_that!(
@@ -58,12 +48,7 @@ fn pagination() -> Result<()> {
 
     // when
     let _ = ds.post_coto(&CotoInput::new("2"), &root_cotonoma.uuid, &opr)?;
-    let paginated = ds.recent_cotos(
-        Scope::Cotonoma((root_cotonoma.uuid, CotonomaScope::Local)),
-        false,
-        2,
-        0,
-    )?;
+    let paginated = ds.recent_cotos(Scope::cotonoma_local(root_cotonoma.uuid), false, 2, 0)?;
 
     // then
     assert_that!(
@@ -88,12 +73,7 @@ fn pagination() -> Result<()> {
 
     // when
     let _ = ds.post_coto(&CotoInput::new("3"), &root_cotonoma.uuid, &opr)?;
-    let paginated = ds.recent_cotos(
-        Scope::Cotonoma((root_cotonoma.uuid, CotonomaScope::Local)),
-        false,
-        2,
-        0,
-    )?;
+    let paginated = ds.recent_cotos(Scope::cotonoma_local(root_cotonoma.uuid), false, 2, 0)?;
 
     // then
     assert_that!(
@@ -117,12 +97,7 @@ fn pagination() -> Result<()> {
     assert_eq!(paginated.total_pages(), 2);
 
     // when
-    let paginated = ds.recent_cotos(
-        Scope::Cotonoma((root_cotonoma.uuid, CotonomaScope::Local)),
-        false,
-        2,
-        1,
-    )?;
+    let paginated = ds.recent_cotos(Scope::cotonoma_local(root_cotonoma.uuid), false, 2, 1)?;
 
     // then
     assert_that!(
