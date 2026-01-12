@@ -75,30 +75,10 @@ fn cotonoma_tree() -> Result<()> {
         unordered_elements_are![eq(&cotonoma1.uuid), eq(&cotonoma2.uuid),]
     );
 
-    // assert: recent_cotos in "Object-Oriented"
+    // assert: recent cotos in "Object-Oriented"
     assert_that!(
-        ds.recent_cotos(
-            Scope::Cotonoma((cotonoma1.uuid, CotonomaScope::Recursive)),
-            false,
-            5,
-            0
-        )?
-        .rows,
-        elements_are![
-            pat!(Coto {
-                content: some(eq("POJO")),
-                ..
-            }),
-            pat!(Coto {
-                summary: some(eq("Java")),
-                is_cotonoma: eq(&true),
-                ..
-            }),
-            pat!(Coto {
-                content: some(eq("polymorphism")),
-                ..
-            }),
-        ]
+        timeline(&mut ds, Scope::cotonoma_recursive(cotonoma1.uuid))?,
+        elements_are![eq("POJO"), eq("cotonoma:Java"), eq("polymorphism"),]
     );
 
     /////////////////////////////////////////////////////////////////////////////
@@ -138,38 +118,43 @@ fn cotonoma_tree() -> Result<()> {
         unordered_elements_are![eq(&cotonoma3.uuid), eq(&cotonoma4.uuid)]
     );
 
-    // assert: recent_cotos in "Object-Oriented"
+    // assert: recent cotos in "Object-Oriented"
     assert_that!(
-        ds.recent_cotos(
-            Scope::Cotonoma((cotonoma1.uuid, CotonomaScope::Recursive)),
-            false,
-            5,
-            0
-        )?
-        .rows,
+        timeline(&mut ds, Scope::cotonoma_recursive(cotonoma1.uuid))?,
         elements_are![
-            pat!(Coto {
-                repost_of_id: some(eq(&cotonoma_coto4.uuid)),
-                ..
-            }),
-            pat!(Coto {
-                content: some(eq("sbt")),
-                ..
-            }),
-            pat!(Coto {
-                content: some(eq("POJO")),
-                ..
-            }),
-            pat!(Coto {
-                summary: some(eq("Java")),
-                is_cotonoma: eq(&true),
-                ..
-            }),
-            pat!(Coto {
-                content: some(eq("polymorphism")),
-                ..
-            }),
+            eq(&format!("repost:{}", cotonoma_coto4.uuid)),
+            eq("sbt"),
+            eq("POJO"),
+            eq("cotonoma:Java"),
+            eq("polymorphism"),
         ]
     );
     Ok(())
+}
+
+/// Returns recent cotos as [Vec<String>] in the given scope.
+fn timeline(ds: &mut DatabaseSession<'_>, scope: Scope) -> Result<Vec<String>> {
+    Ok(ds
+        .recent_cotos(scope, false, 100, 0)?
+        .rows
+        .into_iter()
+        .map(|coto| match coto {
+            Coto {
+                repost_of_id: Some(coto_id),
+                ..
+            } => {
+                format!("repost:{coto_id}")
+            }
+            Coto {
+                is_cotonoma: true,
+                summary: Some(name),
+                ..
+            } => format!("cotonoma:{name}"),
+            Coto {
+                content: Some(content),
+                ..
+            } => content,
+            _ => "".into(),
+        })
+        .collect())
 }

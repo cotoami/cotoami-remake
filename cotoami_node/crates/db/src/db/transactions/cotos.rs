@@ -25,6 +25,10 @@ impl Scope {
     pub fn cotonoma_local(cotonoma_id: Id<Cotonoma>) -> Self {
         Self::Cotonoma((cotonoma_id, CotonomaScope::Local))
     }
+
+    pub fn cotonoma_recursive(cotonoma_id: Id<Cotonoma>) -> Self {
+        Self::Cotonoma((cotonoma_id, CotonomaScope::Recursive))
+    }
 }
 
 #[derive(derive_more::Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
