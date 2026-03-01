@@ -7,7 +7,7 @@ use std::{borrow::Cow, sync::Arc};
 
 use anyhow::{anyhow, ensure, Context, Result};
 use const_format::concatcp;
-use cotoami_db::models::Bytes;
+use cotoami_db::{models::Bytes, CotonomaScope, Scope};
 use futures::future::FutureExt;
 use parking_lot::{RwLock, RwLockReadGuard};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
@@ -45,7 +45,9 @@ impl HttpClient {
         })
     }
 
-    pub fn url_prefix(&self) -> &Url { &self.url_prefix }
+    pub fn url_prefix(&self) -> &Url {
+        &self.url_prefix
+    }
 
     fn default_headers() -> HeaderMap {
         let mut headers = HeaderMap::new();
@@ -60,7 +62,9 @@ impl HttpClient {
         self.headers.write().insert(name, value);
     }
 
-    pub(crate) fn read_headers(&self) -> RwLockReadGuard<'_, HeaderMap> { self.headers.read() }
+    pub(crate) fn read_headers(&self) -> RwLockReadGuard<'_, HeaderMap> {
+        self.headers.read()
+    }
 
     fn url(&self, path: &str) -> Url {
         self.url_prefix
@@ -180,23 +184,29 @@ impl HttpClient {
                 .get(&format!("{API_PATH_COTONOMAS}/{id}/subs"))
                 .query(&pagination),
             Command::RecentCotos {
-                node,
-                cotonoma,
+                scope,
                 only_cotonomas,
                 pagination,
             } => {
                 let only_cotonomas = if only_cotonomas { "/cotonomas" } else { "" };
-                if let Some(cotonoma_id) = cotonoma {
-                    self.get(&format!(
-                        "{API_PATH_COTONOMAS}/{cotonoma_id}/cotos{only_cotonomas}"
-                    ))
-                    .query(&pagination)
-                } else if let Some(node_id) = node {
-                    self.get(&format!("{API_PATH_NODES}/{node_id}/cotos{only_cotonomas}"))
-                        .query(&pagination)
-                } else {
-                    self.get(&format!("{API_PATH_COTOS}{only_cotonomas}"))
-                        .query(&pagination)
+                match scope {
+                    Scope::All => self
+                        .get(&format!("{API_PATH_COTOS}{only_cotonomas}"))
+                        .query(&pagination),
+                    Scope::Node(node_id) => self
+                        .get(&format!("{API_PATH_NODES}/{node_id}/cotos{only_cotonomas}"))
+                        .query(&pagination),
+                    Scope::Cotonoma((cotonoma_id, cotonoma_scope)) => {
+                        let request = self.get(&format!(
+                            "{API_PATH_COTONOMAS}/{cotonoma_id}/cotos{only_cotonomas}"
+                        ));
+                        let request = match cotonoma_scope {
+                            CotonomaScope::Recursive => request.query(&[("recursive", true)]),
+                            CotonomaScope::Depth(depth) => request.query(&[("depth", depth)]),
+                            CotonomaScope::Local => request,
+                        };
+                        request.query(&pagination)
+                    }
                 }
             }
             Command::GeolocatedCotos { node, cotonoma } => {

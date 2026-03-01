@@ -49,7 +49,7 @@ async fn recent_cotos(
     Query(pagination): Query<Pagination>,
 ) -> Result<Content<PaginatedCotos>, ServiceError> {
     state
-        .recent_cotos(None, None, false, pagination)
+        .recent_cotos(Scope::All, false, pagination)
         .await
         .map(|cotos| Content(cotos, accept))
 }
@@ -64,7 +64,7 @@ async fn recent_cotonoma_cotos(
     Query(pagination): Query<Pagination>,
 ) -> Result<Content<PaginatedCotos>, ServiceError> {
     state
-        .recent_cotos(None, None, true, pagination)
+        .recent_cotos(Scope::All, true, pagination)
         .await
         .map(|cotos| Content(cotos, accept))
 }

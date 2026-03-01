@@ -484,6 +484,139 @@ where
     assert_that!(coto2, eq(&coto));
 
     /////////////////////////////////////////////////////////////////////////////
+    // Command: RecentCotos
+    /////////////////////////////////////////////////////////////////////////////
+
+    let ((scope_child1, _), _) = backend_ds.post_cotonoma(
+        &CotonomaInput::new("RecentCotos Scope Child1"),
+        &backend_root_cotonoma,
+        &backend_owner,
+    )?;
+    let ((scope_child2, _), _) = backend_ds.post_cotonoma(
+        &CotonomaInput::new("RecentCotos Scope Child2"),
+        &scope_child1,
+        &backend_owner,
+    )?;
+    let ((scope_child3, _), _) = backend_ds.post_cotonoma(
+        &CotonomaInput::new("RecentCotos Scope Child3"),
+        &scope_child2,
+        &backend_owner,
+    )?;
+
+    let (scope_root_coto, _) = backend_ds.post_coto(
+        &CotoInput::new("RecentCotos Scope Root"),
+        &backend_root_cotonoma.uuid,
+        &backend_owner,
+    )?;
+    let (scope_child1_coto, _) = backend_ds.post_coto(
+        &CotoInput::new("RecentCotos Scope Child1"),
+        &scope_child1.uuid,
+        &backend_owner,
+    )?;
+    let (scope_child2_coto, _) = backend_ds.post_coto(
+        &CotoInput::new("RecentCotos Scope Child2"),
+        &scope_child2.uuid,
+        &backend_owner,
+    )?;
+    let (scope_child3_coto, _) = backend_ds.post_coto(
+        &CotoInput::new("RecentCotos Scope Child3"),
+        &scope_child3.uuid,
+        &backend_owner,
+    )?;
+
+    let pagination = Pagination {
+        page: 0,
+        page_size: Some(100),
+    };
+
+    let all_recent = service
+        .call(
+            Command::RecentCotos {
+                scope: Scope::All,
+                only_cotonomas: false,
+                pagination: pagination.clone(),
+            }
+            .into_request(),
+        )
+        .await?
+        .content::<PaginatedCotos>()?;
+    let all_ids: Vec<_> = all_recent.page.rows.iter().map(|c| c.uuid).collect();
+    assert_that!(
+        all_ids.contains(&scope_root_coto.uuid) && all_ids.contains(&scope_child3_coto.uuid),
+        eq(true)
+    );
+
+    let node_recent = service
+        .call(
+            Command::RecentCotos {
+                scope: Scope::Node(backend_node.uuid),
+                only_cotonomas: false,
+                pagination: pagination.clone(),
+            }
+            .into_request(),
+        )
+        .await?
+        .content::<PaginatedCotos>()?;
+    let node_ids: Vec<_> = node_recent.page.rows.iter().map(|c| c.uuid).collect();
+    assert_that!(
+        node_ids.contains(&scope_root_coto.uuid)
+            && node_ids.contains(&scope_child1_coto.uuid)
+            && node_ids.contains(&scope_child2_coto.uuid)
+            && node_ids.contains(&scope_child3_coto.uuid),
+        eq(true)
+    );
+
+    let local_recent = service
+        .call(
+            Command::RecentCotos {
+                scope: Scope::Cotonoma((scope_child1.uuid, CotonomaScope::Local)),
+                only_cotonomas: false,
+                pagination: pagination.clone(),
+            }
+            .into_request(),
+        )
+        .await?
+        .content::<PaginatedCotos>()?;
+    let local_ids: Vec<_> = local_recent.page.rows.iter().map(|c| c.uuid).collect();
+    assert_that!(local_ids.contains(&scope_child1_coto.uuid), eq(true));
+    assert_that!(local_ids.contains(&scope_child2_coto.uuid), eq(false));
+    assert_that!(local_ids.contains(&scope_child3_coto.uuid), eq(false));
+
+    let recursive_recent = service
+        .call(
+            Command::RecentCotos {
+                scope: Scope::Cotonoma((scope_child1.uuid, CotonomaScope::Recursive)),
+                only_cotonomas: false,
+                pagination: pagination.clone(),
+            }
+            .into_request(),
+        )
+        .await?
+        .content::<PaginatedCotos>()?;
+    let recursive_ids: Vec<_> = recursive_recent.page.rows.iter().map(|c| c.uuid).collect();
+    assert_that!(recursive_ids.contains(&scope_child1_coto.uuid), eq(true));
+    assert_that!(recursive_ids.contains(&scope_child2_coto.uuid), eq(true));
+    assert_that!(recursive_ids.contains(&scope_child3_coto.uuid), eq(true));
+    assert_that!(recursive_ids.contains(&scope_root_coto.uuid), eq(false));
+
+    let depth_recent = service
+        .call(
+            Command::RecentCotos {
+                scope: Scope::Cotonoma((scope_child1.uuid, CotonomaScope::Depth(1))),
+                only_cotonomas: false,
+                pagination,
+            }
+            .into_request(),
+        )
+        .await?
+        .content::<PaginatedCotos>()?;
+    let depth_ids: Vec<_> = depth_recent.page.rows.iter().map(|c| c.uuid).collect();
+    assert_that!(depth_ids.contains(&scope_child1_coto.uuid), eq(true));
+    assert_that!(depth_ids.contains(&scope_child2_coto.uuid), eq(true));
+    assert_that!(depth_ids.contains(&scope_child3_coto.uuid), eq(false));
+    assert_that!(depth_ids.contains(&scope_root_coto.uuid), eq(false));
+
+    /////////////////////////////////////////////////////////////////////////////
     // Command: MarkAsRead
     /////////////////////////////////////////////////////////////////////////////
 

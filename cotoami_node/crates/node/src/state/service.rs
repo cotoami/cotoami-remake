@@ -88,14 +88,10 @@ impl NodeState {
                 format.serialize(self.sub_cotonomas(id, pagination).await)
             }
             Command::RecentCotos {
-                node,
-                cotonoma,
+                scope,
                 only_cotonomas,
                 pagination,
-            } => format.serialize(
-                self.recent_cotos(node, cotonoma, only_cotonomas, pagination)
-                    .await,
-            ),
+            } => format.serialize(self.recent_cotos(scope, only_cotonomas, pagination).await),
             Command::GeolocatedCotos { node, cotonoma } => {
                 format.serialize(self.geolocated_cotos(node, cotonoma).await)
             }
@@ -179,7 +175,9 @@ impl Service<Request> for NodeState {
 }
 
 impl NodeService for NodeState {
-    fn description(&self) -> Cow<'_, str> { Cow::from("local-node") }
+    fn description(&self) -> Cow<'_, str> {
+        Cow::from("local-node")
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////

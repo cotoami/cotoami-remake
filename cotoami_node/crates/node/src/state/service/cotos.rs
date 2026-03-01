@@ -20,19 +20,13 @@ const GEOLOCATED_COTOS_MAX_SIZE: i64 = 30;
 impl NodeState {
     pub async fn recent_cotos(
         &self,
-        node: Option<Id<Node>>,
-        cotonoma: Option<Id<Cotonoma>>,
+        scope: Scope,
         only_cotonomas: bool,
         pagination: Pagination,
     ) -> Result<PaginatedCotos, ServiceError> {
         if let Err(errors) = pagination.validate() {
             return errors.into_result();
         }
-        let scope = match (node, cotonoma) {
-            (Some(node), None) => Scope::Node(node),
-            (_, Some(cotonoma)) => Scope::cotonoma_local(cotonoma),
-            (None, None) => Scope::All,
-        };
         self.get(move |ds| {
             let page = ds.recent_cotos(
                 scope,
