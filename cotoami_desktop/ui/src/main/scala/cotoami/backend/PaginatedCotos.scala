@@ -3,7 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 import marubinotto.fui.Cmd
 
-import cotoami.models.{Coto, Cotonoma, Id, Ito, Node, Page}
+import cotoami.models.{Coto, Cotonoma, Id, Ito, Node, Page, Scope}
 
 case class PaginatedCotos(json: PaginatedCotosJson) {
   def page: Page[Coto] =
@@ -15,12 +15,11 @@ case class PaginatedCotos(json: PaginatedCotosJson) {
 
 object PaginatedCotos {
   def fetchRecent(
-      nodeId: Option[Id[Node]],
-      cotonomaId: Option[Id[Cotonoma]],
+      scope: Scope,
       onlyCotonomas: Boolean,
       pageIndex: Double
   ): Cmd.One[Either[ErrorJson, PaginatedCotos]] =
-    PaginatedCotosJson.fetchRecent(nodeId, cotonomaId, onlyCotonomas, pageIndex)
+    PaginatedCotosJson.fetchRecent(scope, onlyCotonomas, pageIndex)
       .map(_.map(PaginatedCotos(_)))
 
   def search(
@@ -49,13 +48,12 @@ trait PaginatedCotosJson extends js.Object {
 
 object PaginatedCotosJson {
   def fetchRecent(
-      nodeId: Option[Id[Node]],
-      cotonomaId: Option[Id[Cotonoma]],
+      scope: Scope,
       onlyCotonomas: Boolean,
       pageIndex: Double
   ): Cmd.One[Either[ErrorJson, PaginatedCotosJson]] =
     Commands.send(
-      Commands.RecentCotos(nodeId, cotonomaId, onlyCotonomas, pageIndex)
+      Commands.RecentCotos(scope, onlyCotonomas, pageIndex)
     )
 
   def search(

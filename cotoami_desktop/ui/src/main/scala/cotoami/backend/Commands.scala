@@ -163,15 +163,13 @@ object Commands {
     jso(SubCotonomas = jso(id = id.uuid, pagination = jso(page = pageIndex)))
 
   def RecentCotos(
-      nodeId: Option[Id[Node]],
-      cotonomaId: Option[Id[Cotonoma]],
+      scope: Scope,
       onlyCotonomas: Boolean,
       pageIndex: Double
   ) =
     jso(RecentCotos =
       jso(
-        node = nodeId.map(_.uuid).getOrElse(null),
-        cotonoma = cotonomaId.map(_.uuid).getOrElse(null),
+        scope = scopeJson(scope),
         only_cotonomas = onlyCotonomas,
         pagination = jso(page = pageIndex)
       )
@@ -370,5 +368,20 @@ object Commands {
       case Some(Some(value)) => jso(Change = value)
       case Some(None)        => "Delete"
       case None              => "None"
+    }
+
+  private def scopeJson(scope: Scope): js.Any =
+    scope match {
+      case Scope.All => "All"
+      case Scope.ByNode(nodeId) => jso(Node = nodeId.uuid)
+      case Scope.ByCotonoma(cotonomaId, cotonomaScope) =>
+        jso(Cotonoma = js.Array(cotonomaId.uuid, cotonomaScopeJson(cotonomaScope)))
+    }
+
+  private def cotonomaScopeJson(scope: CotonomaScope): js.Any =
+    scope match {
+      case CotonomaScope.Local     => "Local"
+      case CotonomaScope.Recursive => "Recursive"
+      case CotonomaScope.Depth(d)  => jso(Depth = d)
     }
 }

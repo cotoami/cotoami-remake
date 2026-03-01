@@ -23,6 +23,7 @@ import cotoami.models.{
   Id,
   Node,
   PaginatedIds,
+  Scope,
   WaitingPost,
   WaitingPosts
 }
@@ -289,8 +290,21 @@ object SectionTimeline {
           pageIndex
         )
       case _ =>
-        PaginatedCotos.fetchRecent(nodeId, cotonomaId, onlyCotonomas, pageIndex)
+        PaginatedCotos.fetchRecent(
+          toScope(nodeId, cotonomaId),
+          onlyCotonomas,
+          pageIndex
+        )
     }).map(Msg.Fetched(fetchNumber, _).into)
+
+  private def toScope(
+      nodeId: Option[Id[Node]],
+      cotonomaId: Option[Id[Cotonoma]]
+  ): Scope =
+    cotonomaId
+      .map(Scope.ByCotonoma(_))
+      .orElse(nodeId.map(Scope.ByNode(_)))
+      .getOrElse(Scope.All)
 
   /////////////////////////////////////////////////////////////////////////////
   // View
