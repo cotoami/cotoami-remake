@@ -1003,6 +1003,7 @@ dependencies = [
  "diesel",
  "diesel_migrations",
  "dotenvy",
+ "either",
  "fs4",
  "generic-array",
  "googletest",
