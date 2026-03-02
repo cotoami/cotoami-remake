@@ -23,6 +23,8 @@ use crate::{
     schema::cotos,
 };
 
+type ScopeFilter<'a> = Option<Either<&'a Id<Node>, &'a [Id<Cotonoma>]>>;
+
 pub(crate) fn get<Conn: ReadConn>(id: &Id<Coto>) -> impl Operation<Conn, Option<Coto>> + '_ {
     read_op(move |conn| {
         cotos::table
@@ -107,7 +109,7 @@ pub(crate) fn get_by_ids<'a, Conn: ReadConn>(
 }
 
 pub(crate) fn recently_inserted<'a, Conn: ReadConn>(
-    scope: Option<Either<&'a Id<Node>, &'a [Id<Cotonoma>]>>,
+    scope: ScopeFilter<'a>,
     only_cotonomas: bool,
     page_size: i64,
     page_index: i64,
@@ -357,23 +359,14 @@ const INDEX_TOKEN_LENGTH: usize = 3;
 
 pub(crate) fn full_text_search<'a, Conn: ReadConn>(
     query: &'a str,
-    filter_by_node_id: Option<&'a Id<Node>>,
-    filter_by_posted_in_id: Option<&'a Id<Cotonoma>>,
+    scope: ScopeFilter<'a>,
     only_cotonomas: bool,
     page_size: i64,
     page_index: i64,
 ) -> impl Operation<Conn, Page<Coto>> + 'a {
     read_op(move |conn| {
         if detect_cjk_chars(query) {
-            search_trigram_index(
-                conn,
-                query,
-                filter_by_node_id,
-                filter_by_posted_in_id,
-                only_cotonomas,
-                page_size,
-                page_index,
-            )
+            search_trigram_index(conn, query, scope, only_cotonomas, page_size, page_index)
         } else {
             use crate::schema::cotos_fts::dsl::*;
             super::paginate(conn, page_size, page_index, move || {
@@ -407,11 +400,14 @@ pub(crate) fn full_text_search<'a, Conn: ReadConn>(
                     ))
                     .filter(whole_row.eq(fts_query))
                     .into_boxed();
-                if let Some(id) = filter_by_node_id {
-                    query = query.filter(node_id.eq(id));
-                }
-                if let Some(id) = filter_by_posted_in_id {
-                    query = query.filter(posted_in_id.eq(id));
+                match scope {
+                    Some(Either::Left(filter_node_id)) => {
+                        query = query.filter(node_id.eq(filter_node_id));
+                    }
+                    Some(Either::Right(posted_in_ids)) => {
+                        query = query.filter(posted_in_id.eq_any(posted_in_ids));
+                    }
+                    None => (),
                 }
                 if only_cotonomas {
                     query = query.filter(is_cotonoma.eq(true));
@@ -422,11 +418,10 @@ pub(crate) fn full_text_search<'a, Conn: ReadConn>(
     })
 }
 
-fn search_trigram_index(
+fn search_trigram_index<'a>(
     conn: &mut SqliteConnection,
-    query: &str,
-    filter_by_node_id: Option<&Id<Node>>,
-    filter_by_posted_in_id: Option<&Id<Cotonoma>>,
+    query: &'a str,
+    scope: ScopeFilter<'a>,
     only_cotonomas: bool,
     page_size: i64,
     page_index: i64,
@@ -476,11 +471,14 @@ fn search_trigram_index(
             ))
             .filter(whole_row.eq(&query))
             .into_boxed();
-        if let Some(id) = filter_by_node_id {
-            query = query.filter(node_id.eq(id));
-        }
-        if let Some(id) = filter_by_posted_in_id {
-            query = query.filter(posted_in_id.eq(id));
+        match scope {
+            Some(Either::Left(filter_node_id)) => {
+                query = query.filter(node_id.eq(filter_node_id));
+            }
+            Some(Either::Right(posted_in_ids)) => {
+                query = query.filter(posted_in_id.eq_any(posted_in_ids));
+            }
+            None => (),
         }
         if only_cotonomas {
             query = query.filter(is_cotonoma.eq(true));

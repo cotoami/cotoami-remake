@@ -77,10 +77,13 @@ impl NodeState {
             return errors.into_result();
         }
         self.get(move |ds| {
+            let scope = cotonoma
+                .map(Scope::cotonoma_local)
+                .or_else(|| node.map(Scope::Node))
+                .unwrap_or(Scope::All);
             let page = ds.search_cotos(
                 &query,
-                node.as_ref(),
-                cotonoma.as_ref(),
+                scope,
                 only_cotonomas,
                 pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
                 pagination.page,

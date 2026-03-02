@@ -71,13 +71,84 @@ fn search_cotos() -> Result<()> {
     Ok(())
 }
 
+#[test]
+fn search_cotos_in_scope() -> Result<()> {
+    // setup
+    let (_root_dir, db, node) = common::setup_db("My Node")?;
+    let mut ds = db.new_session()?;
+    let opr = db.globals().local_node_as_operator()?;
+    let (root, _) = ds.local_node_root()?.unwrap();
+
+    // when
+    let ((child1, _), _) = ds.post_cotonoma(&CotonomaInput::new("Scope Child1"), &root, &opr)?;
+    let ((child2, _), _) = ds.post_cotonoma(&CotonomaInput::new("Scope Child2"), &child1, &opr)?;
+    let ((child3, _), _) = ds.post_cotonoma(&CotonomaInput::new("Scope Child3"), &child2, &opr)?;
+
+    let (root_coto, _) = ds.post_coto(&CotoInput::new("scopeprobe root"), &root.uuid, &opr)?;
+    let (child1_coto, _) =
+        ds.post_coto(&CotoInput::new("scopeprobe child1"), &child1.uuid, &opr)?;
+    let (child2_coto, _) =
+        ds.post_coto(&CotoInput::new("scopeprobe child2"), &child2.uuid, &opr)?;
+    let (child3_coto, _) =
+        ds.post_coto(&CotoInput::new("scopeprobe child3"), &child3.uuid, &opr)?;
+
+    // then
+    assert_search_in_scope(
+        &mut ds,
+        "scopeprobe",
+        Scope::All,
+        vec![&root_coto, &child1_coto, &child2_coto, &child3_coto],
+    )?;
+    assert_search_in_scope(
+        &mut ds,
+        "scopeprobe",
+        Scope::Node(node.uuid),
+        vec![&root_coto, &child1_coto, &child2_coto, &child3_coto],
+    )?;
+    assert_search_in_scope(
+        &mut ds,
+        "scopeprobe",
+        Scope::Cotonoma((child1.uuid, CotonomaScope::Local)),
+        vec![&child1_coto],
+    )?;
+    assert_search_in_scope(
+        &mut ds,
+        "scopeprobe",
+        Scope::Cotonoma((child1.uuid, CotonomaScope::Recursive)),
+        vec![&child1_coto, &child2_coto, &child3_coto],
+    )?;
+    assert_search_in_scope(
+        &mut ds,
+        "scopeprobe",
+        Scope::Cotonoma((child1.uuid, CotonomaScope::Depth(1))),
+        vec![&child1_coto, &child2_coto],
+    )?;
+
+    Ok(())
+}
+
 fn assert_search(ds: &mut DatabaseSession<'_>, query: &str, expect: Vec<&Coto>) -> Result<()> {
     assert_that!(
-        ds.search_cotos(query, None, None, false, 10, 0)?
+        ds.search_cotos(query, Scope::All, false, 10, 0)?
             .rows
             .iter()
             .collect::<Vec<_>>(),
         eq(&expect)
     );
+    Ok(())
+}
+
+fn assert_search_in_scope(
+    ds: &mut DatabaseSession<'_>,
+    query: &str,
+    scope: Scope,
+    expect: Vec<&Coto>,
+) -> Result<()> {
+    let rows = ds.search_cotos(query, scope, false, 100, 0)?.rows;
+    let actual_ids: Vec<_> = rows.iter().map(|coto| coto.uuid).collect();
+    assert_that!(actual_ids.len(), eq(expect.len()));
+    for expected in expect {
+        assert_that!(actual_ids.contains(&expected.uuid), eq(true));
+    }
     Ok(())
 }

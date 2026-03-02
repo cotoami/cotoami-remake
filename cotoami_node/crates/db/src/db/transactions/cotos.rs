@@ -38,6 +38,28 @@ pub enum CotonomaScope {
     Depth(usize),
 }
 
+fn resolve_scope_filter(
+    ctx: &mut Context<'_, SqliteConnection>,
+    scope: Scope,
+) -> Result<Option<Either<Id<Node>, Vec<Id<Cotonoma>>>>> {
+    use cotonoma_ops::sub_ids_recursive;
+
+    let filter = match scope {
+        Scope::All => None,
+        Scope::Node(node_id) => Some(Either::Left(node_id)),
+        Scope::Cotonoma((local, cotonoma_scope)) => {
+            let mut cotonoma_ids = match cotonoma_scope {
+                CotonomaScope::Local => vec![],
+                CotonomaScope::Recursive => sub_ids_recursive(&local, None).run(ctx)?,
+                CotonomaScope::Depth(d) => sub_ids_recursive(&local, Some(d)).run(ctx)?,
+            };
+            cotonoma_ids.push(local); // order doesn't matter
+            Some(Either::Right(cotonoma_ids))
+        }
+    };
+    Ok(filter)
+}
+
 impl DatabaseSession<'_> {
     pub fn coto(&mut self, id: &Id<Coto>) -> Result<Option<Coto>> {
         self.read_transaction(coto_ops::get(id))
@@ -72,21 +94,8 @@ impl DatabaseSession<'_> {
         page_size: i64,
         page_index: i64,
     ) -> Result<Page<Coto>> {
-        use cotonoma_ops::sub_ids_recursive;
         self.read_transaction(|ctx: &mut Context<'_, SqliteConnection>| {
-            let scope = match scope {
-                Scope::All => None,
-                Scope::Node(node_id) => Some(Either::Left(node_id)),
-                Scope::Cotonoma((local, cotonoma_scope)) => {
-                    let mut cotonoma_ids = match cotonoma_scope {
-                        CotonomaScope::Local => vec![],
-                        CotonomaScope::Recursive => sub_ids_recursive(&local, None).run(ctx)?,
-                        CotonomaScope::Depth(d) => sub_ids_recursive(&local, Some(d)).run(ctx)?,
-                    };
-                    cotonoma_ids.push(local); // order doesn't matter
-                    Some(Either::Right(cotonoma_ids))
-                }
-            };
+            let scope = resolve_scope_filter(ctx, scope)?;
             coto_ops::recently_inserted(
                 scope.as_ref().map(|e| e.as_ref().map_right(Vec::as_slice)),
                 only_cotonomas,
@@ -118,20 +127,22 @@ impl DatabaseSession<'_> {
     pub fn search_cotos(
         &mut self,
         query: &str,
-        node_id: Option<&Id<Node>>,
-        posted_in_id: Option<&Id<Cotonoma>>,
+        scope: Scope,
         only_cotonomas: bool,
         page_size: i64,
         page_index: i64,
     ) -> Result<Page<Coto>> {
-        self.read_transaction(coto_ops::full_text_search(
-            query,
-            node_id,
-            posted_in_id,
-            only_cotonomas,
-            page_size,
-            page_index,
-        ))
+        self.read_transaction(|ctx: &mut Context<'_, SqliteConnection>| {
+            let scope = resolve_scope_filter(ctx, scope)?;
+            coto_ops::full_text_search(
+                query,
+                scope.as_ref().map(|e| e.as_ref().map_right(Vec::as_slice)),
+                only_cotonomas,
+                page_size,
+                page_index,
+            )
+            .run(ctx)
+        })
     }
 
     /// Posts a coto in the specified cotonoma.
