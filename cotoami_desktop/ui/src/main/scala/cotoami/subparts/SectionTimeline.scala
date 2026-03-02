@@ -284,8 +284,7 @@ object SectionTimeline {
       case Some(query) if !query.isBlank() =>
         PaginatedCotos.search(
           query,
-          nodeId,
-          cotonomaId,
+          toScope(nodeId, cotonomaId),
           onlyCotonomas,
           pageIndex
         )

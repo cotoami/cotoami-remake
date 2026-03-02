@@ -202,16 +202,14 @@ object Commands {
 
   def SearchCotos(
       query: String,
-      nodeId: Option[Id[Node]],
-      cotonomaId: Option[Id[Cotonoma]],
+      scope: Scope,
       onlyCotonomas: Boolean,
       pageIndex: Double
   ) =
     jso(SearchCotos =
       jso(
         query = query,
-        node = nodeId.map(_.uuid).getOrElse(null),
-        cotonoma = cotonomaId.map(_.uuid).getOrElse(null),
+        scope = scopeJson(scope),
         only_cotonomas = onlyCotonomas,
         pagination = jso(page = pageIndex)
       )

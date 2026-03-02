@@ -10,7 +10,7 @@ import marubinotto.fui.Cmd
 import marubinotto.components.{materialSymbol, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, PaginatedIds}
+import cotoami.models.{Coto, PaginatedIds, Scope}
 import cotoami.repository.Root
 import cotoami.backend.{ErrorJson, PaginatedCotos}
 
@@ -175,8 +175,7 @@ object PaneSearch {
     if (!query.isBlank())
       PaginatedCotos.search(
         query,
-        None,
-        None,
+        Scope.All,
         false,
         pageIndex
       ).map(Msg.Fetched(fetchNumber, query, _).into)
