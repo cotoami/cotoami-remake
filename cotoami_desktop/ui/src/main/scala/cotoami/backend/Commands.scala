@@ -175,14 +175,10 @@ object Commands {
       )
     )
 
-  def GeolocatedCotos(
-      nodeId: Option[Id[Node]],
-      cotonomaId: Option[Id[Cotonoma]]
-  ) =
+  def GeolocatedCotos(scope: Scope) =
     jso(GeolocatedCotos =
       jso(
-        node = nodeId.map(_.uuid).getOrElse(null),
-        cotonoma = cotonomaId.map(_.uuid).getOrElse(null)
+        scope = scopeJson(scope)
       )
     )
 

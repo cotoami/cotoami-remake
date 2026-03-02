@@ -3,7 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 import marubinotto.fui.Cmd
 
-import cotoami.models.{Coto, Cotonoma, GeoBounds, Id, Node}
+import cotoami.models.{Coto, GeoBounds, Scope}
 
 case class GeolocatedCotos(json: GeolocatedCotosJson) {
   def cotos: js.Array[Coto] = json.cotos.map(CotoBackend.toModel(_))
@@ -12,10 +12,9 @@ case class GeolocatedCotos(json: GeolocatedCotosJson) {
 
 object GeolocatedCotos {
   def fetch(
-      nodeId: Option[Id[Node]],
-      cotonomaId: Option[Id[Cotonoma]]
+      scope: Scope
   ): Cmd.One[Either[ErrorJson, GeolocatedCotos]] =
-    GeolocatedCotosJson.fetch(nodeId, cotonomaId)
+    GeolocatedCotosJson.fetch(scope)
       .map(_.map(GeolocatedCotos(_)))
 
   def inGeoBounds(
@@ -33,10 +32,9 @@ trait GeolocatedCotosJson extends js.Object {
 
 object GeolocatedCotosJson {
   def fetch(
-      nodeId: Option[Id[Node]],
-      cotonomaId: Option[Id[Cotonoma]]
+      scope: Scope
   ): Cmd.One[Either[ErrorJson, GeolocatedCotosJson]] =
-    Commands.send(Commands.GeolocatedCotos(nodeId, cotonomaId))
+    Commands.send(Commands.GeolocatedCotos(scope))
 
   def inGeoBounds(
       bounds: GeoBounds

@@ -15,7 +15,7 @@ import marubinotto.libs.geomap
 import marubinotto.components.MapLibre
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{CenterOrBounds, CotoMarker, GeoBounds, Geolocation, Id}
+import cotoami.models.{CenterOrBounds, CotoMarker, GeoBounds, Geolocation, Id, Scope}
 import cotoami.repository.Root
 import cotoami.backend.{ErrorJson, GeolocatedCotos}
 
@@ -57,13 +57,17 @@ object SectionGeomap {
     // If the new focus is on a cotonoma, the target cotonoma must
     // have been loaded before calling this method.
     def onFocusChange(repo: Root): (Model, Cmd.One[AppMsg]) =
-      (
-        unfocus.copy(fetchingCotosInFocus = true),
-        GeolocatedCotos.fetch(
-          repo.nodes.focusedId,
-          repo.cotonomas.focusedId
-        ).map(Msg.CotosInFocusFetched(_).into)
-      )
+      {
+        val scope = repo.cotonomas.focusedId
+          .map(Scope.ByCotonoma(_))
+          .orElse(repo.nodes.focusedId.map(Scope.ByNode(_)))
+          .getOrElse(Scope.All)
+        (
+          unfocus.copy(fetchingCotosInFocus = true),
+          GeolocatedCotos.fetch(scope)
+            .map(Msg.CotosInFocusFetched(_).into)
+        )
+      }
 
     def checkRemotePmtiles: Cmd.One[AppMsg] =
       Browser.ajaxHead(remotePmtilesUrl)
