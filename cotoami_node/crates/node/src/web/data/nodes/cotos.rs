@@ -66,7 +66,7 @@ async fn geolocated_cotos(
     Path(node_id): Path<Id<Node>>,
 ) -> Result<Content<GeolocatedCotos>, ServiceError> {
     state
-        .geolocated_cotos(Some(node_id), None)
+        .geolocated_cotos(Scope::Node(node_id))
         .await
         .map(|cotos| Content(cotos, accept))
 }

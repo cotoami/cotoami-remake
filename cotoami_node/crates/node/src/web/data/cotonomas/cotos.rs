@@ -185,9 +185,10 @@ async fn geolocated_cotos(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
+    Query(cotos_query): Query<CotosQuery>,
 ) -> Result<Content<GeolocatedCotos>, ServiceError> {
     state
-        .geolocated_cotos(None, Some(cotonoma_id))
+        .geolocated_cotos(cotos_query.scope(cotonoma_id))
         .await
         .map(|cotos| Content(cotos, accept))
 }

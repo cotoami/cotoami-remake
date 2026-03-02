@@ -105,11 +105,8 @@ pub enum Command {
         pagination: Pagination,
     },
 
-    /// Request [GeolocatedCotos] in the given node or cotonoma.
-    GeolocatedCotos {
-        node: Option<Id<Node>>,
-        cotonoma: Option<Id<Cotonoma>>,
-    },
+    /// Request [GeolocatedCotos] in the given scope.
+    GeolocatedCotos { scope: Scope },
 
     /// Request [GeolocatedCotos] found in the given geo bounds.
     CotosInGeoBounds {

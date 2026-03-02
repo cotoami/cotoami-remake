@@ -678,6 +678,104 @@ where
     assert_that!(depth_search_ids.contains(&scope_root_coto.uuid), eq(false));
 
     /////////////////////////////////////////////////////////////////////////////
+    // Command: GeolocatedCotos
+    /////////////////////////////////////////////////////////////////////////////
+
+    let geolocation = Geolocation::from_lng_lat((135.0, 35.0));
+    let (geo_root_coto, _) = backend_ds.post_coto(
+        &CotoInput::new("Geolocated Scope Root").geolocation(geolocation.clone()),
+        &backend_root_cotonoma.uuid,
+        &backend_owner,
+    )?;
+    let (geo_child1_coto, _) = backend_ds.post_coto(
+        &CotoInput::new("Geolocated Scope Child1").geolocation(geolocation.clone()),
+        &scope_child1.uuid,
+        &backend_owner,
+    )?;
+    let (geo_child2_coto, _) = backend_ds.post_coto(
+        &CotoInput::new("Geolocated Scope Child2").geolocation(geolocation.clone()),
+        &scope_child2.uuid,
+        &backend_owner,
+    )?;
+    let (geo_child3_coto, _) = backend_ds.post_coto(
+        &CotoInput::new("Geolocated Scope Child3").geolocation(geolocation),
+        &scope_child3.uuid,
+        &backend_owner,
+    )?;
+
+    let all_geolocated = service
+        .call(
+            Command::GeolocatedCotos { scope: Scope::All }
+                .into_request(),
+        )
+        .await?
+        .content::<GeolocatedCotos>()?;
+    let all_geo_ids: Vec<_> = all_geolocated.cotos.iter().map(|c| c.uuid).collect();
+    assert_that!(all_geo_ids.contains(&geo_root_coto.uuid), eq(true));
+    assert_that!(all_geo_ids.contains(&geo_child1_coto.uuid), eq(true));
+    assert_that!(all_geo_ids.contains(&geo_child2_coto.uuid), eq(true));
+    assert_that!(all_geo_ids.contains(&geo_child3_coto.uuid), eq(true));
+
+    let node_geolocated = service
+        .call(
+            Command::GeolocatedCotos {
+                scope: Scope::Node(backend_node.uuid),
+            }
+            .into_request(),
+        )
+        .await?
+        .content::<GeolocatedCotos>()?;
+    let node_geo_ids: Vec<_> = node_geolocated.cotos.iter().map(|c| c.uuid).collect();
+    assert_that!(node_geo_ids.contains(&geo_root_coto.uuid), eq(true));
+    assert_that!(node_geo_ids.contains(&geo_child1_coto.uuid), eq(true));
+    assert_that!(node_geo_ids.contains(&geo_child2_coto.uuid), eq(true));
+    assert_that!(node_geo_ids.contains(&geo_child3_coto.uuid), eq(true));
+
+    let local_geolocated = service
+        .call(
+            Command::GeolocatedCotos {
+                scope: Scope::Cotonoma((scope_child1.uuid, CotonomaScope::Local)),
+            }
+            .into_request(),
+        )
+        .await?
+        .content::<GeolocatedCotos>()?;
+    let local_geo_ids: Vec<_> = local_geolocated.cotos.iter().map(|c| c.uuid).collect();
+    assert_that!(local_geo_ids.contains(&geo_child1_coto.uuid), eq(true));
+    assert_that!(local_geo_ids.contains(&geo_child2_coto.uuid), eq(false));
+    assert_that!(local_geo_ids.contains(&geo_child3_coto.uuid), eq(false));
+
+    let recursive_geolocated = service
+        .call(
+            Command::GeolocatedCotos {
+                scope: Scope::Cotonoma((scope_child1.uuid, CotonomaScope::Recursive)),
+            }
+            .into_request(),
+        )
+        .await?
+        .content::<GeolocatedCotos>()?;
+    let recursive_geo_ids: Vec<_> = recursive_geolocated.cotos.iter().map(|c| c.uuid).collect();
+    assert_that!(recursive_geo_ids.contains(&geo_child1_coto.uuid), eq(true));
+    assert_that!(recursive_geo_ids.contains(&geo_child2_coto.uuid), eq(true));
+    assert_that!(recursive_geo_ids.contains(&geo_child3_coto.uuid), eq(true));
+    assert_that!(recursive_geo_ids.contains(&geo_root_coto.uuid), eq(false));
+
+    let depth_geolocated = service
+        .call(
+            Command::GeolocatedCotos {
+                scope: Scope::Cotonoma((scope_child1.uuid, CotonomaScope::Depth(1))),
+            }
+            .into_request(),
+        )
+        .await?
+        .content::<GeolocatedCotos>()?;
+    let depth_geo_ids: Vec<_> = depth_geolocated.cotos.iter().map(|c| c.uuid).collect();
+    assert_that!(depth_geo_ids.contains(&geo_child1_coto.uuid), eq(true));
+    assert_that!(depth_geo_ids.contains(&geo_child2_coto.uuid), eq(true));
+    assert_that!(depth_geo_ids.contains(&geo_child3_coto.uuid), eq(false));
+    assert_that!(depth_geo_ids.contains(&geo_root_coto.uuid), eq(false));
+
+    /////////////////////////////////////////////////////////////////////////////
     // Command: MarkAsRead
     /////////////////////////////////////////////////////////////////////////////
 

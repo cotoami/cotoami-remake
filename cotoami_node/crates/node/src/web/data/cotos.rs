@@ -78,7 +78,7 @@ async fn geolocated_cotos(
     TypedHeader(accept): TypedHeader<Accept>,
 ) -> Result<Content<GeolocatedCotos>, ServiceError> {
     state
-        .geolocated_cotos(None, None)
+        .geolocated_cotos(Scope::All)
         .await
         .map(|cotos| Content(cotos, accept))
 }

@@ -209,17 +209,21 @@ impl HttpClient {
                     }
                 }
             }
-            Command::GeolocatedCotos { node, cotonoma } => {
-                if let Some(cotonoma_id) = cotonoma {
-                    self.get(&format!(
-                        "{API_PATH_COTONOMAS}/{cotonoma_id}/cotos/geolocated"
-                    ))
-                } else if let Some(node_id) = node {
+            Command::GeolocatedCotos { scope } => match scope {
+                Scope::All => self.get(&format!("{API_PATH_COTOS}/geolocated")),
+                Scope::Node(node_id) => {
                     self.get(&format!("{API_PATH_NODES}/{node_id}/cotos/geolocated"))
-                } else {
-                    self.get(&format!("{API_PATH_COTOS}/geolocated"))
                 }
-            }
+                Scope::Cotonoma((cotonoma_id, cotonoma_scope)) => {
+                    let request =
+                        self.get(&format!("{API_PATH_COTONOMAS}/{cotonoma_id}/cotos/geolocated"));
+                    match cotonoma_scope {
+                        CotonomaScope::Recursive => request.query(&[("recursive", true)]),
+                        CotonomaScope::Depth(depth) => request.query(&[("depth", depth)]),
+                        CotonomaScope::Local => request,
+                    }
+                }
+            },
             Command::CotosInGeoBounds {
                 southwest,
                 northeast,

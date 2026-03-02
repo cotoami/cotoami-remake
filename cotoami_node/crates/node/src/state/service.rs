@@ -92,8 +92,8 @@ impl NodeState {
                 only_cotonomas,
                 pagination,
             } => format.serialize(self.recent_cotos(scope, only_cotonomas, pagination).await),
-            Command::GeolocatedCotos { node, cotonoma } => {
-                format.serialize(self.geolocated_cotos(node, cotonoma).await)
+            Command::GeolocatedCotos { scope } => {
+                format.serialize(self.geolocated_cotos(scope).await)
             }
             Command::CotosInGeoBounds {
                 southwest,
