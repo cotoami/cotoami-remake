@@ -45,8 +45,11 @@ impl NodeState {
         cotonoma: Option<Id<Cotonoma>>,
     ) -> Result<GeolocatedCotos, ServiceError> {
         self.get(move |ds| {
-            let cotos =
-                ds.geolocated_cotos(node.as_ref(), cotonoma.as_ref(), GEOLOCATED_COTOS_MAX_SIZE)?;
+            let scope = cotonoma
+                .map(Scope::cotonoma_local)
+                .or_else(|| node.map(Scope::Node))
+                .unwrap_or(Scope::All);
+            let cotos = ds.geolocated_cotos(scope, GEOLOCATED_COTOS_MAX_SIZE)?;
             GeolocatedCotos::new(cotos, ds)
         })
         .await

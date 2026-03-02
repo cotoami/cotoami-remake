@@ -108,11 +108,14 @@ impl DatabaseSession<'_> {
 
     pub fn geolocated_cotos(
         &mut self,
-        node_id: Option<&Id<Node>>,
-        posted_in_id: Option<&Id<Cotonoma>>,
+        scope: Scope,
         limit: i64,
     ) -> Result<Vec<Coto>> {
-        self.read_transaction(coto_ops::geolocated(node_id, posted_in_id, limit))
+        self.read_transaction(|ctx: &mut Context<'_, SqliteConnection>| {
+            let scope = resolve_scope_filter(ctx, scope)?;
+            coto_ops::geolocated(scope.as_ref().map(|e| e.as_ref().map_right(Vec::as_slice)), limit)
+                .run(ctx)
+        })
     }
 
     pub fn cotos_in_geo_bounds(

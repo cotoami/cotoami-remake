@@ -133,27 +133,27 @@ pub(crate) fn recently_inserted<'a, Conn: ReadConn>(
 }
 
 pub(crate) fn geolocated<'a, Conn: ReadConn>(
-    node_id: Option<&'a Id<Node>>,
-    posted_in_id: Option<&'a Id<Cotonoma>>,
+    scope: ScopeFilter<'a>,
     limit: i64,
 ) -> impl Operation<Conn, Vec<Coto>> + 'a {
     read_op(move |conn| {
-        let geolocated_cotos = cotos::table
+        let mut query = cotos::table
             .filter(cotos::longitude.is_not_null())
             .filter(cotos::latitude.is_not_null())
             .order(cotos::created_at.desc())
             .limit(limit)
             .into_boxed();
 
-        match (node_id, posted_in_id) {
-            (Some(node_id), None) => geolocated_cotos.filter(cotos::node_id.eq(node_id)),
-            (_, Some(posted_in_id)) => {
-                geolocated_cotos.filter(cotos::posted_in_id.eq(posted_in_id))
+        match scope {
+            Some(Either::Left(node_id)) => {
+                query = query.filter(cotos::node_id.eq(node_id));
             }
-            _ => geolocated_cotos,
+            Some(Either::Right(posted_in_ids)) => {
+                query = query.filter(cotos::posted_in_id.eq_any(posted_in_ids));
+            }
+            None => (),
         }
-        .load::<Coto>(conn)
-        .map_err(anyhow::Error::from)
+        query.load::<Coto>(conn).map_err(anyhow::Error::from)
     })
 }
 
