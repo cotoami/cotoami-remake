@@ -7,7 +7,7 @@ object Scope {
   case class ByNode(nodeId: Id[Node]) extends Scope
   case class ByCotonoma(
       cotonomaId: Id[Cotonoma],
-      scope: CotonomaScope = CotonomaScope.Local
+      scope: CotonomaScope = CotonomaScope.Recursive
   ) extends Scope
 }
 
