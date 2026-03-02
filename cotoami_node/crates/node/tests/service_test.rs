@@ -617,6 +617,67 @@ where
     assert_that!(depth_ids.contains(&scope_root_coto.uuid), eq(false));
 
     /////////////////////////////////////////////////////////////////////////////
+    // Command: SearchCotos
+    /////////////////////////////////////////////////////////////////////////////
+
+    let search_pagination = Pagination {
+        page: 0,
+        page_size: Some(100),
+    };
+    let local_search = service
+        .call(
+            Command::SearchCotos {
+                query: "RecentCotos Scope".into(),
+                scope: Scope::Cotonoma((scope_child1.uuid, CotonomaScope::Local)),
+                only_cotonomas: false,
+                pagination: search_pagination.clone(),
+            }
+            .into_request(),
+        )
+        .await?
+        .content::<PaginatedCotos>()?;
+    let local_search_ids: Vec<_> = local_search.page.rows.iter().map(|c| c.uuid).collect();
+    assert_that!(local_search_ids.contains(&scope_child1_coto.uuid), eq(true));
+    assert_that!(local_search_ids.contains(&scope_child2_coto.uuid), eq(false));
+    assert_that!(local_search_ids.contains(&scope_child3_coto.uuid), eq(false));
+
+    let recursive_search = service
+        .call(
+            Command::SearchCotos {
+                query: "RecentCotos Scope".into(),
+                scope: Scope::Cotonoma((scope_child1.uuid, CotonomaScope::Recursive)),
+                only_cotonomas: false,
+                pagination: search_pagination.clone(),
+            }
+            .into_request(),
+        )
+        .await?
+        .content::<PaginatedCotos>()?;
+    let recursive_search_ids: Vec<_> = recursive_search.page.rows.iter().map(|c| c.uuid).collect();
+    assert_that!(recursive_search_ids.contains(&scope_child1_coto.uuid), eq(true));
+    assert_that!(recursive_search_ids.contains(&scope_child2_coto.uuid), eq(true));
+    assert_that!(recursive_search_ids.contains(&scope_child3_coto.uuid), eq(true));
+    assert_that!(recursive_search_ids.contains(&scope_root_coto.uuid), eq(false));
+
+    let depth_search = service
+        .call(
+            Command::SearchCotos {
+                query: "RecentCotos Scope".into(),
+                scope: Scope::Cotonoma((scope_child1.uuid, CotonomaScope::Depth(1))),
+                only_cotonomas: false,
+                pagination: search_pagination,
+            }
+            .into_request(),
+        )
+        .await?
+        .content::<PaginatedCotos>()?;
+    let depth_search_ids: Vec<_> = depth_search.page.rows.iter().map(|c| c.uuid).collect();
+    assert_that!(depth_search_ids.contains(&scope_child1_coto.uuid), eq(true));
+    assert_that!(depth_search_ids.contains(&scope_child2_coto.uuid), eq(true));
+    assert_that!(depth_search_ids.contains(&scope_child3_coto.uuid), eq(false));
+    assert_that!(depth_search_ids.contains(&scope_root_coto.uuid), eq(false));
+
+    /////////////////////////////////////////////////////////////////////////////
     // Command: MarkAsRead
     /////////////////////////////////////////////////////////////////////////////
 

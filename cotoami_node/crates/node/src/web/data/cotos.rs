@@ -112,7 +112,7 @@ async fn search_cotos(
     Query(pagination): Query<Pagination>,
 ) -> Result<Content<PaginatedCotos>, ServiceError> {
     state
-        .search_cotos(query, None, None, false, pagination)
+        .search_cotos(query, Scope::All, false, pagination)
         .await
         .map(|cotos| Content(cotos, accept))
 }
@@ -128,7 +128,7 @@ async fn search_cotonoma_cotos(
     Query(pagination): Query<Pagination>,
 ) -> Result<Content<PaginatedCotos>, ServiceError> {
     state
-        .search_cotos(query, None, None, true, pagination)
+        .search_cotos(query, Scope::All, true, pagination)
         .await
         .map(|cotos| Content(cotos, accept))
 }

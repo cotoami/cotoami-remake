@@ -68,8 +68,7 @@ impl NodeState {
     pub async fn search_cotos(
         &self,
         query: String,
-        node: Option<Id<Node>>,
-        cotonoma: Option<Id<Cotonoma>>,
+        scope: Scope,
         only_cotonomas: bool,
         pagination: Pagination,
     ) -> Result<PaginatedCotos, ServiceError> {
@@ -77,10 +76,6 @@ impl NodeState {
             return errors.into_result();
         }
         self.get(move |ds| {
-            let scope = cotonoma
-                .map(Scope::cotonoma_local)
-                .or_else(|| node.map(Scope::Node))
-                .unwrap_or(Scope::All);
             let page = ds.search_cotos(
                 &query,
                 scope,

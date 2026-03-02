@@ -229,28 +229,34 @@ impl HttpClient {
             )),
             Command::SearchCotos {
                 query,
-                node,
-                cotonoma,
+                scope,
                 only_cotonomas,
                 pagination,
             } => {
                 let only_cotonomas = if only_cotonomas { "/cotonomas" } else { "" };
                 let encoded_query = utf8_percent_encode(&query, NON_ALPHANUMERIC).to_string();
-                if let Some(cotonoma_id) = cotonoma {
-                    self.get(&format!(
-                        "{API_PATH_COTONOMAS}/{cotonoma_id}/cotos{only_cotonomas}/search/{encoded_query}"
-                    ))
-                    .query(&pagination)
-                } else if let Some(node_id) = node {
-                    self.get(&format!(
-                        "{API_PATH_NODES}/{node_id}/cotos{only_cotonomas}/search/{encoded_query}"
-                    ))
-                    .query(&pagination)
-                } else {
-                    self.get(&format!(
-                        "{API_PATH_COTOS}{only_cotonomas}/search/{encoded_query}"
-                    ))
-                    .query(&pagination)
+                match scope {
+                    Scope::All => self
+                        .get(&format!(
+                            "{API_PATH_COTOS}{only_cotonomas}/search/{encoded_query}"
+                        ))
+                        .query(&pagination),
+                    Scope::Node(node_id) => self
+                        .get(&format!(
+                            "{API_PATH_NODES}/{node_id}/cotos{only_cotonomas}/search/{encoded_query}"
+                        ))
+                        .query(&pagination),
+                    Scope::Cotonoma((cotonoma_id, cotonoma_scope)) => {
+                        let request = self.get(&format!(
+                            "{API_PATH_COTONOMAS}/{cotonoma_id}/cotos{only_cotonomas}/search/{encoded_query}"
+                        ));
+                        let request = match cotonoma_scope {
+                            CotonomaScope::Recursive => request.query(&[("recursive", true)]),
+                            CotonomaScope::Depth(depth) => request.query(&[("depth", depth)]),
+                            CotonomaScope::Local => request,
+                        };
+                        request.query(&pagination)
+                    }
                 }
             }
             Command::CotoDetails { id } => self.get(&format!("{API_PATH_COTOS}/{id}/details")),

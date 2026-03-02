@@ -39,7 +39,7 @@ async fn recent_cotos(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
-    Query(query): Query<RecentCotosQuery>,
+    Query(query): Query<CotosQuery>,
 ) -> Result<Content<PaginatedCotos>, ServiceError> {
     let pagination = query.pagination();
     if let Err(errors) = pagination.validate() {
@@ -59,7 +59,7 @@ async fn recent_cotonoma_cotos(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
-    Query(query): Query<RecentCotosQuery>,
+    Query(query): Query<CotosQuery>,
 ) -> Result<Content<PaginatedCotos>, ServiceError> {
     let pagination = query.pagination();
     if let Err(errors) = pagination.validate() {
@@ -72,7 +72,7 @@ async fn recent_cotonoma_cotos(
 }
 
 #[derive(Debug, serde::Deserialize)]
-struct RecentCotosQuery {
+struct CotosQuery {
     #[serde(default)]
     page: i64,
     page_size: Option<i64>,
@@ -81,7 +81,7 @@ struct RecentCotosQuery {
     depth: Option<usize>,
 }
 
-impl RecentCotosQuery {
+impl CotosQuery {
     fn pagination(&self) -> Pagination {
         Pagination {
             page: self.page,
@@ -111,7 +111,7 @@ mod tests {
 
     #[test]
     fn depth_takes_precedence_over_recursive() {
-        let query = RecentCotosQuery {
+        let query = CotosQuery {
             page: 0,
             page_size: None,
             recursive: true,
@@ -122,7 +122,7 @@ mod tests {
 
     #[test]
     fn recursive_maps_to_recursive_scope() {
-        let query = RecentCotosQuery {
+        let query = CotosQuery {
             page: 0,
             page_size: None,
             recursive: true,
@@ -133,7 +133,7 @@ mod tests {
 
     #[test]
     fn default_maps_to_local_scope() {
-        let query = RecentCotosQuery {
+        let query = CotosQuery {
             page: 0,
             page_size: None,
             recursive: false,
@@ -200,13 +200,14 @@ async fn search_cotos(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path((cotonoma_id, query)): Path<(Id<Cotonoma>, String)>,
-    Query(pagination): Query<Pagination>,
+    Query(cotos_query): Query<CotosQuery>,
 ) -> Result<Content<PaginatedCotos>, ServiceError> {
+    let pagination = cotos_query.pagination();
     if let Err(errors) = pagination.validate() {
         return errors.into_result();
     }
     state
-        .search_cotos(query, None, Some(cotonoma_id), false, pagination)
+        .search_cotos(query, cotos_query.scope(cotonoma_id), false, pagination)
         .await
         .map(|cotos| Content(cotos, accept))
 }
@@ -219,13 +220,14 @@ async fn search_cotonoma_cotos(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path((cotonoma_id, query)): Path<(Id<Cotonoma>, String)>,
-    Query(pagination): Query<Pagination>,
+    Query(cotos_query): Query<CotosQuery>,
 ) -> Result<Content<PaginatedCotos>, ServiceError> {
+    let pagination = cotos_query.pagination();
     if let Err(errors) = pagination.validate() {
         return errors.into_result();
     }
     state
-        .search_cotos(query, None, Some(cotonoma_id), true, pagination)
+        .search_cotos(query, cotos_query.scope(cotonoma_id), true, pagination)
         .await
         .map(|cotos| Content(cotos, accept))
 }

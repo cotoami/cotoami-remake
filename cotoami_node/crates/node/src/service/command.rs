@@ -117,11 +117,10 @@ pub enum Command {
         northeast: Geolocation,
     },
 
-    /// Request [CotosPage] that match the given query and cotonoma.
+    /// Request [CotosPage] that match the given query in the given scope.
     SearchCotos {
         query: String,
-        node: Option<Id<Node>>,
-        cotonoma: Option<Id<Cotonoma>>,
+        scope: Scope,
         only_cotonomas: bool,
         pagination: Pagination,
     },

@@ -101,12 +101,11 @@ impl NodeState {
             } => format.serialize(self.cotos_in_geo_bounds(southwest, northeast).await),
             Command::SearchCotos {
                 query,
-                node,
-                cotonoma,
+                scope,
                 only_cotonomas,
                 pagination,
             } => format.serialize(
-                self.search_cotos(query, node, cotonoma, only_cotonomas, pagination)
+                self.search_cotos(query, scope, only_cotonomas, pagination)
                     .await,
             ),
             Command::CotoDetails { id } => format.serialize(self.coto_details(id).await),
