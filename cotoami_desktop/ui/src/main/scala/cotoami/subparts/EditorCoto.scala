@@ -5,7 +5,10 @@ import scala.scalajs.js
 import org.scalajs.dom
 import com.softwaremill.quicklens._
 
+import slinky.core._
 import slinky.core.facade.{Fragment, ReactElement}
+import slinky.core.facade.Hooks._
+import slinky.core.annotations.react
 import slinky.web.html._
 import slinky.web.SyntheticMouseEvent
 
@@ -34,6 +37,8 @@ object EditorCoto {
   /////////////////////////////////////////////////////////////////////////////
 
   object CotoForm {
+    private val DraftSyncDelayMs = 300
+
     case class Model(
         isCotonoma: Boolean = false,
         inPreview: Boolean = false,
@@ -305,32 +310,15 @@ object EditorCoto {
         enableImageInput: Boolean = true
     )(implicit context: Context, dispatch: Msg => Unit): ReactElement =
       section(className := "coto-editor fill")(
-        Option.when(!form.isCotonoma) {
-          input(
-            className := "summary",
-            `type` := "text",
-            placeholder := context.i18n.text.EditorCoto_placeholder_summary,
-            value := form.summaryInput,
-            onChange := (e => dispatch(Msg.SummaryInput(e.target.value))),
-            onKeyDown := (e =>
-              if (form.hasValidContents && detectCtrlEnter(e)) {
-                onCtrlEnter.map(_())
-              }
-            )
-          )
-        },
-        textarea(
-          placeholder := (if (form.isCotonoma)
-                            context.i18n.text.EditorCoto_placeholder_cotonomaContent
-                          else context.i18n.text.EditorCoto_placeholder_coto),
-          value := form.contentInput,
-          slinky.web.html.onFocus := onFocus,
-          onChange := (e => dispatch(Msg.ContentInput(e.target.value))),
-          onKeyDown := (e =>
-            if (form.hasValidContents && detectCtrlEnter(e)) {
-              onCtrlEnter.map(_())
-            }
-          )
+        LocalDraftTextInputs(
+          form = form,
+          summaryPlaceholder = context.i18n.text.EditorCoto_placeholder_summary,
+          contentPlaceholder = (if (form.isCotonoma)
+                                  context.i18n.text.EditorCoto_placeholder_cotonomaContent
+                                else context.i18n.text.EditorCoto_placeholder_coto),
+          onCtrlEnter = onCtrlEnter,
+          onFocus = onFocus,
+          onDraftCommitted = dispatch
         ),
         Option.when(enableImageInput) {
           div(className := "input-image")(
@@ -354,6 +342,156 @@ object EditorCoto {
           )
         )
       )
+
+    @react object LocalDraftTextInputs {
+      case class Props(
+          form: Model,
+          summaryPlaceholder: String,
+          contentPlaceholder: String,
+          onCtrlEnter: Option[() => Unit],
+          onFocus: Option[() => Unit],
+          onDraftCommitted: Msg => Unit
+      )
+
+      val component = FunctionalComponent[Props] { props =>
+        val (summaryDraft, setSummaryDraft) = useState(props.form.summaryInput)
+        val (contentDraft, setContentDraft) = useState(props.form.contentInput)
+        val (imeActive, setImeActive) = useState(false)
+
+        val prevSummaryProp = useRef(props.form.summaryInput)
+        val prevContentProp = useRef(props.form.contentInput)
+        val summaryInModelRef = useRef(props.form.summaryInput)
+        val contentInModelRef = useRef(props.form.contentInput)
+        val syncTimerRef = useRef(Option.empty[Int])
+
+        val localForm = props.form.copy(
+          summaryInput = summaryDraft,
+          contentInput = contentDraft
+        )
+
+        def clearScheduledSync(): Unit = {
+          syncTimerRef.current.foreach(dom.window.clearTimeout)
+          syncTimerRef.current = None
+        }
+
+        def syncDraftToModel(): Unit = {
+          if (
+            !props.form.isCotonoma &&
+            summaryInModelRef.current != summaryDraft
+          )
+            props.onDraftCommitted(Msg.SummaryInput(summaryDraft))
+
+          if (contentInModelRef.current != contentDraft)
+            props.onDraftCommitted(Msg.ContentInput(contentDraft))
+        }
+
+        def flushDraft(): Unit = {
+          clearScheduledSync()
+          syncDraftToModel()
+        }
+
+        // Keep refs of the latest model values for stable sync comparisons.
+        useEffect(
+          () => {
+            summaryInModelRef.current = props.form.summaryInput
+          },
+          Seq(props.form.summaryInput)
+        )
+        useEffect(
+          () => {
+            contentInModelRef.current = props.form.contentInput
+          },
+          Seq(props.form.contentInput)
+        )
+
+        // Sync from model only when form values changed externally.
+        useEffect(
+          () => {
+            if (props.form.summaryInput != prevSummaryProp.current) {
+              prevSummaryProp.current = props.form.summaryInput
+              if (props.form.summaryInput != summaryDraft)
+                setSummaryDraft(props.form.summaryInput)
+            }
+          },
+          Seq(props.form.summaryInput, summaryDraft)
+        )
+        useEffect(
+          () => {
+            if (props.form.contentInput != prevContentProp.current) {
+              prevContentProp.current = props.form.contentInput
+              if (props.form.contentInput != contentDraft)
+                setContentDraft(props.form.contentInput)
+            }
+          },
+          Seq(props.form.contentInput, contentDraft)
+        )
+
+        // Debounced sync while typing.
+        useEffect(
+          () => {
+            clearScheduledSync()
+            if (!imeActive) {
+              syncTimerRef.current = Some(dom.window.setTimeout(
+                () => {
+                  syncTimerRef.current = None
+                  syncDraftToModel()
+                },
+                DraftSyncDelayMs.toDouble
+              ))
+            }
+          },
+          Seq(summaryDraft, contentDraft, imeActive)
+        )
+
+        // Prevent stale timer callbacks after unmount.
+        useEffect(
+          () => () => clearScheduledSync(),
+          Seq.empty
+        )
+
+        Fragment(
+          Option.when(!props.form.isCotonoma) {
+            input(
+              className := "summary",
+              `type` := "text",
+              placeholder := props.summaryPlaceholder,
+              value := summaryDraft,
+              onChange := (e => setSummaryDraft(e.target.value)),
+              onBlur := (_ => flushDraft()),
+              onCompositionStart := (_ => setImeActive(true)),
+              onCompositionEnd := (_ => {
+                setImeActive(false)
+                flushDraft()
+              }),
+              onKeyDown := (e =>
+                if (localForm.hasValidContents && detectCtrlEnter(e)) {
+                  flushDraft()
+                  props.onCtrlEnter.map(_())
+                }
+              )
+            )
+          },
+          textarea(
+            placeholder := props.contentPlaceholder,
+            value := contentDraft,
+            slinky.web.html.onFocus := props.onFocus,
+            onChange := (e => setContentDraft(e.target.value)),
+            onBlur := (_ => flushDraft()),
+            onCompositionStart := (_ => setImeActive(true)),
+            onCompositionEnd := (_ => {
+              setImeActive(false)
+              flushDraft()
+            }),
+            onKeyDown := (e =>
+              if (localForm.hasValidContents && detectCtrlEnter(e)) {
+                flushDraft()
+                props.onCtrlEnter.map(_())
+              }
+            )
+          )
+        )
+      }
+    }
 
     def buttonPreview(
         form: Model
