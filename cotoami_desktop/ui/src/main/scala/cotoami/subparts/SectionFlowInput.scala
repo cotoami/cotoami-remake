@@ -105,7 +105,7 @@ object SectionFlowInput {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.FlowInputMsg(this)
+    override def into: AppMsg = AppMsg.FlowInputMsg(this)
   }
 
   object Msg {
@@ -184,7 +184,7 @@ object SectionFlowInput {
               _2 = geomap,
               _4 = submsg match {
                 case CotoForm.Msg.ContentInput(_) => model.save
-                case _ => subcmd.map(Msg.CotoFormMsg).map(_.into)
+                case _ => subcmd.map(Msg.CotoFormMsg.apply).map(_.into)
               }
             )
           }
@@ -207,7 +207,7 @@ object SectionFlowInput {
           .pipe { model =>
             default.copy(
               _1 = model,
-              _4 = subcmd.map(Msg.CotonomaFormMsg).map(_.into)
+              _4 = subcmd.map(Msg.CotonomaFormMsg.apply).map(_.into)
             )
           }
       }

@@ -63,7 +63,7 @@ object DatabaseFocus {
           ),
           Cmd.Batch(
             CotonomaDetails.fetch(cotonomaId)
-              .map(Msg.FocusedCotonomaDetailsFetched),
+              .map(Msg.FocusedCotonomaDetailsFetched.apply),
             fetchRecentCotonomas,
             timelineCmd,
             model.repo.fetchGraph

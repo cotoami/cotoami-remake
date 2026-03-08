@@ -25,7 +25,7 @@ object SectionNodeTools {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.SectionNodeToolsMsg(this)
+    override def into: AppMsg = AppMsg.SectionNodeToolsMsg(this)
   }
 
   object Msg {

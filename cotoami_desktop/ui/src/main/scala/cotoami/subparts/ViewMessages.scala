@@ -4,7 +4,6 @@ import org.scalajs.dom.html
 
 import slinky.core._
 import slinky.core.facade.ReactElement
-import slinky.core.annotations.react
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
@@ -30,7 +29,7 @@ object ViewMessages {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.ViewMessagesMsg(this)
+    override def into: AppMsg = AppMsg.ViewMessagesMsg(this)
   }
 
   object Msg {
@@ -62,10 +61,13 @@ object ViewMessages {
       )
     }
 
-  @react object ContentArea {
+  object ContentArea {
     case class Props(
         entries: Seq[SystemMessages.Entry]
     )
+
+    def apply(entries: Seq[SystemMessages.Entry]) =
+      component(Props(entries))
 
     val component = FunctionalComponent[Props] { props =>
       val bottomRef = useRef[html.Div](null)

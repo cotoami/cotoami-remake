@@ -27,7 +27,7 @@ trait Paginated {
 }
 
 case class PaginatedItems[T](
-    items: Seq[T] = Seq.empty,
+    items: Seq[T] = Seq.empty[T],
     pageSize: Double = 0,
     lastLoadedIndex: Option[Double] = None,
     totalItems: Double = 0
@@ -56,7 +56,7 @@ case class PaginatedItems[T](
 
 case class PaginatedIds[T <: Entity[T]](
     ids: Set[Id[T]] = Set.empty[Id[T]],
-    order: Seq[Id[T]] = Seq.empty,
+    order: Seq[Id[T]] = Seq.empty[Id[T]],
     pageSize: Double = 0,
     lastLoadedIndex: Option[Double] = None,
     totalItems: Double = 0

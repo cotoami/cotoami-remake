@@ -70,7 +70,7 @@ object ModalPromote {
         val cotoForm = CotoForm.Model.forUpdate(coto)
         (
           Model(original, cotonomaForm, cotoForm),
-          cmd.map(Msg.CotonomaFormMsg).map(_.into)
+          cmd.map(Msg.CotonomaFormMsg.apply).map(_.into)
         )
       }
   }
@@ -80,7 +80,8 @@ object ModalPromote {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.PromoteMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.PromoteMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -98,7 +99,7 @@ object ModalPromote {
         val (form, subcmd) = CotonomaForm.update(submsg, model.cotonomaForm)
         (
           model.copy(cotonomaForm = form),
-          subcmd.map(Msg.CotonomaFormMsg).map(_.into)
+          subcmd.map(Msg.CotonomaFormMsg.apply).map(_.into)
         )
       }
 
@@ -106,7 +107,7 @@ object ModalPromote {
         val (form, _, subcmd) = CotoForm.update(submsg, model.cotoForm)
         (
           model.copy(cotoForm = form),
-          subcmd.map(Msg.CotoFormMsg).map(_.into)
+          subcmd.map(Msg.CotoFormMsg.apply).map(_.into)
         )
       }
 

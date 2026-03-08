@@ -5,19 +5,25 @@ import org.scalajs.dom
 
 import slinky.core._
 import slinky.core.facade.{React, ReactElement}
-import slinky.core.annotations.react
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import marubinotto.optionalClasses
 import marubinotto.libs.reactDropzone._
 
-@react object InputFile {
+object InputFile {
   case class Props(
       accept: js.Dictionary[js.Array[String]],
       message: ReactElement,
       onSelect: dom.Blob => Unit
   )
+
+  def apply(
+      accept: js.Dictionary[js.Array[String]],
+      message: ReactElement,
+      onSelect: dom.Blob => Unit
+  ) =
+    component(Props(accept, message, onSelect))
 
   val component = FunctionalComponent[Props] { props =>
     val onDropCallback: OnDrop = useCallback(

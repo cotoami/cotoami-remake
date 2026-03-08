@@ -75,7 +75,8 @@ object ModalIncorporate {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.IncorporateMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.IncorporateMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {

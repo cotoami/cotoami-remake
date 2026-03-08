@@ -75,7 +75,8 @@ object ModalEditIto {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.EditItoMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.EditItoMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {

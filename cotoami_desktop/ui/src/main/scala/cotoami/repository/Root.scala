@@ -522,7 +522,7 @@ object Root {
     )
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.RepositoryMsg(this)
+    override def into: AppMsg = AppMsg.RepositoryMsg(this)
   }
 
   object Msg {

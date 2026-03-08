@@ -82,7 +82,8 @@ object ModalRepost {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.RepostMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.RepostMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {

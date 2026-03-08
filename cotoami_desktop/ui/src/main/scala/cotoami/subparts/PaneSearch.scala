@@ -106,7 +106,7 @@ object PaneSearch {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.PaneSearchMsg(this)
+    override def into: AppMsg = AppMsg.PaneSearchMsg(this)
   }
 
   object Msg {

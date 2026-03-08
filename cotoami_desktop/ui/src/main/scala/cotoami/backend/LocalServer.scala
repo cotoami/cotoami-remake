@@ -10,7 +10,7 @@ case class LocalServer(
     anonymousConnections: Int
 ) {
   def this(json: LocalServerJson) = this(
-    Nullable.toOption(json.active_config).map(ServerConfig),
+    Nullable.toOption(json.active_config).map(ServerConfig.apply),
     json.anonymous_connections
   )
 }

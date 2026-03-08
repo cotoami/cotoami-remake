@@ -121,7 +121,8 @@ object ModalSubcoto {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.SubcotoMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.SubcotoMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -141,7 +142,7 @@ object ModalSubcoto {
         default.copy(
           _1 = model.copy(cotoForm = form),
           _2 = geomap,
-          _3 = subcmd.map(Msg.CotoFormMsg).map(_.into)
+          _3 = subcmd.map(Msg.CotoFormMsg.apply).map(_.into)
         )
       }
 

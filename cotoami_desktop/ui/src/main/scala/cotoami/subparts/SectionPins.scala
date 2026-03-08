@@ -60,7 +60,7 @@ object SectionPins {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.SectionPinsMsg(this)
+    override def into: AppMsg = AppMsg.SectionPinsMsg(this)
   }
 
   object Msg {

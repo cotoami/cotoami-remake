@@ -4,7 +4,6 @@ import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => jso}
 
 import slinky.core._
-import slinky.core.annotations.react
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.core.facade.Hooks._
 import slinky.web.html._
@@ -209,12 +208,19 @@ object PartsCoto {
       )
     }
 
-  @react object CollapsibleContent {
+  object CollapsibleContent {
     case class Props(
         summary: String,
         details: ReactElement,
         opened: Boolean = false
     )
+
+    def apply(
+        summary: String,
+        details: ReactElement,
+        opened: Boolean = false
+    ) =
+      component(Props(summary, details, opened))
 
     val component = FunctionalComponent[Props] { props =>
       val (opened, setOpened) = useState(props.opened)

@@ -8,7 +8,6 @@ import com.softwaremill.quicklens._
 import slinky.core._
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.core.facade.Hooks._
-import slinky.core.annotations.react
 import slinky.web.html._
 import slinky.web.SyntheticMouseEvent
 
@@ -343,7 +342,7 @@ object EditorCoto {
         )
       )
 
-    @react object LocalDraftTextInputs {
+    object LocalDraftTextInputs {
       case class Props(
           form: Model,
           summaryPlaceholder: String,
@@ -352,6 +351,25 @@ object EditorCoto {
           onFocus: Option[() => Unit],
           onDraftCommitted: Msg => Unit
       )
+
+      def apply(
+          form: Model,
+          summaryPlaceholder: String,
+          contentPlaceholder: String,
+          onCtrlEnter: Option[() => Unit],
+          onFocus: Option[() => Unit],
+          onDraftCommitted: Msg => Unit
+      ) =
+        component(
+          Props(
+            form,
+            summaryPlaceholder,
+            contentPlaceholder,
+            onCtrlEnter,
+            onFocus,
+            onDraftCommitted
+          )
+        )
 
       val component = FunctionalComponent[Props] { props =>
         val (summaryDraft, setSummaryDraft) = useState(props.form.summaryInput)

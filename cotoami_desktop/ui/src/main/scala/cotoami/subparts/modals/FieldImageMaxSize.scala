@@ -86,10 +86,10 @@ object FieldImageMaxSize {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into =
+    override def into: AppMsg =
       ModalNodeProfile.Msg.FieldImageMaxSizeMsg(this)
-        .pipe(Modal.Msg.NodeProfileMsg)
-        .pipe(AppMsg.ModalMsg)
+        .pipe(Modal.Msg.NodeProfileMsg.apply)
+        .pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {

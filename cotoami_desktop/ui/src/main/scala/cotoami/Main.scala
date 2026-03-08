@@ -39,7 +39,7 @@ object Main {
           view(model, msg => dispatch(msg.into)),
         update,
         subscriptions,
-        Some(Msg.UrlChanged)
+        Some(Msg.UrlChanged.apply)
       )
     )
   }
@@ -64,10 +64,10 @@ object Main {
       Model(url = url, flowInput = flowInput, geomap = geomap),
       Cmd.Batch(
         showAppWindow,
-        UiState.restore.map(Msg.UiStateRestored),
-        cotoami.backend.SystemInfoJson.fetch().map(Msg.SystemInfoFetched),
+        UiState.restore.map(Msg.UiStateRestored.apply),
+        cotoami.backend.SystemInfoJson.fetch().map(Msg.SystemInfoFetched.apply),
         DatabaseFolder.restore.flatMap(
-          _.map(DatabaseInfo.openDatabase(_).map(Msg.DatabaseOpened))
+          _.map(DatabaseInfo.openDatabase(_).map(Msg.DatabaseOpened.apply))
             .getOrElse(Modal.open(Modal.Welcome()))
         ),
         flowInputCmd,
@@ -309,7 +309,7 @@ object Main {
         (
           model.copy(repo = Root()),
           model.databaseFolder.map(
-            DatabaseInfo.openDatabase(_).map(Msg.DatabaseOpened)
+            DatabaseInfo.openDatabase(_).map(Msg.DatabaseOpened.apply)
           ).getOrElse(Cmd.none)
         )
       }
@@ -500,11 +500,11 @@ object Main {
   // https://github.com/tauri-apps/tauri/issues/1564
   private def showAppWindow: Cmd.One[Msg] =
     tauri.invokeCommand("show_window")
-      .map(Msg.AppWindowShown)
+      .map(Msg.AppWindowShown.apply)
 
   private def connectToServers: Cmd.One[Msg] =
     tauri.invokeCommand("connect_to_servers")
-      .map(Msg.ServerConnectionsInitialized)
+      .map(Msg.ServerConnectionsInitialized.apply)
 
   def subscriptions(model: Model): Sub[Msg] =
     listenToBackendMessages <+>
@@ -514,18 +514,18 @@ object Main {
 
   private def listenToBackendMessages: Sub[Msg] =
     (tauri.listen[MessageJson]("message")
-      .map(Msg.BackendMessage): Sub[Msg])
+      .map(Msg.BackendMessage.apply): Sub[Msg])
 
   private def listenToBackendChanges(model: Model): Sub[Msg] =
     if (model.modalStack.opened[Modal.ParentSync])
       Sub.Empty
     else
       tauri.listen[ChangelogEntryJson]("backend-change")
-        .map(Msg.BackendChange)
+        .map(Msg.BackendChange.apply)
 
   private def listenToBackendEvents: Sub[Msg] =
     tauri.listen[LocalNodeEventJson]("backend-event")
-      .map(Msg.BackendEvent)
+      .map(Msg.BackendEvent.apply)
 
   private def appUpdateProgress(model: Model): Sub[Msg] =
     model.modalStack.get[Modal.AppUpdate]

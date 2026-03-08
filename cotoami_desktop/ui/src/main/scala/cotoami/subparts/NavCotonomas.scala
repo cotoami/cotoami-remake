@@ -76,7 +76,7 @@ object NavCotonomas {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.NavCotonomasMsg(this)
+    override def into: AppMsg = AppMsg.NavCotonomasMsg(this)
   }
 
   object Msg {

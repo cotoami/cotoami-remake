@@ -1,6 +1,8 @@
 import org.scalajs.linker.interface.ModuleSplitStyle
 
-ThisBuild / scalaVersion := "2.13.16"
+val scala3Version = "3.3.6"
+
+ThisBuild / scalaVersion := scala3Version
 
 val circeVersion = "0.14.7"
 val slinkyVersion = "0.7.5"
@@ -14,8 +16,7 @@ lazy val cotoami = project
       "utf-8",
       "-deprecation",
       "-feature",
-      "-Ymacro-annotations",
-      "-Xlint:unused"
+      "-Wunused:all"
     ),
 
     // We have a `main` method

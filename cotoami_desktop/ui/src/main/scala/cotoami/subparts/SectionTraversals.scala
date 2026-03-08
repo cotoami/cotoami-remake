@@ -134,7 +134,7 @@ object SectionTraversals {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.SectionTraversalsMsg(this)
+    override def into: AppMsg = AppMsg.SectionTraversalsMsg(this)
   }
 
   object Msg {

@@ -8,7 +8,7 @@ import cotoami.models._
 import cotoami.subparts._
 
 sealed trait Msg extends Into[Msg] {
-  def into = this
+  override def into: Msg = this
 }
 
 object Msg {

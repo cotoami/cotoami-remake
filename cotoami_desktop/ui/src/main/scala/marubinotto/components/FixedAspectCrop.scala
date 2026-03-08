@@ -8,11 +8,10 @@ import org.scalajs.dom
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 import slinky.core._
-import slinky.core.annotations.react
 
 import marubinotto.fui.Browser
 
-@react object FixedAspectCrop extends ExternalComponent {
+object FixedAspectCrop extends ExternalComponent {
   case class Props(
       image: String,
       onCropChange: Position => Unit,
@@ -21,6 +20,25 @@ import marubinotto.fui.Browser
       onMediaLoaded: Option[() => Unit] = None,
       onCropComplete: Option[(Area, Area) => Unit] = None
   )
+
+  def apply(
+      image: String,
+      onCropChange: Position => Unit,
+      crop: Position = position(0, 0),
+      aspect: Option[Double] = None,
+      onMediaLoaded: Option[() => Unit] = None,
+      onCropComplete: Option[(Area, Area) => Unit] = None
+  ) =
+    super.apply(
+      Props(
+        image,
+        onCropChange,
+        crop,
+        aspect,
+        onMediaLoaded,
+        onCropComplete
+      )
+    )
 
   override val component = ReactEasyCrop
 

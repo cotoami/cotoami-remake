@@ -4,12 +4,11 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 
 import slinky.core._
-import slinky.core.annotations.react
 import slinky.core.facade.ReactElement
 
 import marubinotto.facade.Nullable
 
-@react object Select extends ExternalComponent {
+object Select extends ExternalComponent {
   case class Props(
       className: String,
       options: Seq[SelectOption],
@@ -26,6 +25,41 @@ import marubinotto.facade.Nullable
       menuPlacement: String = "auto", // "auto" / "bottom" / "top"
       onChange: Option[Nullable[SelectOption] => Unit] = None
   )
+
+  def apply(
+      className: String,
+      options: Seq[SelectOption],
+      placeholder: Option[String] = None,
+      inputValue: String = "",
+      defaultValue: Option[SelectOption] = None,
+      value: Option[SelectOption] = None,
+      onInputChange: Option[String => Unit] = None,
+      formatOptionLabel: Option[SelectOption => ReactElement] = None,
+      isLoading: Boolean = false,
+      noOptionsMessage: Option[NoOptionsMessageArg => ReactElement] = None,
+      isClearable: Boolean = false,
+      autoFocus: Boolean = false,
+      menuPlacement: String = "auto",
+      onChange: Option[Nullable[SelectOption] => Unit] = None
+  ) =
+    super.apply(
+      Props(
+        className,
+        options,
+        placeholder,
+        inputValue,
+        defaultValue,
+        value,
+        onInputChange,
+        formatOptionLabel,
+        isLoading,
+        noOptionsMessage,
+        isClearable,
+        autoFocus,
+        menuPlacement,
+        onChange
+      )
+    )
 
   trait SelectOption extends js.Object {
     val value: String

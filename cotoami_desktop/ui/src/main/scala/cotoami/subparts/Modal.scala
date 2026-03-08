@@ -219,7 +219,7 @@ object Modal {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.ModalMsg(this)
+    override def into: AppMsg = AppMsg.ModalMsg(this)
   }
 
   object Msg {

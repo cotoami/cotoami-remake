@@ -20,7 +20,7 @@ object AppMain {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.AppMainMsg(this)
+    override def into: AppMsg = AppMsg.AppMainMsg(this)
   }
 
   object Msg {
@@ -86,7 +86,7 @@ object AppMain {
       uiState: UiState
   ): Cmd.One[Either[Throwable, Unit]] = {
     val foldedPaneWidth = 16
-    val deltaWidth = (name, open) match {
+    val deltaWidth: Double = (name, open) match {
       case (PaneFlow.PaneName, true) =>
         PaneFlow.widthIn(uiState) - foldedPaneWidth
       case (PaneFlow.PaneName, false) =>

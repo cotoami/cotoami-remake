@@ -6,7 +6,6 @@ import scala.scalajs.js
 import org.scalajs.dom
 
 import slinky.core._
-import slinky.core.annotations.react
 import slinky.core.facade.ReactElement
 import slinky.core.facade.Hooks._
 import slinky.web.html._
@@ -43,7 +42,8 @@ object ModalNodeIcon {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.NodeIconMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.NodeIconMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -159,7 +159,7 @@ object ModalNodeIcon {
       )
     )
 
-  @react object SectionCrop {
+  object SectionCrop {
     // https://github.com/scala-js/scala-js-macrotask-executor
     import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
@@ -167,6 +167,12 @@ object ModalNodeIcon {
         imageUrl: String,
         dispatch: Into[AppMsg] => Unit
     )
+
+    def apply(
+        imageUrl: String,
+        dispatch: Into[AppMsg] => Unit
+    ) =
+      component(Props(imageUrl, dispatch))
 
     val component = FunctionalComponent[Props] { props =>
       val (crop, setCrop) = useState(FixedAspectCrop.position(0, 0))

@@ -8,7 +8,6 @@ import org.scalajs.dom
 import org.scalajs.dom.document.createElement
 
 import slinky.core._
-import slinky.core.annotations.react
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
@@ -17,7 +16,7 @@ import marubinotto.libs.geomap.maplibre
 import marubinotto.libs.geomap.maplibre._
 import marubinotto.libs.geomap.pmtiles
 
-@react object MapLibre {
+object MapLibre {
 
   // Enable to load PMTiles files.
   //
@@ -67,6 +66,59 @@ import marubinotto.libs.geomap.pmtiles
     def markerToUpdate: Option[MarkerDef] =
       updateMarker.parameter.flatMap(markerDefs.get)
   }
+
+  def apply(
+      id: String,
+      disableRotation: Boolean = true,
+      style: () => js.Object,
+      center: LngLat,
+      zoom: Double,
+      detectZoomClass: Option[Double => Option[String]] = None,
+      focusedLocation: Option[LngLat] = None,
+      markerDefs: TreeMap[String, MarkerDef] = TreeMap.empty,
+      focusedMarkerId: Option[String] = None,
+      bounds: Option[LngLatBounds] = None,
+      paddingToBounds: Double = 30,
+      createMap: Action[Unit] = Action.default,
+      applyCenterZoom: Action[Unit] = Action.default,
+      fitBounds: Action[Unit] = Action.default,
+      refreshMarkers: Action[Unit] = Action.default,
+      updateMarker: Action[String] = Action.default,
+      onInit: Option[LngLatBounds => Unit] = None,
+      onClick: Option[MapMouseEvent => Unit] = None,
+      onZoomChanged: Option[Double => Unit] = None,
+      onCenterMoved: Option[LngLat => Unit] = None,
+      onBoundsChanged: Option[LngLatBounds => Unit] = None,
+      onMarkerClick: Option[String => Unit] = None,
+      onFocusedLocationClick: Option[() => Unit] = None
+  ) =
+    component(
+      Props(
+        id,
+        disableRotation,
+        style,
+        center,
+        zoom,
+        detectZoomClass,
+        focusedLocation,
+        markerDefs,
+        focusedMarkerId,
+        bounds,
+        paddingToBounds,
+        createMap,
+        applyCenterZoom,
+        fitBounds,
+        refreshMarkers,
+        updateMarker,
+        onInit,
+        onClick,
+        onZoomChanged,
+        onCenterMoved,
+        onBoundsChanged,
+        onMarkerClick,
+        onFocusedLocationClick
+      )
+    )
 
   val component = FunctionalComponent[Props] { props =>
     val (mapInitialized, setMapInitialized) = useState[Boolean](false)

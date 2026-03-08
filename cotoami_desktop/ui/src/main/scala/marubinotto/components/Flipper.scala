@@ -4,26 +4,35 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 
 import slinky.core._
-import slinky.core.annotations.react
 import slinky.core.facade.ReactElement
 
-@react object Flipper extends ExternalComponent {
+object Flipper extends ExternalComponent {
   case class Props(
       element: String,
       className: String,
-      flipKey: String,
-      children: ReactElement*
+      flipKey: String
   )
+
+  def apply(
+      element: String,
+      className: String,
+      flipKey: String
+  )(children: ReactElement*) =
+    super.apply(Props(element, className, flipKey))(children: _*)
 
   override val component = ReactFlipToolkit.Flipper
 }
 
-@react object Flipped extends ExternalComponent {
+object Flipped extends ExternalComponent {
   case class Props(
-      key: String,
-      flipId: String,
-      children: ReactElement*
+      flipId: String
   )
+
+  def apply(
+      key: String,
+      flipId: String
+  )(children: ReactElement*) =
+    super.apply(Props(flipId)).withKey(key).apply(children: _*)
 
   override val component = ReactFlipToolkit.Flipped
 }

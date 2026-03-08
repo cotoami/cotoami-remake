@@ -148,7 +148,7 @@ object SectionTimeline {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.SectionTimelineMsg(this)
+    override def into: AppMsg = AppMsg.SectionTimelineMsg(this)
   }
 
   object Msg {

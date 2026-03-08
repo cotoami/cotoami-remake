@@ -41,7 +41,7 @@ object PaneStock {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.PaneStockMsg(this)
+    override def into: AppMsg = AppMsg.PaneStockMsg(this)
   }
 
   object Msg {

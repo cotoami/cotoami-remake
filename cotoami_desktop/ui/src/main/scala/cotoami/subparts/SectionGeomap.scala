@@ -137,7 +137,7 @@ object SectionGeomap {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.SectionGeomapMsg(this)
+    override def into: AppMsg = AppMsg.SectionGeomapMsg(this)
   }
 
   object Msg {

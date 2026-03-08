@@ -112,7 +112,7 @@ object ModalEditCoto {
         )
       (
         Model(coto, cotoForm, cotonomaForm),
-        cotoForm.scanMediaMetadata.map(Msg.CotoFormMsg).map(_.into)
+        cotoForm.scanMediaMetadata.map(Msg.CotoFormMsg.apply).map(_.into)
       )
     }
   }
@@ -122,7 +122,8 @@ object ModalEditCoto {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.EditCotoMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.EditCotoMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -149,7 +150,7 @@ object ModalEditCoto {
             }
           ),
           _2 = geomap,
-          _3 = subcmd.map(Msg.CotoFormMsg).map(_.into)
+          _3 = subcmd.map(Msg.CotoFormMsg.apply).map(_.into)
         )
       }
 
@@ -157,7 +158,7 @@ object ModalEditCoto {
         val (form, subcmd) = CotonomaForm.update(submsg, model.cotonomaForm)
         default.copy(
           _1 = model.copy(cotonomaForm = form),
-          _3 = subcmd.map(Msg.CotonomaFormMsg).map(_.into)
+          _3 = subcmd.map(Msg.CotonomaFormMsg.apply).map(_.into)
         )
       }
 

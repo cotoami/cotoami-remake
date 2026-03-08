@@ -5,7 +5,6 @@ import org.scalajs.dom.html
 import org.scalajs.dom.HTMLElement
 
 import slinky.core._
-import slinky.core.annotations.react
 import slinky.core.facade.{ReactElement, ReactRef}
 import slinky.core.facade.Hooks._
 import slinky.web.html._
@@ -16,13 +15,21 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Ito, Siblings}
 import cotoami.subparts.{PartsIto, PartsNode, SectionPins}
 
-@react object DocumentLayout {
+object DocumentLayout {
   case class Props(
       pins: Siblings,
       viewportId: String,
       context: Context,
       dispatch: Into[AppMsg] => Unit
   )
+
+  def apply(
+      pins: Siblings,
+      viewportId: String,
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ) =
+    component(Props(pins, viewportId, context, dispatch))
 
   final val ActiveTocEntryClass = "active"
 
