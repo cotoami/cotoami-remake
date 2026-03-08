@@ -3,7 +3,7 @@ name: release-desktop
 on:
   push:
     branches:
-    - release-desktop
+      - release-desktop
 
 jobs:
   # https://github.com/tauri-apps/tauri-action
@@ -14,113 +14,113 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        # for Universal macOS builds (arm64 and x86_64)
-        - platform: 'macos-latest'
-          args: '--target universal-apple-darwin'
-        - platform: 'ubuntu-24.04' 
-          args: ''
-        - platform: 'windows-latest'
-          args: ''
+          # for Universal macOS builds (arm64 and x86_64)
+          - platform: "macos-latest"
+            args: "--target universal-apple-darwin"
+          - platform: "ubuntu-24.04"
+            args: ""
+          - platform: "windows-latest"
+            args: ""
 
     runs-on: ${{ matrix.platform }}
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        lfs: true
-        fetch-depth: 2  # to detect version change in detect_version
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 2 # to detect version change in detect_version
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-    - name: Install Rust stable
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
-        targets: ${{ runner.os == 'macOS' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
+          targets: ${{ runner.os == 'macOS' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-    # https://github.com/gitbutlerapp/gitbutler/issues/5638#issuecomment-2507918738
-    # https://www.reddit.com/r/tauri/comments/1k4i5r7/comment/mpowuyi/
-    - name: Install linux dependencies
-      shell: bash
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt update;
-        sudo apt install -y \
-          build-essential \
-          curl \
-          wget \
-          file \
-          libssl-dev \
-          libgtk-3-dev \
-          libappindicator3-dev \
-          librsvg2-dev;
+      # https://github.com/gitbutlerapp/gitbutler/issues/5638#issuecomment-2507918738
+      # https://www.reddit.com/r/tauri/comments/1k4i5r7/comment/mpowuyi/
+      - name: Install linux dependencies
+        shell: bash
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt update;
+          sudo apt install -y \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libssl-dev \
+            libgtk-3-dev \
+            libappindicator3-dev \
+            librsvg2-dev;
 
-        sudo apt install -y \
-          libwebkit2gtk-4.1-0=2.44.0-2 \
-          libwebkit2gtk-4.1-dev=2.44.0-2 \
-          libjavascriptcoregtk-4.1-0=2.44.0-2 \
-          libjavascriptcoregtk-4.1-dev=2.44.0-2 \
-          gir1.2-javascriptcoregtk-4.1=2.44.0-2 \
-          gir1.2-webkit2-4.1=2.44.0-2;
+          sudo apt install -y \
+            libwebkit2gtk-4.1-0=2.44.0-2 \
+            libwebkit2gtk-4.1-dev=2.44.0-2 \
+            libjavascriptcoregtk-4.1-0=2.44.0-2 \
+            libjavascriptcoregtk-4.1-dev=2.44.0-2 \
+            gir1.2-javascriptcoregtk-4.1=2.44.0-2 \
+            gir1.2-webkit2-4.1=2.44.0-2;
 
-    - name: Setup JDK
-      uses: actions/setup-java@v4
-      with:
-        distribution: corretto
-        java-version: 23
-        cache: sbt
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: corretto
+          java-version: 23
+          cache: sbt
 
-    # https://eed3si9n.com/setup-sbt/
-    - name: Install sbt
-      uses: sbt/setup-sbt@v1
+      # https://eed3si9n.com/setup-sbt/
+      - name: Install sbt
+        uses: sbt/setup-sbt@v1
 
-    - name: Import Apple Developer Certificate
-      uses: apple-actions/import-codesign-certs@v3
-      if: runner.os == 'macOS'
-      with:
-        p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
-        p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-        keychain: build
+      - name: Import Apple Developer Certificate
+        uses: apple-actions/import-codesign-certs@v3
+        if: runner.os == 'macOS'
+        with:
+          p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
+          p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          keychain: build
 
-    - name: Verify Certificate
-      if: runner.os == 'macOS'
-      run: |
-        CERT_INFO=$(security find-identity -v -p codesigning build.keychain | grep "Developer ID Application")
-        CERT_ID=$(echo "$CERT_INFO" | awk -F'"' '{print $2}')
-        echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
-        echo "Certificate imported."
+      - name: Verify Certificate
+        if: runner.os == 'macOS'
+        run: |
+          CERT_INFO=$(security find-identity -v -p codesigning build.keychain | grep "Developer ID Application")
+          CERT_ID=$(echo "$CERT_INFO" | awk -F'"' '{print $2}')
+          echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
+          echo "Certificate imported."
 
-    - name: Detect app version
-      uses: salsify/action-detect-and-tag-new-version@v2
-      id: detect_version
-      with:
-        create-tag: false
-        version-command: cd cotoami_desktop/tauri && cargo read-manifest | jq -r .version
+      - name: Detect app version
+        uses: salsify/action-detect-and-tag-new-version@v2
+        id: detect_version
+        with:
+          create-tag: false
+          version-command: cd cotoami_desktop/tauri && cargo read-manifest | jq -r .version
 
-    - name: Build and release desktop app
-      uses: tauri-apps/tauri-action@v0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        APP_VERSION: ${{ steps.detect_version.outputs.current-version }}
-        TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-        TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        APPLE_ID: ${{ secrets.APPLE_ID }}
-        APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-        APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-        APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-        APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-        APPLE_SIGNING_IDENTITY: ${{ env.CERT_ID }}
-      with:
-        projectPath: cotoami_desktop/tauri
-        appVersion: ${{ env.APP_VERSION }}
-        tagName: desktop-v${{ env.APP_VERSION }}
-        releaseName: Cotoami Desktop v${{ env.APP_VERSION }}
-        releaseDraft: true
-        prerelease: false
-        includeDebug: false
-        includeRelease: true
-        args: ${{ matrix.args }}
+      - name: Build and release desktop app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APP_VERSION: ${{ steps.detect_version.outputs.current-version }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ env.CERT_ID }}
+        with:
+          projectPath: cotoami_desktop/tauri
+          appVersion: ${{ env.APP_VERSION }}
+          tagName: desktop-v${{ env.APP_VERSION }}
+          releaseName: Cotoami Desktop v${{ env.APP_VERSION }}
+          releaseDraft: true
+          prerelease: false
+          includeDebug: false
+          includeRelease: true
+          args: ${{ matrix.args }}
