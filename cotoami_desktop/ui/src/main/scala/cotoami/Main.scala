@@ -265,7 +265,7 @@ object Main {
             addCmd(_ => Browser.send(AppMain.Msg.SetPaneFlowOpen(true).into))
           )
 
-      case Msg.CotoFetchedOnDirectVisit(Left(e)) =>
+      case Msg.CotoFetchedOnDirectVisit(Left(_)) =>
         update(Msg.UnfocusCoto, model)
 
       case Msg.UnfocusCoto => {

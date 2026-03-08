@@ -475,13 +475,13 @@ object MapLibre {
         })
         marker.getElement().addEventListener(
           "mouseenter",
-          (e: dom.MouseEvent) => {
+          (_: dom.MouseEvent) => {
             popup.setLngLat(jsLngLat).setHTML(html).addTo(map)
           }
         )
         marker.getElement().addEventListener(
           "mouseleave",
-          (e: dom.MouseEvent) => {
+          (_: dom.MouseEvent) => {
             popup.remove()
           }
         )

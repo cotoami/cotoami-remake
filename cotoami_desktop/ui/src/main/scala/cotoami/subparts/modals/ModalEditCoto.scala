@@ -220,18 +220,24 @@ object ModalEditCoto {
           CotonomaForm.inputName(
             model = model.cotonomaForm,
             onCtrlEnter = Some(() => dispatch(Msg.Save))
-          )(context, submsg => dispatch(Msg.CotonomaFormMsg(submsg))),
+          )(using
+            context,
+            (submsg: CotonomaForm.Msg) => dispatch(Msg.CotonomaFormMsg(submsg))
+          ),
           Validation.sectionValidationError(model.cotonomaForm.validation)
         )
       },
       CotoForm(
         form = model.cotoForm,
         onCtrlEnter = Some(() => dispatch(Msg.Save))
-      )(context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
+      )(using
+        context,
+        (submsg: CotoForm.Msg) => dispatch(Msg.CotoFormMsg(submsg))
+      ),
       div(className := "buttons")(
-        CotoForm.buttonPreview(model.cotoForm)(
+        CotoForm.buttonPreview(model.cotoForm)(using
           context,
-          submsg => dispatch(Msg.CotoFormMsg(submsg))
+          (submsg: CotoForm.Msg) => dispatch(Msg.CotoFormMsg(submsg))
         ),
         button(
           className := "save",

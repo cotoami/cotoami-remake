@@ -27,7 +27,7 @@ object InputFile {
 
   val component = FunctionalComponent[Props] { props =>
     val onDropCallback: OnDrop = useCallback(
-      (accepted, rejected, event) => {
+      (accepted, _, _) => {
         if (accepted.length > 0) {
           props.onSelect(accepted(0))
         }

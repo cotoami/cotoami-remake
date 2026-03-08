@@ -46,7 +46,7 @@ object SectionNodeTools {
         (
           model.copy(togglingSync = false),
           result match {
-            case Right(server) => Cmd.none
+            case Right(_) => Cmd.none
             case Left(e) => cotoami.error("Failed to disable parent sync.", e)
           }
         )

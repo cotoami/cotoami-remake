@@ -66,12 +66,12 @@ object Cmd {
   }
 
   object Batch {
-    def fromSeq[Msg](cmds: Seq[One[Msg]]): Batch[Msg] = Batch(cmds: _*)
+    def fromSeq[Msg](cmds: Seq[One[Msg]]): Batch[Msg] = Batch(cmds*)
   }
 
   case class Sequence[+Msg](batches: Batch[Msg]*) extends Cmd[Msg] {
     override def map[OtherMsg](f: Msg => OtherMsg): Sequence[OtherMsg] =
-      Sequence(batches.map(_.map(f)): _*)
+      Sequence(batches.map(_.map(f))*)
 
     override def ++[LubMsg >: Msg](that: Cmd[LubMsg]): Cmd[LubMsg] =
       that match {
@@ -83,7 +83,7 @@ object Cmd {
 
   object Sequence {
     def fromSeq[Msg](batches: Seq[Batch[Msg]]): Sequence[Msg] =
-      Sequence(batches: _*)
+      Sequence(batches*)
   }
 
   def none[Msg]: One[Msg] = One(IO.none)

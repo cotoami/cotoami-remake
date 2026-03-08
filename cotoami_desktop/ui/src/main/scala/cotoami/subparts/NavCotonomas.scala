@@ -194,7 +194,7 @@ object NavCotonomas {
       )(
         li(key := "super")(
           ul(className := "super-cotonomas")(
-            superCotonomas.map(liCotonoma): _*
+            superCotonomas.map(liCotonoma)*
           )
         ),
         li(key := "current", className := "current-cotonoma cotonoma focused")(
@@ -232,7 +232,7 @@ object NavCotonomas {
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "recent")(
       h2()(context.i18n.text.NavCotonomas_recent),
-      ul()(cotonomas.map(liCotonoma): _*)
+      ul()(cotonomas.map(liCotonoma)*)
     )
 
   private def liCotonoma(

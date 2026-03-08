@@ -92,7 +92,7 @@ object EditorCoto {
             Browser.encodeAsBase64(blob, true).map {
               case Right(base64) =>
                 Msg.MediaContentEncoded(Right((base64, blob.`type`)))
-              case Left(e) =>
+              case Left(_) =>
                 Msg.MediaContentEncoded(
                   Left("Media content encoding error.")
                 )
@@ -565,7 +565,7 @@ object EditorCoto {
       ).flatten match {
         case Seq() => None
         case attributes =>
-          Some(ul(className := "attributes")(attributes: _*))
+          Some(ul(className := "attributes")(attributes*))
       }
 
     private def liAttributeDateTimeRange(form: Model)(using
@@ -672,7 +672,7 @@ object EditorCoto {
     }
 
     private def divAttributeDelete(
-        onClick: SyntheticMouseEvent[_] => Unit
+        onClick: SyntheticMouseEvent[?] => Unit
     )(using context: Context): ReactElement =
       div(className := "attribute-delete")(
         toolButton(

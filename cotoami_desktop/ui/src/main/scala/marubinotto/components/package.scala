@@ -21,7 +21,7 @@ package object components {
       tipPlacement: String = "bottom",
       classes: String = "",
       disabled: Boolean = false,
-      onClick: SyntheticMouseEvent[_] => Unit = (_ => ())
+      onClick: SyntheticMouseEvent[?] => Unit = (_ => ())
   ): ReactElement =
     button(
       className := s"default tool ${classes}",

@@ -152,20 +152,20 @@ object ModalPromote {
       context.i18n.text.ModalPromote_title
     )(
       div(className := "cotonoma-form")(
-        CotonomaForm.inputName(model = model.cotonomaForm)(
+        CotonomaForm.inputName(model = model.cotonomaForm)(using
           context,
-          submsg => dispatch(Msg.CotonomaFormMsg(submsg))
+          (submsg: CotonomaForm.Msg) => dispatch(Msg.CotonomaFormMsg(submsg))
         ),
         Validation.sectionValidationError(model.cotonomaForm.validation)
       ),
       divCotoForm(model.cotoForm)(using
         context,
-        submsg => dispatch(Msg.CotoFormMsg(submsg))
+        (submsg: CotoForm.Msg) => dispatch(Msg.CotoFormMsg(submsg))
       ),
       div(className := "buttons")(
-        CotoForm.buttonPreview(model.cotoForm)(
+        CotoForm.buttonPreview(model.cotoForm)(using
           context,
-          submsg => dispatch(Msg.CotoFormMsg(submsg))
+          (submsg: CotoForm.Msg) => dispatch(Msg.CotoFormMsg(submsg))
         ),
         button(
           className := "promote",

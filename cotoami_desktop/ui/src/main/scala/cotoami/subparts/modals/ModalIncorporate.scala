@@ -244,13 +244,13 @@ object ModalIncorporate {
         button(
           `type` := "button",
           className := "cancel contrast outline",
-          onClick := (e => dispatch(Msg.Cancel))
+          onClick := (_ => dispatch(Msg.Cancel))
         )(context.i18n.text.Cancel),
         button(
           `type` := "button",
           disabled := !model.readyToIncorporate,
           aria - "busy" := model.incorporating.toString(),
-          onClick := (e => dispatch(Msg.Incorporate))
+          onClick := (_ => dispatch(Msg.Incorporate))
         )(context.i18n.text.ModalIncorporate_incorporate)
       )
     )

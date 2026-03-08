@@ -62,7 +62,7 @@ object MasonryLayout {
                   PinnedCoto(ito, coto, order).asInstanceOf[scala.Any]
               }.toSeq.toJSArray,
               itemKey =
-                (item, index) => item.asInstanceOf[PinnedCoto].ito.id.uuid,
+                (item, _) => item.asInstanceOf[PinnedCoto].ito.id.uuid,
               render = props => {
                 val data = props.data.asInstanceOf[PinnedCoto]
                 sectionPinnedCoto(data.ito, data.coto, data.order)(
@@ -77,7 +77,7 @@ object MasonryLayout {
               overscanBy = Double.PositiveInfinity
             )
           )
-        }: _*
+        }*
       )
     )
 

@@ -204,7 +204,10 @@ object ModalSubcoto {
         form = model.cotoForm,
         vertical = true,
         onCtrlEnter = Some(() => dispatch(Msg.Post))
-      )(context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
+      )(using
+        context,
+        (submsg: CotoForm.Msg) => dispatch(Msg.CotoFormMsg(submsg))
+      ),
       sectionPost(model)
     )
   }
@@ -247,9 +250,9 @@ object ModalSubcoto {
         ),
         div(className := "space")()
       ),
-      CotoForm.buttonPreview(model.cotoForm)(
+      CotoForm.buttonPreview(model.cotoForm)(using
         context,
-        submsg => dispatch(Msg.CotoFormMsg(submsg))
+        (submsg: CotoForm.Msg) => dispatch(Msg.CotoFormMsg(submsg))
       ),
       button(
         className := "post",

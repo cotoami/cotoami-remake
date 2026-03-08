@@ -1,6 +1,6 @@
 import org.scalajs.linker.interface.ModuleSplitStyle
 
-val scala3Version = "3.3.6"
+val scala3Version = "3.7.4"
 
 ThisBuild / scalaVersion := scala3Version
 
@@ -11,6 +11,7 @@ lazy val cotoami = project
   .in(file("."))
   .enablePlugins(ScalaJSPlugin)
   .settings(
+    scalaModuleInfo := scalaModuleInfo.value.map(_.withOverrideScalaVersion(true)),
     scalacOptions ++= Seq(
       "-encoding",
       "utf-8",
@@ -44,5 +45,10 @@ lazy val cotoami = project
       "io.github.cquiroz" %%% "scala-java-time" % "2.6.0",
       "io.github.cquiroz" %%% "scala-java-locales" % "1.5.4",
       "org.scalatest" %%% "scalatest" % "3.2.9" % Test
+    ),
+    dependencyOverrides ++= Seq(
+      "org.scala-lang" % "scala3-library_3" % scala3Version,
+      "org.scala-lang" % "scala3-interfaces" % scala3Version,
+      "org.scala-lang" % "tasty-core_3" % scala3Version
     )
   )

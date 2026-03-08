@@ -33,7 +33,7 @@ object PartsCoto {
         ) ++ classes
       ),
       onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
-    )(children: _*)
+    )(children*)
 
   def addressAuthor(
       coto: Coto
@@ -105,7 +105,7 @@ object PartsCoto {
               })
             )(cotonoma.name)
           )
-        ): _*
+        )*
     )
 
   def divContent(

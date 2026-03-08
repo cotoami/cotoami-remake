@@ -226,7 +226,7 @@ object ModalNodeProfile {
       div(className := "arrow")(materialSymbol("arrow_upward")),
       Option.when(isParent) {
         ul(className := "privileges")(
-          PartsNode.childPrivileges(privileges).map(li()(_)): _*
+          PartsNode.childPrivileges(privileges).map(li()(_))*
         )
       },
       section(className := "self-node")(

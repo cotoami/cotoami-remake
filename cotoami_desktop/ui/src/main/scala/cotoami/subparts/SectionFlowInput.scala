@@ -1,6 +1,7 @@
 package cotoami.subparts
 
 import scala.util.chaining._
+import scala.annotation.unused
 import scala.scalajs.js
 import org.scalajs.dom
 
@@ -267,7 +268,7 @@ object SectionFlowInput {
         }
       }
 
-      case (Msg.CotoPosted(postId, Right(coto)), _, _) =>
+      case (Msg.CotoPosted(postId, Right(_)), _, _) =>
         default.copy(
           _1 = model.copy(posting = false),
           _3 = waitingPosts.remove(postId)
@@ -284,7 +285,7 @@ object SectionFlowInput {
         )
       }
 
-      case (Msg.CotonomaPosted(postId, Right((cotonoma, _))), _, _) =>
+      case (Msg.CotonomaPosted(postId, Right((_, _))), _, _) =>
         default.copy(
           _1 = model.copy(posting = false),
           _3 = waitingPosts.remove(postId)
@@ -329,7 +330,7 @@ object SectionFlowInput {
   def apply(
       model: Model,
       currentCotonoma: Cotonoma,
-      geomap: Geomap,
+      @unused _geomap: Geomap,
       editorHeight: Int,
       onEditorHeightChanged: Int => Unit
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =

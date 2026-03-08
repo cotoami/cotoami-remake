@@ -29,7 +29,7 @@ case class Parents(
       )
 
   def appendAll(parents: Iterable[ParentNode]): Parents =
-    parents.foldLeft(this)(_ append _)
+    parents.foldLeft(this)((acc, parent) => acc.append(parent))
 
   lazy val anyOthersPosts: Boolean =
     map.values.exists(_.othersLastPostedAt.isDefined)

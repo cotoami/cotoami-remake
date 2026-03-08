@@ -56,7 +56,7 @@ object DocumentLayout {
         tocRef.current.style.height = tocHeight(viewport.offsetHeight)
 
         // Resize the TOC height according to the viewport size
-        val resizeObserver = new dom.ResizeObserver((entries, observer) => {
+        val resizeObserver = new dom.ResizeObserver((entries, _) => {
           entries.foreach(entry => {
             if (tocRef.current != null) {
               tocRef.current.style.height = tocHeight(entry.contentRect.height)
@@ -67,7 +67,7 @@ object DocumentLayout {
 
         // Highlight TOC entries according to the current viewport position
         val intersectionObserver = new dom.IntersectionObserver(
-          (entries, observer) =>
+          (entries, _) =>
             entries.foreach(entry => {
               val id = entry.target.getAttribute("id")
               // Directly modify the class of the corresponding TOC entry element
@@ -117,7 +117,7 @@ object DocumentLayout {
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "toc", ref := tocRef)(
       ScrollArea()(
-        PartsIto.sectionSiblings(pins) { case (ito, coto, order) =>
+        PartsIto.sectionSiblings(pins) { case (ito, coto, _) =>
           div(
             id := elementIdOfTocEntry(ito),
             // This className will be modified directly by DocumentView to highlight

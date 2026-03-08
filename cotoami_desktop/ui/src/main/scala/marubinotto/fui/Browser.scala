@@ -26,7 +26,7 @@ object Browser {
       program: Program[Model, Msg]
   ) = {
     val runtime = new Runtime(container, program)
-    listenersOnPushUrl = runtime.onPushUrl _ :: listenersOnPushUrl
+    listenersOnPushUrl = runtime.onPushUrl :: listenersOnPushUrl
   }
 
   def send[Msg](msg: Msg): Cmd.One[Msg] = Cmd(IO(Some(msg)))

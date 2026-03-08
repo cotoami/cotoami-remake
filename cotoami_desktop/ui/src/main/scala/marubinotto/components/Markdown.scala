@@ -16,7 +16,7 @@ object Markdown extends ExternalComponent {
       remarkPlugins: Seq[js.Object | js.Tuple2[js.Object, js.Object]],
       rehypePlugins: Seq[js.Object | js.Tuple2[js.Object, js.Object]]
   )(children: ReactElement*) =
-    super.apply(Props(remarkPlugins, rehypePlugins))(children: _*)
+    super.apply(Props(remarkPlugins, rehypePlugins))(children*)
 
   override val component = ReactMarkdown
 }

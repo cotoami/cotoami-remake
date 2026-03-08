@@ -138,7 +138,7 @@ object SectionAsChild {
   def apply(
       model: Model
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    model.child.map { child =>
+    model.child.map { _ =>
       section(className := "field-group as-child")(
         h2()(context.i18n.text.AsChild_title),
         fieldChildPrivileges(model)

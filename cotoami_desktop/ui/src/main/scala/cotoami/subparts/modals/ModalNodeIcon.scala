@@ -189,7 +189,7 @@ object ModalNodeIcon {
           onCropChange = setCrop,
           aspect = Some(1.0),
           onCropComplete =
-            Some((croppedArea: Area, croppedAreaPixels: Area) => {
+            Some((_: Area, croppedAreaPixels: Area) => {
               props.dispatch(Msg.CropStarted)
               FixedAspectCrop.getCroppedImg(
                 props.imageUrl,

@@ -17,8 +17,9 @@ object DatabaseFocus {
       .modify(_.flowInput).using(_.onFocusChange)
       .pipe { model =>
         val (navCotonomas, fetchRecentCotonomas) =
-          model.navCotonomas.fetchRecent(model)
-        val (timeline, timelineCmd) = model.timeline.onFocusChange(model)
+          model.navCotonomas.fetchRecent(using model)
+        val (timeline, timelineCmd) =
+          model.timeline.onFocusChange(using model)
         val (geomap, geomapCmd) = model.geomap.onFocusChange(model.repo)
         (
           model.copy(
@@ -52,10 +53,11 @@ object DatabaseFocus {
       .pipe { model =>
         val (navCotonomas, fetchRecentCotonomas) =
           if (shouldRecentFetchCotonomas)
-            model.navCotonomas.fetchRecent(model)
+            model.navCotonomas.fetchRecent(using model)
           else
             (model.navCotonomas, Cmd.none)
-        val (timeline, timelineCmd) = model.timeline.onFocusChange(model)
+        val (timeline, timelineCmd) =
+          model.timeline.onFocusChange(using model)
         (
           model.copy(
             navCotonomas = navCotonomas,

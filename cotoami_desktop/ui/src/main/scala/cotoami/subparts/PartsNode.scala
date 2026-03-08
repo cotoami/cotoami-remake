@@ -96,9 +96,9 @@ object PartsNode {
   def inputChildPrivileges(
       values: ChildNodeInput,
       disabled: Boolean,
-      onAsOwnerChange: SyntheticEvent[_, _] => Unit,
-      onCanEditItosChange: SyntheticEvent[_, _] => Unit,
-      onCanPostCotonomas: SyntheticEvent[_, _] => Unit
+      onAsOwnerChange: SyntheticEvent[?, ?] => Unit,
+      onCanEditItosChange: SyntheticEvent[?, ?] => Unit,
+      onCanPostCotonomas: SyntheticEvent[?, ?] => Unit
   )(using context: Context): ReactElement =
     Fragment(
       label(htmlFor := "as-owner")(

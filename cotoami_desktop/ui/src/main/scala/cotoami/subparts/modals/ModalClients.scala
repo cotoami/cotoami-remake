@@ -186,7 +186,7 @@ object ModalClients {
                     className := "more",
                     aria - "busy" := model.loading.toString()
                   )()
-              ): _*
+              )*
             )
           )
         )

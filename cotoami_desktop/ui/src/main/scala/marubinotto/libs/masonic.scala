@@ -85,7 +85,7 @@ object masonic {
   object Masonry extends ExternalComponent {
     case class Props(
         items: js.Array[scala.Any],
-        itemKey: js.Function2[js.Any, Int, String] = (item, index) =>
+        itemKey: js.Function2[js.Any, Int, String] = (_, index) =>
           index.toString(),
         render: RenderComponentProps => ReactElement,
         columnWidth: Int = 240,
@@ -96,7 +96,7 @@ object masonic {
 
     def apply(
         items: js.Array[scala.Any],
-        itemKey: js.Function2[js.Any, Int, String] = (item, index) =>
+        itemKey: js.Function2[js.Any, Int, String] = (_, index) =>
           index.toString(),
         render: RenderComponentProps => ReactElement,
         columnWidth: Int = 240,
@@ -122,7 +122,7 @@ object masonic {
   object MasonryScroller extends ExternalComponent {
     case class Props(
         items: js.Array[scala.Any],
-        itemKey: js.Function2[js.Any, Int, String] = (item, index) =>
+        itemKey: js.Function2[js.Any, Int, String] = (_, index) =>
           index.toString(),
         render: RenderComponentProps => ReactElement,
         overscanBy: Double = 2,
@@ -134,7 +134,7 @@ object masonic {
 
     def apply(
         items: js.Array[scala.Any],
-        itemKey: js.Function2[js.Any, Int, String] = (item, index) =>
+        itemKey: js.Function2[js.Any, Int, String] = (_, index) =>
           index.toString(),
         render: RenderComponentProps => ReactElement,
         overscanBy: Double = 2,

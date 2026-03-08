@@ -217,10 +217,10 @@ object SectionPins {
     Option.when(!ofFocused.isEmpty || !ofPinned.isEmpty) {
       section(className := "super-cotonomas")(
         ul(className := "of-focused")(
-          ofFocused.map(liSuperCotonoma): _*
+          ofFocused.map(liSuperCotonoma)*
         ),
         ul(className := "of-pinned")(
-          ofPinned.map(liSuperCotonoma): _*
+          ofPinned.map(liSuperCotonoma)*
         )
       )
     }

@@ -199,7 +199,7 @@ object ModalRepost {
           )
         )
 
-      case Msg.Reposted(Right((repost, original))) =>
+      case Msg.Reposted(Right((_, original))) =>
         default.copy(
           _1 = model.copy(
             originalCoto = original,
@@ -328,7 +328,7 @@ object ModalRepost {
               span(className := "cotonoma-name")(cotonoma.name),
               spanRootCotonomaMark(cotonoma, context.repo.nodes)
             )
-          ): _*
+          )*
         )
       )
     )

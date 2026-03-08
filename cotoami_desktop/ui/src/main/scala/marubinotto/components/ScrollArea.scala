@@ -121,7 +121,7 @@ object ScrollArea {
         props.scrollableClassName,
         Some(scrollableNodeRef)
       )
-    )(props.getChildren: _*)
+    )(props.getChildren*)
   }
 }
 
@@ -153,7 +153,7 @@ object SimpleBar extends ExternalComponent {
       autoHide: Boolean,
       scrollableNodeProps: ScrollableNodeProps
   )(children: ReactElement*) =
-    super.apply(Props(className, autoHide, scrollableNodeProps))(children: _*)
+    super.apply(Props(className, autoHide, scrollableNodeProps))(children*)
 
   override val component = SimpleBarReact
 }

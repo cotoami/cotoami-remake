@@ -52,7 +52,7 @@ object SectionCotoDetails {
         tip = Some(context.i18n.text.Insert),
         tipPlacement = "bottom",
         classes = "insert-sub-coto",
-        onClick = e =>
+        onClick = _ =>
           dispatch(
             Modal.Msg.OpenModal(
               Modal.Subcoto(sourceCotoId, order, defaultCotonomaId)

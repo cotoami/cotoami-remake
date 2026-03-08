@@ -18,7 +18,7 @@ object Flipper extends ExternalComponent {
       className: String,
       flipKey: String
   )(children: ReactElement*) =
-    super.apply(Props(element, className, flipKey))(children: _*)
+    super.apply(Props(element, className, flipKey))(children*)
 
   override val component = ReactFlipToolkit.Flipper
 }
@@ -32,7 +32,7 @@ object Flipped extends ExternalComponent {
       key: String,
       flipId: String
   )(children: ReactElement*) =
-    super.apply(Props(flipId)).withKey(key).apply(children: _*)
+    super.apply(Props(flipId)).withKey(key).apply(children*)
 
   override val component = ReactFlipToolkit.Flipped
 }

@@ -377,7 +377,7 @@ object ModalWelcome {
                   section(className := "database-path")(db.folder)
                 )
               )
-            ): _*
+            )*
           )
         )
       )

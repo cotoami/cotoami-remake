@@ -1,6 +1,7 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
+import scala.annotation.unused
 import slinky.core.facade.ReactElement
 import slinky.web.html
 import slinky.web.html._
@@ -50,7 +51,7 @@ object ModalParentSync {
   /////////////////////////////////////////////////////////////////////////////
 
   def apply(
-      model: Model,
+      @unused _model: Model,
       parentSync: ParentSync
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Modal.view(
@@ -118,7 +119,7 @@ object ModalParentSync {
         button(
           `type` := "button",
           disabled := !parentSync.syncing.isEmpty,
-          onClick := (e => dispatch(Msg.Close))
+          onClick := (_ => dispatch(Msg.Close))
         )("OK")
       )
     )

@@ -24,7 +24,7 @@ object Modal {
   /////////////////////////////////////////////////////////////////////////////
 
   case class Stack(modals: Seq[Modal] = Seq.empty) {
-    def open[M <: Modal: ClassTag](modal: M): Stack =
+    def open[M <: Modal](modal: M): Stack =
       close(modal.getClass()).modify(_.modals).using(modal +: _)
 
     def opened[M <: Modal: ClassTag]: Boolean =
@@ -472,10 +472,10 @@ object Modal {
               onClick := (_ => dispatch(Modal.Msg.CloseModal(modalType)))
             )
           },
-          h1()(title: _*)
+          h1()(title*)
         ),
         error.map(e => section(className := "error")(e)),
-        div(className := s"modal-body ${bodyClasses}")(body: _*)
+        div(className := s"modal-body ${bodyClasses}")(body*)
       )
     )
 

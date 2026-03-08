@@ -206,7 +206,7 @@ object PaneSearch {
                 className := "more",
                 aria - "busy" := model.loading.toString()
               )()
-          ): _*
+          )*
         )
       )
     )

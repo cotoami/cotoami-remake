@@ -78,20 +78,22 @@ object ViewMessages {
 
       section(className := "entries")(
         ScrollArea()(
-          props.entries.map(entry =>
-            section(
-              className := s"entry ${entry.category.name}",
-              key := entry.timestamp.getTime().toString()
-            )(
-              section(className := "category")(
-                materialSymbol(entry.category.icon)
-              ),
-              div(className := "content")(
-                section(className := "message")(entry.message),
-                section(className := "details")(entry.details)
+          (
+            props.entries.map(entry =>
+              section(
+                className := s"entry ${entry.category.name}",
+                key := entry.timestamp.getTime().toString()
+              )(
+                section(className := "category")(
+                  materialSymbol(entry.category.icon)
+                ),
+                div(className := "content")(
+                  section(className := "message")(entry.message),
+                  section(className := "details")(entry.details)
+                )
               )
-            )
-          ) :+ div(key := "bottom", ref := bottomRef)(): _*
+            ) :+ div(key := "bottom", ref := bottomRef)()
+          )*
         )
       )
     }

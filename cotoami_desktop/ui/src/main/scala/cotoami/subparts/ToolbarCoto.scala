@@ -165,7 +165,7 @@ object ToolbarCoto {
     ).flatten
 
     Option.when(!buttons.isEmpty) {
-      section(className := "coto-toolbar")(buttons: _*)
+      section(className := "coto-toolbar")(buttons*)
     }
   }
 }

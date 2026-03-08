@@ -61,7 +61,7 @@ object AppHeader {
         toolButton(
           classes = "geolocation",
           symbol = "location_on",
-          onClick = e => dispatch(PaneStock.Msg.DisplayGeolocationInFocus)
+          onClick = _ => dispatch(PaneStock.Msg.DisplayGeolocationInFocus)
         )
       )
     )
@@ -93,7 +93,7 @@ object AppHeader {
       classes = "delete-cotonoma",
       symbol = "delete",
       tip = Some(context.i18n.text.DeleteCotonoma),
-      onClick = e =>
+      onClick = _ =>
         dispatch(
           Modal.Msg.OpenModal(
             Modal.Confirm(

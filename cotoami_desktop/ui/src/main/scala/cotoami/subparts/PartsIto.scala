@@ -125,7 +125,7 @@ object PartsIto {
       renderSibling: (Ito, Coto, OrderContext) => ReactElement
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := s"siblings ${classes}")(
-      siblings.groupsInOrder.map(sectionSiblingGroup(_, renderSibling)): _*
+      siblings.groupsInOrder.map(sectionSiblingGroup(_, renderSibling))*
     )
 
   def sectionSiblingGroup(

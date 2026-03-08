@@ -87,7 +87,7 @@ object Validation {
     try {
       Right(new URI(value))
     } catch {
-      case e: URISyntaxException =>
+      case _: URISyntaxException =>
         Left(
           Error(
             "invaid-url",

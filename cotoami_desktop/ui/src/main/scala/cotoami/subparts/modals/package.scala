@@ -12,7 +12,7 @@ import marubinotto.components.toolButton
 package object modals {
 
   def buttonEdit(
-      onClick: SyntheticMouseEvent[_] => Unit
+      onClick: SyntheticMouseEvent[?] => Unit
   )(using context: Context): ReactElement =
     toolButton(
       classes = "edit",
@@ -28,7 +28,7 @@ package object modals {
     div(className := s"field ${classes}")(
       section(className := "field-name")(name),
       section(className := "field-content")(
-        fieldContent: _*
+        fieldContent*
       )
     )
 
@@ -78,16 +78,16 @@ package object modals {
           )
         )
       )(
-        div(className := "content")(fieldContent: _*),
+        div(className := "content")(fieldContent*),
         viewFieldEdit(edit)
       )
     )
 
   case class FieldEdit(
       disabled: Boolean = false,
-      onEditClick: SyntheticMouseEvent[_] => Unit,
-      onSaveClick: SyntheticMouseEvent[_] => Unit = _ => (),
-      onCancelClick: SyntheticMouseEvent[_] => Unit = _ => (),
+      onEditClick: SyntheticMouseEvent[?] => Unit,
+      onSaveClick: SyntheticMouseEvent[?] => Unit = _ => (),
+      onCancelClick: SyntheticMouseEvent[?] => Unit = _ => (),
       editing: Boolean = false,
       readyToSave: Boolean = true,
       saving: Boolean = false,

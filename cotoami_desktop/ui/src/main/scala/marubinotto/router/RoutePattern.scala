@@ -1,5 +1,6 @@
 package marubinotto.router
 
+import scala.annotation.unused
 import scala.scalajs.js.URIUtils
 
 abstract class RoutePattern[A] { self =>
@@ -23,7 +24,7 @@ abstract class RoutePattern[A] { self =>
         self.renderSegments(value) :+ segment
     }
 
-  final def /[B, Out](arg: Arg[B])(using
+  final def /[B, Out](@unused _arg: Arg[B])(using
       codec: Codec[B],
       appender: Appender[A, B, Out]
   ): RoutePattern[Out] =

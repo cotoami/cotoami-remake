@@ -113,7 +113,7 @@ object ModalSwitchNode {
           `type` := "button",
           disabled := !model.readyToSwitch,
           aria - "busy" := model.switching.toString(),
-          onClick := (e => dispatch(Msg.Switch))
+          onClick := (_ => dispatch(Msg.Switch))
         )(context.i18n.text.ModalSwitchNode_switch)
       )
     )

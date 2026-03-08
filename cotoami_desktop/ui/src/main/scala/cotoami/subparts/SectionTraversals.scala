@@ -223,7 +223,7 @@ object SectionTraversals {
   ): Option[ReactElement] =
     Option.when(!model.traversals.isEmpty) {
       section(className := "traversals")(
-        model.traversals.zipWithIndex.map(sectionTraversal): _*
+        model.traversals.zipWithIndex.map(sectionTraversal)*
       )
     }
 

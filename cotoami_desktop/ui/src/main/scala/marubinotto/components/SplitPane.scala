@@ -137,7 +137,7 @@ object SplitPane {
       )
 
     val onMouseUp: js.Function1[dom.MouseEvent, Unit] = useCallback(
-      (e: dom.MouseEvent) => {
+      (_: dom.MouseEvent) => {
         setMoving(false)
         if (!separatorPosRef.current.isNaN()) {
           props.onPrimarySizeChanged.map(_(primarySizeRef.current))
@@ -249,7 +249,7 @@ object SplitPane {
         onClick := props.onClick,
         ref := primaryRef
       )(
-        props.getChildren: _*
+        props.getChildren*
       )
     }
 
@@ -292,7 +292,7 @@ object SplitPane {
           )
         ),
         onClick := props.onClick
-      )(props.getChildren: _*)
+      )(props.getChildren*)
     }
 
     private def positionalClass(

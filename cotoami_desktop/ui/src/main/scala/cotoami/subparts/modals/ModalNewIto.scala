@@ -113,7 +113,7 @@ object ModalNewIto {
           default.copy(_1 = model, _3 = cmd)
         }
 
-      case Msg.Connected(Right(itos)) =>
+      case Msg.Connected(Right(_)) =>
         default.copy(
           _1 = model.copy(connecting = false),
           _2 =

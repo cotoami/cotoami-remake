@@ -356,7 +356,7 @@ object SectionTimeline {
               div(
                 className := "more",
                 aria - "busy" := model.loading.toString()
-              )()): _*
+              )())*
           )
         )
       )
