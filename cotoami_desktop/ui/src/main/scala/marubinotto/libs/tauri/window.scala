@@ -1,7 +1,7 @@
 package marubinotto.libs.tauri
 
+import scala.annotation.unused
 import scala.scalajs.js
-import scala.scalajs.js.|
 import scala.scalajs.js.annotation.JSImport
 
 import marubinotto.libs.tauri.dpi._
@@ -15,7 +15,10 @@ object window extends js.Object {
   def getCurrentWindow(): Window = js.native
 
   @js.native
-  class Window(label: String, options: WindowOptions) extends js.Object {
+  class Window(
+      @unused _label: String,
+      @unused _options: WindowOptions
+  ) extends js.Object {
 
     /** Centers the window.
       */

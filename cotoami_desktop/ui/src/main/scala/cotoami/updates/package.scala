@@ -3,7 +3,6 @@ package cotoami
 import scala.util.chaining._
 
 import marubinotto.fui.Cmd
-import cotoami.Model
 import cotoami.models.UiState
 
 package object updates {

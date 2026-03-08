@@ -19,7 +19,6 @@ import marubinotto.libs.tauri
 import cotoami.backend._
 import cotoami.repository._
 import cotoami.models._
-import cotoami.updates
 import cotoami.updates._
 import cotoami.subparts._
 import cotoami.subparts.modals.ModalAppUpdate

@@ -341,13 +341,8 @@ object MapLibre {
     )
   }
 
-  private val UrlRegex = "^([a-z][a-z0-9+\\-.]*):".r
-  private val VectorTilesUrlPlaceHolder = "$mainVectorTilesUrl"
   private val FocusedLocationMarkerClassName = "focused-location-marker"
   private val FocusedMarkerClassName = "focused-marker"
-
-  private def isUrl(string: String): Boolean =
-    UrlRegex.findFirstIn(string).isDefined
 
   class ExtendedMap(
       options: MapOptions,

@@ -3,7 +3,6 @@ package marubinotto.libs
 import org.scalajs.dom
 
 import scala.scalajs.js
-import scala.scalajs.js.|
 import scala.scalajs.js.annotation.JSImport
 
 // https://github.com/MikeKovarik/exifr

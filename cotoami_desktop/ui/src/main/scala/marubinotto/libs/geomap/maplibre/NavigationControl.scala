@@ -1,5 +1,6 @@
 package marubinotto.libs.geomap.maplibre
 
+import scala.annotation.unused
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 
@@ -8,7 +9,7 @@ import scala.scalajs.js.annotation.JSImport
 @js.native
 @JSImport("maplibre-gl", "NavigationControl")
 class NavigationControl(
-    options: js.UndefOr[NavigationControlOptions] = js.undefined
+    @unused _options: js.UndefOr[NavigationControlOptions] = js.undefined
 ) extends js.Object
 
 trait NavigationControlOptions extends js.Object {

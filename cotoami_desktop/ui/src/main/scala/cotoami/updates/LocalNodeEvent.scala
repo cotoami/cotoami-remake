@@ -21,9 +21,8 @@ import cotoami.subparts.Modal
 
 object LocalNodeEvent {
 
-  def handle(event: LocalNodeEventJson, model: Model): (Model, Cmd[Msg]) = {
-    // ServerStateChanged
-    for (change <- event.ServerStateChanged.toOption) {
+  def handle(event: LocalNodeEventJson, model: Model): (Model, Cmd[Msg]) =
+    event.ServerStateChanged.toOption.map { change =>
       val nodeId = Id[Node](change.node_id)
       val notConnected =
         Nullable.toOption(change.not_connected)
@@ -37,7 +36,7 @@ object LocalNodeEvent {
           model.repo.nodes.isSelf(nodeId) &&
           notConnected.isDefined
 
-      return (
+      (
         model
           .modify(_.repo.nodes.servers).using(
             _.setState(nodeId, notConnected, childPrivileges)
@@ -71,97 +70,93 @@ object LocalNodeEvent {
           }
         }
       )
-    }
-
-    // ParentSyncProgress
-    for (progress <- event.ParentSyncProgress.toOption) {
-      val parentSync =
-        model.parentSync.progress(ParentSyncProgressBackend.toModel(progress))
-      val modalStack =
-        if (parentSync.comingManyChanges)
-          model.modalStack.openIfNot(Modal.ParentSync())
-        else
-          model.modalStack
-      return (
-        model.copy(parentSync = parentSync, modalStack = modalStack),
-        Cmd.none
-      )
-    }
-
-    // ParentSyncEnd
-    for (end <- event.ParentSyncEnd.toOption) {
-      return (
-        model.modify(_.parentSync).using(
-          _.end(ParentSyncEndBackend.toModel(end))
-        ),
-        Cmd.none
-      )
-    }
-
-    // ClientConnected
-    for (activeClientJson <- event.ClientConnected.toOption) {
-      val activeClient = ActiveClientBackend.toModel(activeClientJson)
-      return (
-        model.modify(_.repo.nodes.activeClients).using(
-          _.put(activeClient)
-        ),
-        Cmd.none
-      )
-    }
-
-    // ClientDisconnected
-    for (json <- event.ClientDisconnected.toOption) {
-      return (
-        model.modify(_.repo.nodes.activeClients).using(
-          _.remove(Id(json.node_id))
-        ),
-        Cmd.none
-      )
-    }
-
-    // PluginEvent
-    for (pluginEvent <- event.PluginEvent.toOption) {
-      for (json <- pluginEvent.Registered.toOption) {
-        return (
-          model.info(
-            "Plugin registered.",
-            Some(s"${json.name} v${json.version} (${json.identifier})")
+    }.orElse(
+      event.ParentSyncProgress.toOption.map { progress =>
+        val parentSync =
+          model.parentSync.progress(ParentSyncProgressBackend.toModel(progress))
+        val modalStack =
+          if (parentSync.comingManyChanges)
+            model.modalStack.openIfNot(Modal.ParentSync())
+          else
+            model.modalStack
+        (
+          model.copy(parentSync = parentSync, modalStack = modalStack),
+          Cmd.none
+        )
+      }
+    ).orElse(
+      event.ParentSyncEnd.toOption.map { end =>
+        (
+          model.modify(_.parentSync).using(
+            _.end(ParentSyncEndBackend.toModel(end))
           ),
           Cmd.none
         )
       }
-      for (json <- pluginEvent.InvalidFile.toOption) {
-        return (
-          model.error(
-            "Invalid plugin file.",
-            Some(s"${json.path} - ${json.message}")
+    ).orElse(
+      event.ClientConnected.toOption.map { activeClientJson =>
+        val activeClient = ActiveClientBackend.toModel(activeClientJson)
+        (
+          model.modify(_.repo.nodes.activeClients).using(
+            _.put(activeClient)
           ),
           Cmd.none
         )
       }
-      for (json <- pluginEvent.Info.toOption) {
-        return (
-          model.info(s"Plugin(${json.identifier}): ${json.message}", None),
-          Cmd.none
-        )
-      }
-      for (json <- pluginEvent.Error.toOption) {
-        return (
-          model.error(
-            s"Plugin(${json.identifier}): an error occurred",
-            Some(json.message)
+    ).orElse(
+      event.ClientDisconnected.toOption.map { json =>
+        (
+          model.modify(_.repo.nodes.activeClients).using(
+            _.remove(Id(json.node_id))
           ),
           Cmd.none
         )
       }
-      for (json <- pluginEvent.Destroyed.toOption) {
-        return (
-          model.info("Plugin destroyed.", Some(json.identifier)),
-          Cmd.none
+    ).orElse(
+      event.PluginEvent.toOption.flatMap { pluginEvent =>
+        pluginEvent.Registered.toOption.map { json =>
+          (
+            model.info(
+              "Plugin registered.",
+              Some(s"${json.name} v${json.version} (${json.identifier})")
+            ),
+            Cmd.none
+          )
+        }.orElse(
+          pluginEvent.InvalidFile.toOption.map { json =>
+            (
+              model.error(
+                "Invalid plugin file.",
+                Some(s"${json.path} - ${json.message}")
+              ),
+              Cmd.none
+            )
+          }
+        ).orElse(
+          pluginEvent.Info.toOption.map { json =>
+            (
+              model.info(s"Plugin(${json.identifier}): ${json.message}", None),
+              Cmd.none
+            )
+          }
+        ).orElse(
+          pluginEvent.Error.toOption.map { json =>
+            (
+              model.error(
+                s"Plugin(${json.identifier}): an error occurred",
+                Some(json.message)
+              ),
+              Cmd.none
+            )
+          }
+        ).orElse(
+          pluginEvent.Destroyed.toOption.map { json =>
+            (
+              model.info("Plugin destroyed.", Some(json.identifier)),
+              Cmd.none
+            )
+          }
         )
       }
-    }
-
-    (model, Cmd.none)
-  }
+    ).getOrElse((model, Cmd.none))
 }

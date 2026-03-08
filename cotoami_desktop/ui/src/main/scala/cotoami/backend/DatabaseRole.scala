@@ -11,13 +11,12 @@ trait DatabaseRoleJson extends js.Object {
 }
 
 object DatabaseRoleBackend {
-  def toModel(json: DatabaseRoleJson): DatabaseRole = {
-    for (parent <- json.Parent.toOption) {
-      return DatabaseRole.Parent(ParentNodeBackend.toModel(parent))
-    }
-    for (child <- json.Child.toOption) {
-      return DatabaseRole.Child(ChildNodeBackend.toModel(child))
-    }
-    return null // this should be unreachable
-  }
+  def toModel(json: DatabaseRoleJson): DatabaseRole =
+    json.Parent.toOption.map(parent =>
+      DatabaseRole.Parent(ParentNodeBackend.toModel(parent))
+    ).orElse(
+      json.Child.toOption.map(child =>
+        DatabaseRole.Child(ChildNodeBackend.toModel(child))
+      )
+    ).orNull // this should be unreachable
 }

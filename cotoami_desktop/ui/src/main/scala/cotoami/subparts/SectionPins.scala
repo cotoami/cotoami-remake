@@ -140,7 +140,7 @@ object SectionPins {
         ScrollArea(scrollableClassName = Some("scrollable-pins"))(
           Option.when(layout.displaysCotonomaContent) {
             Fragment(
-              sectionSuperCotonomas(cotonomaCoto),
+              sectionSuperCotonomas(),
               sectionCotonomaContent(cotonomaCoto)
             )
           },
@@ -209,9 +209,10 @@ object SectionPins {
       )
     )
 
-  private def sectionSuperCotonomas(
-      cotonomaCoto: Coto
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  private def sectionSuperCotonomas()(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement = {
     val (ofFocused, ofPinned) = context.repo.superCotonomasOfStock
     Option.when(!ofFocused.isEmpty || !ofPinned.isEmpty) {
       section(className := "super-cotonomas")(

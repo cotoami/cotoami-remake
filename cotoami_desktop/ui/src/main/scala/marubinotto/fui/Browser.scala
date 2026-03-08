@@ -10,7 +10,6 @@ import org.scalajs.dom.{Element, URL}
 import cats.effect.IO
 
 import io.circe._
-import io.circe.Decoder
 import io.circe.parser._
 
 object Browser {

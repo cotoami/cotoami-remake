@@ -11,7 +11,6 @@ import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import cats.effect.IO
 
 import marubinotto.fui.{Cmd, Sub}
-import marubinotto.libs.tauri
 
 package object tauri {
 

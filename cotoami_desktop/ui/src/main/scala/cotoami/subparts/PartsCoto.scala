@@ -15,7 +15,6 @@ import marubinotto.components.{materialSymbol, toolButton, Markdown}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, CotoContent, Cotonoma, Id, Ito, Node, WaitingPost}
-import cotoami.subparts.SectionGeomap
 
 object PartsCoto {
 

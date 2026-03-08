@@ -1,12 +1,13 @@
 package marubinotto.libs.geomap.maplibre
 
+import scala.annotation.unused
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 import org.scalajs.dom
 
 @js.native
 @JSImport("maplibre-gl", "Marker")
-class Marker(options: js.UndefOr[MarkerOptions] = js.undefined)
+class Marker(@unused _options: js.UndefOr[MarkerOptions] = js.undefined)
     extends js.Object {
 
   /** Attaches the Marker to a Map object.

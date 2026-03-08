@@ -347,8 +347,6 @@ object SectionFlowInput {
           val divForm = formCoto(
             form,
             model,
-            currentCotonoma,
-            geomap,
             editorHeight,
             onEditorHeightChanged
           )
@@ -370,7 +368,7 @@ object SectionFlowInput {
         }
 
         case form: CotonomaForm.Model =>
-          formCotonoma(form, model, currentCotonoma, geomap)
+          formCotonoma(form, model)
       }
     )
 
@@ -425,8 +423,6 @@ object SectionFlowInput {
   private def formCoto(
       form: CotoForm.Model,
       model: Model,
-      currentCotonoma: Cotonoma,
-      geomap: Geomap,
       editorHeight: Int,
       onEditorHeightChanged: Int => Unit
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
@@ -465,7 +461,7 @@ object SectionFlowInput {
                 context,
                 submsg => dispatch(Msg.CotoFormMsg(submsg))
               ),
-              buttonPost(model, currentCotonoma)
+              buttonPost(model)
             )
           )
         )
@@ -474,9 +470,7 @@ object SectionFlowInput {
 
   private def formCotonoma(
       form: CotonomaForm.Model,
-      model: Model,
-      currentCotonoma: Cotonoma,
-      geomap: Geomap
+      model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Fragment(
       div(className := "cotonoma-form")(
@@ -491,15 +485,14 @@ object SectionFlowInput {
         Validation.sectionValidationError(form.validation),
         section(className := "post")(
           div(className := "buttons")(
-            buttonPost(model, currentCotonoma)
+            buttonPost(model)
           )
         )
       )
     )
 
   private def buttonPost(
-      model: Model,
-      currentCotonoma: Cotonoma
+      model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     button(
       className := "post",

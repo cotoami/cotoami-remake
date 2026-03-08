@@ -1,7 +1,6 @@
 package marubinotto.libs.tauri
 
 import scala.scalajs.js
-import scala.scalajs.js.|
 import scala.scalajs.js.annotation.JSImport
 
 @js.native

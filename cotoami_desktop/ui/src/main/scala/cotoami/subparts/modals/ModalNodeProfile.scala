@@ -160,7 +160,7 @@ object ModalNodeProfile {
     Fragment(
       divSidebar(node, model),
       div(className := "main")(
-        sectionToolButtons(node, model),
+        sectionToolButtons(node),
         div(className := "fields")(
           ScrollArea(className = Some("scroll-fields"))(
             fieldId(node),
@@ -234,7 +234,7 @@ object ModalNodeProfile {
       )
     )
 
-  private def sectionToolButtons(node: Node, model: Model)(implicit
+  private def sectionToolButtons(node: Node)(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =

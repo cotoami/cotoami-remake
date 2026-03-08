@@ -350,7 +350,7 @@ object SectionTimeline {
             (model.waitingPosts.posts.map(sectionWaitingPost) ++
               cotos.map { coto =>
                 Flipped(key = coto.id.uuid, flipId = coto.id.uuid)(
-                  sectionPost(coto, model)
+                  sectionPost(coto)
                 ): ReactElement
               } :+
               div(
@@ -412,8 +412,7 @@ object SectionTimeline {
     )
 
   private def sectionPost(
-      post: Coto,
-      model: Model
+      post: Coto
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     section(className := "post flow-entry")(
       context.repo.cotos.getOriginal(post)

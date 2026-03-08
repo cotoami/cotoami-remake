@@ -7,7 +7,6 @@ import marubinotto.components.toolButton
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Ito}
 import cotoami.repository.Root
-import cotoami.subparts.Modal
 
 object ToolbarCoto {
 

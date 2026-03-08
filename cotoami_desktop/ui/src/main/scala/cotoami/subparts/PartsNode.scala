@@ -10,7 +10,6 @@ import marubinotto.components.toolButton
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ChildNode, Node}
 import cotoami.backend.ChildNodeInput
-import cotoami.subparts.ViewConnectionStatus
 
 object PartsNode {
 

@@ -9,7 +9,6 @@ import marubinotto.components.{materialSymbol, toolButton}
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Cotonoma, Node, UiState}
 import cotoami.repository.Root
-import cotoami.subparts.PaneStock
 
 object AppHeader {
 

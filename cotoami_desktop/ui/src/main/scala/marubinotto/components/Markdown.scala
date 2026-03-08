@@ -1,7 +1,6 @@
 package marubinotto.components
 
 import scala.scalajs.js
-import scala.scalajs.js.|
 import scala.scalajs.js.annotation.JSImport
 
 import slinky.core._

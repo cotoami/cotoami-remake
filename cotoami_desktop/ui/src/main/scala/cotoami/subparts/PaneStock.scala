@@ -20,7 +20,6 @@ import marubinotto.components.{
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Geolocation, UiState}
 import cotoami.updates
-import cotoami.subparts.SectionGeomap
 
 object PaneStock {
 

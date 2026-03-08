@@ -1,7 +1,7 @@
 package marubinotto.libs.geomap
 
+import scala.annotation.unused
 import scala.scalajs.js
-import scala.scalajs.js.|
 import scala.scalajs.js.annotation.JSImport
 
 package object maplibre {
@@ -20,7 +20,7 @@ package object maplibre {
     */
   @js.native
   @JSImport("maplibre-gl", "LngLat")
-  class LngLat(lng: Double, lat: Double) extends js.Object {
+  class LngLat(@unused _lng: Double, @unused _lat: Double) extends js.Object {
 
     /** Returns the approximate distance between a pair of coordinates in meters
       * Uses the Haversine Formula (from R.W. Sinnott, "Virtues of the
@@ -47,7 +47,10 @@ package object maplibre {
 
   @js.native
   @JSImport("maplibre-gl", "LngLatBounds")
-  class LngLatBounds(sw: LngLatLike, ne: LngLatLike) extends js.Object {
+  class LngLatBounds(
+      @unused _sw: LngLatLike,
+      @unused _ne: LngLatLike
+  ) extends js.Object {
 
     /** Check if the point is within the bounding box.
       */

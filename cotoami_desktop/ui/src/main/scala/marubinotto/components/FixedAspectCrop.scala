@@ -63,14 +63,14 @@ object FixedAspectCrop extends ExternalComponent {
     val promise = Promise[dom.Blob]()
     Browser.createImage(imageUrl).onComplete {
       case Success(image) => {
-        var canvas = dom.document.createElement("canvas")
+        val canvas = dom.document.createElement("canvas")
           .asInstanceOf[dom.HTMLCanvasElement]
-        var ctx = canvas.getContext("2d")
+        val ctx = canvas.getContext("2d")
         if (ctx != null) {
           canvas.width = crop.width.toInt
           canvas.height = crop.height.toInt
 
-          var ctx2d = ctx.asInstanceOf[dom.CanvasRenderingContext2D]
+          val ctx2d = ctx.asInstanceOf[dom.CanvasRenderingContext2D]
           ctx2d.drawImage(
             image,
 
@@ -87,7 +87,7 @@ object FixedAspectCrop extends ExternalComponent {
             crop.height
           )
 
-          var canvas2 = canvas.asInstanceOf[ToBlob]
+          val canvas2 = canvas.asInstanceOf[ToBlob]
           canvas2.toBlob(blob => promise.success(blob))
         } else {
           promise.failure(new RuntimeException("2D context is not supported."))

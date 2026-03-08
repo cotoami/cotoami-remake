@@ -1,7 +1,5 @@
 package marubinotto
 
-import scala.scalajs.js.|
-
 object facade {
 
   type Nullable[T] = T | Null
