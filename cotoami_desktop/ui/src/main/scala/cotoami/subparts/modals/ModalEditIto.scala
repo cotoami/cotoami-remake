@@ -127,7 +127,7 @@ object ModalEditIto {
 
   def apply(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Modal.view(
       dialogClasses = "edit-ito",
       closeButton = Some((classOf[Modal.EditIto], dispatch)),
@@ -181,7 +181,7 @@ object ModalEditIto {
 
   private def sectionIto(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "ito")(
       div(className := "ito-icon")(
         materialSymbol("arrow_downward")
@@ -193,7 +193,7 @@ object ModalEditIto {
       )
     )
 
-  private def articleCoto(coto: Coto)(implicit context: Context): ReactElement =
+  private def articleCoto(coto: Coto)(using context: Context): ReactElement =
     article(className := "coto embedded")(
       div(className := "body")(
         ScrollArea()(

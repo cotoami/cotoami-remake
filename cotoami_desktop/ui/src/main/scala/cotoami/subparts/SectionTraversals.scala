@@ -31,10 +31,10 @@ object SectionTraversals {
   ) {
     def isEmpty: Boolean = traversals.isEmpty
 
-    def openTraversal(start: Id[Coto])(implicit context: Context): Model =
+    def openTraversal(start: Id[Coto])(using context: Context): Model =
       this.modify(_.traversals).using(_ :+ Traversal(start))
 
-    def step(traversalIndex: Int, stepIndex: Int, step: Id[Coto])(implicit
+    def step(traversalIndex: Int, stepIndex: Int, step: Id[Coto])(using
         context: Context
     ): Model =
       this.modify(_.traversals.index(traversalIndex)).using(
@@ -60,7 +60,7 @@ object SectionTraversals {
       id: String =
         Instant.now().toEpochMilli().toString() // for react element's key
   ) {
-    def step(stepIndex: Int, step: Id[Coto])(implicit
+    def step(stepIndex: Int, step: Id[Coto])(using
         context: Context
     ): Traversal =
       this
@@ -99,7 +99,7 @@ object SectionTraversals {
         case None => steps.headOption.map(_ == subCotoId)
       }).getOrElse(false)
 
-    def traverseSingleSuccessors(implicit context: Context): Traversal = {
+    def traverseSingleSuccessors(using context: Context): Traversal = {
       var traversal = this
       var step = lastStep
       var nextIndex = nextStepIndex
@@ -125,7 +125,7 @@ object SectionTraversals {
   }
 
   object Traversal {
-    def apply(start: Id[Coto])(implicit context: Context): Traversal =
+    def apply(start: Id[Coto])(using context: Context): Traversal =
       new Traversal(start).traverseSingleSuccessors
   }
 
@@ -145,7 +145,7 @@ object SectionTraversals {
     case class StepToParent(traversalIndex: Int, parentId: Id[Coto]) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Cmd[AppMsg]) =
     msg match {
@@ -217,7 +217,7 @@ object SectionTraversals {
 
   def apply(
       model: Model
-  )(implicit
+  )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] =
@@ -229,7 +229,7 @@ object SectionTraversals {
 
   private def sectionTraversal(
       traversal: (Traversal, Int)
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(key := traversal._1.id, className := "traversal header-and-body")(
       header(className := "tools")(
         button(
@@ -249,7 +249,7 @@ object SectionTraversals {
   private def divParents(
       parents: Seq[(Coto, Ito)],
       traversalIndex: Int
-  )(implicit dispatch: Into[AppMsg] => Unit): Option[ReactElement] =
+  )(using dispatch: Into[AppMsg] => Unit): Option[ReactElement] =
     Option.when(!parents.isEmpty) {
       div(className := "parents")(
         ul(className := "traverse-to-parents")(
@@ -273,7 +273,7 @@ object SectionTraversals {
   private def divTraversalSteps(
       startCoto: Coto,
       traversal: (Traversal, Int)
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     ScrollArea(
       className = Some("traversal-steps"),
       scrollableClassName = Some("scrollable-traversal")
@@ -302,7 +302,7 @@ object SectionTraversals {
       coto: Coto,
       stepIndex: Option[Int],
       traversal: (Traversal, Int)
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val subCotos = context.repo.childrenOf(coto.id)
     val subCotosCount = subCotos.map(_.count).getOrElse(0)
     val noVisibleSubCotos = subCotosCount == 0 ||
@@ -357,7 +357,7 @@ object SectionTraversals {
       subCotos: Siblings,
       stepIndex: Option[Int],
       traversal: (Traversal, Int)
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     PartsIto.sectionSiblings(subCotos, "sub-cotos") { case (ito, coto, order) =>
       val traversed = traversal._1.traversed(stepIndex, coto.id)
       div(
@@ -380,7 +380,7 @@ object SectionTraversals {
       ito: Ito,
       coto: Coto,
       order: OrderContext
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     PartsCoto.article(
       coto,
       dispatch,

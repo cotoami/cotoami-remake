@@ -93,7 +93,7 @@ object ModalIncorporate {
   def update(
       msg: Msg,
       model: Model
-  )(implicit
+  )(using
       context: Context
   ): (Model, Nodes, Cmd[AppMsg]) = {
     val nodes = context.repo.nodes
@@ -169,7 +169,7 @@ object ModalIncorporate {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(model: Model)(implicit
+  def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -188,7 +188,7 @@ object ModalIncorporate {
 
   private def sectionConnect(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "connect")(
       form()(
         // Node URL
@@ -227,7 +227,7 @@ object ModalIncorporate {
   private def sectionIncorporate(
       model: Model,
       nodeSession: ClientNodeSession
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "incorporate")(
       // Node preview
       section(className := "node-preview")(
@@ -257,7 +257,7 @@ object ModalIncorporate {
 
   private def sectionChildPrivileges(
       nodeSession: ClientNodeSession
-  )(implicit context: Context): ReactElement =
+  )(using context: Context): ReactElement =
     section(className := "child-privileges")(
       s"${context.i18n.text.ChildPrivileges}: ",
       span(className := "privileges")(

@@ -44,7 +44,7 @@ object ModalSwitchNode {
   def update(
       msg: Msg,
       model: Model
-  )(implicit
+  )(using
       context: Context
   ): (Model, Cmd[AppMsg]) =
     msg match {
@@ -87,7 +87,7 @@ object ModalSwitchNode {
 
   def apply(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val modalType = classOf[Modal.SwitchNode]
     Modal.view(
       dialogClasses = "switch-node",
@@ -119,7 +119,7 @@ object ModalSwitchNode {
     )
   }
 
-  private def sectionNode(node: Node, elementClasses: String)(implicit
+  private def sectionNode(node: Node, elementClasses: String)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =

@@ -120,7 +120,7 @@ object ModalClients {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(model: Model)(implicit
+  def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -150,7 +150,7 @@ object ModalClients {
       )
     )
 
-  private def sectionClientNodes(model: Model)(implicit
+  private def sectionClientNodes(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -192,7 +192,7 @@ object ModalClients {
         )
     }
 
-  private def divClientRow(client: Client, model: Model)(implicit
+  private def divClientRow(client: Client, model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {

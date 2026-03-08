@@ -110,7 +110,7 @@ object AppMain {
   def apply(
       model: Model,
       uiState: UiState
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val flowOpened = uiState.paneOpened(PaneFlow.PaneName)
     val stockOpened = uiState.paneOpened(PaneStock.PaneName)
     slinky.web.html.main(className := "fill")(
@@ -178,13 +178,13 @@ object AppMain {
     uiState.paneOpened(PaneFlow.PaneName).toString() ++
       uiState.paneOpened(PaneStock.PaneName).toString()
 
-  private def flowPaneToggle(implicit dispatch: AppMsg => Unit): ReactElement =
+  private def flowPaneToggle(using dispatch: AppMsg => Unit): ReactElement =
     paneToggle(
       onFoldClick = () => dispatch(Msg.SetPaneFlowOpen(false).into),
       onUnfoldClick = () => dispatch(Msg.SetPaneFlowOpen(true).into)
     )
 
-  private def stockPaneToggle(implicit dispatch: AppMsg => Unit): ReactElement =
+  private def stockPaneToggle(using dispatch: AppMsg => Unit): ReactElement =
     paneToggle(
       onFoldClick = () => dispatch(Msg.SetPaneStockOpen(false).into),
       onUnfoldClick = () => dispatch(Msg.SetPaneStockOpen(true).into)

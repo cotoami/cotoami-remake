@@ -11,7 +11,7 @@ package object subparts {
 
   def paneToggle(
       paneName: String
-  )(implicit dispatch: AppMsg => Unit): ReactElement =
+  )(using dispatch: AppMsg => Unit): ReactElement =
     marubinotto.components.paneToggle(
       onFoldClick = () => dispatch(AppMsg.SetPaneOpen(paneName, false)),
       onUnfoldClick = () => dispatch(AppMsg.SetPaneOpen(paneName, true))
@@ -25,7 +25,7 @@ package object subparts {
   def sectionClientNodesCount(
       clientCount: Double,
       nodes: Nodes
-  )(implicit
+  )(using
       context: Context
   ): ReactElement = {
     val connecting = nodes.activeClients.count

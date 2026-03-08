@@ -28,7 +28,7 @@ object PaneFlow {
   def apply(
       model: Model,
       uiState: UiState
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(id := PaneId, className := "flow fill")(
       model.repo.cotos.focused.map(SectionCotoDetails(_))
         .getOrElse(timeline(model, uiState))
@@ -37,7 +37,7 @@ object PaneFlow {
   private def timeline(
       model: Model,
       uiState: UiState
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Fragment(
       (model.repo.currentCotonoma, model.repo.canPostCoto) match {
         case (Some(cotonoma), true) =>

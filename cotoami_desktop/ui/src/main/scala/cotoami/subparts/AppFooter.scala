@@ -10,7 +10,7 @@ object AppFooter {
 
   def apply(
       model: Model
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using dispatch: Into[AppMsg] => Unit): ReactElement =
     footer(
       div(className := "browser-nav")(
         div(className := "path")(model.path)

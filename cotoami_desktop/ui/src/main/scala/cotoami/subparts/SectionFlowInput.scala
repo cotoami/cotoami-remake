@@ -133,7 +133,7 @@ object SectionFlowInput {
       msg: Msg,
       model: Model,
       waitingPosts: WaitingPosts
-  )(implicit
+  )(using
       context: Context
   ): (Model, Geomap, WaitingPosts, Cmd[AppMsg]) = {
     val default = (model, context.geomap, waitingPosts, Cmd.none)
@@ -332,7 +332,7 @@ object SectionFlowInput {
       geomap: Geomap,
       editorHeight: Int,
       onEditorHeightChanged: Int => Unit
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(
       className := optionalClasses(
         Seq(
@@ -351,7 +351,7 @@ object SectionFlowInput {
             onEditorHeightChanged
           )
 
-          CotoForm.sectionMediaPreview(form)(submsg =>
+          CotoForm.sectionMediaPreview(form)(using submsg =>
             dispatch(Msg.CotoFormMsg(submsg))
           ) match {
             case Some(mediaPreview) =>
@@ -372,7 +372,7 @@ object SectionFlowInput {
       }
     )
 
-  private def header(model: Model, currentCotonoma: Cotonoma)(implicit
+  private def header(model: Model, currentCotonoma: Cotonoma)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -425,7 +425,7 @@ object SectionFlowInput {
       model: Model,
       editorHeight: Int,
       onEditorHeightChanged: Int => Unit
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     SplitPane(
       vertical = false,
       initialPrimarySize = editorHeight,
@@ -436,10 +436,10 @@ object SectionFlowInput {
           form = form,
           onCtrlEnter = Some(() => dispatch(Msg.Post)),
           onFocus = Some(() => dispatch(Msg.Unfold))
-        )(context, submsg => dispatch(Msg.CotoFormMsg(submsg)))
+        )(using context, submsg => dispatch(Msg.CotoFormMsg(submsg)))
       ),
       secondary = SplitPane.Secondary.Props()(
-        CotoForm.ulAttributes(form)(
+        CotoForm.ulAttributes(form)(using
           context,
           submsg => dispatch(Msg.CotoFormMsg(submsg))
         ),
@@ -457,7 +457,7 @@ object SectionFlowInput {
               )
             },
             div(className := "buttons")(
-              CotoForm.buttonPreview(form)(
+              CotoForm.buttonPreview(form)(using
                 context,
                 submsg => dispatch(Msg.CotoFormMsg(submsg))
               ),
@@ -471,7 +471,7 @@ object SectionFlowInput {
   private def formCotonoma(
       form: CotonomaForm.Model,
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Fragment(
       div(className := "cotonoma-form")(
         CotonomaForm.inputName(
@@ -479,7 +479,7 @@ object SectionFlowInput {
           onFocus = Some(() => dispatch(Msg.Unfold)),
           onBlur = Some(() => dispatch(Msg.SetFolded(!model.hasContents))),
           onCtrlEnter = Some(() => dispatch(Msg.Post))
-        )(context, submsg => dispatch(Msg.CotonomaFormMsg(submsg)))
+        )(using context, submsg => dispatch(Msg.CotonomaFormMsg(submsg)))
       ),
       div(className := "post")(
         Validation.sectionValidationError(form.validation),
@@ -493,7 +493,7 @@ object SectionFlowInput {
 
   private def buttonPost(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     button(
       className := "post",
       disabled := !model.readyToPost,

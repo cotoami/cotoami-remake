@@ -94,7 +94,7 @@ object ModalNewIto {
     case class Connected(result: Either[ErrorJson, Seq[Ito]]) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Cotos, Cmd[AppMsg]) = {
     val default = (model, context.repo.cotos, Cmd.none)
@@ -136,7 +136,7 @@ object ModalNewIto {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(model: Model)(implicit
+  def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
@@ -193,7 +193,7 @@ object ModalNewIto {
 
   private def sectionIto(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "ito")(
       div(className := "ito-icon")(
         materialSymbol("arrow_downward")
@@ -207,7 +207,7 @@ object ModalNewIto {
       }
     )
 
-  private def articleCoto(coto: Coto)(implicit
+  private def articleCoto(coto: Coto)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -222,7 +222,7 @@ object ModalNewIto {
       )
     )
 
-  private def divSelection(implicit
+  private def divSelection(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {

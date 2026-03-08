@@ -34,10 +34,9 @@ package object components {
       materialSymbol(symbol)
     )
 
-  sealed trait CollapseDirection
-  object CollapseDirection {
-    case object ToLeft extends CollapseDirection
-    case object ToRight extends CollapseDirection
+  enum CollapseDirection {
+    case ToLeft
+    case ToRight
   }
 
   def paneToggle(

@@ -34,8 +34,8 @@ object DocumentLayout {
   final val ActiveTocEntryClass = "active"
 
   val component = FunctionalComponent[Props] { props =>
-    implicit val _context: Context = props.context
-    implicit val _dispatch = props.dispatch
+    given Context = props.context
+    given (Into[AppMsg] => Unit) = props.dispatch
 
     val rootRef = useRef[html.Div](null)
     val tocRef = useRef[html.Div](null)
@@ -114,7 +114,7 @@ object DocumentLayout {
   private def divToc(
       pins: Siblings,
       tocRef: ReactRef[dom.HTMLDivElement]
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "toc", ref := tocRef)(
       ScrollArea()(
         PartsIto.sectionSiblings(pins) { case (ito, coto, order) =>

@@ -91,7 +91,7 @@ object ModalPromote {
     case class Promoted(result: Either[ErrorJson, (Cotonoma, Coto)]) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Cmd[AppMsg]) =
     msg match {
@@ -130,7 +130,7 @@ object ModalPromote {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(model: Model)(implicit
+  def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -158,7 +158,7 @@ object ModalPromote {
         ),
         Validation.sectionValidationError(model.cotonomaForm.validation)
       ),
-      divCotoForm(model.cotoForm)(
+      divCotoForm(model.cotoForm)(using
         context,
         submsg => dispatch(Msg.CotoFormMsg(submsg))
       ),
@@ -185,7 +185,7 @@ object ModalPromote {
       )
     )
 
-  private def divCotoForm(form: CotoForm.Model)(implicit
+  private def divCotoForm(form: CotoForm.Model)(using
       context: Context,
       dispatch: CotoForm.Msg => Unit
   ): ReactElement = {

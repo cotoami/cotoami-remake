@@ -4,8 +4,8 @@ import marubinotto.router._
 import cotoami.models.{Cotonoma, Id, Node}
 
 object Route {
-  implicit case object NodeIdCodec extends IdCodec[Node]
-  implicit case object CotonomaIdCodec extends IdCodec[Cotonoma]
+  given nodeIdCodec: IdCodec[Node] = new IdCodec[Node]
+  given cotonomaIdCodec: IdCodec[Cotonoma] = new IdCodec[Cotonoma]
 
   val index = Root
   val node = Root / "nodes" / Arg[Id[Node]]()

@@ -46,7 +46,7 @@ object ViewMessages {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(model: Model)(implicit
+  def apply(model: Model)(using
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     Option.when(model.open) {

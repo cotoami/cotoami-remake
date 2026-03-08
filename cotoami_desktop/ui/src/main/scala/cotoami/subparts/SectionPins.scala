@@ -70,7 +70,7 @@ object SectionPins {
     case class ScrollToPin(pin: Ito) extends Msg
   }
 
-  def update(msg: Msg)(implicit
+  def update(msg: Msg)(using
       context: Context
   ): (Option[UiState], Cmd[AppMsg]) = {
     val default = (context.uiState, Cmd.none)
@@ -113,7 +113,7 @@ object SectionPins {
 
   def apply(
       uiState: UiState
-  )(implicit
+  )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] = {
@@ -128,7 +128,7 @@ object SectionPins {
       pins: Siblings,
       uiState: UiState,
       currentCotonoma: (Cotonoma, Coto)
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val (cotonoma, cotonomaCoto) = currentCotonoma
     val layout = uiState.pinsLayout(cotonoma.id).getOrElse(Layout.Document)
     section(className := "pins header-and-body fill")(
@@ -172,7 +172,7 @@ object SectionPins {
       cotonoma: Cotonoma,
       cotonomaCoto: Coto,
       layout: Layout
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     slinky.web.html.header()(
       ToolbarCoto(cotonomaCoto),
       section(className := "title")(
@@ -209,7 +209,7 @@ object SectionPins {
       )
     )
 
-  private def sectionSuperCotonomas()(implicit
+  private def sectionSuperCotonomas()(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
@@ -228,7 +228,7 @@ object SectionPins {
 
   private def liSuperCotonoma(
       cotonoma: Cotonoma
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     li(key := cotonoma.id.uuid)(
       a(
         className := "cotonoma",
@@ -244,7 +244,7 @@ object SectionPins {
 
   private def sectionCotonomaContent(
       cotonomaCoto: Coto
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using dispatch: Into[AppMsg] => Unit): ReactElement =
     PartsCoto.sectionCotonomaContent(cotonomaCoto).map(
       div(
         className := "cotonoma-content",
@@ -258,7 +258,7 @@ object SectionPins {
       currentLayout: Layout,
       symbol: String,
       tip: String
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using dispatch: Into[AppMsg] => Unit): ReactElement = {
     val selected = layout.name == currentLayout.name
     toolButton(
       symbol = symbol,

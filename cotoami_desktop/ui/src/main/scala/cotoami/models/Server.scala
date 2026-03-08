@@ -11,14 +11,13 @@ case class Server(
 )
 
 object Server {
-  sealed trait NotConnected
-  object NotConnected {
-    case object Disabled extends NotConnected
-    case class Connecting(details: Option[String]) extends NotConnected
-    case class InitFailed(details: String) extends NotConnected
-    case object Unauthorized extends NotConnected
-    case object SessionExpired extends NotConnected
-    case class Disconnected(details: Option[String]) extends NotConnected
+  enum NotConnected {
+    case Disabled
+    case Connecting(details: Option[String])
+    case InitFailed(details: String)
+    case Unauthorized
+    case SessionExpired
+    case Disconnected(details: Option[String])
   }
 }
 

@@ -59,7 +59,7 @@ object SectionNodeTools {
   def apply(
       node: Node,
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val repo = context.repo
     val status = repo.nodes.parentStatus(node.id)
     val statusView = status.map(ViewConnectionStatus(_))

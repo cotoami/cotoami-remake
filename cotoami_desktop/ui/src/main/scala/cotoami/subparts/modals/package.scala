@@ -13,7 +13,7 @@ package object modals {
 
   def buttonEdit(
       onClick: SyntheticMouseEvent[_] => Unit
-  )(implicit context: Context): ReactElement =
+  )(using context: Context): ReactElement =
     toolButton(
       classes = "edit",
       symbol = "edit",
@@ -65,7 +65,7 @@ package object modals {
       name: String,
       classes: String = "",
       edit: FieldEdit
-  )(fieldContent: ReactElement*)(implicit
+  )(fieldContent: ReactElement*)(using
       context: Context
   ): ReactElement =
     div(className := s"field ${classes}")(
@@ -96,7 +96,7 @@ package object modals {
 
   private def viewFieldEdit(
       model: FieldEdit
-  )(implicit context: Context): ReactElement =
+  )(using context: Context): ReactElement =
     Option.when(!model.disabled) {
       Fragment(
         div(className := "edit")(

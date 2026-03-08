@@ -157,7 +157,7 @@ object EditorCoto {
       case object UseMediaLocation extends Msg
     }
 
-    def update(msg: Msg, model: Model)(implicit
+    def update(msg: Msg, model: Model)(using
         context: Context
     ): (Model, Geomap, Cmd[Msg]) = {
       val default = (model, context.geomap, Cmd.none)
@@ -268,7 +268,7 @@ object EditorCoto {
         onCtrlEnter: Option[() => Unit] = None,
         onFocus: Option[() => Unit] = None,
         vertical: Boolean = false
-    )(implicit
+    )(using
         context: Context,
         dispatch: Msg => Unit
     ): ReactElement = {
@@ -296,7 +296,7 @@ object EditorCoto {
         onCtrlEnter: Option[() => Unit] = None,
         onFocus: Option[() => Unit] = None,
         enableImageInput: Boolean = true
-    )(implicit context: Context, dispatch: Msg => Unit): ReactElement =
+    )(using context: Context, dispatch: Msg => Unit): ReactElement =
       if (form.inPreview)
         sectionPreview(form)
       else
@@ -307,7 +307,7 @@ object EditorCoto {
         onCtrlEnter: Option[() => Unit] = None,
         onFocus: Option[() => Unit] = None,
         enableImageInput: Boolean = true
-    )(implicit context: Context, dispatch: Msg => Unit): ReactElement =
+    )(using context: Context, dispatch: Msg => Unit): ReactElement =
       section(className := "coto-editor fill")(
         LocalDraftTextInputs(
           form = form,
@@ -513,7 +513,7 @@ object EditorCoto {
 
     def buttonPreview(
         form: Model
-    )(implicit context: Context, dispatch: Msg => Unit): ReactElement =
+    )(using context: Context, dispatch: Msg => Unit): ReactElement =
       button(
         className := "preview contrast outline",
         disabled := !form.validate.validated,
@@ -528,7 +528,7 @@ object EditorCoto {
     def sectionMediaPreview(
         form: Model,
         enableDelete: Boolean = true
-    )(implicit dispatch: Msg => Unit): Option[ReactElement] =
+    )(using dispatch: Msg => Unit): Option[ReactElement] =
       form.mediaBlob.map { blob =>
         val url = dom.URL.createObjectURL(blob)
         section(className := "media-preview fill")(
@@ -555,7 +555,7 @@ object EditorCoto {
 
     def ulAttributes(
         form: Model
-    )(implicit
+    )(using
         context: Context,
         dispatch: CotoForm.Msg => Unit
     ): Option[ReactElement] =
@@ -568,7 +568,7 @@ object EditorCoto {
           Some(ul(className := "attributes")(attributes: _*))
       }
 
-    private def liAttributeDateTimeRange(form: Model)(implicit
+    private def liAttributeDateTimeRange(form: Model)(using
         context: Context,
         dispatch: CotoForm.Msg => Unit
     ): Option[ReactElement] =
@@ -604,7 +604,7 @@ object EditorCoto {
 
     private def liAttributeGeolocation(
         form: Model
-    )(implicit
+    )(using
         context: Context,
         dispatch: CotoForm.Msg => Unit
     ): Option[ReactElement] = {
@@ -673,7 +673,7 @@ object EditorCoto {
 
     private def divAttributeDelete(
         onClick: SyntheticMouseEvent[_] => Unit
-    )(implicit context: Context): ReactElement =
+    )(using context: Context): ReactElement =
       div(className := "attribute-delete")(
         toolButton(
           symbol = "close",
@@ -762,7 +762,7 @@ object EditorCoto {
       ) extends Msg
     }
 
-    def update(msg: Msg, model: Model)(implicit
+    def update(msg: Msg, model: Model)(using
         context: Context
     ): (Model, Cmd[Msg]) =
       (msg, context.repo.currentCotonoma) match {
@@ -823,7 +823,7 @@ object EditorCoto {
         onFocus: Option[() => Unit] = None,
         onBlur: Option[() => Unit] = None,
         onCtrlEnter: Option[() => Unit] = None
-    )(implicit context: Context, dispatch: Msg => Unit): ReactElement =
+    )(using context: Context, dispatch: Msg => Unit): ReactElement =
       input(
         className := "cotonoma-name",
         `type` := "text",

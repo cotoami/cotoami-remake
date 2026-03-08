@@ -23,7 +23,7 @@ abstract class RoutePattern[A] { self =>
         self.renderSegments(value) :+ segment
     }
 
-  final def /[B, Out](arg: Arg[B])(implicit
+  final def /[B, Out](arg: Arg[B])(using
       codec: Codec[B],
       appender: Appender[A, B, Out]
   ): RoutePattern[Out] =

@@ -54,7 +54,7 @@ object ModalNodeIcon {
     case class Saved(result: Either[ErrorJson, Node]) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Nodes, Cmd[AppMsg]) = {
     val default = (model, context.repo.nodes, Cmd.none)
@@ -115,7 +115,7 @@ object ModalNodeIcon {
 
   def apply(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Modal.view(
       dialogClasses = "image",
       closeButton = Some((classOf[Modal.NodeIcon], dispatch)),
@@ -136,7 +136,7 @@ object ModalNodeIcon {
   private def divPreview(
       imageUrl: String,
       model: Model
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "preview")(
       SectionCrop(
         imageUrl = imageUrl,

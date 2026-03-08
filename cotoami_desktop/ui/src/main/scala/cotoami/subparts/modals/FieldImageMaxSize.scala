@@ -25,15 +25,15 @@ object FieldImageMaxSize {
       editing: Boolean = false,
       saving: Boolean = false
   ) {
-    def isLocal(implicit context: Context): Boolean =
+    def isLocal(using context: Context): Boolean =
       context.repo.nodes.isLocal(nodeId)
 
-    def isSelf(implicit context: Context): Boolean =
+    def isSelf(using context: Context): Boolean =
       context.repo.nodes.isSelf(nodeId)
 
     def edit: Model = copy(editing = true)
 
-    def cancelEditing(implicit context: Context): Model =
+    def cancelEditing(using context: Context): Model =
       copy(
         input = context.repo.nodes.selfSettings
           .flatMap(_.imageMaxSize)
@@ -75,7 +75,7 @@ object FieldImageMaxSize {
   }
 
   object Model {
-    def apply(nodeId: Id[Node])(implicit context: Context): Model =
+    def apply(nodeId: Id[Node])(using context: Context): Model =
       context.repo.nodes.selfSettings
         .map(new Model(nodeId).reset(_))
         .getOrElse(new Model(nodeId))
@@ -100,7 +100,7 @@ object FieldImageMaxSize {
     case class Saved(result: Either[ErrorJson, LocalNode]) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Nodes, Cmd[AppMsg]) = {
     val default = (model, context.repo.nodes, Cmd.none)
@@ -131,7 +131,7 @@ object FieldImageMaxSize {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(model: Model)(implicit
+  def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -139,7 +139,7 @@ object FieldImageMaxSize {
       fieldImageMaxSize(model)
     }
 
-  private def fieldImageMaxSize(model: Model)(implicit
+  private def fieldImageMaxSize(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =

@@ -76,7 +76,7 @@ object Main {
   }
 
   def update(msg: Msg, model: Model): (Model, Cmd[Msg]) = {
-    implicit val context: Context = model
+    given Context = model
     msg match {
       case Msg.UrlChanged(url) => applyUrlChange(url, model.changeUrl(url))
 
@@ -532,8 +532,8 @@ object Main {
       .getOrElse(Sub.Empty)
 
   def view(model: Model, dispatch: Into[Msg] => Unit): ReactElement = {
-    implicit val _context: Context = model
-    implicit val _dispatch = dispatch
+    given Context = model
+    given (Into[Msg] => Unit) = dispatch
     Fragment(
       AppHeader(model),
       AppBody(model),

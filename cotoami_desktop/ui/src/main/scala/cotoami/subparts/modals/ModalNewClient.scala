@@ -82,7 +82,7 @@ object ModalNewClient {
     case class Registered(result: Either[ErrorJson, ClientAdded]) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Nodes, Cmd[AppMsg]) = {
     val default = (model, context.repo.nodes, Cmd.none)
@@ -158,7 +158,7 @@ object ModalNewClient {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(model: Model)(implicit
+  def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =

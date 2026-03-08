@@ -65,7 +65,7 @@ object ModalSubcoto {
         sourceCotoId: Id[Coto],
         order: Option[Int],
         defaultCotonomaId: Option[Id[Cotonoma]]
-    )(implicit
+    )(using
         context: Context
     ): Model = {
       val repo = context.repo
@@ -132,7 +132,7 @@ object ModalSubcoto {
     case class Posted(result: Either[ErrorJson, (Coto, Ito)]) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Geomap, Cmd[AppMsg]) = {
     val default = (model, context.geomap, Cmd.none)
@@ -171,7 +171,7 @@ object ModalSubcoto {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(model: Model)(implicit
+  def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
@@ -209,7 +209,7 @@ object ModalSubcoto {
     )
   }
 
-  private def articleCoto(coto: Coto)(implicit
+  private def articleCoto(coto: Coto)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -226,7 +226,7 @@ object ModalSubcoto {
 
   private def sectionPost(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "post")(
       div(className := "post-to")(
         div(className := "label")(s"${context.i18n.text.PostTo}:"),

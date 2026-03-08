@@ -12,7 +12,7 @@ object ToolbarCoto {
 
   def apply(
       coto: Coto
-  )(implicit
+  )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] = {

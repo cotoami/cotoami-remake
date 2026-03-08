@@ -122,7 +122,7 @@ object ModalAppUpdate {
 
   def apply(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     Modal.view(
       dialogClasses = "app-update",
       closeButton = Some((classOf[Modal.AppUpdate], dispatch))

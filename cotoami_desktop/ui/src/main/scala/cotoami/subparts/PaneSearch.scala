@@ -122,7 +122,7 @@ object PaneSearch {
     ) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Root, Cmd[AppMsg]) = {
     val default = (model, context.repo, Cmd.none)
@@ -188,7 +188,7 @@ object PaneSearch {
 
   def apply(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "search header-and-body fill")(
       header()(
         span(className := "title")(
@@ -213,7 +213,7 @@ object PaneSearch {
 
   private def sectionCoto(
       coto: Coto
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val repo = context.repo
     section(className := "coto flow-entry")(
       PartsCoto.article(coto, dispatch)(

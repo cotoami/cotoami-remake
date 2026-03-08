@@ -22,7 +22,7 @@ object PartsCoto {
       coto: Coto,
       dispatch: Into[AppMsg] => Unit,
       classes: Seq[(String, Boolean)] = Seq.empty
-  )(children: ReactElement*)(implicit context: Context): ReactElement =
+  )(children: ReactElement*)(using context: Context): ReactElement =
     slinky.web.html.article(
       className := optionalClasses(
         Seq(
@@ -37,7 +37,7 @@ object PartsCoto {
 
   def addressAuthor(
       coto: Coto
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     address(className := "author")(
       context.repo.nodes.get(coto.postedById).map(PartsNode.spanNode)
     )
@@ -45,7 +45,7 @@ object PartsCoto {
   // Display the author only if it is a remote node.
   def addressRemoteAuthor(
       coto: Coto
-  )(implicit
+  )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] =
@@ -55,7 +55,7 @@ object PartsCoto {
 
   def divAttributes(
       coto: Coto
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "attributes")(
       ulOtherCotonomas(coto),
       buttonDateTimeRange(coto),
@@ -82,7 +82,7 @@ object PartsCoto {
 
   private def ulOtherCotonomas(
       coto: Coto
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     ul(className := "other-cotonomas")(
       coto.postedInIds
         .filter(id =>
@@ -111,7 +111,7 @@ object PartsCoto {
   def divContent(
       coto: Coto,
       collapsibleContentOpened: Boolean = false
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "content")(
       context.repo.cotonomas.asCotonoma(coto) match {
         case Some(cotonoma) =>
@@ -125,7 +125,7 @@ object PartsCoto {
 
   def sectionCotonomaLinkLabel(
       cotonoma: Cotonoma
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "cotonoma-label")(
       a(
         className := "cotonoma",
@@ -142,13 +142,13 @@ object PartsCoto {
 
   def sectionCotonomaLabel(
       cotonoma: Cotonoma
-  )(implicit context: Context): ReactElement =
+  )(using context: Context): ReactElement =
     sectionCotonomaLabel(cotonoma.name, cotonoma.nodeId)
 
   def sectionCotonomaLabel(
       cotonomaName: String,
       nodeId: Id[Node]
-  )(implicit context: Context): ReactElement =
+  )(using context: Context): ReactElement =
     section(className := "cotonoma-label")(
       span(className := "cotonoma")(
         context.repo.nodes.get(nodeId).map(PartsNode.imgNode(_)),
@@ -159,7 +159,7 @@ object PartsCoto {
   def divContentPreview(
       coto: Coto,
       collapsibleContentOpened: Boolean = false
-  )(implicit context: Context): ReactElement =
+  )(using context: Context): ReactElement =
     div(className := "content")(
       context.repo.cotonomas.asCotonoma(coto) match {
         case Some(cotonoma) =>
@@ -174,7 +174,7 @@ object PartsCoto {
 
   def divWaitingPostContent(
       post: WaitingPost
-  )(implicit context: Context): ReactElement =
+  )(using context: Context): ReactElement =
     div(className := "content")(
       post.nameAsCotonoma
         .map(sectionCotonomaLabel(_, post.postedIn.nodeId))
@@ -296,7 +296,7 @@ object PartsCoto {
       parents: Seq[(Coto, Ito)],
       onClickTagger: Id[Coto] => Into[AppMsg],
       displayAuthorIcon: Boolean = false
-  )(implicit
+  )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] =
@@ -324,7 +324,7 @@ object PartsCoto {
 
   def divDetailsButton(
       coto: Coto
-  )(implicit
+  )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] =
@@ -343,7 +343,7 @@ object PartsCoto {
 
   def articleFooter(
       coto: Coto
-  )(implicit context: Context): ReactElement =
+  )(using context: Context): ReactElement =
     footer()(
       time(
         className := "posted-at",
@@ -358,7 +358,7 @@ object PartsCoto {
 
   def buttonGeolocation(
       coto: Coto
-  )(implicit
+  )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] =
@@ -388,7 +388,7 @@ object PartsCoto {
 
   def buttonDateTimeRange(
       coto: Coto
-  )(implicit
+  )(using
       context: Context
   ): Option[ReactElement] =
     coto.dateTimeRange.map(range =>

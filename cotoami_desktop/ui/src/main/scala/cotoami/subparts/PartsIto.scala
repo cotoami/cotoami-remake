@@ -14,7 +14,7 @@ object PartsIto {
 
   def buttonPin(
       ito: Ito
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val canEditPin = context.repo.nodes.canEdit(ito)
     div(
       className := optionalClasses(
@@ -60,7 +60,7 @@ object PartsIto {
 
   def buttonSubcotoIto(
       ito: Ito
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val canEditIto = context.repo.nodes.canEdit(ito)
     div(
       className := optionalClasses(
@@ -108,7 +108,7 @@ object PartsIto {
       description: String,
       validation: Validation.Result,
       onChange: String => Unit
-  )(implicit context: Context): ReactElement =
+  )(using context: Context): ReactElement =
     div(className := "description")(
       input(
         className := "description",
@@ -123,7 +123,7 @@ object PartsIto {
 
   def sectionSiblings(siblings: Siblings, classes: String = "")(
       renderSibling: (Ito, Coto, OrderContext) => ReactElement
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := s"siblings ${classes}")(
       siblings.groupsInOrder.map(sectionSiblingGroup(_, renderSibling)): _*
     )
@@ -131,7 +131,7 @@ object PartsIto {
   def sectionSiblingGroup(
       group: SiblingGroup,
       renderSibling: (Ito, Coto, OrderContext) => ReactElement
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(
       className := optionalClasses(
         Seq(

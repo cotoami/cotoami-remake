@@ -158,7 +158,7 @@ object SectionGeomap {
     case class MarkerClicked(id: String) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Root, Cmd[AppMsg]) = {
     val default = (model, context.repo, Cmd.none)
@@ -297,7 +297,7 @@ object SectionGeomap {
   private val PmtilesUrlPrefix = "pmtiles://"
 
   def generateStyle(pmtilesUrl: Option[String], flavor: String, lang: String)(
-      implicit context: Context
+      using context: Context
   ): js.Object =
     geomap.basemapsStyle(
       PmtilesUrlPrefix + pmtilesUrl.getOrElse(
@@ -309,15 +309,15 @@ object SectionGeomap {
       spriteUrl(flavor)
     )
 
-  def glyphsUrl(implicit context: Context): String =
+  def glyphsUrl(using context: Context): String =
     s"${context.resolveResource(PathGlyphsDir).get}/{fontstack}/{range}.pbf"
 
-  def spriteUrl(flavor: String)(implicit context: Context): String =
+  def spriteUrl(flavor: String)(using context: Context): String =
     s"${context.resolveResource(PathSpritesDir).get}/v4/${flavor}"
 
   def apply(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     model.remotePmtilesAvailable.map(remotePmtiles =>
       MapLibre(
         id = "main-geomap",

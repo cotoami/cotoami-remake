@@ -133,7 +133,7 @@ object ModalEditCoto {
     case class Saved(result: Either[ErrorJson, Coto]) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Geomap, Cmd[AppMsg]) = {
     val default = (model, context.geomap, Cmd.none)
@@ -184,7 +184,7 @@ object ModalEditCoto {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(model: Model)(implicit
+  def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =

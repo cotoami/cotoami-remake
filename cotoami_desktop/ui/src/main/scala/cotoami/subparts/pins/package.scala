@@ -16,7 +16,7 @@ package object pins {
 
   def sectionPinnedCotos(pins: Siblings)(
       renderSubCotos: Siblings => ReactElement
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     PartsIto.sectionSiblings(pins, "pinned-cotos") { case (pin, coto, order) =>
       sectionPinnedCoto(pin, coto, order)(renderSubCotos)
     }
@@ -27,7 +27,7 @@ package object pins {
       order: OrderContext
   )(
       renderSubCotos: Siblings => ReactElement
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val subCotos = context.repo.childrenOf(coto.id)
     section(
       className := optionalClasses(
@@ -83,7 +83,7 @@ package object pins {
 
   def sectionSubCotos(
       subCotos: Siblings
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     PartsIto.sectionSiblings(subCotos, "sub-cotos") { case (ito, coto, order) =>
       div(className := "sub-coto")(
         PartsCoto.article(coto, dispatch, Seq(("sub-coto", true)))(
@@ -107,7 +107,7 @@ package object pins {
 
   def divItosTraversalButton(
       coto: Coto
-  )(implicit
+  )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] =

@@ -21,7 +21,7 @@ case class ViewConnectionStatus(
 object ViewConnectionStatus {
   val ConnectedClassName = "connected"
 
-  def connected(implicit context: Context) =
+  def connected(using context: Context) =
     ViewConnectionStatus(
       ConnectedClassName,
       materialSymbol("link"),
@@ -29,12 +29,12 @@ object ViewConnectionStatus {
       None
     )
 
-  def apply(server: Server)(implicit context: Context): ViewConnectionStatus =
+  def apply(server: Server)(using context: Context): ViewConnectionStatus =
     server.notConnected.map(apply).getOrElse(connected)
 
   def apply(
       status: ParentStatus
-  )(implicit context: Context): ViewConnectionStatus =
+  )(using context: Context): ViewConnectionStatus =
     status match {
       case ParentStatus.ServerDisconnected(details) => apply(details)
       case ParentStatus.Connected(_)                => connected
@@ -42,7 +42,7 @@ object ViewConnectionStatus {
 
   def apply(
       notConnected: NotConnected
-  )(implicit context: Context): ViewConnectionStatus =
+  )(using context: Context): ViewConnectionStatus =
     notConnected match {
       case NotConnected.Disabled =>
         ViewConnectionStatus(

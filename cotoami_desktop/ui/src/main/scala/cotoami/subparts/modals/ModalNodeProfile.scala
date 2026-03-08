@@ -30,16 +30,16 @@ object ModalNodeProfile {
       asClient: SectionAsClient.Model,
       asChild: SectionAsChild.Model
   ) {
-    def isLocal(implicit context: Context): Boolean =
+    def isLocal(using context: Context): Boolean =
       context.repo.nodes.isLocal(nodeId)
 
-    def isSelf(implicit context: Context): Boolean =
+    def isSelf(using context: Context): Boolean =
       context.repo.nodes.isSelf(nodeId)
 
-    def asServer(implicit context: Context): Option[Server] =
+    def asServer(using context: Context): Option[Server] =
       context.repo.nodes.servers.get(nodeId)
 
-    def nodeRoleName(implicit context: Context): Option[String] =
+    def nodeRoleName(using context: Context): Option[String] =
       if (isSelf)
         Some(
           context.i18n.text.ModalNodeProfile_selfNode ++
@@ -58,7 +58,7 @@ object ModalNodeProfile {
   object Model {
     def apply(
         nodeId: Id[Node]
-    )(implicit context: Context): (Model, Cmd[AppMsg]) = {
+    )(using context: Context): (Model, Cmd[AppMsg]) = {
       val (selfNodeServer, selfNodeServerCmd) =
         SectionSelfNodeServer.Model(nodeId)
       val (asClient, asClientCmd) = SectionAsClient.Model(nodeId)
@@ -98,7 +98,7 @@ object ModalNodeProfile {
     case class SectionAsChildMsg(submsg: SectionAsChild.Msg) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Nodes, Cmd[AppMsg]) =
     msg match {
@@ -135,7 +135,7 @@ object ModalNodeProfile {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(model: Model)(implicit
+  def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -152,7 +152,7 @@ object ModalNodeProfile {
         .getOrElse(s"Node ${model.nodeId} not found.")
     )
 
-  private def modalContent(node: Node, model: Model)(implicit
+  private def modalContent(node: Node, model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
@@ -178,7 +178,7 @@ object ModalNodeProfile {
     )
   }
 
-  private def divSidebar(node: Node, model: Model)(implicit
+  private def divSidebar(node: Node, model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -219,7 +219,7 @@ object ModalNodeProfile {
   private def sectionNodeRelationship(
       isParent: Boolean,
       privileges: Option[ChildNode]
-  )(implicit
+  )(using
       context: Context
   ): ReactElement =
     section(className := "node-relationship")(
@@ -234,7 +234,7 @@ object ModalNodeProfile {
       )
     )
 
-  private def sectionToolButtons(node: Node)(implicit
+  private def sectionToolButtons(node: Node)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -242,7 +242,7 @@ object ModalNodeProfile {
       PartsNode.buttonSwitchNode(node, "left")
     )
 
-  private def fieldId(node: Node)(implicit
+  private def fieldId(node: Node)(using
       context: Context
   ): ReactElement =
     fieldInput(
@@ -253,7 +253,7 @@ object ModalNodeProfile {
     )
 
   private def fieldName(node: Node, rootCoto: Option[Coto], model: Model)(
-      implicit
+      using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -270,7 +270,7 @@ object ModalNodeProfile {
       rootCoto.map(divEditRootCoto(_, model))
     )
 
-  private def fieldDescription(rootCoto: Coto, model: Model)(implicit
+  private def fieldDescription(rootCoto: Coto, model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -284,7 +284,7 @@ object ModalNodeProfile {
       divEditRootCoto(rootCoto, model)
     )
 
-  private def divEditRootCoto(rootCoto: Coto, model: Model)(implicit
+  private def divEditRootCoto(rootCoto: Coto, model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
