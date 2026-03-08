@@ -40,7 +40,6 @@ lazy val cotoami = project
       "io.circe" %%% "circe-parser" % circeVersion,
       "org.typelevel" %%% "cats-effect" % "3.5.4",
       "com.softwaremill.quicklens" %%% "quicklens" % "1.9.7",
-      "tech.sparse" %%% "trail" % "0.3.1",
       "io.github.cquiroz" %%% "scala-java-time" % "2.6.0",
       "io.github.cquiroz" %%% "scala-java-locales" % "1.5.4",
       "org.scalatest" %%% "scalatest" % "3.2.9" % Test

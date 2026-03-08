@@ -1,6 +1,6 @@
 package cotoami
 
-import trail._
+import marubinotto.router._
 import cotoami.models.{Cotonoma, Id, Node}
 
 object Route {
