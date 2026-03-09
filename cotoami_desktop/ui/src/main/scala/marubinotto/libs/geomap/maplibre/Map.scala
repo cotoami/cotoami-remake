@@ -1,13 +1,13 @@
 package marubinotto.libs.geomap.maplibre
 
+import scala.annotation.unused
 import scala.scalajs.js
-import scala.scalajs.js.|
 import scala.scalajs.js.annotation.JSImport
 import org.scalajs.dom
 
 @js.native
 @JSImport("maplibre-gl", "Map")
-class Map(options: MapOptions) extends js.Object {
+class Map(@unused _options: MapOptions) extends js.Object {
 
   /** Adds an IControl to the map, calling control.onAdd(this).
     *

@@ -65,7 +65,8 @@ object ModalNewClient {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.NewClientMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.NewClientMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -81,7 +82,7 @@ object ModalNewClient {
     case class Registered(result: Either[ErrorJson, ClientAdded]) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Nodes, Cmd[AppMsg]) = {
     val default = (model, context.repo.nodes, Cmd.none)
@@ -157,7 +158,7 @@ object ModalNewClient {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(model: Model)(implicit
+  def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =

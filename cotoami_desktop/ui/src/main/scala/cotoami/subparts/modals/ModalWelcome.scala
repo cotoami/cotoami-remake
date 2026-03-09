@@ -112,7 +112,8 @@ object ModalWelcome {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.WelcomeMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.WelcomeMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -145,7 +146,7 @@ object ModalWelcome {
     ) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Cmd[AppMsg]) =
     msg match {
@@ -311,7 +312,7 @@ object ModalWelcome {
   def apply(
       model: Model,
       recentDatabases: Seq[DatabaseOpenedJson]
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Modal.view(
       dialogClasses = "welcome",
       error = model.error
@@ -333,7 +334,7 @@ object ModalWelcome {
       )
     )
 
-  private def sectionAppUpdate(appUpdate: tauri.updater.Update)(implicit
+  private def sectionAppUpdate(appUpdate: tauri.updater.Update)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -353,7 +354,7 @@ object ModalWelcome {
   private def sectionRecent(
       model: Model,
       databases: Seq[DatabaseOpenedJson]
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Option.when(!databases.isEmpty) {
       section(className := "recent-databases")(
         h2()(context.i18n.text.ModalWelcome_recent),
@@ -376,7 +377,7 @@ object ModalWelcome {
                   section(className := "database-path")(db.folder)
                 )
               )
-            ): _*
+            )*
           )
         )
       )
@@ -384,7 +385,7 @@ object ModalWelcome {
 
   private def sectionNewDatabase(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "new-database")(
       h2()(context.i18n.text.ModalWelcome_new),
       form()(
@@ -434,7 +435,7 @@ object ModalWelcome {
 
   private def sectionOpenDatabase(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "open-database")(
       h2()(context.i18n.text.ModalWelcome_open),
       form()(

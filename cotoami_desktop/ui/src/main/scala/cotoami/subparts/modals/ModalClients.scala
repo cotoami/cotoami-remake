@@ -67,7 +67,8 @@ object ModalClients {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.ClientsMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.ClientsMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -119,7 +120,7 @@ object ModalClients {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(model: Model)(implicit
+  def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -149,7 +150,7 @@ object ModalClients {
       )
     )
 
-  private def sectionClientNodes(model: Model)(implicit
+  private def sectionClientNodes(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -185,13 +186,13 @@ object ModalClients {
                     className := "more",
                     aria - "busy" := model.loading.toString()
                   )()
-              ): _*
+              )*
             )
           )
         )
     }
 
-  private def divClientRow(client: Client, model: Model)(implicit
+  private def divClientRow(client: Client, model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {

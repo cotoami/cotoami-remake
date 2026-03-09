@@ -11,7 +11,6 @@ import io.circe.parser._
 
 import marubinotto.fui.Cmd
 import cotoami.Msg
-import cotoami.models.Cotonoma
 import cotoami.subparts.{PaneStock, SectionPins}
 
 case class UiState(

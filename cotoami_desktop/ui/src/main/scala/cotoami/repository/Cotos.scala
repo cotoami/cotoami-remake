@@ -55,7 +55,8 @@ case class Cotos(
       }
     }
 
-  def putAll(cotos: Iterable[Coto]): Cotos = cotos.foldLeft(this)(_ put _)
+  def putAll(cotos: Iterable[Coto]): Cotos =
+    cotos.foldLeft(this)((acc, coto) => acc.put(coto))
 
   def delete(id: Id[Coto]): Cotos = {
     get(id).foreach(_.revokeMediaUrl()) // Side-effect!

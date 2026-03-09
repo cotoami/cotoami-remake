@@ -5,7 +5,6 @@ import org.scalajs.dom.html
 import org.scalajs.dom.HTMLElement
 
 import slinky.core._
-import slinky.core.annotations.react
 import slinky.core.facade.{ReactElement, ReactRef}
 import slinky.core.facade.Hooks._
 import slinky.web.html._
@@ -16,7 +15,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Ito, Siblings}
 import cotoami.subparts.{PartsIto, PartsNode, SectionPins}
 
-@react object DocumentLayout {
+object DocumentLayout {
   case class Props(
       pins: Siblings,
       viewportId: String,
@@ -24,11 +23,19 @@ import cotoami.subparts.{PartsIto, PartsNode, SectionPins}
       dispatch: Into[AppMsg] => Unit
   )
 
+  def apply(
+      pins: Siblings,
+      viewportId: String,
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ) =
+    component(Props(pins, viewportId, context, dispatch))
+
   final val ActiveTocEntryClass = "active"
 
   val component = FunctionalComponent[Props] { props =>
-    implicit val _context: Context = props.context
-    implicit val _dispatch = props.dispatch
+    given Context = props.context
+    given (Into[AppMsg] => Unit) = props.dispatch
 
     val rootRef = useRef[html.Div](null)
     val tocRef = useRef[html.Div](null)
@@ -49,7 +56,7 @@ import cotoami.subparts.{PartsIto, PartsNode, SectionPins}
         tocRef.current.style.height = tocHeight(viewport.offsetHeight)
 
         // Resize the TOC height according to the viewport size
-        val resizeObserver = new dom.ResizeObserver((entries, observer) => {
+        val resizeObserver = new dom.ResizeObserver((entries, _) => {
           entries.foreach(entry => {
             if (tocRef.current != null) {
               tocRef.current.style.height = tocHeight(entry.contentRect.height)
@@ -60,7 +67,7 @@ import cotoami.subparts.{PartsIto, PartsNode, SectionPins}
 
         // Highlight TOC entries according to the current viewport position
         val intersectionObserver = new dom.IntersectionObserver(
-          (entries, observer) =>
+          (entries, _) =>
             entries.foreach(entry => {
               val id = entry.target.getAttribute("id")
               // Directly modify the class of the corresponding TOC entry element
@@ -107,10 +114,10 @@ import cotoami.subparts.{PartsIto, PartsNode, SectionPins}
   private def divToc(
       pins: Siblings,
       tocRef: ReactRef[dom.HTMLDivElement]
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "toc", ref := tocRef)(
       ScrollArea()(
-        PartsIto.sectionSiblings(pins) { case (ito, coto, order) =>
+        PartsIto.sectionSiblings(pins) { case (ito, coto, _) =>
           div(
             id := elementIdOfTocEntry(ito),
             // This className will be modified directly by DocumentView to highlight

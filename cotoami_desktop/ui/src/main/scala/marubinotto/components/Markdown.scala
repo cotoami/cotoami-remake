@@ -1,19 +1,22 @@
 package marubinotto.components
 
 import scala.scalajs.js
-import scala.scalajs.js.|
 import scala.scalajs.js.annotation.JSImport
 
 import slinky.core._
-import slinky.core.annotations.react
 import slinky.core.facade.ReactElement
 
-@react object Markdown extends ExternalComponent {
+object Markdown extends ExternalComponent {
   case class Props(
       remarkPlugins: Seq[js.Object | js.Tuple2[js.Object, js.Object]],
-      rehypePlugins: Seq[js.Object | js.Tuple2[js.Object, js.Object]],
-      children: ReactElement*
+      rehypePlugins: Seq[js.Object | js.Tuple2[js.Object, js.Object]]
   )
+
+  def apply(
+      remarkPlugins: Seq[js.Object | js.Tuple2[js.Object, js.Object]],
+      rehypePlugins: Seq[js.Object | js.Tuple2[js.Object, js.Object]]
+  )(children: ReactElement*) =
+    super.apply(Props(remarkPlugins, rehypePlugins))(children*)
 
   override val component = ReactMarkdown
 }

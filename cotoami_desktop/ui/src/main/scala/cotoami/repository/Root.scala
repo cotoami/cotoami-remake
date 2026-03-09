@@ -118,7 +118,7 @@ case class Root(
 
   def deleteCoto(id: Id[Coto]): Root =
     // Delete the reposts first if they exist
-    cotos.repostsOf(id).foldLeft(this)(_ deleteCoto _.id)
+    cotos.repostsOf(id).foldLeft(this)((acc, repost) => acc.deleteCoto(repost.id))
       // then, delete the coto (which could be a cotonoma)
       // and the itos to/from the coto.
       .modify(_.cotos).using(_.delete(id))
@@ -522,7 +522,7 @@ object Root {
     )
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.RepositoryMsg(this)
+    override def into: AppMsg = AppMsg.RepositoryMsg(this)
   }
 
   object Msg {

@@ -57,7 +57,7 @@ object SectionTimeline {
       loading: Boolean = false,
       markingAsRead: Boolean = false
   ) {
-    def onFocusChange(implicit context: Context): (Model, Cmd.One[AppMsg]) =
+    def onFocusChange(using context: Context): (Model, Cmd.One[AppMsg]) =
       copy(
         cotoIds = PaginatedIds(),
         waitingPosts = WaitingPosts(),
@@ -68,7 +68,7 @@ object SectionTimeline {
         imeActive = false
       ).fetchFirst
 
-    def cotos(implicit context: Context): Seq[Coto] = {
+    def cotos(using context: Context): Seq[Coto] = {
       val repo = context.repo
       val rootCotoId = repo.currentNodeRootCotonoma.map(_.cotoId)
       cotoIds.order.filter(Some(_) != rootCotoId).map(repo.cotos.get).flatten
@@ -95,7 +95,7 @@ object SectionTimeline {
             cotoIds
         )
 
-    def fetchFirst(implicit context: Context): (Model, Cmd.One[AppMsg]) =
+    def fetchFirst(using context: Context): (Model, Cmd.One[AppMsg]) =
       fetching.pipe { model =>
         (
           model,
@@ -109,7 +109,7 @@ object SectionTimeline {
         )
       }
 
-    def fetchMore(implicit context: Context): (Model, Cmd.One[AppMsg]) =
+    def fetchMore(using context: Context): (Model, Cmd.One[AppMsg]) =
       if (loading)
         (this, Cmd.none)
       else
@@ -133,13 +133,13 @@ object SectionTimeline {
 
     def inputQuery(
         query: String
-    )(implicit context: Context): (Model, Cmd[AppMsg]) =
+    )(using context: Context): (Model, Cmd[AppMsg]) =
       if (imeActive)
         (copy(queryInput = query), Cmd.none)
       else
         copy(queryInput = query).fetchFirst
 
-    def readyToMarkAsRead(implicit context: Context): Boolean =
+    def readyToMarkAsRead(using context: Context): Boolean =
       context.repo.nodes.anyUnreadPostsInFocus && !markingAsRead
   }
 
@@ -148,7 +148,7 @@ object SectionTimeline {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.SectionTimelineMsg(this)
+    override def into: AppMsg = AppMsg.SectionTimelineMsg(this)
   }
 
   object Msg {
@@ -169,7 +169,7 @@ object SectionTimeline {
     ) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Root, Cmd[AppMsg]) = {
     val default = (model, context.repo, Cmd.none)
@@ -311,7 +311,7 @@ object SectionTimeline {
 
   def apply(
       model: Model
-  )(implicit
+  )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] = {
@@ -329,7 +329,7 @@ object SectionTimeline {
       model: Model,
       cotos: Seq[Coto],
       currentCotonomaId: Id[Cotonoma]
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "timeline header-and-body")(
       headerTools(model),
       div(className := "coto-flow body")(
@@ -350,13 +350,13 @@ object SectionTimeline {
             (model.waitingPosts.posts.map(sectionWaitingPost) ++
               cotos.map { coto =>
                 Flipped(key = coto.id.uuid, flipId = coto.id.uuid)(
-                  sectionPost(coto, model)
+                  sectionPost(coto)
                 ): ReactElement
               } :+
               div(
                 className := "more",
                 aria - "busy" := model.loading.toString()
-              )()): _*
+              )())*
           )
         )
       )
@@ -364,7 +364,7 @@ object SectionTimeline {
 
   private def headerTools(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     header(className := "tools")(
       Option.when(
         context.repo.cotonomas.focusedId.isEmpty &&
@@ -397,7 +397,7 @@ object SectionTimeline {
 
   private def sectionWaitingPost(
       post: WaitingPost
-  )(implicit context: Context): ReactElement =
+  )(using context: Context): ReactElement =
     section(
       className := "waiting-post flow-entry",
       key := post.postId,
@@ -412,16 +412,15 @@ object SectionTimeline {
     )
 
   private def sectionPost(
-      post: Coto,
-      model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+      post: Coto
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     section(className := "post flow-entry")(
       context.repo.cotos.getOriginal(post)
         .map(articleCoto(_, post))
     )
   }
 
-  private def articleCoto(coto: Coto, post: Coto)(implicit
+  private def articleCoto(coto: Coto, post: Coto)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
@@ -451,7 +450,7 @@ object SectionTimeline {
     )
   }
 
-  private def sectionRepostHeader(coto: Coto)(implicit
+  private def sectionRepostHeader(coto: Coto)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] =
@@ -492,7 +491,7 @@ object SectionTimeline {
   private def repostedIn(
       coto: Coto,
       cotonomas: Cotonomas
-  )(implicit dispatch: Into[AppMsg] => Unit): Option[ReactElement] =
+  )(using dispatch: Into[AppMsg] => Unit): Option[ReactElement] =
     coto.postedInId.flatMap(cotonomas.get).map(cotonoma =>
       a(
         className := "reposted-in",
@@ -503,7 +502,7 @@ object SectionTimeline {
       )(cotonoma.name)
     )
 
-  private def reposter(coto: Coto, nodes: Nodes)(implicit
+  private def reposter(coto: Coto, nodes: Nodes)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =

@@ -13,7 +13,7 @@ object AppBody {
 
   def apply(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(
       id := "app-body",
       className := optionalClasses(
@@ -32,7 +32,7 @@ object AppBody {
   private def content(
       model: Model,
       uiState: UiState
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Fragment(
       NavNodes(model, uiState),
       SplitPane(

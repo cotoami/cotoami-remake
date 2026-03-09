@@ -43,138 +43,133 @@ object Changelog {
   private def applyChange(
       change: ChangeJson,
       model: Model
-  ): (Model, Cmd[Msg]) = {
+  ): (Model, Cmd[Msg]) =
     // Handle changes in order of assumed their frequency:
-    // CreateCoto
-    for (json <- change.CreateCoto.toOption) {
-      return createCoto(json, model)
-    }
-
-    // CreateCotonoma
-    for (json <- change.CreateCotonoma.toOption) {
-      return createCotonoma(json, model)
-    }
-
-    // CreateIto
-    for (json <- change.CreateIto.toOption) {
-      val ito = ItoBackend.toModel(json)
-      if (model.repo.itos.hasDuplicateOrder(ito))
-        return (
-          model,
-          Cmd.Batch(
-            Root.fetchGraphFromCoto(ito.targetCotoId),
-            // Insertion: refresh sibling itos if there's an order duplication.
-            Root.fetchSiblingItoGroup(ito.sourceCotoId, ito.nodeId)
-          )
-        )
-      else
-        return (
-          model.modify(_.repo.itos).using(_.put(ito)),
-          Cmd.Batch(
-            Root.fetchGraphFromCoto(ito.targetCotoId),
-            if (model.repo.isPin(ito))
-              // Scroll to the just added pin
-              Browser.send(SectionPins.Msg.ScrollToPin(ito).into)
-            else
-              Cmd.none
-          )
-        )
-    }
-
-    // DeleteIto
-    for (json <- change.DeleteIto.toOption) {
-      val itoId: Id[Ito] = Id(json.ito_id)
-      return (
-        model.modify(_.repo.itos).using(_.delete(itoId)),
-        Cmd.none
+    change.CreateCoto.toOption.map(createCoto(_, model))
+      .orElse(change.CreateCotonoma.toOption.map(createCotonoma(_, model)))
+      .orElse(
+        change.CreateIto.toOption.map { json =>
+          val ito = ItoBackend.toModel(json)
+          if (model.repo.itos.hasDuplicateOrder(ito))
+            (
+              model,
+              Cmd.Batch(
+                Root.fetchGraphFromCoto(ito.targetCotoId),
+                // Insertion: refresh sibling itos if there's an order duplication.
+                Root.fetchSiblingItoGroup(ito.sourceCotoId, ito.nodeId)
+              )
+            )
+          else
+            (
+              model.modify(_.repo.itos).using(_.put(ito)),
+              Cmd.Batch(
+                Root.fetchGraphFromCoto(ito.targetCotoId),
+                if (model.repo.isPin(ito))
+                  // Scroll to the just added pin
+                  Browser.send(SectionPins.Msg.ScrollToPin(ito).into)
+                else
+                  Cmd.none
+              )
+            )
+        }
       )
-    }
-
-    // ChangeItoOrder
-    for (json <- change.ChangeItoOrder.toOption) {
-      val itoId: Id[Ito] = Id(json.ito_id)
-      return (
-        model,
-        model.repo.itos.get(itoId)
-          .map(ito => Root.fetchSiblingItoGroup(ito.sourceCotoId, ito.nodeId))
-          .getOrElse(Cmd.none)
+      .orElse(
+        change.DeleteIto.toOption.map { json =>
+          val itoId: Id[Ito] = Id(json.ito_id)
+          (
+            model.modify(_.repo.itos).using(_.delete(itoId)),
+            Cmd.none
+          )
+        }
       )
-    }
-
-    // EditCoto
-    for (json <- change.EditCoto.toOption) {
-      return (model, updateCoto(Id(json.coto_id)))
-    }
-
-    // DeleteCoto
-    for (json <- change.DeleteCoto.toOption) {
-      return deleteCoto(Id(json.coto_id), model)
-    }
-
-    // EditIto
-    for (json <- change.EditIto.toOption) {
-      return (model, Root.fetchIto(Id(json.ito_id)))
-    }
-
-    // RenameCotonoma
-    for (json <- change.RenameCotonoma.toOption) {
-      val cotonomaId: Id[Cotonoma] = Id(json.cotonoma_id)
-      return model
-        .pipe(touchCotonoma(Some(cotonomaId), json.updated_at))
-        .pipe(
-          addCmd((_: Model) =>
-            model.repo.cotonomas.get(cotonomaId)
-              .map(_.cotoId)
-              .map(updateCoto)
+      .orElse(
+        change.ChangeItoOrder.toOption.map { json =>
+          val itoId: Id[Ito] = Id(json.ito_id)
+          (
+            model,
+            model.repo.itos.get(itoId)
+              .map(ito =>
+                Root.fetchSiblingItoGroup(ito.sourceCotoId, ito.nodeId)
+              )
               .getOrElse(Cmd.none)
           )
-        )
-    }
-
-    // PromoteJson
-    for (json <- change.Promote.toOption) {
-      return (model, promote(Id(json.coto_id)))
-    }
-    for (json <- change.PromoteCoto.toOption) {
-      return (model, promote(Id(json.coto_id)))
-    }
-
-    // UpsertNode
-    for (json <- change.UpsertNode.toOption) {
-      val node = NodeBackend.toModel(json)
-      return (model.modify(_.repo.nodes).using(_.put(node)), Cmd.none)
-    }
-
-    // CreateNode
-    for (json <- change.CreateNode.toOption) {
-      return model.modify(_.repo.nodes).using(
-        _.put(NodeBackend.toModel(json.node))
-      ).pipe { model =>
-        Nullable.toOption(json.root)
-          .map(createCotonoma(_, model))
-          .getOrElse((model, Cmd.none))
-      }
-    }
-
-    // RenameNode
-    for (json <- change.RenameNode.toOption) {
-      return (model, updateNode(Id(json.node_id)))
-    }
-
-    // SetNodeIcon
-    for (json <- change.SetNodeIcon.toOption) {
-      return (
-        model
-          .modify(_.repo.nodes).using(
-            _.setIcon(Id(json.node_id), json.icon)
-          )
-          .modify(_.geomap).using(_.refreshMarkers),
-        Cmd.none
+        }
       )
-    }
-
-    (model, Cmd.none)
-  }
+      .orElse(
+        change.EditCoto.toOption.map(json =>
+          (model, updateCoto(Id(json.coto_id)))
+        )
+      )
+      .orElse(
+        change.DeleteCoto.toOption.map(json =>
+          deleteCoto(Id(json.coto_id), model)
+        )
+      )
+      .orElse(
+        change.EditIto.toOption.map(json =>
+          (model, Root.fetchIto(Id(json.ito_id)))
+        )
+      )
+      .orElse(
+        change.RenameCotonoma.toOption.map { json =>
+          val cotonomaId: Id[Cotonoma] = Id(json.cotonoma_id)
+          model
+            .pipe(touchCotonoma(Some(cotonomaId), json.updated_at))
+            .pipe(
+              addCmd(_ =>
+                model.repo.cotonomas.get(cotonomaId)
+                  .map(_.cotoId)
+                  .map(updateCoto)
+                  .getOrElse(Cmd.none)
+              )
+            )
+        }
+      )
+      .orElse(
+        change.Promote.toOption.map(json =>
+          (model, promote(Id(json.coto_id)))
+        )
+      )
+      .orElse(
+        change.PromoteCoto.toOption.map(json =>
+          (model, promote(Id(json.coto_id)))
+        )
+      )
+      .orElse(
+        change.UpsertNode.toOption.map { json =>
+          val node = NodeBackend.toModel(json)
+          (model.modify(_.repo.nodes).using(_.put(node)), Cmd.none)
+        }
+      )
+      .orElse(
+        change.CreateNode.toOption.map { json =>
+          model.modify(_.repo.nodes).using(
+            _.put(NodeBackend.toModel(json.node))
+          ).pipe { updatedModel =>
+            Nullable.toOption(json.root)
+              .map(createCotonoma(_, updatedModel))
+              .getOrElse((updatedModel, Cmd.none))
+          }
+        }
+      )
+      .orElse(
+        change.RenameNode.toOption.map(json =>
+          (model, updateNode(Id(json.node_id)))
+        )
+      )
+      .orElse(
+        change.SetNodeIcon.toOption.map { json =>
+          (
+            model
+              .modify(_.repo.nodes).using(
+                _.setIcon(Id(json.node_id), json.icon)
+              )
+              .modify(_.geomap).using(_.refreshMarkers),
+            Cmd.none
+          )
+        }
+      )
+      .getOrElse((model, Cmd.none))
 
   private def createCoto(
       cotoJson: CotoJson,

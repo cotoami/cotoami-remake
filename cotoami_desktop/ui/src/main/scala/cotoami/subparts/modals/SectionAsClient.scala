@@ -23,14 +23,14 @@ object SectionAsClient {
       resettingPassword: Boolean = false,
       resettingPasswordError: Option[String] = None
   ) {
-    def isLocal(implicit context: Context): Boolean =
+    def isLocal(using context: Context): Boolean =
       context.repo.nodes.isLocal(nodeId)
   }
 
   object Model {
     def apply(
         nodeId: Id[Node]
-    )(implicit context: Context): (Model, Cmd[AppMsg]) =
+    )(using context: Context): (Model, Cmd[AppMsg]) =
       if (!context.repo.nodes.isSelf(nodeId))
         (
           Model(nodeId, loading = true),
@@ -46,10 +46,10 @@ object SectionAsClient {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into =
+    override def into: AppMsg =
       ModalNodeProfile.Msg.SectionAsClientMsg(this)
-        .pipe(Modal.Msg.NodeProfileMsg)
-        .pipe(AppMsg.ModalMsg)
+        .pipe(Modal.Msg.NodeProfileMsg.apply)
+        .pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -62,7 +62,7 @@ object SectionAsClient {
     ) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Cmd[AppMsg]) =
     msg match {
@@ -107,7 +107,7 @@ object SectionAsClient {
 
   def apply(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     model.client.map { client =>
       section(className := "field-group as-client")(
         h2()(context.i18n.text.AsClient_title),
@@ -124,7 +124,7 @@ object SectionAsClient {
       }
     )
 
-  private def fieldPassword(client: Client, model: Model)(implicit
+  private def fieldPassword(client: Client, model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -153,7 +153,7 @@ object SectionAsClient {
       )
     )
 
-  private def fieldLastLogin(client: Client)(implicit
+  private def fieldLastLogin(client: Client)(using
       context: Context
   ): ReactElement =
     fieldInput(
@@ -165,7 +165,7 @@ object SectionAsClient {
       readOnly = true
     )
 
-  private def fieldRemoteAddress(active: ActiveClient)(implicit
+  private def fieldRemoteAddress(active: ActiveClient)(using
       context: Context
   ): ReactElement =
     fieldInput(

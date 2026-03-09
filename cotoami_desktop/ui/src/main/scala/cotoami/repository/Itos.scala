@@ -19,7 +19,8 @@ case class Itos(
       .modify(_.bySource).using(_.put(ito))
       .modify(_.byTarget).using(_.put(ito))
 
-  def putAll(itos: Iterable[Ito]): Itos = itos.foldLeft(this)(_ put _)
+  def putAll(itos: Iterable[Ito]): Itos =
+    itos.foldLeft(this)((acc, ito) => acc.put(ito))
 
   def replaceSiblingGroup(
       cotoId: Id[Coto],
@@ -69,7 +70,7 @@ case class Itos(
     val itosFrom = from(cotoId).values.flatten
     val itosTo = to(cotoId)
     val toDelete = (itosFrom ++ itosTo).map(_.id)
-    toDelete.foldLeft(this)(_ delete _)
+    toDelete.foldLeft(this)((acc, itoId) => acc.delete(itoId))
   }
 }
 
@@ -176,7 +177,7 @@ object Itos {
       )
 
     def putAll(itos: Iterable[Ito]): ByTarget =
-      itos.foldLeft(this)(_ put _)
+      itos.foldLeft(this)((acc, ito) => acc.put(ito))
 
     def delete(id: Id[Ito]): ByTarget =
       copy(map = map.map { case (cotoId, itoIds) => (cotoId, itoIds - id) }

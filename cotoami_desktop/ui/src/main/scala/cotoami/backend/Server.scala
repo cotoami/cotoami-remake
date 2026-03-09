@@ -93,26 +93,35 @@ trait NotConnectedJson extends js.Object {
 
 object NotConnectedBackend {
   def toModel(json: NotConnectedJson): Server.NotConnected = {
-    if (json.toString == "Disabled") {
-      return Server.NotConnected.Disabled
-    }
-    for (msg <- json.Connecting.toOption) {
-      return Server.NotConnected.Connecting(Nullable.toOption(msg))
-    }
-    for (msg <- json.InitFailed.toOption) {
-      return Server.NotConnected.InitFailed(msg)
-    }
-    if (json.toString == "Unauthorized") {
-      return Server.NotConnected.Unauthorized
-    }
-    if (json.toString == "SessionExpired") {
-      return Server.NotConnected.SessionExpired
-    }
-    for (msg <- json.Disconnected.toOption) {
-      return Server.NotConnected.Disconnected(Nullable.toOption(msg))
-    }
-    Server.NotConnected.Disconnected(
+    val jsonString = json.toString
+    Option.when(jsonString == "Disabled")(Server.NotConnected.Disabled)
+      .orElse(
+        json.Connecting.toOption.map(msg =>
+          Server.NotConnected.Connecting(Nullable.toOption(msg))
+        )
+      )
+      .orElse(
+        json.InitFailed.toOption.map(Server.NotConnected.InitFailed(_))
+      )
+      .orElse(
+        Option.when(jsonString == "Unauthorized")(
+          Server.NotConnected.Unauthorized
+        )
+      )
+      .orElse(
+        Option.when(jsonString == "SessionExpired")(
+          Server.NotConnected.SessionExpired
+        )
+      )
+      .orElse(
+        json.Disconnected.toOption.map(msg =>
+          Server.NotConnected.Disconnected(Nullable.toOption(msg))
+        )
+      )
+      .getOrElse(
+        Server.NotConnected.Disconnected(
       Some(s"Invalid NotConnected JSON : ${js.JSON.stringify(json)}")
-    )
+        )
+      )
   }
 }

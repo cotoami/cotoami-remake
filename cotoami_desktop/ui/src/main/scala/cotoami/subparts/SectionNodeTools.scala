@@ -25,7 +25,7 @@ object SectionNodeTools {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.SectionNodeToolsMsg(this)
+    override def into: AppMsg = AppMsg.SectionNodeToolsMsg(this)
   }
 
   object Msg {
@@ -46,7 +46,7 @@ object SectionNodeTools {
         (
           model.copy(togglingSync = false),
           result match {
-            case Right(server) => Cmd.none
+            case Right(_) => Cmd.none
             case Left(e) => cotoami.error("Failed to disable parent sync.", e)
           }
         )
@@ -59,7 +59,7 @@ object SectionNodeTools {
   def apply(
       node: Node,
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val repo = context.repo
     val status = repo.nodes.parentStatus(node.id)
     val statusView = status.map(ViewConnectionStatus(_))

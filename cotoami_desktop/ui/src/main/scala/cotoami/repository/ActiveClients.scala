@@ -15,7 +15,7 @@ case class ActiveClients(
     this.modify(_.map).using(_ + (client.nodeId -> client))
 
   def putAll(clients: Iterable[ActiveClient]): ActiveClients =
-    clients.foldLeft(this)(_ put _)
+    clients.foldLeft(this)((acc, client) => acc.put(client))
 
   def remove(id: Id[Node]): ActiveClients =
     this.modify(_.map).using(_.removed(id))

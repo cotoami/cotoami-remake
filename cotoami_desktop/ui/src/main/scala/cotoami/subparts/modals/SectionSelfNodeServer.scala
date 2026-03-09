@@ -35,7 +35,7 @@ object SectionSelfNodeServer {
   object Model {
     def apply(
         nodeId: Id[Node]
-    )(implicit context: Context): (Model, Cmd[AppMsg]) =
+    )(using context: Context): (Model, Cmd[AppMsg]) =
       if (context.repo.nodes.isSelf(nodeId))
         (
           Model(nodeId, loading = true),
@@ -53,10 +53,10 @@ object SectionSelfNodeServer {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into =
+    override def into: AppMsg =
       ModalNodeProfile.Msg.SectionSelfNodeServerMsg(this)
-        .pipe(Modal.Msg.NodeProfileMsg)
-        .pipe(AppMsg.ModalMsg)
+        .pipe(Modal.Msg.NodeProfileMsg.apply)
+        .pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -68,7 +68,7 @@ object SectionSelfNodeServer {
         extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Nodes, Cmd[AppMsg]) = {
     val default = (model, context.repo.nodes, Cmd.none)
@@ -123,7 +123,7 @@ object SectionSelfNodeServer {
 
   def apply(
       model: Model
-  )(implicit
+  )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -140,7 +140,7 @@ object SectionSelfNodeServer {
         )
     }
 
-  private def sectionSelfNodeServer(config: ServerConfig, model: Model)(implicit
+  private def sectionSelfNodeServer(config: ServerConfig, model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -151,7 +151,7 @@ object SectionSelfNodeServer {
       fieldAnonymousRead(model)
     )
 
-  private def fieldServerUrl(config: ServerConfig)(implicit
+  private def fieldServerUrl(config: ServerConfig)(using
       context: Context
   ): ReactElement =
     fieldInput(
@@ -161,7 +161,7 @@ object SectionSelfNodeServer {
       readOnly = true
     )
 
-  private def fieldClientNodes(model: Model)(implicit
+  private def fieldClientNodes(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -177,7 +177,7 @@ object SectionSelfNodeServer {
 
   private def fieldAnonymousRead(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val anonymousReadEnabled =
       context.repo.nodes.selfSettings
         .map(_.anonymousReadEnabled)

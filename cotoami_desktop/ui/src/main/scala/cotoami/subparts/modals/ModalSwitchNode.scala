@@ -32,7 +32,8 @@ object ModalSwitchNode {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.SwitchNodeMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.SwitchNodeMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -43,7 +44,7 @@ object ModalSwitchNode {
   def update(
       msg: Msg,
       model: Model
-  )(implicit
+  )(using
       context: Context
   ): (Model, Cmd[AppMsg]) =
     msg match {
@@ -86,7 +87,7 @@ object ModalSwitchNode {
 
   def apply(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val modalType = classOf[Modal.SwitchNode]
     Modal.view(
       dialogClasses = "switch-node",
@@ -112,13 +113,13 @@ object ModalSwitchNode {
           `type` := "button",
           disabled := !model.readyToSwitch,
           aria - "busy" := model.switching.toString(),
-          onClick := (e => dispatch(Msg.Switch))
+          onClick := (_ => dispatch(Msg.Switch))
         )(context.i18n.text.ModalSwitchNode_switch)
       )
     )
   }
 
-  private def sectionNode(node: Node, elementClasses: String)(implicit
+  private def sectionNode(node: Node, elementClasses: String)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =

@@ -19,7 +19,7 @@ object Commands {
         try {
           js.JSON.parse(json).asInstanceOf[T]
         } catch {
-          case e: Throwable =>
+          case _: Throwable =>
             throw new RuntimeException(
               s"[invalid-response] command: ${js.JSON.stringify(command)}, response: ${json}"
             )

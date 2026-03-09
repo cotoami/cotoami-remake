@@ -5,7 +5,6 @@ import org.scalajs.dom
 import org.scalajs.dom.html
 
 import slinky.core._
-import slinky.core.annotations.react
 import slinky.core.facade.{React, ReactElement, SetStateHookCallback}
 import slinky.core.facade.Hooks._
 import slinky.web.html._
@@ -14,7 +13,7 @@ import slinky.web.SyntheticMouseEvent
 import marubinotto.optionalClasses
 import marubinotto.Action
 
-@react object SplitPane {
+object SplitPane {
   case class Props(
       vertical: Boolean, // true: "vertical", false: "horizontal"
       reverse: Boolean = false,
@@ -28,6 +27,35 @@ import marubinotto.Action
       primary: Primary.Props,
       secondary: Secondary.Props
   )
+
+  def apply(
+      vertical: Boolean,
+      reverse: Boolean = false,
+      initialPrimarySize: Int,
+      resizable: Boolean = true,
+      resize: Action[Int] = Action.default,
+      className: Option[String] = None,
+      onResizeStart: Option[() => Unit] = None,
+      onResizeEnd: Option[() => Unit] = None,
+      onPrimarySizeChanged: Option[Int => Unit] = None,
+      primary: Primary.Props,
+      secondary: Secondary.Props
+  ) =
+    component(
+      Props(
+        vertical,
+        reverse,
+        initialPrimarySize,
+        resizable,
+        resize,
+        className,
+        onResizeStart,
+        onResizeEnd,
+        onPrimarySizeChanged,
+        primary,
+        secondary
+      )
+    )
 
   val PaneClassPrefix = "split-pane-"
 
@@ -109,7 +137,7 @@ import marubinotto.Action
       )
 
     val onMouseUp: js.Function1[dom.MouseEvent, Unit] = useCallback(
-      (e: dom.MouseEvent) => {
+      (_: dom.MouseEvent) => {
         setMoving(false)
         if (!separatorPosRef.current.isNaN()) {
           props.onPrimarySizeChanged.map(_(primarySizeRef.current))
@@ -180,13 +208,19 @@ import marubinotto.Action
     )
   }
 
-  @react object Primary {
+  object Primary {
     case class Props(
         className: Option[String] = None,
         onClick: Option[() => Unit] = None
     )(children: ReactElement*) {
       def getChildren: Seq[ReactElement] = children
     }
+
+    def apply(
+        className: Option[String] = None,
+        onClick: Option[() => Unit] = None
+    )(children: ReactElement*) =
+      component(Props(className, onClick)(children*))
 
     val component = FunctionalComponent[Props] { props =>
       val primaryRef = useRef[html.Div](null)
@@ -215,7 +249,7 @@ import marubinotto.Action
         onClick := props.onClick,
         ref := primaryRef
       )(
-        props.getChildren: _*
+        props.getChildren*
       )
     }
 
@@ -231,13 +265,19 @@ import marubinotto.Action
       }
   }
 
-  @react object Secondary {
+  object Secondary {
     case class Props(
         className: Option[String] = None,
         onClick: Option[() => Unit] = None
     )(children: ReactElement*) {
       def getChildren: Seq[ReactElement] = children
     }
+
+    def apply(
+        className: Option[String] = None,
+        onClick: Option[() => Unit] = None
+    )(children: ReactElement*) =
+      component(Props(className, onClick)(children*))
 
     val component = FunctionalComponent[Props] { props =>
       val Context(vertical, reverse, primarySize, setPrimarySize) =
@@ -252,7 +292,7 @@ import marubinotto.Action
           )
         ),
         onClick := props.onClick
-      )(props.getChildren: _*)
+      )(props.getChildren*)
     }
 
     private def positionalClass(

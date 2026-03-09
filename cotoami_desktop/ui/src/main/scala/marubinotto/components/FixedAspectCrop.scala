@@ -8,11 +8,10 @@ import org.scalajs.dom
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 import slinky.core._
-import slinky.core.annotations.react
 
 import marubinotto.fui.Browser
 
-@react object FixedAspectCrop extends ExternalComponent {
+object FixedAspectCrop extends ExternalComponent {
   case class Props(
       image: String,
       onCropChange: Position => Unit,
@@ -21,6 +20,25 @@ import marubinotto.fui.Browser
       onMediaLoaded: Option[() => Unit] = None,
       onCropComplete: Option[(Area, Area) => Unit] = None
   )
+
+  def apply(
+      image: String,
+      onCropChange: Position => Unit,
+      crop: Position = position(0, 0),
+      aspect: Option[Double] = None,
+      onMediaLoaded: Option[() => Unit] = None,
+      onCropComplete: Option[(Area, Area) => Unit] = None
+  ) =
+    super.apply(
+      Props(
+        image,
+        onCropChange,
+        crop,
+        aspect,
+        onMediaLoaded,
+        onCropComplete
+      )
+    )
 
   override val component = ReactEasyCrop
 
@@ -45,14 +63,14 @@ import marubinotto.fui.Browser
     val promise = Promise[dom.Blob]()
     Browser.createImage(imageUrl).onComplete {
       case Success(image) => {
-        var canvas = dom.document.createElement("canvas")
+        val canvas = dom.document.createElement("canvas")
           .asInstanceOf[dom.HTMLCanvasElement]
-        var ctx = canvas.getContext("2d")
+        val ctx = canvas.getContext("2d")
         if (ctx != null) {
           canvas.width = crop.width.toInt
           canvas.height = crop.height.toInt
 
-          var ctx2d = ctx.asInstanceOf[dom.CanvasRenderingContext2D]
+          val ctx2d = ctx.asInstanceOf[dom.CanvasRenderingContext2D]
           ctx2d.drawImage(
             image,
 
@@ -69,7 +87,7 @@ import marubinotto.fui.Browser
             crop.height
           )
 
-          var canvas2 = canvas.asInstanceOf[ToBlob]
+          val canvas2 = canvas.asInstanceOf[ToBlob]
           canvas2.toBlob(blob => promise.success(blob))
         } else {
           promise.failure(new RuntimeException("2D context is not supported."))

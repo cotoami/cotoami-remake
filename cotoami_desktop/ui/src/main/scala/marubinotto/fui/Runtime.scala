@@ -89,7 +89,7 @@ class Runtime[Model, Msg](
   program.onUrlChange.map(onUrlChange => {
     dom.window.addEventListener(
       "popstate",
-      (e: Event) => dispatch(onUrlChange(new URL(dom.window.location.href)))
+      (_: Event) => dispatch(onUrlChange(new URL(dom.window.location.href)))
     )
   })
 

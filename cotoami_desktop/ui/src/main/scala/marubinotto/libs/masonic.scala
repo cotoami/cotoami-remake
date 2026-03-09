@@ -5,7 +5,6 @@ import scala.scalajs.js.annotation.JSImport
 import org.scalajs.dom
 
 import slinky.core._
-import slinky.core.annotations.react
 import slinky.core.facade.{ReactElement, ReactRef}
 
 // https://github.com/jaredLunde/masonic
@@ -83,10 +82,10 @@ object masonic {
     val column: Double = js.native
   }
 
-  @react object Masonry extends ExternalComponent {
+  object Masonry extends ExternalComponent {
     case class Props(
         items: js.Array[scala.Any],
-        itemKey: js.Function2[js.Any, Int, String] = (item, index) =>
+        itemKey: js.Function2[js.Any, Int, String] = (_, index) =>
           index.toString(),
         render: RenderComponentProps => ReactElement,
         columnWidth: Int = 240,
@@ -94,13 +93,36 @@ object masonic {
         rowGutter: Option[Int] = None,
         overscanBy: Double = 2
     )
+
+    def apply(
+        items: js.Array[scala.Any],
+        itemKey: js.Function2[js.Any, Int, String] = (_, index) =>
+          index.toString(),
+        render: RenderComponentProps => ReactElement,
+        columnWidth: Int = 240,
+        columnGutter: Option[Int] = Some(0),
+        rowGutter: Option[Int] = None,
+        overscanBy: Double = 2
+    ) =
+      super.apply(
+        Props(
+          items,
+          itemKey,
+          render,
+          columnWidth,
+          columnGutter,
+          rowGutter,
+          overscanBy
+        )
+      )
+
     override val component = Masonic.Masonry
   }
 
-  @react object MasonryScroller extends ExternalComponent {
+  object MasonryScroller extends ExternalComponent {
     case class Props(
         items: js.Array[scala.Any],
-        itemKey: js.Function2[js.Any, Int, String] = (item, index) =>
+        itemKey: js.Function2[js.Any, Int, String] = (_, index) =>
           index.toString(),
         render: RenderComponentProps => ReactElement,
         overscanBy: Double = 2,
@@ -109,6 +131,31 @@ object masonic {
         height: Double,
         containerRef: ReactRef[dom.HTMLElement] = null
     )
+
+    def apply(
+        items: js.Array[scala.Any],
+        itemKey: js.Function2[js.Any, Int, String] = (_, index) =>
+          index.toString(),
+        render: RenderComponentProps => ReactElement,
+        overscanBy: Double = 2,
+        positioner: Positioner,
+        offset: Double = 0,
+        height: Double,
+        containerRef: ReactRef[dom.HTMLElement] = null
+    ) =
+      super.apply(
+        Props(
+          items,
+          itemKey,
+          render,
+          overscanBy,
+          positioner,
+          offset,
+          height,
+          containerRef
+        )
+      )
+
     override val component = Masonic.MasonryScroller
   }
 }

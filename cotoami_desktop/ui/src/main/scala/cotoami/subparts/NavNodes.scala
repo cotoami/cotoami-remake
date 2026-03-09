@@ -16,7 +16,7 @@ object NavNodes {
   def apply(
       model: Model,
       uiState: UiState
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val nodes = model.repo.nodes
     nav(
       className := optionalClasses(
@@ -89,7 +89,7 @@ object NavNodes {
 
   private def buttonSwitchBack(
       nodes: Nodes
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using dispatch: Into[AppMsg] => Unit): ReactElement =
     (nodes.isSelfRemote, nodes.self, nodes.local) match {
       case (true, Some(selfNode), Some(localNode)) =>
         Some(
@@ -119,7 +119,7 @@ object NavNodes {
       node: Node,
       anyUnreadPosts: Boolean,
       nodes: Nodes
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val status = nodes.parentStatus(node.id)
       .flatMap(ViewConnectionStatus(_).onlyIfNotConnected)
     val tooltip =

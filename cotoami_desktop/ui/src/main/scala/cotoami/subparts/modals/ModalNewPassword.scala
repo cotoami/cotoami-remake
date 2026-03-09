@@ -18,7 +18,7 @@ object ModalNewPassword {
 
   def apply(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val modalType = classOf[Modal.NewPassword]
     Modal.view(
       dialogClasses = "new-password",

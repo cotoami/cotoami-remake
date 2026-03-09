@@ -20,7 +20,7 @@ trait SessionTokenJson extends js.Object {
 
 case class ClientNodeSession(json: ClientNodeSessionJson) {
   def token: Option[SessionToken] =
-    Nullable.toOption(json.token).map(SessionToken)
+    Nullable.toOption(json.token).map(SessionToken.apply)
   def server: Node = NodeBackend.toModel(json.server)
   def serverRoot: Option[(Cotonoma, Coto)] =
     Nullable.toOption(json.server_root).map(pair =>

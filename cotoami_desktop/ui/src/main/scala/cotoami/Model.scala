@@ -11,7 +11,6 @@ import cotoami.backend._
 import cotoami.repository._
 import cotoami.models._
 import cotoami.subparts._
-import cotoami.subparts.Modal
 
 trait Context {
   def time: Time

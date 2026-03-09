@@ -10,7 +10,6 @@ import marubinotto.components.toolButton
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ChildNode, Node}
 import cotoami.backend.ChildNodeInput
-import cotoami.subparts.ViewConnectionStatus
 
 object PartsNode {
 
@@ -23,7 +22,7 @@ object PartsNode {
 
   def spanNode(
       node: Node
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     span(
       className := "node",
       onClick := (_ =>
@@ -51,7 +50,7 @@ object PartsNode {
       status.message.map(p(className := "message")(_))
     )
 
-  def buttonSwitchNode(switchTo: Node, tipPlacement: String = "bottom")(implicit
+  def buttonSwitchNode(switchTo: Node, tipPlacement: String = "bottom")(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] = {
@@ -76,7 +75,7 @@ object PartsNode {
     }
   }
 
-  def childPrivileges(child: Option[ChildNode])(implicit
+  def childPrivileges(child: Option[ChildNode])(using
       context: Context
   ): Seq[String] =
     child.map { child =>
@@ -97,10 +96,10 @@ object PartsNode {
   def inputChildPrivileges(
       values: ChildNodeInput,
       disabled: Boolean,
-      onAsOwnerChange: SyntheticEvent[_, _] => Unit,
-      onCanEditItosChange: SyntheticEvent[_, _] => Unit,
-      onCanPostCotonomas: SyntheticEvent[_, _] => Unit
-  )(implicit context: Context): ReactElement =
+      onAsOwnerChange: SyntheticEvent[?, ?] => Unit,
+      onCanEditItosChange: SyntheticEvent[?, ?] => Unit,
+      onCanPostCotonomas: SyntheticEvent[?, ?] => Unit
+  )(using context: Context): ReactElement =
     Fragment(
       label(htmlFor := "as-owner")(
         input(

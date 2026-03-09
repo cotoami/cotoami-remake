@@ -70,7 +70,7 @@ object ModalPromote {
         val cotoForm = CotoForm.Model.forUpdate(coto)
         (
           Model(original, cotonomaForm, cotoForm),
-          cmd.map(Msg.CotonomaFormMsg).map(_.into)
+          cmd.map(Msg.CotonomaFormMsg.apply).map(_.into)
         )
       }
   }
@@ -80,7 +80,8 @@ object ModalPromote {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.PromoteMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.PromoteMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -90,7 +91,7 @@ object ModalPromote {
     case class Promoted(result: Either[ErrorJson, (Cotonoma, Coto)]) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Cmd[AppMsg]) =
     msg match {
@@ -98,7 +99,7 @@ object ModalPromote {
         val (form, subcmd) = CotonomaForm.update(submsg, model.cotonomaForm)
         (
           model.copy(cotonomaForm = form),
-          subcmd.map(Msg.CotonomaFormMsg).map(_.into)
+          subcmd.map(Msg.CotonomaFormMsg.apply).map(_.into)
         )
       }
 
@@ -106,7 +107,7 @@ object ModalPromote {
         val (form, _, subcmd) = CotoForm.update(submsg, model.cotoForm)
         (
           model.copy(cotoForm = form),
-          subcmd.map(Msg.CotoFormMsg).map(_.into)
+          subcmd.map(Msg.CotoFormMsg.apply).map(_.into)
         )
       }
 
@@ -129,7 +130,7 @@ object ModalPromote {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(model: Model)(implicit
+  def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -151,20 +152,20 @@ object ModalPromote {
       context.i18n.text.ModalPromote_title
     )(
       div(className := "cotonoma-form")(
-        CotonomaForm.inputName(model = model.cotonomaForm)(
+        CotonomaForm.inputName(model = model.cotonomaForm)(using
           context,
-          submsg => dispatch(Msg.CotonomaFormMsg(submsg))
+          (submsg: CotonomaForm.Msg) => dispatch(Msg.CotonomaFormMsg(submsg))
         ),
         Validation.sectionValidationError(model.cotonomaForm.validation)
       ),
-      divCotoForm(model.cotoForm)(
+      divCotoForm(model.cotoForm)(using
         context,
-        submsg => dispatch(Msg.CotoFormMsg(submsg))
+        (submsg: CotoForm.Msg) => dispatch(Msg.CotoFormMsg(submsg))
       ),
       div(className := "buttons")(
-        CotoForm.buttonPreview(model.cotoForm)(
+        CotoForm.buttonPreview(model.cotoForm)(using
           context,
-          submsg => dispatch(Msg.CotoFormMsg(submsg))
+          (submsg: CotoForm.Msg) => dispatch(Msg.CotoFormMsg(submsg))
         ),
         button(
           className := "promote",
@@ -184,7 +185,7 @@ object ModalPromote {
       )
     )
 
-  private def divCotoForm(form: CotoForm.Model)(implicit
+  private def divCotoForm(form: CotoForm.Model)(using
       context: Context,
       dispatch: CotoForm.Msg => Unit
   ): ReactElement = {

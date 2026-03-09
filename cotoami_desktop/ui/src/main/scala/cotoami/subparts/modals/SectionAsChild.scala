@@ -27,7 +27,7 @@ object SectionAsChild {
       saving: Boolean = false,
       savingError: Option[String] = None
   ) {
-    def isLocal(implicit context: Context): Boolean =
+    def isLocal(using context: Context): Boolean =
       context.repo.nodes.isLocal(nodeId)
 
     def setChild(child: ChildNode): Model =
@@ -47,7 +47,7 @@ object SectionAsChild {
   object Model {
     def apply(
         nodeId: Id[Node]
-    )(implicit context: Context): (Model, Cmd[AppMsg]) =
+    )(using context: Context): (Model, Cmd[AppMsg]) =
       if (!context.repo.nodes.isSelf(nodeId))
         (
           Model(nodeId, loading = true),
@@ -63,10 +63,10 @@ object SectionAsChild {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into =
+    override def into: AppMsg =
       ModalNodeProfile.Msg.SectionAsChildMsg(this)
-        .pipe(Modal.Msg.NodeProfileMsg)
-        .pipe(AppMsg.ModalMsg)
+        .pipe(Modal.Msg.NodeProfileMsg.apply)
+        .pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -137,8 +137,8 @@ object SectionAsChild {
 
   def apply(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    model.child.map { child =>
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    model.child.map { _ =>
       section(className := "field-group as-child")(
         h2()(context.i18n.text.AsChild_title),
         fieldChildPrivileges(model)
@@ -152,7 +152,7 @@ object SectionAsChild {
       }
     )
 
-  private def fieldChildPrivileges(model: Model)(implicit
+  private def fieldChildPrivileges(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =

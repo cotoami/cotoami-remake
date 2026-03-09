@@ -1,6 +1,8 @@
 import org.scalajs.linker.interface.ModuleSplitStyle
 
-ThisBuild / scalaVersion := "2.13.16"
+val scala3Version = "3.7.4"
+
+ThisBuild / scalaVersion := scala3Version
 
 val circeVersion = "0.14.7"
 val slinkyVersion = "0.7.5"
@@ -9,13 +11,13 @@ lazy val cotoami = project
   .in(file("."))
   .enablePlugins(ScalaJSPlugin)
   .settings(
+    scalaModuleInfo := scalaModuleInfo.value.map(_.withOverrideScalaVersion(true)),
     scalacOptions ++= Seq(
       "-encoding",
       "utf-8",
       "-deprecation",
       "-feature",
-      "-Ymacro-annotations",
-      "-Xlint:unused"
+      "-Wunused:all"
     ),
 
     // We have a `main` method
@@ -40,9 +42,13 @@ lazy val cotoami = project
       "io.circe" %%% "circe-parser" % circeVersion,
       "org.typelevel" %%% "cats-effect" % "3.5.4",
       "com.softwaremill.quicklens" %%% "quicklens" % "1.9.7",
-      "tech.sparse" %%% "trail" % "0.3.1",
       "io.github.cquiroz" %%% "scala-java-time" % "2.6.0",
       "io.github.cquiroz" %%% "scala-java-locales" % "1.5.4",
       "org.scalatest" %%% "scalatest" % "3.2.9" % Test
+    ),
+    dependencyOverrides ++= Seq(
+      "org.scala-lang" % "scala3-library_3" % scala3Version,
+      "org.scala-lang" % "scala3-interfaces" % scala3Version,
+      "org.scala-lang" % "tasty-core_3" % scala3Version
     )
   )

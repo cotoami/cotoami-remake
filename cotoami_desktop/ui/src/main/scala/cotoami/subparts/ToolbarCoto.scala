@@ -7,13 +7,12 @@ import marubinotto.components.toolButton
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Ito}
 import cotoami.repository.Root
-import cotoami.subparts.Modal
 
 object ToolbarCoto {
 
   def apply(
       coto: Coto
-  )(implicit
+  )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] = {
@@ -166,7 +165,7 @@ object ToolbarCoto {
     ).flatten
 
     Option.when(!buttons.isEmpty) {
-      section(className := "coto-toolbar")(buttons: _*)
+      section(className := "coto-toolbar")(buttons*)
     }
   }
 }

@@ -75,7 +75,8 @@ object ModalIncorporate {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.IncorporateMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.IncorporateMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -92,7 +93,7 @@ object ModalIncorporate {
   def update(
       msg: Msg,
       model: Model
-  )(implicit
+  )(using
       context: Context
   ): (Model, Nodes, Cmd[AppMsg]) = {
     val nodes = context.repo.nodes
@@ -168,7 +169,7 @@ object ModalIncorporate {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(model: Model)(implicit
+  def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -187,7 +188,7 @@ object ModalIncorporate {
 
   private def sectionConnect(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "connect")(
       form()(
         // Node URL
@@ -226,7 +227,7 @@ object ModalIncorporate {
   private def sectionIncorporate(
       model: Model,
       nodeSession: ClientNodeSession
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "incorporate")(
       // Node preview
       section(className := "node-preview")(
@@ -243,20 +244,20 @@ object ModalIncorporate {
         button(
           `type` := "button",
           className := "cancel contrast outline",
-          onClick := (e => dispatch(Msg.Cancel))
+          onClick := (_ => dispatch(Msg.Cancel))
         )(context.i18n.text.Cancel),
         button(
           `type` := "button",
           disabled := !model.readyToIncorporate,
           aria - "busy" := model.incorporating.toString(),
-          onClick := (e => dispatch(Msg.Incorporate))
+          onClick := (_ => dispatch(Msg.Incorporate))
         )(context.i18n.text.ModalIncorporate_incorporate)
       )
     )
 
   private def sectionChildPrivileges(
       nodeSession: ClientNodeSession
-  )(implicit context: Context): ReactElement =
+  )(using context: Context): ReactElement =
     section(className := "child-privileges")(
       s"${context.i18n.text.ChildPrivileges}: ",
       span(className := "privileges")(

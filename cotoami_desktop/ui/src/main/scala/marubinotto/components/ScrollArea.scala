@@ -6,11 +6,10 @@ import org.scalajs.dom
 import org.scalajs.dom.html
 
 import slinky.core._
-import slinky.core.annotations.react
 import slinky.core.facade.{ReactElement, ReactRef}
 import slinky.core.facade.Hooks._
 
-@react object ScrollArea {
+object ScrollArea {
   case class Props(
       className: Option[String] = None,
       scrollableElementId: Option[String] = None,
@@ -33,6 +32,29 @@ import slinky.core.facade.Hooks._
     // Putting the `children` in the secondary parameters seems to work without this limitation.
     def getChildren: Seq[ReactElement] = children
   }
+
+  def apply(
+      className: Option[String] = None,
+      scrollableElementId: Option[String] = None,
+      scrollableClassName: Option[String] = None,
+      autoHide: Boolean = true,
+      bottomThreshold: Option[Int] = None,
+      onScrollToBottom: Option[() => Unit] = None,
+      onUnmounted: Option[Double => Unit] = None,
+      setScrollTop: Option[Double] = None
+  )(children: ReactElement*) =
+    component(
+      Props(
+        className,
+        scrollableElementId,
+        scrollableClassName,
+        autoHide,
+        bottomThreshold,
+        onScrollToBottom,
+        onUnmounted,
+        setScrollTop
+      )(children*)
+    )
 
   val DefaultClassName = "scroll-area"
   val DefaultBottomThreshold = 1
@@ -99,7 +121,7 @@ import slinky.core.facade.Hooks._
         props.scrollableClassName,
         Some(scrollableNodeRef)
       )
-    )(props.getChildren: _*)
+    )(props.getChildren*)
   }
 }
 
@@ -111,14 +133,13 @@ object SimpleBarReact extends js.Object
 @JSImport("simplebar-react/dist/simplebar.min.css", JSImport.Namespace)
 object SimpleBarCSS extends js.Object
 
-@react object SimpleBar extends ExternalComponent {
+object SimpleBar extends ExternalComponent {
   val css = SimpleBarCSS
 
   case class Props(
       className: String,
       autoHide: Boolean,
-      scrollableNodeProps: ScrollableNodeProps,
-      children: ReactElement*
+      scrollableNodeProps: ScrollableNodeProps
   )
 
   case class ScrollableNodeProps(
@@ -126,6 +147,13 @@ object SimpleBarCSS extends js.Object
       className: Option[String] = None,
       ref: Option[ReactRef[html.Div]] = None
   )
+
+  def apply(
+      className: String,
+      autoHide: Boolean,
+      scrollableNodeProps: ScrollableNodeProps
+  )(children: ReactElement*) =
+    super.apply(Props(className, autoHide, scrollableNodeProps))(children*)
 
   override val component = SimpleBarReact
 }

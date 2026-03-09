@@ -82,7 +82,8 @@ object ModalRepost {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.RepostMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.RepostMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -98,7 +99,7 @@ object ModalRepost {
     case class Reposted(result: Either[ErrorJson, (Coto, Coto)]) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Cotonomas, Cmd[AppMsg]) = {
     val default = (model, context.repo.cotonomas, Cmd.none)
@@ -198,7 +199,7 @@ object ModalRepost {
           )
         )
 
-      case Msg.Reposted(Right((repost, original))) =>
+      case Msg.Reposted(Right((_, original))) =>
         default.copy(
           _1 = model.copy(
             originalCoto = original,
@@ -229,7 +230,7 @@ object ModalRepost {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(model: Model)(implicit
+  def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -279,7 +280,7 @@ object ModalRepost {
   private def divSelectOption(
       option: Select.SelectOption,
       nodes: Nodes
-  )(implicit context: Context): ReactElement = {
+  )(using context: Context): ReactElement = {
     val dest = option.asInstanceOf[Destination]
     dest match {
       case dest: ExistingCotonoma =>
@@ -302,7 +303,7 @@ object ModalRepost {
 
   private def articleCoto(
       coto: Coto
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     article(className := "coto embedded")(
       header()(
         PartsCoto.addressRemoteAuthor(coto)
@@ -314,7 +315,7 @@ object ModalRepost {
       )
     )
 
-  private def sectionAlreadyPostedIn(model: Model)(implicit
+  private def sectionAlreadyPostedIn(model: Model)(using
       context: Context
   ): ReactElement =
     section(className := "already-posted-in")(
@@ -327,7 +328,7 @@ object ModalRepost {
               span(className := "cotonoma-name")(cotonoma.name),
               spanRootCotonomaMark(cotonoma, context.repo.nodes)
             )
-          ): _*
+          )*
         )
       )
     )
@@ -335,7 +336,7 @@ object ModalRepost {
   private def spanRootCotonomaMark(
       cotonoma: Cotonoma,
       nodes: Nodes
-  )(implicit context: Context): ReactElement =
+  )(using context: Context): ReactElement =
     Option.when(nodes.isNodeRoot(cotonoma)) {
       span(className := "root-mark")(s"(${context.i18n.text.ModalRepost_root})")
     }

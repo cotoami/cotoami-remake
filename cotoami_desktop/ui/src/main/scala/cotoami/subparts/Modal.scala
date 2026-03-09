@@ -24,7 +24,7 @@ object Modal {
   /////////////////////////////////////////////////////////////////////////////
 
   case class Stack(modals: Seq[Modal] = Seq.empty) {
-    def open[M <: Modal: ClassTag](modal: M): Stack =
+    def open[M <: Modal](modal: M): Stack =
       close(modal.getClass()).modify(_.modals).using(modal +: _)
 
     def opened[M <: Modal: ClassTag]: Boolean =
@@ -106,7 +106,7 @@ object Modal {
         ModalNewPassword.Model(title, message, principalNode, password)
       )
 
-    def forOwner(password: String)(implicit
+    def forOwner(password: String)(using
         context: Context
     ): NewPassword =
       NewPassword(
@@ -116,7 +116,7 @@ object Modal {
         password
       )
 
-    def forClient(node: Node, password: String)(implicit
+    def forClient(node: Node, password: String)(using
         context: Context
     ): NewPassword =
       NewPassword(
@@ -165,7 +165,7 @@ object Modal {
         sourceCotoId: Id[Coto],
         order: Option[Int],
         defaultCotonomaId: Option[Id[Cotonoma]] = None
-    )(implicit
+    )(using
         context: Context
     ): Subcoto =
       Subcoto(ModalSubcoto.Model(sourceCotoId, order, defaultCotonomaId))
@@ -188,7 +188,7 @@ object Modal {
   object NodeProfile {
     def apply(
         nodeId: Id[Node]
-    )(implicit context: Context): (NodeProfile, Cmd[AppMsg]) = {
+    )(using context: Context): (NodeProfile, Cmd[AppMsg]) = {
       val (model, cmd) = ModalNodeProfile.Model(nodeId)
       (NodeProfile(model), cmd)
     }
@@ -219,7 +219,7 @@ object Modal {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.ModalMsg(this)
+    override def into: AppMsg = AppMsg.ModalMsg(this)
   }
 
   object Msg {
@@ -259,7 +259,7 @@ object Modal {
   def close[M <: Modal](modalType: Class[M]): Cmd.One[AppMsg] =
     Browser.send(Msg.CloseModal(modalType).into)
 
-  def update(msg: Msg, model: AppModel)(implicit
+  def update(msg: Msg, model: AppModel)(using
       context: Context
   ): (AppModel, Cmd[AppMsg]) = {
     val stack = model.modalStack
@@ -472,10 +472,10 @@ object Modal {
               onClick := (_ => dispatch(Modal.Msg.CloseModal(modalType)))
             )
           },
-          h1()(title: _*)
+          h1()(title*)
         ),
         error.map(e => section(className := "error")(e)),
-        div(className := s"modal-body ${bodyClasses}")(body: _*)
+        div(className := s"modal-body ${bodyClasses}")(body*)
       )
     )
 
@@ -484,7 +484,7 @@ object Modal {
 
   def apply(
       model: AppModel
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     model.modalStack.top.flatMap {
       case Confirm(modal) => Some(ModalConfirm(modal))
 

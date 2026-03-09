@@ -82,7 +82,8 @@ object ModalNewIto {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.NewItoMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.NewItoMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -93,7 +94,7 @@ object ModalNewIto {
     case class Connected(result: Either[ErrorJson, Seq[Ito]]) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Cotos, Cmd[AppMsg]) = {
     val default = (model, context.repo.cotos, Cmd.none)
@@ -112,7 +113,7 @@ object ModalNewIto {
           default.copy(_1 = model, _3 = cmd)
         }
 
-      case Msg.Connected(Right(itos)) =>
+      case Msg.Connected(Right(_)) =>
         default.copy(
           _1 = model.copy(connecting = false),
           _2 =
@@ -135,7 +136,7 @@ object ModalNewIto {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(model: Model)(implicit
+  def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
@@ -192,7 +193,7 @@ object ModalNewIto {
 
   private def sectionIto(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "ito")(
       div(className := "ito-icon")(
         materialSymbol("arrow_downward")
@@ -206,7 +207,7 @@ object ModalNewIto {
       }
     )
 
-  private def articleCoto(coto: Coto)(implicit
+  private def articleCoto(coto: Coto)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -221,7 +222,7 @@ object ModalNewIto {
       )
     )
 
-  private def divSelection(implicit
+  private def divSelection(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {

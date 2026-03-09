@@ -1,7 +1,6 @@
 package marubinotto.libs
 
 import scala.scalajs.js
-import scala.scalajs.js.|
 
 package object unified {
 

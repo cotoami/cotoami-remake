@@ -14,7 +14,7 @@ object SectionCotoDetails {
 
   def apply(
       coto: Coto
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "coto-details header-and-body")(
       header(
         toolButton(
@@ -42,7 +42,7 @@ object SectionCotoDetails {
       sourceCotoId: Id[Coto],
       order: Option[Int],
       defaultCotonomaId: Option[Id[Cotonoma]]
-  )(implicit
+  )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -52,7 +52,7 @@ object SectionCotoDetails {
         tip = Some(context.i18n.text.Insert),
         tipPlacement = "bottom",
         classes = "insert-sub-coto",
-        onClick = e =>
+        onClick = _ =>
           dispatch(
             Modal.Msg.OpenModal(
               Modal.Subcoto(sourceCotoId, order, defaultCotonomaId)
@@ -61,7 +61,7 @@ object SectionCotoDetails {
       )
     )
 
-  private def articleMainCoto(coto: Coto)(implicit
+  private def articleMainCoto(coto: Coto)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -83,7 +83,7 @@ object SectionCotoDetails {
 
   private def sectionSubCotos(
       subCotos: Siblings
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     PartsIto.sectionSiblings(subCotos, "sub-cotos") { case (ito, coto, order) =>
       val repo = context.repo
       val addSubCotoTo =

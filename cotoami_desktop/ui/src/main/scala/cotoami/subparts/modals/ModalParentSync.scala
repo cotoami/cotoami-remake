@@ -1,6 +1,7 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
+import scala.annotation.unused
 import slinky.core.facade.ReactElement
 import slinky.web.html
 import slinky.web.html._
@@ -25,7 +26,8 @@ object ModalParentSync {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.ParentSyncMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.ParentSyncMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -49,9 +51,9 @@ object ModalParentSync {
   /////////////////////////////////////////////////////////////////////////////
 
   def apply(
-      model: Model,
+      @unused _model: Model,
       parentSync: ParentSync
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Modal.view(
       dialogClasses = "parent-sync"
     )(
@@ -68,7 +70,7 @@ object ModalParentSync {
 
   private def sectionSyncing(
       parentSync: ParentSync
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "syncing")(
       h2()("Syncing"),
       ul()(
@@ -90,7 +92,7 @@ object ModalParentSync {
 
   private def sectionSynced(
       parentSync: ParentSync
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "synced")(
       h2()("Synced"),
       ul()(
@@ -117,14 +119,14 @@ object ModalParentSync {
         button(
           `type` := "button",
           disabled := !parentSync.syncing.isEmpty,
-          onClick := (e => dispatch(Msg.Close))
+          onClick := (_ => dispatch(Msg.Close))
         )("OK")
       )
     )
 
   private def spanNode(
       id: Id[Node]
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     context.repo.nodes.get(id).map(PartsNode.spanNode)
       .getOrElse(
         span(className := "node not-found")(

@@ -13,7 +13,7 @@ case class Servers(
     this.modify(_.map).using(_ + (server.server.nodeId -> server))
 
   def putAll(servers: Iterable[Server]): Servers =
-    servers.foldLeft(this)(_ put _)
+    servers.foldLeft(this)((acc, server) => acc.put(server))
 
   def updateSpec(spec: ServerNode): Servers =
     this.modify(_.map.index(spec.nodeId)).using(_.copy(server = spec))

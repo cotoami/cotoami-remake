@@ -14,7 +14,7 @@ package object models {
     // This default implementation should be overridden in subclasses
     override def equals(that: Any): Boolean =
       that match {
-        case that: Entity[_] => id == that.id
+        case that: Entity[?] => id == that.id
         case _               => false
       }
   }

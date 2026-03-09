@@ -10,7 +10,7 @@ object AppFooter {
 
   def apply(
       model: Model
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using dispatch: Into[AppMsg] => Unit): ReactElement =
     footer(
       div(className := "browser-nav")(
         div(className := "path")(model.path)
@@ -21,7 +21,7 @@ object AppFooter {
           div(className := s"message-peek ${entry.category.name}")(
             button(
               className := "open-messages-view default",
-              onClick := ((e) => dispatch(ViewMessages.Msg.Toggle))
+              onClick := (_ => dispatch(ViewMessages.Msg.Toggle))
             )(
               materialSymbol(entry.category.icon),
               entry.message

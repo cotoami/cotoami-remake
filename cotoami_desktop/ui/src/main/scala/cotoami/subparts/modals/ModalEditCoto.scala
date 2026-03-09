@@ -112,7 +112,7 @@ object ModalEditCoto {
         )
       (
         Model(coto, cotoForm, cotonomaForm),
-        cotoForm.scanMediaMetadata.map(Msg.CotoFormMsg).map(_.into)
+        cotoForm.scanMediaMetadata.map(Msg.CotoFormMsg.apply).map(_.into)
       )
     }
   }
@@ -122,7 +122,8 @@ object ModalEditCoto {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.EditCotoMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.EditCotoMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -132,7 +133,7 @@ object ModalEditCoto {
     case class Saved(result: Either[ErrorJson, Coto]) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Geomap, Cmd[AppMsg]) = {
     val default = (model, context.geomap, Cmd.none)
@@ -149,7 +150,7 @@ object ModalEditCoto {
             }
           ),
           _2 = geomap,
-          _3 = subcmd.map(Msg.CotoFormMsg).map(_.into)
+          _3 = subcmd.map(Msg.CotoFormMsg.apply).map(_.into)
         )
       }
 
@@ -157,7 +158,7 @@ object ModalEditCoto {
         val (form, subcmd) = CotonomaForm.update(submsg, model.cotonomaForm)
         default.copy(
           _1 = model.copy(cotonomaForm = form),
-          _3 = subcmd.map(Msg.CotonomaFormMsg).map(_.into)
+          _3 = subcmd.map(Msg.CotonomaFormMsg.apply).map(_.into)
         )
       }
 
@@ -183,7 +184,7 @@ object ModalEditCoto {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(model: Model)(implicit
+  def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -219,18 +220,24 @@ object ModalEditCoto {
           CotonomaForm.inputName(
             model = model.cotonomaForm,
             onCtrlEnter = Some(() => dispatch(Msg.Save))
-          )(context, submsg => dispatch(Msg.CotonomaFormMsg(submsg))),
+          )(using
+            context,
+            (submsg: CotonomaForm.Msg) => dispatch(Msg.CotonomaFormMsg(submsg))
+          ),
           Validation.sectionValidationError(model.cotonomaForm.validation)
         )
       },
       CotoForm(
         form = model.cotoForm,
         onCtrlEnter = Some(() => dispatch(Msg.Save))
-      )(context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
+      )(using
+        context,
+        (submsg: CotoForm.Msg) => dispatch(Msg.CotoFormMsg(submsg))
+      ),
       div(className := "buttons")(
-        CotoForm.buttonPreview(model.cotoForm)(
+        CotoForm.buttonPreview(model.cotoForm)(using
           context,
-          submsg => dispatch(Msg.CotoFormMsg(submsg))
+          (submsg: CotoForm.Msg) => dispatch(Msg.CotoFormMsg(submsg))
         ),
         button(
           className := "save",

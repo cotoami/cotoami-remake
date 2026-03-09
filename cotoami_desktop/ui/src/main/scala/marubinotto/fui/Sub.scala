@@ -90,7 +90,7 @@ object Sub {
     Impl[Msg](
       name + target.hashCode,
       (dispatch, onSubscribe) => {
-        val listener: js.Function1[Event, _] =
+        val listener: js.Function1[Event, ?] =
           (e: Event) => toMsg(e).map(dispatch)
         target.addEventListener(name, listener)
 

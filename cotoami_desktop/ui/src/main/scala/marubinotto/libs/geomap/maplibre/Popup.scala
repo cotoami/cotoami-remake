@@ -1,11 +1,12 @@
 package marubinotto.libs.geomap.maplibre
 
+import scala.annotation.unused
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 
 @js.native
 @JSImport("maplibre-gl", "Popup")
-class Popup(options: js.UndefOr[PopupOptions] = js.undefined)
+class Popup(@unused _options: js.UndefOr[PopupOptions] = js.undefined)
     extends js.Object {
 
   /** Adds the popup to a map.

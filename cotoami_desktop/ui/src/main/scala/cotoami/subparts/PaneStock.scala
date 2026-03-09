@@ -20,7 +20,6 @@ import marubinotto.components.{
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Geolocation, UiState}
 import cotoami.updates
-import cotoami.subparts.SectionGeomap
 
 object PaneStock {
 
@@ -41,7 +40,7 @@ object PaneStock {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.PaneStockMsg(this)
+    override def into: AppMsg = AppMsg.PaneStockMsg(this)
   }
 
   object Msg {
@@ -101,7 +100,7 @@ object PaneStock {
   def apply(
       model: Model,
       uiState: UiState
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(id := PaneId, className := "stock fill")(
       if (uiState.mapOpened)
         SplitPane(
@@ -117,21 +116,21 @@ object PaneStock {
             divMap(model, uiState)
           ),
           secondary = SplitPane.Secondary.Props()(
-            sectionCotoGraph(model, uiState)(model, dispatch)
+            sectionCotoGraph(model, uiState)
           )
           // Re-create the component on orientation change
         ).withKey(uiState.mapVertical.toString())
       else
-        sectionCotoGraph(model, uiState)(model, dispatch)
+        sectionCotoGraph(model, uiState)
     )
 
-  private def divMap(model: Model, uiState: UiState)(implicit
+  private def divMap(model: Model, uiState: UiState)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     div(className := "map fill")(
       Option.when(uiState.geomapOpened) {
-        SectionGeomap(model.geomap)(model, dispatch)
+        SectionGeomap(model.geomap)
       },
       toolButton(
         classes = "change-split-orientation",
@@ -160,7 +159,7 @@ object PaneStock {
   private def sectionCotoGraph(
       model: Model,
       uiState: UiState
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val sectionTraversals = SectionTraversals(model.traversals)
     val contents = Fragment(
       SectionPins(uiState),

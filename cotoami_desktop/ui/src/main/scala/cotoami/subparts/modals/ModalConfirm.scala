@@ -24,7 +24,8 @@ object ModalConfirm {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.ConfirmMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.ConfirmMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -49,7 +50,7 @@ object ModalConfirm {
 
   def apply(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val modalType = classOf[Modal.Confirm]
     Modal.view(
       dialogClasses = "confirm",

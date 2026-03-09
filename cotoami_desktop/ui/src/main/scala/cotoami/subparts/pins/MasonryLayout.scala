@@ -26,7 +26,7 @@ object MasonryLayout {
       pins: Siblings,
       cotonomaId: Id[Cotonoma],
       columnWidth: Int
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "pinned-cotos siblings masonry-layout")(
       div(className := "column-width-slider")(
         input(
@@ -62,7 +62,7 @@ object MasonryLayout {
                   PinnedCoto(ito, coto, order).asInstanceOf[scala.Any]
               }.toSeq.toJSArray,
               itemKey =
-                (item, index) => item.asInstanceOf[PinnedCoto].ito.id.uuid,
+                (item, _) => item.asInstanceOf[PinnedCoto].ito.id.uuid,
               render = props => {
                 val data = props.data.asInstanceOf[PinnedCoto]
                 sectionPinnedCoto(data.ito, data.coto, data.order)(
@@ -77,7 +77,7 @@ object MasonryLayout {
               overscanBy = Double.PositiveInfinity
             )
           )
-        }: _*
+        }*
       )
     )
 

@@ -26,14 +26,14 @@ object NavCotonomas {
       loadingRecent: Boolean = false,
       loadingSubs: Boolean = false
   ) {
-    def fetchRecent(implicit context: Context): (Model, Cmd.One[AppMsg]) =
+    def fetchRecent(using context: Context): (Model, Cmd.One[AppMsg]) =
       (
         copy(loadingRecent = true),
         context.repo.fetchRecentCotonomas(0)
           .map(Msg.RecentFetched(_).into)
       )
 
-    def fetchMoreRecent(implicit
+    def fetchMoreRecent(using
         context: Context
     ): (Model, Cmd.One[AppMsg]) =
       if (loadingRecent)
@@ -48,14 +48,14 @@ object NavCotonomas {
           )
           .getOrElse((this, Cmd.none))
 
-    def fetchSubs(implicit context: Context): (Model, Cmd.One[AppMsg]) =
+    def fetchSubs(using context: Context): (Model, Cmd.One[AppMsg]) =
       (
         copy(loadingSubs = true),
         context.repo.fetchSubCotonomas(0)
           .map(Msg.SubsFetched(_).into)
       )
 
-    def fetchMoreSubs(implicit
+    def fetchMoreSubs(using
         context: Context
     ): (Model, Cmd.One[AppMsg]) =
       if (loadingSubs)
@@ -76,7 +76,7 @@ object NavCotonomas {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.NavCotonomasMsg(this)
+    override def into: AppMsg = AppMsg.NavCotonomasMsg(this)
   }
 
   object Msg {
@@ -88,7 +88,7 @@ object NavCotonomas {
         extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Cotonomas, Cmd[AppMsg]) = {
     val default = (model, context.repo.cotonomas, Cmd.none)
@@ -135,7 +135,7 @@ object NavCotonomas {
 
   def apply(model: Model, nodeTools: SectionNodeTools.Model)(
       currentNode: Node
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val repo = context.repo
     val recentCotonomas = context.repo.recentCotonomas
     nav(className := "cotonomas header-and-body fill")(
@@ -180,7 +180,7 @@ object NavCotonomas {
   private def sectionCurrent(
       focusedCotonoma: Cotonoma,
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val repo = context.repo
     val superCotonomas = repo.superCotonomas
     section(className := "current")(
@@ -194,7 +194,7 @@ object NavCotonomas {
       )(
         li(key := "super")(
           ul(className := "super-cotonomas")(
-            superCotonomas.map(liCotonoma): _*
+            superCotonomas.map(liCotonoma)*
           )
         ),
         li(key := "current", className := "current-cotonoma cotonoma focused")(
@@ -229,15 +229,15 @@ object NavCotonomas {
 
   private def sectionRecent(
       cotonomas: Seq[Cotonoma]
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "recent")(
       h2()(context.i18n.text.NavCotonomas_recent),
-      ul()(cotonomas.map(liCotonoma): _*)
+      ul()(cotonomas.map(liCotonoma)*)
     )
 
   private def liCotonoma(
       cotonoma: Cotonoma
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     li(
       className := optionalClasses(
         Seq(

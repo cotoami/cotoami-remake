@@ -25,14 +25,15 @@ object ModalSelection {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.SelectionMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.SelectionMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
     case object Clear extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Cotos, Cmd[AppMsg]) =
     msg match {
@@ -51,7 +52,7 @@ object ModalSelection {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(model: Model)(implicit
+  def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
@@ -88,7 +89,7 @@ object ModalSelection {
     )
   }
 
-  private def articleCoto(coto: Coto)(implicit
+  private def articleCoto(coto: Coto)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =

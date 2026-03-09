@@ -1,6 +1,7 @@
 package cotoami.subparts
 
 import scala.util.chaining._
+import scala.annotation.unused
 import scala.scalajs.js
 import org.scalajs.dom
 
@@ -105,7 +106,7 @@ object SectionFlowInput {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.FlowInputMsg(this)
+    override def into: AppMsg = AppMsg.FlowInputMsg(this)
   }
 
   object Msg {
@@ -133,7 +134,7 @@ object SectionFlowInput {
       msg: Msg,
       model: Model,
       waitingPosts: WaitingPosts
-  )(implicit
+  )(using
       context: Context
   ): (Model, Geomap, WaitingPosts, Cmd[AppMsg]) = {
     val default = (model, context.geomap, waitingPosts, Cmd.none)
@@ -184,7 +185,7 @@ object SectionFlowInput {
               _2 = geomap,
               _4 = submsg match {
                 case CotoForm.Msg.ContentInput(_) => model.save
-                case _ => subcmd.map(Msg.CotoFormMsg).map(_.into)
+                case _ => subcmd.map(Msg.CotoFormMsg.apply).map(_.into)
               }
             )
           }
@@ -207,7 +208,7 @@ object SectionFlowInput {
           .pipe { model =>
             default.copy(
               _1 = model,
-              _4 = subcmd.map(Msg.CotonomaFormMsg).map(_.into)
+              _4 = subcmd.map(Msg.CotonomaFormMsg.apply).map(_.into)
             )
           }
       }
@@ -267,7 +268,7 @@ object SectionFlowInput {
         }
       }
 
-      case (Msg.CotoPosted(postId, Right(coto)), _, _) =>
+      case (Msg.CotoPosted(postId, Right(_)), _, _) =>
         default.copy(
           _1 = model.copy(posting = false),
           _3 = waitingPosts.remove(postId)
@@ -284,7 +285,7 @@ object SectionFlowInput {
         )
       }
 
-      case (Msg.CotonomaPosted(postId, Right((cotonoma, _))), _, _) =>
+      case (Msg.CotonomaPosted(postId, Right((_, _))), _, _) =>
         default.copy(
           _1 = model.copy(posting = false),
           _3 = waitingPosts.remove(postId)
@@ -329,10 +330,10 @@ object SectionFlowInput {
   def apply(
       model: Model,
       currentCotonoma: Cotonoma,
-      geomap: Geomap,
+      @unused _geomap: Geomap,
       editorHeight: Int,
       onEditorHeightChanged: Int => Unit
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(
       className := optionalClasses(
         Seq(
@@ -347,13 +348,11 @@ object SectionFlowInput {
           val divForm = formCoto(
             form,
             model,
-            currentCotonoma,
-            geomap,
             editorHeight,
             onEditorHeightChanged
           )
 
-          CotoForm.sectionMediaPreview(form)(submsg =>
+          CotoForm.sectionMediaPreview(form)(using submsg =>
             dispatch(Msg.CotoFormMsg(submsg))
           ) match {
             case Some(mediaPreview) =>
@@ -370,11 +369,11 @@ object SectionFlowInput {
         }
 
         case form: CotonomaForm.Model =>
-          formCotonoma(form, model, currentCotonoma, geomap)
+          formCotonoma(form, model)
       }
     )
 
-  private def header(model: Model, currentCotonoma: Cotonoma)(implicit
+  private def header(model: Model, currentCotonoma: Cotonoma)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -425,11 +424,9 @@ object SectionFlowInput {
   private def formCoto(
       form: CotoForm.Model,
       model: Model,
-      currentCotonoma: Cotonoma,
-      geomap: Geomap,
       editorHeight: Int,
       onEditorHeightChanged: Int => Unit
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     SplitPane(
       vertical = false,
       initialPrimarySize = editorHeight,
@@ -440,10 +437,10 @@ object SectionFlowInput {
           form = form,
           onCtrlEnter = Some(() => dispatch(Msg.Post)),
           onFocus = Some(() => dispatch(Msg.Unfold))
-        )(context, submsg => dispatch(Msg.CotoFormMsg(submsg)))
+        )(using context, submsg => dispatch(Msg.CotoFormMsg(submsg)))
       ),
       secondary = SplitPane.Secondary.Props()(
-        CotoForm.ulAttributes(form)(
+        CotoForm.ulAttributes(form)(using
           context,
           submsg => dispatch(Msg.CotoFormMsg(submsg))
         ),
@@ -461,11 +458,11 @@ object SectionFlowInput {
               )
             },
             div(className := "buttons")(
-              CotoForm.buttonPreview(form)(
+              CotoForm.buttonPreview(form)(using
                 context,
                 submsg => dispatch(Msg.CotoFormMsg(submsg))
               ),
-              buttonPost(model, currentCotonoma)
+              buttonPost(model)
             )
           )
         )
@@ -474,10 +471,8 @@ object SectionFlowInput {
 
   private def formCotonoma(
       form: CotonomaForm.Model,
-      model: Model,
-      currentCotonoma: Cotonoma,
-      geomap: Geomap
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+      model: Model
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Fragment(
       div(className := "cotonoma-form")(
         CotonomaForm.inputName(
@@ -485,22 +480,21 @@ object SectionFlowInput {
           onFocus = Some(() => dispatch(Msg.Unfold)),
           onBlur = Some(() => dispatch(Msg.SetFolded(!model.hasContents))),
           onCtrlEnter = Some(() => dispatch(Msg.Post))
-        )(context, submsg => dispatch(Msg.CotonomaFormMsg(submsg)))
+        )(using context, submsg => dispatch(Msg.CotonomaFormMsg(submsg)))
       ),
       div(className := "post")(
         Validation.sectionValidationError(form.validation),
         section(className := "post")(
           div(className := "buttons")(
-            buttonPost(model, currentCotonoma)
+            buttonPost(model)
           )
         )
       )
     )
 
   private def buttonPost(
-      model: Model,
-      currentCotonoma: Cotonoma
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+      model: Model
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     button(
       className := "post",
       disabled := !model.readyToPost,

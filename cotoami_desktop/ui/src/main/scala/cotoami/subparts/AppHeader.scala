@@ -9,13 +9,12 @@ import marubinotto.components.{materialSymbol, toolButton}
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Cotonoma, Node, UiState}
 import cotoami.repository.Root
-import cotoami.subparts.PaneStock
 
 object AppHeader {
 
   def apply(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     header(
       data - "tauri-drag-region" := "default",
       data - "os" := model.systemInfo.map(_.os).getOrElse("")
@@ -35,7 +34,7 @@ object AppHeader {
 
   private def sectionCurrentFocus(
       focus: (Node, Option[Cotonoma])
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val (node, cotonoma) = focus
     section(
       className := optionalClasses(
@@ -62,7 +61,7 @@ object AppHeader {
         toolButton(
           classes = "geolocation",
           symbol = "location_on",
-          onClick = e => dispatch(PaneStock.Msg.DisplayGeolocationInFocus)
+          onClick = _ => dispatch(PaneStock.Msg.DisplayGeolocationInFocus)
         )
       )
     )
@@ -70,7 +69,7 @@ object AppHeader {
 
   private def fragmentCurrentCotonoma(
       cotonoma: Cotonoma
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Fragment(
       materialSymbol("chevron_right", "arrow"),
       h1(className := "current-cotonoma")(cotonoma.name),
@@ -86,7 +85,7 @@ object AppHeader {
       )
     )
 
-  private def buttonDeleteCotonoma(cotonoma: Cotonoma)(implicit
+  private def buttonDeleteCotonoma(cotonoma: Cotonoma)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -94,7 +93,7 @@ object AppHeader {
       classes = "delete-cotonoma",
       symbol = "delete",
       tip = Some(context.i18n.text.DeleteCotonoma),
-      onClick = e =>
+      onClick = _ =>
         dispatch(
           Modal.Msg.OpenModal(
             Modal.Confirm(
@@ -107,7 +106,7 @@ object AppHeader {
 
   private def divSearch(
       search: PaneSearch.Model
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using dispatch: Into[AppMsg] => Unit): ReactElement = {
     import PaneSearch.Msg._
     div(className := "search")(
       input(
@@ -129,7 +128,7 @@ object AppHeader {
 
   private def divToolButtons(
       uiState: UiState
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "tool-buttons")(
       Option.when(!context.repo.cotos.selectedIds.isEmpty) {
         button(
@@ -185,7 +184,7 @@ object AppHeader {
 
   private def buttonNodeProfile(
       node: Node
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     button(
       className := "node-profile, default",
       title := context.i18n.text.ModalNodeProfile_title,

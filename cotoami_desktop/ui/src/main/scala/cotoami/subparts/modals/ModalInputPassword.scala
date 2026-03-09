@@ -34,7 +34,8 @@ object ModalInputPassword {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.InputPasswordMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.InputPasswordMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -63,7 +64,7 @@ object ModalInputPassword {
 
   def apply(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val modalType = classOf[Modal.InputPassword]
     Modal.view(
       dialogClasses = "input-password",

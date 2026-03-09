@@ -65,7 +65,7 @@ object ModalSubcoto {
         sourceCotoId: Id[Coto],
         order: Option[Int],
         defaultCotonomaId: Option[Id[Cotonoma]]
-    )(implicit
+    )(using
         context: Context
     ): Model = {
       val repo = context.repo
@@ -121,7 +121,8 @@ object ModalSubcoto {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.SubcotoMsg(this).pipe(AppMsg.ModalMsg)
+    override def into: AppMsg =
+      Modal.Msg.SubcotoMsg(this).pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -131,7 +132,7 @@ object ModalSubcoto {
     case class Posted(result: Either[ErrorJson, (Coto, Ito)]) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Geomap, Cmd[AppMsg]) = {
     val default = (model, context.geomap, Cmd.none)
@@ -141,7 +142,7 @@ object ModalSubcoto {
         default.copy(
           _1 = model.copy(cotoForm = form),
           _2 = geomap,
-          _3 = subcmd.map(Msg.CotoFormMsg).map(_.into)
+          _3 = subcmd.map(Msg.CotoFormMsg.apply).map(_.into)
         )
       }
 
@@ -170,7 +171,7 @@ object ModalSubcoto {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(model: Model)(implicit
+  def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
@@ -203,12 +204,15 @@ object ModalSubcoto {
         form = model.cotoForm,
         vertical = true,
         onCtrlEnter = Some(() => dispatch(Msg.Post))
-      )(context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
+      )(using
+        context,
+        (submsg: CotoForm.Msg) => dispatch(Msg.CotoFormMsg(submsg))
+      ),
       sectionPost(model)
     )
   }
 
-  private def articleCoto(coto: Coto)(implicit
+  private def articleCoto(coto: Coto)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -225,7 +229,7 @@ object ModalSubcoto {
 
   private def sectionPost(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "post")(
       div(className := "post-to")(
         div(className := "label")(s"${context.i18n.text.PostTo}:"),
@@ -246,9 +250,9 @@ object ModalSubcoto {
         ),
         div(className := "space")()
       ),
-      CotoForm.buttonPreview(model.cotoForm)(
+      CotoForm.buttonPreview(model.cotoForm)(using
         context,
-        submsg => dispatch(Msg.CotoFormMsg(submsg))
+        (submsg: CotoForm.Msg) => dispatch(Msg.CotoFormMsg(submsg))
       ),
       button(
         className := "post",

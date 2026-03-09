@@ -13,7 +13,7 @@ object ToolbarReorder {
   def apply(
       ito: Ito,
       order: OrderContext
-  )(implicit
+  )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] =

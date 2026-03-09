@@ -36,7 +36,7 @@ case class Cotonomas(
   }
 
   def putAll(cotonomas: Iterable[Cotonoma]): Cotonomas =
-    cotonomas.foldLeft(this)(_ put _)
+    cotonomas.foldLeft(this)((acc, cotonoma) => acc.put(cotonoma))
 
   def deleteByCoto(coto: Coto): Cotonomas =
     incrementTotalPosts(coto, -1).deleteByCotoId(coto.id)

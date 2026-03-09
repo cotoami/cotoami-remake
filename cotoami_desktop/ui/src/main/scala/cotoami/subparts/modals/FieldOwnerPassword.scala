@@ -21,10 +21,10 @@ object FieldOwnerPassword {
       resetting: Boolean = false,
       error: Option[String] = None
   ) {
-    def isLocal(implicit context: Context): Boolean =
+    def isLocal(using context: Context): Boolean =
       context.repo.nodes.isLocal(nodeId)
 
-    def isSelf(implicit context: Context): Boolean =
+    def isSelf(using context: Context): Boolean =
       context.repo.nodes.isSelf(nodeId)
   }
 
@@ -33,10 +33,10 @@ object FieldOwnerPassword {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into =
+    override def into: AppMsg =
       ModalNodeProfile.Msg.FieldOwnerPasswordMsg(this)
-        .pipe(Modal.Msg.NodeProfileMsg)
-        .pipe(AppMsg.ModalMsg)
+        .pipe(Modal.Msg.NodeProfileMsg.apply)
+        .pipe(AppMsg.ModalMsg.apply)
   }
 
   object Msg {
@@ -44,7 +44,7 @@ object FieldOwnerPassword {
     case class OwnerPasswordReset(result: Either[ErrorJson, String]) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg, model: Model)(using
       context: Context
   ): (Model, Cmd[AppMsg]) =
     msg match {
@@ -75,7 +75,7 @@ object FieldOwnerPassword {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(model: Model)(implicit
+  def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -83,7 +83,7 @@ object FieldOwnerPassword {
       fieldOwnerPassword(model)
     }
 
-  private def fieldOwnerPassword(model: Model)(implicit
+  private def fieldOwnerPassword(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
