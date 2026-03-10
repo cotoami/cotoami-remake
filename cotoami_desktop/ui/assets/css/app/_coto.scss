@@ -214,12 +214,7 @@ article.coto {
       }
 
       .details {
-        display: none;
-
-        &.open {
-          display: block;
-          margin-top: 1rem;
-        }
+        margin-top: 1rem;
       }
     }
   }

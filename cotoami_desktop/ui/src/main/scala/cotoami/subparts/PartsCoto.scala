@@ -246,14 +246,9 @@ object PartsCoto {
             })
           )(props.summary)
         ),
-        div(
-          className := optionalClasses(
-            Seq(
-              ("details", true),
-              ("open", opened)
-            )
-          )
-        )(props.details)
+        Option.when(opened) {
+          div(className := "details")(props.details)
+        }
       )
     }
   }
