@@ -312,9 +312,10 @@ object EditorCoto {
         LocalDraftTextInputs(
           form = form,
           summaryPlaceholder = context.i18n.text.EditorCoto_placeholder_summary,
-          contentPlaceholder = (if (form.isCotonoma)
-                                  context.i18n.text.EditorCoto_placeholder_cotonomaContent
-                                else context.i18n.text.EditorCoto_placeholder_coto),
+          contentPlaceholder =
+            (if (form.isCotonoma)
+               context.i18n.text.EditorCoto_placeholder_cotonomaContent
+             else context.i18n.text.EditorCoto_placeholder_coto),
           onCtrlEnter = onCtrlEnter,
           onFocus = onFocus,
           onDraftCommitted = dispatch
@@ -449,13 +450,15 @@ object EditorCoto {
           () => {
             clearScheduledSync()
             if (!imeActive) {
-              syncTimerRef.current = Some(dom.window.setTimeout(
-                () => {
-                  syncTimerRef.current = None
-                  syncDraftToModel()
-                },
-                DraftSyncDelayMs.toDouble
-              ))
+              syncTimerRef.current = Some(
+                dom.window.setTimeout(
+                  () => {
+                    syncTimerRef.current = None
+                    syncDraftToModel()
+                  },
+                  DraftSyncDelayMs.toDouble
+                )
+              )
             }
           },
           Seq(summaryDraft, contentDraft, imeActive)
@@ -563,7 +566,7 @@ object EditorCoto {
         liAttributeDateTimeRange(form),
         liAttributeGeolocation(form)
       ).flatten match {
-        case Seq() => None
+        case Seq()      => None
         case attributes =>
           Some(ul(className := "attributes")(attributes*))
       }
@@ -690,6 +693,8 @@ object EditorCoto {
   /////////////////////////////////////////////////////////////////////////////
 
   object CotonomaForm {
+    private val DraftSyncDelayMs = 300
+
     case class Model(
         originalName: Option[String] = None,
         nameInput: String = "",
@@ -769,12 +774,6 @@ object EditorCoto {
         case (Msg.CotonomaNameInput(name), Some(cotonoma)) =>
           model.copy(nameInput = name)
             .validate(cotonoma.nodeId)
-            .modify(_._2).using(validation =>
-              if (model.imeActive)
-                Cmd.none // validation should not be invoked when IME is active
-              else
-                validation.debounce("CotonomaForm.validation", 200)
-            )
 
         case (Msg.ImeCompositionStart, _) =>
           (model.copy(imeActive = true), Cmd.none)
@@ -824,25 +823,143 @@ object EditorCoto {
         onBlur: Option[() => Unit] = None,
         onCtrlEnter: Option[() => Unit] = None
     )(using context: Context, dispatch: Msg => Unit): ReactElement =
-      input(
-        className := "cotonoma-name",
-        `type` := "text",
-        placeholder := (if (model.isNew)
-                          context.i18n.text.EditorCoto_placeholder_newCotonomaName
-                        else
-                          context.i18n.text.EditorCoto_placeholder_cotonomaName),
-        value := model.nameInput,
-        Validation.ariaInvalid(model.validation),
-        slinky.web.html.onFocus := onFocus,
-        slinky.web.html.onBlur := onBlur,
-        onChange := (e => dispatch(Msg.CotonomaNameInput(e.target.value))),
-        onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart)),
-        onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd)),
-        onKeyDown := (e =>
-          if (model.hasValidContents && detectCtrlEnter(e)) {
-            onCtrlEnter.map(_())
-          }
-        )
+      LocalDraftNameInput(
+        model = model,
+        placeholder =
+          (if (model.isNew)
+             context.i18n.text.EditorCoto_placeholder_newCotonomaName
+           else
+             context.i18n.text.EditorCoto_placeholder_cotonomaName),
+        onFocus = onFocus,
+        onBlur = onBlur,
+        onCtrlEnter = onCtrlEnter,
+        onDraftCommitted = dispatch
       )
+
+    object LocalDraftNameInput {
+      case class Props(
+          model: Model,
+          placeholder: String,
+          onFocus: Option[() => Unit],
+          onBlur: Option[() => Unit],
+          onCtrlEnter: Option[() => Unit],
+          onDraftCommitted: Msg => Unit
+      )
+
+      def apply(
+          model: Model,
+          placeholder: String,
+          onFocus: Option[() => Unit],
+          onBlur: Option[() => Unit],
+          onCtrlEnter: Option[() => Unit],
+          onDraftCommitted: Msg => Unit
+      ) =
+        component(
+          Props(
+            model,
+            placeholder,
+            onFocus,
+            onBlur,
+            onCtrlEnter,
+            onDraftCommitted
+          )
+        )
+
+      val component = FunctionalComponent[Props] { props =>
+        val (nameDraft, setNameDraft) = useState(props.model.nameInput)
+        val (imeActive, setImeActive) = useState(false)
+
+        val prevNameProp = useRef(props.model.nameInput)
+        val nameInModelRef = useRef(props.model.nameInput)
+        val syncTimerRef = useRef(Option.empty[Int])
+
+        val localModel = props.model.copy(nameInput = nameDraft)
+
+        def clearScheduledSync(): Unit = {
+          syncTimerRef.current.foreach(dom.window.clearTimeout)
+          syncTimerRef.current = None
+        }
+
+        def syncDraftToModel(): Unit = {
+          if (nameInModelRef.current != nameDraft)
+            props.onDraftCommitted(Msg.CotonomaNameInput(nameDraft))
+        }
+
+        def flushDraft(): Unit = {
+          clearScheduledSync()
+          syncDraftToModel()
+        }
+
+        useEffect(
+          () => {
+            nameInModelRef.current = props.model.nameInput
+          },
+          Seq(props.model.nameInput)
+        )
+
+        useEffect(
+          () => {
+            if (props.model.nameInput != prevNameProp.current) {
+              prevNameProp.current = props.model.nameInput
+              if (props.model.nameInput != nameDraft)
+                setNameDraft(props.model.nameInput)
+            }
+          },
+          Seq(props.model.nameInput, nameDraft)
+        )
+
+        useEffect(
+          () => {
+            clearScheduledSync()
+            if (!imeActive) {
+              syncTimerRef.current = Some(
+                dom.window.setTimeout(
+                  () => {
+                    syncTimerRef.current = None
+                    syncDraftToModel()
+                  },
+                  DraftSyncDelayMs.toDouble
+                )
+              )
+            }
+          },
+          Seq(nameDraft, imeActive)
+        )
+
+        useEffect(
+          () => () => clearScheduledSync(),
+          Seq.empty
+        )
+
+        input(
+          className := "cotonoma-name",
+          `type` := "text",
+          placeholder := props.placeholder,
+          value := nameDraft,
+          Validation.ariaInvalid(props.model.validation),
+          slinky.web.html.onFocus := props.onFocus,
+          slinky.web.html.onBlur := (_ => {
+            flushDraft()
+            props.onBlur.map(_())
+          }),
+          onChange := (e => setNameDraft(e.target.value)),
+          onCompositionStart := (_ => {
+            setImeActive(true)
+            props.onDraftCommitted(Msg.ImeCompositionStart)
+          }),
+          onCompositionEnd := (_ => {
+            setImeActive(false)
+            flushDraft()
+            props.onDraftCommitted(Msg.ImeCompositionEnd)
+          }),
+          onKeyDown := (e =>
+            if (localModel.hasValidContents && detectCtrlEnter(e)) {
+              flushDraft()
+              props.onCtrlEnter.map(_())
+            }
+          )
+        )
+      }
+    }
   }
 }
