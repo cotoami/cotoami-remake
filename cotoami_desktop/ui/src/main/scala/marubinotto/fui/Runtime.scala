@@ -6,14 +6,16 @@ import org.scalajs.dom.Element
 import org.scalajs.dom.URL
 import org.scalajs.dom.Event
 
-import cats.effect.unsafe.implicits.global
+import cats.effect.IO
+import cats.effect.std.Dispatcher
 import cats.syntax.parallel._
 
 import slinky.web.ReactDOMClient
 
 class Runtime[Model, Msg](
     container: Element,
-    val program: Program[Model, Msg]
+    val program: Program[Model, Msg],
+    dispatcher: Dispatcher[IO]
 ) {
   private val reactRoot = ReactDOMClient.createRoot(container)
   private val init = program.init(new URL(dom.window.location.href))
@@ -44,23 +46,20 @@ class Runtime[Model, Msg](
     }
 
   private def runOne(cmd: Cmd.One[Msg]): Unit =
-    cmd.io.unsafeRunAsync {
-      case Right(optionMsg) => optionMsg.map(dispatch)
-      case Left(e) => throw e // IO should return Right even when it fails
-    }
+    dispatcher.unsafeRunAndForget(
+      cmd.io.flatMap(optionMsg => IO(optionMsg.foreach(dispatch)))
+    )
 
   private def runSequence(batches: List[Cmd.Batch[Msg]]): Unit =
+    dispatcher.unsafeRunAndForget(runSequenceIO(batches))
+
+  private def runSequenceIO(batches: List[Cmd.Batch[Msg]]): IO[Unit] =
     batches match {
-      case Nil => ()
-      case head :: tail => {
-        head.cmds.map(_.io).parSequence.unsafeRunAsync {
-          case Right(optionMsgs) => {
-            optionMsgs.foreach(_.map(dispatch))
-            runSequence(tail)
-          }
-          case Left(e) => throw e // IO should return Right even when it fails
+      case Nil => IO.unit
+      case head :: tail =>
+        head.cmds.map(_.io).toList.parSequence.flatMap { optionMsgs =>
+          IO(optionMsgs.foreach(_.foreach(dispatch))) *> runSequenceIO(tail)
         }
-      }
     }
 
   private def updateSubs(model: Model): Unit = {

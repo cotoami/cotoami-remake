@@ -11,6 +11,8 @@ import slinky.hot
 import com.softwaremill.quicklens._
 
 import cats.effect.IO
+import cats.effect.IOApp
+import cats.effect.std.Dispatcher
 import cats.syntax.all._
 
 import marubinotto.fui._
@@ -23,25 +25,29 @@ import cotoami.updates._
 import cotoami.subparts._
 import cotoami.subparts.modals.ModalAppUpdate
 
-object Main {
+object Main extends IOApp.Simple {
 
-  def main(args: Array[String]): Unit = {
-    if (LinkingInfo.developmentMode) {
-      hot.initialize()
+  def run: IO[Unit] =
+    Dispatcher.sequential[IO].use { dispatcher =>
+      IO {
+        if (LinkingInfo.developmentMode) {
+          hot.initialize()
+        }
+
+        Browser.runProgram(
+          dom.document.getElementById("app"),
+          Program(
+            init,
+            (model: Model, dispatch: Msg => Unit) =>
+              view(model, msg => dispatch(msg.into)),
+            update,
+            subscriptions,
+            Some(Msg.UrlChanged.apply)
+          ),
+          dispatcher
+        )
+      } *> IO.never
     }
-
-    Browser.runProgram(
-      dom.document.getElementById("app"),
-      Program(
-        init,
-        (model: Model, dispatch: Msg => Unit) =>
-          view(model, msg => dispatch(msg.into)),
-        update,
-        subscriptions,
-        Some(Msg.UrlChanged.apply)
-      )
-    )
-  }
 
   object DatabaseFolder {
     val SessionStorageKey = "DatabaseFolder"
@@ -104,7 +110,7 @@ object Main {
       case Msg.AppWindowShown(result) =>
         result match {
           case Right(_) => (model, Cmd.none)
-          case Left(e) =>
+          case Left(e)  =>
             (model.error("Failed to display the app window.", e), Cmd.none)
         }
 
@@ -157,7 +163,7 @@ object Main {
         (
           result match {
             case Right(_) => model
-            case Left(e) =>
+            case Left(e)  =>
               model.error("Failed to initialize server connections.", e)
           },
           Cmd.none
