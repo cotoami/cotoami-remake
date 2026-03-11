@@ -11,7 +11,9 @@ lazy val cotoami = project
   .in(file("."))
   .enablePlugins(ScalaJSPlugin)
   .settings(
-    scalaModuleInfo := scalaModuleInfo.value.map(_.withOverrideScalaVersion(true)),
+    scalaModuleInfo := scalaModuleInfo.value.map(
+      _.withOverrideScalaVersion(true)
+    ),
     scalacOptions ++= Seq(
       "-encoding",
       "utf-8",
@@ -40,7 +42,7 @@ lazy val cotoami = project
       "io.circe" %%% "circe-core" % circeVersion,
       "io.circe" %%% "circe-generic" % circeVersion,
       "io.circe" %%% "circe-parser" % circeVersion,
-      "org.typelevel" %%% "cats-effect" % "3.5.4",
+      "org.typelevel" %%% "cats-effect" % "3.7.0",
       "com.softwaremill.quicklens" %%% "quicklens" % "1.9.7",
       "io.github.cquiroz" %%% "scala-java-time" % "2.6.0",
       "io.github.cquiroz" %%% "scala-java-locales" % "1.5.4",
