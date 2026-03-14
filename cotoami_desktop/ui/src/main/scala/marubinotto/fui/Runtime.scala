@@ -11,7 +11,6 @@ import org.scalajs.dom.Event
 import cats.effect.IO
 import cats.effect.std.Dispatcher
 import cats.effect.std.Queue
-import cats.syntax.parallel._
 
 import slinky.web.ReactDOMClient
 
@@ -44,29 +43,14 @@ class Runtime[Model, Msg] private (
         val timer = dom.window.setTimeout(() => runOne(cmd), delay)
         debounceTimers.put(key, timer)
       }
-      case cmd: Cmd.One[Msg]          => runOne(cmd)
-      case Cmd.Batch(cmds @ _*)       => for (cmd <- cmds) run(cmd)
-      case Cmd.Sequence(batches @ _*) => runSequence(batches.toList)
+      case cmd: Cmd.One[Msg]    => runOne(cmd)
+      case Cmd.Batch(cmds @ _*) => for (cmd <- cmds) run(cmd)
     }
 
   private def runOne(cmd: Cmd.One[Msg]): Unit =
     dispatcher.unsafeRunAndForget(
       cmd.io.flatMap(optionMsg => IO(optionMsg.foreach(msg => dispatch(msg))))
     )
-
-  private def runSequence(batches: List[Cmd.Batch[Msg]]): Unit =
-    dispatcher.unsafeRunAndForget(runSequenceIO(batches))
-
-  private def runSequenceIO(batches: List[Cmd.Batch[Msg]]): IO[Unit] =
-    batches match {
-      case Nil => IO.unit
-      case head :: tail =>
-        head.cmds.map(_.io).toList.parSequence.flatMap { optionMsgs =>
-          IO(optionMsgs.foreach(_.foreach(msg => dispatch(msg)))) *> runSequenceIO(
-            tail
-          )
-        }
-    }
 
   private def updateSubs(model: Model): Unit = {
     val nextSubs = Sub.toMap(program.subscriptions(model))
