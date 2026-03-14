@@ -2,6 +2,7 @@ package marubinotto.fui
 
 import scala.collection.mutable.{Map => MutableMap}
 import scala.compiletime.uninitialized
+import scala.concurrent.Future
 import org.scalajs.dom
 import org.scalajs.dom.Element
 import org.scalajs.dom.URL
@@ -22,7 +23,7 @@ class Runtime[Model, Msg] private (
 ) {
   private val reactRoot = ReactDOMClient.createRoot(container)
   private var state: Model = uninitialized
-  private val subs: MutableMap[String, Option[Sub.Unsubscribe]] = MutableMap()
+  private val subs: MutableMap[String, () => Future[Unit]] = MutableMap()
   private val debounceTimers: MutableMap[String, Int] = MutableMap()
 
   def dispatch(msg: Msg): Unit =
@@ -71,20 +72,17 @@ class Runtime[Model, Msg] private (
     val nextSubs = Sub.toMap(program.subscriptions(model))
     val keysToAdd = nextSubs.keySet.diff(subs.keySet)
     val keysToRemove = subs.keySet.diff(nextSubs.keySet)
-    keysToAdd.foreach(key => {
-      // Register the key first to avoid multiple subscriptions
-      subs.update(key, None)
-
-      // subscribe and keep the `unsubscribe` function
-      nextSubs.get(key) match {
-        case Some(subscribe) => subscribe(dispatch, subs.update(key, _))
-        case None            => subs.update(key, None)
-      }
-    })
-    keysToRemove.foreach(key => {
-      // remove and unsubscribe
-      subs.remove(key).map(_.map(_()))
-    })
+    keysToAdd.foreach(key =>
+      nextSubs.get(key).foreach(stream =>
+        subs.update(
+          key,
+          dispatcher.unsafeRunCancelable(
+            stream.evalMap(queue.offer).compile.drain
+          )
+        )
+      )
+    )
+    keysToRemove.foreach(key => subs.remove(key).foreach(_()))
   }
 
   def onPushUrl(url: URL): Unit =

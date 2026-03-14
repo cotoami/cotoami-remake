@@ -49,14 +49,17 @@ package object tauri {
     })
 
   def listen[T](event: String, id: Option[String] = None): Sub[T] =
-    Sub.Impl[T](
-      id.getOrElse(s"listen-${event}"),
-      (dispatch, onSubscribe) => {
-        tauri.event
-          .listen(event, (e: tauri.event.Event[T]) => dispatch(e.payload))
-          .foreach(unlisten => onSubscribe(Some(unlisten)))
-      }
-    )
+    Sub.fromCallback[T](id.getOrElse(s"listen-${event}")) { dispatch =>
+      IO
+        .fromFuture(
+          IO(
+            tauri.event
+              .listen(event, (e: tauri.event.Event[T]) => dispatch(e.payload))
+              .toFuture
+          )
+        )
+        .map(unlisten => IO(unlisten()))
+    }
 
   def selectSingleDirectory(
       dialogTitle: String,

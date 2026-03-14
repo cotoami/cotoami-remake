@@ -2,6 +2,7 @@ package cotoami.subparts.modals
 
 import scala.util.chaining._
 import scala.scalajs.js
+import cats.effect.IO
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html
 import slinky.web.html._
@@ -85,9 +86,8 @@ object ModalAppUpdate {
   /////////////////////////////////////////////////////////////////////////////
 
   def progress(model: Model): Sub[AppMsg] =
-    Sub.Impl[AppMsg](
-      "app-update-progress",
-      (dispatch, onSubscribe) => {
+    Sub.fromCallback[AppMsg]("app-update-progress") { dispatch =>
+      IO {
         model.appUpdate.downloadAndInstall(
           event =>
             event.event match {
@@ -107,14 +107,9 @@ object ModalAppUpdate {
             },
           js.undefined
         )
-        val unsubscribe = () => {
-          println("Canceling app-update-progress ...")
-          model.appUpdate.close() // fire-and-forget js.Promise[Unit]
-          ()
-        }
-        onSubscribe(Some(unsubscribe))
+        IO.fromFuture(IO(model.appUpdate.close().toFuture)).void
       }
-    )
+    }
 
   /////////////////////////////////////////////////////////////////////////////
   // View
