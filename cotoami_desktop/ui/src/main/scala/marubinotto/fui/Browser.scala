@@ -8,6 +8,7 @@ import org.scalajs.dom
 import org.scalajs.dom.{Element, URL}
 
 import cats.effect.IO
+import cats.effect.std.Dispatcher
 
 import io.circe._
 import io.circe.parser._
@@ -23,11 +24,12 @@ object Browser {
 
   def runProgram[Model, Msg](
       container: Element,
-      program: Program[Model, Msg]
-  ) = {
-    val runtime = new Runtime(container, program)
-    listenersOnPushUrl = runtime.onPushUrl :: listenersOnPushUrl
-  }
+      program: Program[Model, Msg],
+      dispatcher: Dispatcher[IO]
+  ): IO[Unit] =
+    Runtime.make(container, program, dispatcher).map { runtime =>
+      listenersOnPushUrl = runtime.onPushUrl :: listenersOnPushUrl
+    }
 
   def send[Msg](msg: Msg): Cmd.One[Msg] = Cmd(IO(Some(msg)))
 

@@ -28,14 +28,11 @@ object Cmd {
 
     override def ++[LubMsg >: Msg](that: Cmd[LubMsg]): Cmd[LubMsg] =
       that match {
-        case o: One[LubMsg]         => Batch(this, o)
-        case Batch(cmds @ _*)       => Batch.fromSeq(this +: cmds)
-        case Sequence(batches @ _*) => Sequence.fromSeq(toBatch +: batches)
+        case o: One[LubMsg]   => Batch(this, o)
+        case Batch(cmds @ _*) => Batch.fromSeq(this +: cmds)
       }
 
     def toNone[OtherMsg]: One[OtherMsg] = One(io.map(_ => None))
-
-    def toBatch: Batch[Msg] = Batch(this)
 
     def debounce(key: String, delay: Double): One[Msg] =
       copy(debounce = Some(Debounce(key, delay)))
@@ -59,31 +56,13 @@ object Cmd {
 
     override def ++[LubMsg >: Msg](that: Cmd[LubMsg]): Cmd[LubMsg] =
       that match {
-        case o: One[LubMsg]         => Batch.fromSeq(cmds :+ o)
-        case Batch(cmds @ _*)       => Batch.fromSeq(this.cmds ++ cmds)
-        case Sequence(batches @ _*) => Sequence.fromSeq(this +: batches)
+        case o: One[LubMsg]   => Batch.fromSeq(cmds :+ o)
+        case Batch(cmds @ _*) => Batch.fromSeq(this.cmds ++ cmds)
       }
   }
 
   object Batch {
     def fromSeq[Msg](cmds: Seq[One[Msg]]): Batch[Msg] = Batch(cmds*)
-  }
-
-  case class Sequence[+Msg](batches: Batch[Msg]*) extends Cmd[Msg] {
-    override def map[OtherMsg](f: Msg => OtherMsg): Sequence[OtherMsg] =
-      Sequence(batches.map(_.map(f))*)
-
-    override def ++[LubMsg >: Msg](that: Cmd[LubMsg]): Cmd[LubMsg] =
-      that match {
-        case o: One[LubMsg]         => Sequence.fromSeq(batches :+ o.toBatch)
-        case b: Batch[LubMsg]       => Sequence.fromSeq(batches :+ b)
-        case Sequence(batches @ _*) => Sequence.fromSeq(this.batches ++ batches)
-      }
-  }
-
-  object Sequence {
-    def fromSeq[Msg](batches: Seq[Batch[Msg]]): Sequence[Msg] =
-      Sequence(batches*)
   }
 
   def none[Msg]: One[Msg] = One(IO.none)
