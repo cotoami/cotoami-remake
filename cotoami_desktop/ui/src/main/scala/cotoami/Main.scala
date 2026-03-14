@@ -28,25 +28,23 @@ import cotoami.subparts.modals.ModalAppUpdate
 object Main extends IOApp.Simple {
 
   def run: IO[Unit] =
-    Dispatcher.sequential[IO].use { dispatcher =>
+    Dispatcher.parallel[IO].use { dispatcher =>
       IO {
         if (LinkingInfo.developmentMode) {
           hot.initialize()
         }
-
-        Browser.runProgram(
-          dom.document.getElementById("app"),
-          Program(
-            init,
-            (model: Model, dispatch: Msg => Unit) =>
-              view(model, msg => dispatch(msg.into)),
-            update,
-            subscriptions,
-            Some(Msg.UrlChanged.apply)
-          ),
-          dispatcher
-        )
-      } *> IO.never
+      } *> Browser.runProgram(
+        dom.document.getElementById("app"),
+        Program(
+          init,
+          (model: Model, dispatch: Msg => Unit) =>
+            view(model, msg => dispatch(msg.into)),
+          update,
+          subscriptions,
+          Some(Msg.UrlChanged.apply)
+        ),
+        dispatcher
+      ) *> IO.never
     }
 
   object DatabaseFolder {

@@ -1,6 +1,7 @@
 package marubinotto.fui
 
 import scala.collection.mutable.{Map => MutableMap}
+import scala.compiletime.uninitialized
 import org.scalajs.dom
 import org.scalajs.dom.Element
 import org.scalajs.dom.URL
@@ -8,24 +9,26 @@ import org.scalajs.dom.Event
 
 import cats.effect.IO
 import cats.effect.std.Dispatcher
+import cats.effect.std.Queue
 import cats.syntax.parallel._
 
 import slinky.web.ReactDOMClient
 
-class Runtime[Model, Msg](
+class Runtime[Model, Msg] private (
     container: Element,
     val program: Program[Model, Msg],
-    dispatcher: Dispatcher[IO]
+    dispatcher: Dispatcher[IO],
+    queue: Queue[IO, Msg]
 ) {
   private val reactRoot = ReactDOMClient.createRoot(container)
-  private val init = program.init(new URL(dom.window.location.href))
-  private var state = init._1
+  private var state: Model = uninitialized
   private val subs: MutableMap[String, Option[Sub.Unsubscribe]] = MutableMap()
   private val debounceTimers: MutableMap[String, Int] = MutableMap()
 
-  def dispatch(msg: Msg): Unit = apply(program.update(msg, state))
+  def dispatch(msg: Msg): Unit =
+    dispatcher.unsafeRunAndForget(queue.offer(msg))
 
-  def apply(change: (Model, Cmd[Msg])): Unit = {
+  private def apply(change: (Model, Cmd[Msg])): Unit = {
     val (model, cmd) = change
     state = model
     reactRoot.render(program.view(model, dispatch))
@@ -47,7 +50,7 @@ class Runtime[Model, Msg](
 
   private def runOne(cmd: Cmd.One[Msg]): Unit =
     dispatcher.unsafeRunAndForget(
-      cmd.io.flatMap(optionMsg => IO(optionMsg.foreach(dispatch)))
+      cmd.io.flatMap(optionMsg => IO(optionMsg.foreach(msg => dispatch(msg))))
     )
 
   private def runSequence(batches: List[Cmd.Batch[Msg]]): Unit =
@@ -58,7 +61,9 @@ class Runtime[Model, Msg](
       case Nil => IO.unit
       case head :: tail =>
         head.cmds.map(_.io).toList.parSequence.flatMap { optionMsgs =>
-          IO(optionMsgs.foreach(_.foreach(dispatch))) *> runSequenceIO(tail)
+          IO(optionMsgs.foreach(_.foreach(msg => dispatch(msg)))) *> runSequenceIO(
+            tail
+          )
         }
     }
 
@@ -84,13 +89,35 @@ class Runtime[Model, Msg](
 
   def onPushUrl(url: URL): Unit =
     program.onUrlChange.map(_(url)).map(dispatch)
+}
 
-  program.onUrlChange.map(onUrlChange => {
-    dom.window.addEventListener(
-      "popstate",
-      (_: Event) => dispatch(onUrlChange(new URL(dom.window.location.href)))
-    )
-  })
-
-  apply(init)
+object Runtime {
+  def make[Model, Msg](
+      container: Element,
+      program: Program[Model, Msg],
+      dispatcher: Dispatcher[IO]
+  ): IO[Runtime[Model, Msg]] =
+    for {
+      queue <- Queue.unbounded[IO, Msg]
+      runtime = new Runtime(container, program, dispatcher, queue)
+      init = program.init(new URL(dom.window.location.href))
+      _ <- IO {
+        runtime.state = init._1
+        program.onUrlChange.foreach(onUrlChange =>
+          dom.window.addEventListener(
+            "popstate",
+            (_: Event) => runtime.dispatch(
+              onUrlChange(new URL(dom.window.location.href))
+            )
+          )
+        )
+        runtime.apply((init._1, Cmd.none))
+      }
+      _ <- IO(
+        dispatcher.unsafeRunAndForget(
+          queue.take.flatMap(msg => IO(runtime.apply(program.update(msg, runtime.state)))).foreverM
+        )
+      )
+      _ <- IO(runtime.run(init._2))
+    } yield runtime
 }

@@ -26,10 +26,10 @@ object Browser {
       container: Element,
       program: Program[Model, Msg],
       dispatcher: Dispatcher[IO]
-  ) = {
-    val runtime = new Runtime(container, program, dispatcher)
-    listenersOnPushUrl = runtime.onPushUrl :: listenersOnPushUrl
-  }
+  ): IO[Unit] =
+    Runtime.make(container, program, dispatcher).map { runtime =>
+      listenersOnPushUrl = runtime.onPushUrl :: listenersOnPushUrl
+    }
 
   def send[Msg](msg: Msg): Cmd.One[Msg] = Cmd(IO(Some(msg)))
 
