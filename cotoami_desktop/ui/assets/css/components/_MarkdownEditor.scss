@@ -1,0 +1,151 @@
+.markdown-editor {
+  --markdown-editor-font: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --markdown-editor-line-height: 1.55;
+
+  flex: 1;
+  min-height: 0;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+
+  background-color: var(--input-background-color);
+
+  &.with-line-numbers {
+    grid-template-columns: min-content minmax(0, 1fr);
+  }
+
+  pre,
+  textarea {
+    margin: 0;
+    padding: 0.85rem 1rem;
+    font-family: var(--markdown-editor-font);
+    font-size: 0.96rem;
+    line-height: var(--markdown-editor-line-height);
+    tab-size: 2;
+  }
+
+  pre {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+
+  .line-numbers {
+    min-width: 2rem;
+    overflow: hidden;
+    user-select: none;
+    color: var(--muted-color);
+    background-color: color-mix(in srgb, var(--input-background-color) 92%, var(--background-color));
+    border-right: 1px solid var(--form-element-border-color);
+    border-radius: 0;
+    padding: 0.85rem 0;
+    font-family: var(--markdown-editor-font);
+    font-size: 0.96rem;
+    line-height: var(--markdown-editor-line-height);
+
+    .line-number {
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-start;
+      text-align: right;
+      white-space: pre;
+      padding: 0 0.5rem;
+    }
+  }
+
+  div.editor-surface {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+
+    pre.highlight-layer,
+    textarea,
+    .measure-layer {
+      position: absolute;
+      inset: 0;
+    }
+
+    pre.highlight-layer {
+      overflow: hidden;
+      pointer-events: none;
+      color: var(--color);
+    }
+
+    textarea {
+      border: none;
+      border-radius: 0;
+      resize: none;
+      box-shadow: none;
+      background: transparent;
+      color: transparent;
+      caret-color: var(--color);
+      -webkit-text-fill-color: transparent;
+      overflow: auto;
+
+      &:is(:active, :focus) {
+        border: none;
+        box-shadow: none;
+      }
+    }
+
+    .measure-layer {
+      visibility: hidden;
+      pointer-events: none;
+      overflow: hidden;
+      padding: 0.85rem 1rem;
+      font-family: var(--markdown-editor-font);
+      font-size: 0.96rem;
+      line-height: var(--markdown-editor-line-height);
+      tab-size: 2;
+
+      .measure-line {
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+      }
+    }
+  }
+
+  .syntax,
+  .fence,
+  .info-string,
+  .heading-marker,
+  .quote-marker,
+  .list-marker,
+  .thematic-break {
+    color: var(--muted-color);
+  }
+
+  .heading-text {
+    color: #b04a1f;
+    font-weight: 600;
+  }
+
+  .quote-text {
+    color: #2c6a58;
+  }
+
+  .link,
+  .image {
+    color: #1d5fbf;
+  }
+
+  .code {
+    color: #9a2d73;
+    background-color: color-mix(in srgb, var(--background-color) 75%, transparent);
+  }
+
+  .bold {
+    font-weight: 700;
+    color: #8c3f15;
+  }
+
+  .italic {
+    font-style: italic;
+    color: #4c5f84;
+  }
+
+  .strike {
+    text-decoration: line-through;
+    color: var(--muted-color);
+  }
+}

@@ -14,6 +14,7 @@ import slinky.web.SyntheticMouseEvent
 import marubinotto.fui.{Browser, Cmd}
 import marubinotto.Validation
 import marubinotto.components.{
+  MarkdownEditor,
   materialSymbol,
   toolButton,
   ScrollArea,
@@ -273,7 +274,12 @@ object EditorCoto {
         dispatch: Msg => Unit
     ): ReactElement = {
       val editor = Fragment(
-        sectionEditorOrPreview(form, onCtrlEnter, onFocus),
+        sectionEditorOrPreview(
+          form,
+          onCtrlEnter,
+          onFocus,
+          showLineNumbers = true
+        ),
         ulAttributes(form),
         sectionValidationError(form)
       )
@@ -295,18 +301,26 @@ object EditorCoto {
         form: Model,
         onCtrlEnter: Option[() => Unit] = None,
         onFocus: Option[() => Unit] = None,
-        enableImageInput: Boolean = true
+        enableImageInput: Boolean = true,
+        showLineNumbers: Boolean = true
     )(using context: Context, dispatch: Msg => Unit): ReactElement =
       if (form.inPreview)
         sectionPreview(form)
       else
-        sectionEditor(form, onCtrlEnter, onFocus, enableImageInput)
+        sectionEditor(
+          form,
+          onCtrlEnter,
+          onFocus,
+          enableImageInput,
+          showLineNumbers
+        )
 
     def sectionEditor(
         form: Model,
         onCtrlEnter: Option[() => Unit] = None,
         onFocus: Option[() => Unit] = None,
-        enableImageInput: Boolean = true
+        enableImageInput: Boolean = true,
+        showLineNumbers: Boolean = true
     )(using context: Context, dispatch: Msg => Unit): ReactElement =
       section(className := "coto-editor fill")(
         LocalDraftTextInputs(
@@ -318,6 +332,7 @@ object EditorCoto {
              else context.i18n.text.EditorCoto_placeholder_coto),
           onCtrlEnter = onCtrlEnter,
           onFocus = onFocus,
+          showLineNumbers = showLineNumbers,
           onDraftCommitted = dispatch
         ),
         Option.when(enableImageInput) {
@@ -350,6 +365,7 @@ object EditorCoto {
           contentPlaceholder: String,
           onCtrlEnter: Option[() => Unit],
           onFocus: Option[() => Unit],
+          showLineNumbers: Boolean,
           onDraftCommitted: Msg => Unit
       )
 
@@ -359,6 +375,7 @@ object EditorCoto {
           contentPlaceholder: String,
           onCtrlEnter: Option[() => Unit],
           onFocus: Option[() => Unit],
+          showLineNumbers: Boolean,
           onDraftCommitted: Msg => Unit
       ) =
         component(
@@ -368,6 +385,7 @@ object EditorCoto {
             contentPlaceholder,
             onCtrlEnter,
             onFocus,
+            showLineNumbers,
             onDraftCommitted
           )
         )
@@ -492,23 +510,22 @@ object EditorCoto {
               )
             )
           },
-          textarea(
-            placeholder := props.contentPlaceholder,
-            value := contentDraft,
-            slinky.web.html.onFocus := props.onFocus,
-            onChange := (e => setContentDraft(e.target.value)),
-            onBlur := (_ => flushDraft()),
-            onCompositionStart := (_ => setImeActive(true)),
-            onCompositionEnd := (_ => {
+          MarkdownEditor(
+            value = contentDraft,
+            showLineNumbers = props.showLineNumbers,
+            onFocus = () => props.onFocus.foreach(_()),
+            onChange = content => setContentDraft(content),
+            onBlur = () => flushDraft(),
+            onCompositionStart = () => setImeActive(true),
+            onCompositionEnd = () => {
               setImeActive(false)
               flushDraft()
-            }),
-            onKeyDown := (e =>
+            },
+            onKeyDown = e =>
               if (localForm.hasValidContents && detectCtrlEnter(e)) {
                 flushDraft()
                 props.onCtrlEnter.map(_())
               }
-            )
           )
         )
       }
