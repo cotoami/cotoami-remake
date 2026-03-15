@@ -79,6 +79,8 @@ object MarkdownEditor {
     val editorSurfaceRef = useRef[dom.HTMLDivElement](null)
     val measureRef = useRef[dom.HTMLDivElement](null)
     val pendingSelectionRef = useRef(Option.empty[(Int, Int)])
+    val imeComposingRef = useRef(false)
+    val compositionEndTimerRef = useRef(Option.empty[Int])
     val (lineHeights, setLineHeights) = useState(Seq.empty[Double])
     val (measureVersion, setMeasureVersion) = useState(0)
 
@@ -93,6 +95,11 @@ object MarkdownEditor {
       }
       if (textarea != null && lineNumbers != null)
         lineNumbers.scrollTop = textarea.scrollTop
+    }
+
+    def clearCompositionEndTimer(): Unit = {
+      compositionEndTimerRef.current.foreach(dom.window.clearTimeout)
+      compositionEndTimerRef.current = None
     }
 
     useEffect(
@@ -145,10 +152,54 @@ object MarkdownEditor {
       },
       Seq.empty
     )
+    useEffect(
+      () => () => clearCompositionEndTimer(),
+      Seq.empty
+    )
 
     def applyEdit(edit: SelectionEdit): Unit = {
       pendingSelectionRef.current = Some((edit.selectionStart, edit.selectionEnd))
       props.onChange(edit.value)
+    }
+
+    def isImeConfirmingEnter(
+        e: SyntheticKeyboardEvent[dom.HTMLTextAreaElement]
+    ): Boolean = {
+      val nativeEvent = e.nativeEvent.asInstanceOf[js.Dynamic]
+      val isComposing =
+        nativeEvent
+          .selectDynamic("isComposing")
+          .asInstanceOf[js.UndefOr[Boolean]]
+          .getOrElse(false)
+      val keyCode =
+        nativeEvent
+          .selectDynamic("keyCode")
+          .asInstanceOf[js.UndefOr[Int]]
+          .getOrElse(0)
+
+      imeComposingRef.current || isComposing || keyCode == 229
+    }
+
+    def handleCompositionStart(): Unit = {
+      clearCompositionEndTimer()
+      imeComposingRef.current = true
+      props.onCompositionStart()
+    }
+
+    def handleCompositionEnd(): Unit = {
+      clearCompositionEndTimer()
+      // Keep the composing flag for the current event loop so IME-confirm Enter
+      // does not trigger list auto-continuation on browsers that end composition first.
+      compositionEndTimerRef.current = Some(
+        dom.window.setTimeout(
+          () => {
+            imeComposingRef.current = false
+            compositionEndTimerRef.current = None
+          },
+          0.0
+        )
+      )
+      props.onCompositionEnd()
     }
 
     def handleEditorKeyDown(
@@ -168,7 +219,8 @@ object MarkdownEditor {
           e.key == "Enter" &&
           !e.ctrlKey &&
           !e.metaKey &&
-          !e.altKey
+          !e.altKey &&
+          !isImeConfirmingEnter(e)
         )
           editOnEnter(props.value, selectionStart, selectionEnd)
         else if (e.key == "Tab")
@@ -230,10 +282,14 @@ object MarkdownEditor {
           value := props.value,
           spellCheck := false,
           onFocus := (_ => props.onFocus()),
-          onBlur := (_ => props.onBlur()),
+          onBlur := (_ => {
+            clearCompositionEndTimer()
+            imeComposingRef.current = false
+            props.onBlur()
+          }),
           onChange := (e => props.onChange(e.target.value)),
-          onCompositionStart := (_ => props.onCompositionStart()),
-          onCompositionEnd := (_ => props.onCompositionEnd()),
+          onCompositionStart := (_ => handleCompositionStart()),
+          onCompositionEnd := (_ => handleCompositionEnd()),
           onKeyDown := (e => handleEditorKeyDown(e)),
           onScroll := (_ => syncScroll())
         )
