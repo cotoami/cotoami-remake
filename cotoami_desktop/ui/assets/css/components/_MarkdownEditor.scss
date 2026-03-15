@@ -6,9 +6,13 @@
   min-height: 0;
 
   display: grid;
-  grid-template-columns: min-content minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
 
   background-color: var(--input-background-color);
+
+  &.with-line-numbers {
+    grid-template-columns: min-content minmax(0, 1fr);
+  }
 
   pre,
   textarea,

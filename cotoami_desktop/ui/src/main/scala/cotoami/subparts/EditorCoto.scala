@@ -274,7 +274,12 @@ object EditorCoto {
         dispatch: Msg => Unit
     ): ReactElement = {
       val editor = Fragment(
-        sectionEditorOrPreview(form, onCtrlEnter, onFocus),
+        sectionEditorOrPreview(
+          form,
+          onCtrlEnter,
+          onFocus,
+          showLineNumbers = true
+        ),
         ulAttributes(form),
         sectionValidationError(form)
       )
@@ -296,18 +301,26 @@ object EditorCoto {
         form: Model,
         onCtrlEnter: Option[() => Unit] = None,
         onFocus: Option[() => Unit] = None,
-        enableImageInput: Boolean = true
+        enableImageInput: Boolean = true,
+        showLineNumbers: Boolean = true
     )(using context: Context, dispatch: Msg => Unit): ReactElement =
       if (form.inPreview)
         sectionPreview(form)
       else
-        sectionEditor(form, onCtrlEnter, onFocus, enableImageInput)
+        sectionEditor(
+          form,
+          onCtrlEnter,
+          onFocus,
+          enableImageInput,
+          showLineNumbers
+        )
 
     def sectionEditor(
         form: Model,
         onCtrlEnter: Option[() => Unit] = None,
         onFocus: Option[() => Unit] = None,
-        enableImageInput: Boolean = true
+        enableImageInput: Boolean = true,
+        showLineNumbers: Boolean = true
     )(using context: Context, dispatch: Msg => Unit): ReactElement =
       section(className := "coto-editor fill")(
         LocalDraftTextInputs(
@@ -319,6 +332,7 @@ object EditorCoto {
              else context.i18n.text.EditorCoto_placeholder_coto),
           onCtrlEnter = onCtrlEnter,
           onFocus = onFocus,
+          showLineNumbers = showLineNumbers,
           onDraftCommitted = dispatch
         ),
         Option.when(enableImageInput) {
@@ -351,6 +365,7 @@ object EditorCoto {
           contentPlaceholder: String,
           onCtrlEnter: Option[() => Unit],
           onFocus: Option[() => Unit],
+          showLineNumbers: Boolean,
           onDraftCommitted: Msg => Unit
       )
 
@@ -360,6 +375,7 @@ object EditorCoto {
           contentPlaceholder: String,
           onCtrlEnter: Option[() => Unit],
           onFocus: Option[() => Unit],
+          showLineNumbers: Boolean,
           onDraftCommitted: Msg => Unit
       ) =
         component(
@@ -369,6 +385,7 @@ object EditorCoto {
             contentPlaceholder,
             onCtrlEnter,
             onFocus,
+            showLineNumbers,
             onDraftCommitted
           )
         )
@@ -496,7 +513,7 @@ object EditorCoto {
           MarkdownEditor(
             value = contentDraft,
             placeholder = props.contentPlaceholder,
-            showLineNumbers = true,
+            showLineNumbers = props.showLineNumbers,
             onFocus = () => props.onFocus.foreach(_()),
             onChange = content => setContentDraft(content),
             onBlur = () => flushDraft(),

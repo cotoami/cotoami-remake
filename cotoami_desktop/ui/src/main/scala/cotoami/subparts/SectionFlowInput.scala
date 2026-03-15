@@ -436,7 +436,8 @@ object SectionFlowInput {
         CotoForm.sectionEditorOrPreview(
           form = form,
           onCtrlEnter = Some(() => dispatch(Msg.Post)),
-          onFocus = Some(() => dispatch(Msg.Unfold))
+          onFocus = Some(() => dispatch(Msg.Unfold)),
+          showLineNumbers = !model.folded
         )(using context, submsg => dispatch(Msg.CotoFormMsg(submsg)))
       ),
       secondary = SplitPane.Secondary.Props()(
