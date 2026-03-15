@@ -15,8 +15,7 @@
   }
 
   pre,
-  textarea,
-  .placeholder {
+  textarea {
     margin: 0;
     padding: 0.85rem 1rem;
     font-family: var(--markdown-editor-font);
@@ -61,7 +60,6 @@
 
     pre.highlight-layer,
     textarea,
-    .placeholder,
     .measure-layer {
       position: absolute;
       inset: 0;
@@ -88,12 +86,6 @@
         border: none;
         box-shadow: none;
       }
-    }
-
-    .placeholder {
-      pointer-events: none;
-      color: var(--muted-color);
-      white-space: pre-wrap;
     }
 
     .measure-layer {

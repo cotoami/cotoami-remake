@@ -15,7 +15,6 @@ object MarkdownEditor {
 
   case class Props(
       value: String,
-      placeholder: String = "",
       showLineNumbers: Boolean = true,
       onChange: String => Unit = _ => (),
       onFocus: () => Unit = () => (),
@@ -51,7 +50,6 @@ object MarkdownEditor {
 
   def apply(
       value: String,
-      placeholder: String = "",
       showLineNumbers: Boolean = true,
       onChange: String => Unit = _ => (),
       onFocus: () => Unit = () => (),
@@ -64,7 +62,6 @@ object MarkdownEditor {
     component(
       Props(
         value = value,
-        placeholder = placeholder,
         showLineNumbers = showLineNumbers,
         onChange = onChange,
         onFocus = onFocus,
@@ -209,9 +206,6 @@ object MarkdownEditor {
         )
       },
       div(className := "editor-surface", ref := editorSurfaceRef)(
-        Option.when(props.value.isEmpty && props.placeholder.nonEmpty) {
-          div(className := "placeholder")(props.placeholder)
-        },
         pre(className := "highlight-layer", ref := highlightRef)(
           lines.zipWithIndex.map { case (line, lineIndex) =>
             val rendered = renderLine(line, lineIndex)

@@ -512,7 +512,6 @@ object EditorCoto {
           },
           MarkdownEditor(
             value = contentDraft,
-            placeholder = props.contentPlaceholder,
             showLineNumbers = props.showLineNumbers,
             onFocus = () => props.onFocus.foreach(_()),
             onChange = content => setContentDraft(content),
