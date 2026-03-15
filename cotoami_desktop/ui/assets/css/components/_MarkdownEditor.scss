@@ -10,10 +10,6 @@
 
   background-color: var(--input-background-color);
 
-  &.with-line-numbers {
-    border-left: 1px solid var(--form-element-border-color);
-  }
-
   pre,
   textarea,
   .placeholder {
@@ -31,13 +27,15 @@
   }
 
   pre.line-numbers {
-    min-width: 3.5rem;
+    min-width: 2rem;
     overflow: hidden;
     text-align: right;
     user-select: none;
     color: var(--muted-color);
     background-color: color-mix(in srgb, var(--input-background-color) 92%, var(--background-color));
     border-right: 1px solid var(--form-element-border-color);
+    border-radius: 0;
+    padding: 0.85rem 0.5rem;
   }
 
   div.editor-surface {
