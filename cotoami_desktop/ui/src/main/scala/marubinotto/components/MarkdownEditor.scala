@@ -1,5 +1,6 @@
 package marubinotto.components
 
+import scala.scalajs.js
 import org.scalajs.dom
 
 import marubinotto.optionalClasses
@@ -77,8 +78,12 @@ object MarkdownEditor {
   val component = FunctionalComponent[Props] { props =>
     val textareaRef = useRef[dom.HTMLTextAreaElement](null)
     val highlightRef = useRef[dom.HTMLPreElement](null)
-    val lineNumbersRef = useRef[dom.HTMLPreElement](null)
+    val lineNumbersRef = useRef[dom.HTMLDivElement](null)
+    val editorSurfaceRef = useRef[dom.HTMLDivElement](null)
+    val measureRef = useRef[dom.HTMLDivElement](null)
     val pendingSelectionRef = useRef(Option.empty[(Int, Int)])
+    val (lineHeights, setLineHeights) = useState(Seq.empty[Double])
+    val (measureVersion, setMeasureVersion) = useState(0)
 
     def syncScroll(): Unit = {
       val textarea = textareaRef.current
@@ -112,7 +117,37 @@ object MarkdownEditor {
       Seq(props.value)
     )
 
-    val lineCount = props.value.count(_ == '\n') + 1
+    val lines = props.value.split("\n", -1).toSeq
+    val lineCount = lines.length
+
+    useEffect(
+      () => {
+        val measureRoot = measureRef.current
+        if (measureRoot != null) {
+          val measured =
+            (0 until measureRoot.children.length).map { i =>
+              measureRoot.children(i).asInstanceOf[dom.HTMLElement].offsetHeight.toDouble
+            }
+          if (measured != lineHeights)
+            setLineHeights(measured)
+        }
+      },
+      Seq(props.value, measureVersion, lineCount)
+    )
+    useEffect(
+      () => {
+        val editorSurface = editorSurfaceRef.current
+        if (editorSurface == null) () => ()
+        else {
+          val observer = new dom.ResizeObserver((_, _) =>
+            setMeasureVersion(current => current + 1)
+          )
+          observer.observe(editorSurface)
+          () => observer.disconnect()
+        }
+      },
+      Seq.empty
+    )
 
     def applyEdit(edit: SelectionEdit): Unit = {
       pendingSelectionRef.current = Some((edit.selectionStart, edit.selectionEnd))
@@ -161,25 +196,40 @@ object MarkdownEditor {
       )
     )(
       Option.when(props.showLineNumbers) {
-        pre(className := "line-numbers", ref := lineNumbersRef)(
-          (1 to lineCount).mkString("\n")
+        div(className := "line-numbers", ref := lineNumbersRef)(
+          lines.zipWithIndex.map { case (_, index) =>
+            div(
+              key := s"line-number-$index",
+              className := "line-number",
+              style := js.Dynamic.literal(
+                height = lineHeights.lift(index).getOrElse(24.0).toString + "px"
+              )
+            )(index + 1)
+          }*
         )
       },
-      div(className := "editor-surface")(
+      div(className := "editor-surface", ref := editorSurfaceRef)(
         Option.when(props.value.isEmpty && props.placeholder.nonEmpty) {
           div(className := "placeholder")(props.placeholder)
         },
         pre(className := "highlight-layer", ref := highlightRef)(
-          props.value
-            .split("\n", -1)
-            .zipWithIndex
-            .map { case (line, lineIndex) =>
-              val rendered = renderLine(line, lineIndex)
-              Fragment(
-                (if (lineIndex == lineCount - 1) rendered
-                 else rendered :+ br(key := s"line-break-$lineIndex"))*
-              )
-            }*
+          lines.zipWithIndex.map { case (line, lineIndex) =>
+            val rendered = renderLine(line, lineIndex)
+            Fragment(
+              (if (lineIndex == lineCount - 1) rendered
+               else rendered :+ br(key := s"line-break-$lineIndex"))*
+            )
+          }*
+        ),
+        div(className := "measure-layer", ref := measureRef)(
+          lines.zipWithIndex.map { case (line, lineIndex) =>
+            div(
+              key := s"measure-line-$lineIndex",
+              className := "measure-line"
+            )(
+              renderMeasureLine(line, lineIndex)
+            )
+          }*
         ),
         textarea(
           ref := textareaRef,
@@ -204,6 +254,15 @@ object MarkdownEditor {
         className := token.className.getOrElse("")
       )(token.text)
     }
+
+  private def renderMeasureLine(
+      line: String,
+      lineIndex: Int
+  ): Seq[ReactElement] =
+    if (line.isEmpty)
+      Seq(span(key := s"measure-empty-$lineIndex")("\u00a0"))
+    else
+      renderLine(line, lineIndex)
 
   private def tokenizeLine(line: String): Seq[Token] = {
     val heading = raw"^(\s{0,3}#{1,6})(\s+)(.*)$$".r

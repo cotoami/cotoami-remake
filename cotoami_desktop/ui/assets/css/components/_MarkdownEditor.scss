@@ -26,16 +26,27 @@
     overflow-wrap: break-word;
   }
 
-  pre.line-numbers {
+  .line-numbers {
     min-width: 2rem;
     overflow: hidden;
-    text-align: right;
     user-select: none;
     color: var(--muted-color);
     background-color: color-mix(in srgb, var(--input-background-color) 92%, var(--background-color));
     border-right: 1px solid var(--form-element-border-color);
     border-radius: 0;
-    padding: 0.85rem 0.5rem;
+    padding: 0.85rem 0;
+    font-family: var(--markdown-editor-font);
+    font-size: 0.96rem;
+    line-height: var(--markdown-editor-line-height);
+
+    .line-number {
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-start;
+      text-align: right;
+      white-space: pre;
+      padding: 0 0.5rem;
+    }
   }
 
   div.editor-surface {
@@ -46,7 +57,8 @@
 
     pre.highlight-layer,
     textarea,
-    .placeholder {
+    .placeholder,
+    .measure-layer {
       position: absolute;
       inset: 0;
     }
@@ -78,6 +90,22 @@
       pointer-events: none;
       color: var(--muted-color);
       white-space: pre-wrap;
+    }
+
+    .measure-layer {
+      visibility: hidden;
+      pointer-events: none;
+      overflow: hidden;
+      padding: 0.85rem 1rem;
+      font-family: var(--markdown-editor-font);
+      font-size: 0.96rem;
+      line-height: var(--markdown-editor-line-height);
+      tab-size: 2;
+
+      .measure-line {
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+      }
     }
   }
 
