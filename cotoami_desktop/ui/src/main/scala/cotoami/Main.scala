@@ -11,8 +11,8 @@ import slinky.hot
 import com.softwaremill.quicklens._
 
 import cats.effect.IO
-import cats.effect.IOApp
 import cats.effect.std.Dispatcher
+import cats.effect.unsafe.implicits.global
 import cats.syntax.all._
 
 import marubinotto.fui._
@@ -25,7 +25,13 @@ import cotoami.updates._
 import cotoami.subparts._
 import cotoami.subparts.modals.ModalAppUpdate
 
-object Main extends IOApp.Simple {
+object Main {
+
+  // Avoid inheriting from IOApp and instead use a standard main method.
+  // (IOApp in a Scala.js browser app can produce false-positive CPU-starvation warnings,
+  // because its watchdog interprets delayed browser timers as starvation.)
+  def main(args: Array[String]): Unit =
+    run.unsafeRunAndForget()
 
   def run: IO[Unit] =
     Dispatcher.parallel[IO].use { dispatcher =>

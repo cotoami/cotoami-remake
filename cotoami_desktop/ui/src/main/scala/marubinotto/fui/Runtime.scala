@@ -71,6 +71,11 @@ class Runtime[Model, Msg] private (
 
   def onPushUrl(url: URL): Unit =
     program.onUrlChange.map(_(url)).map(dispatch)
+
+  private def processNextMessage: IO[Unit] =
+    queue.take.flatMap { msg =>
+      IO(apply(program.update(msg, state))) *> IO.cede
+    }
 }
 
 object Runtime {
@@ -97,7 +102,7 @@ object Runtime {
       }
       _ <- IO(
         dispatcher.unsafeRunAndForget(
-          queue.take.flatMap(msg => IO(runtime.apply(program.update(msg, runtime.state)))).foreverM
+          runtime.processNextMessage.foreverM
         )
       )
       _ <- IO(runtime.run(init._2))
