@@ -14,6 +14,7 @@ import slinky.web.SyntheticMouseEvent
 import marubinotto.fui.{Browser, Cmd}
 import marubinotto.Validation
 import marubinotto.components.{
+  MarkdownEditor,
   materialSymbol,
   toolButton,
   ScrollArea,
@@ -492,23 +493,23 @@ object EditorCoto {
               )
             )
           },
-          textarea(
-            placeholder := props.contentPlaceholder,
-            value := contentDraft,
-            slinky.web.html.onFocus := props.onFocus,
-            onChange := (e => setContentDraft(e.target.value)),
-            onBlur := (_ => flushDraft()),
-            onCompositionStart := (_ => setImeActive(true)),
-            onCompositionEnd := (_ => {
+          MarkdownEditor(
+            value = contentDraft,
+            placeholder = props.contentPlaceholder,
+            showLineNumbers = true,
+            onFocus = () => props.onFocus.foreach(_()),
+            onChange = content => setContentDraft(content),
+            onBlur = () => flushDraft(),
+            onCompositionStart = () => setImeActive(true),
+            onCompositionEnd = () => {
               setImeActive(false)
               flushDraft()
-            }),
-            onKeyDown := (e =>
+            },
+            onKeyDown = e =>
               if (localForm.hasValidContents && detectCtrlEnter(e)) {
                 flushDraft()
                 props.onCtrlEnter.map(_())
               }
-            )
           )
         )
       }

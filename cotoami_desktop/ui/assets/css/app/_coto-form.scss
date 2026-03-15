@@ -51,15 +51,11 @@ section.coto-editor {
     }
   }
 
-  textarea {
+  .markdown-editor {
     flex: 1;
 
     margin: 0;
-    border-radius: 0;
-    border-style: none;
     height: 100%;
-    resize: none;
-    box-shadow: none;
   }
 
   div.input-image {
