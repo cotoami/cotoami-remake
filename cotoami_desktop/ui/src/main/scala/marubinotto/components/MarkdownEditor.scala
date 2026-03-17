@@ -26,6 +26,10 @@ object MarkdownEditor {
   )
 
   private case class Token(text: String, className: Option[String] = None)
+  private case class HighlightState(
+      codeBlockState: Option[CodeBlockState] = None,
+      listContentIndent: Option[Int] = None
+  )
   private sealed trait CodeBlockState
   private case class FencedCodeBlock(
       markerChar: Char,
@@ -326,12 +330,12 @@ object MarkdownEditor {
 
   private def tokenizeLines(lines: Seq[String]): Seq[Seq[Token]] = {
     val rendered = Seq.newBuilder[Seq[Token]]
-    var codeBlockState = Option.empty[CodeBlockState]
+    var state = HighlightState()
 
     lines.foreach { line =>
-      val (tokens, nextCodeBlockState) = tokenizeLine(line, codeBlockState)
+      val (tokens, nextState) = tokenizeLine(line, state)
       rendered += tokens
-      codeBlockState = nextCodeBlockState
+      state = nextState
     }
 
     rendered.result()
@@ -339,15 +343,21 @@ object MarkdownEditor {
 
   private def tokenizeLine(
       line: String,
-      codeBlockState: Option[CodeBlockState]
-  ): (Seq[Token], Option[CodeBlockState]) = {
+      state: HighlightState
+  ): (Seq[Token], HighlightState) = {
     val heading = raw"^(\s{0,3}#{1,6})(\s+)(.*)$$".r
     val blockquote = raw"^(\s{0,3}>\s?)(.*)$$".r
     val unorderedList = raw"^(\s*)([-+*])(\s+)(.*)$$".r
     val orderedList = raw"^(\s*)(\d+\.)(\s+)(.*)$$".r
     val thematicBreak = raw"^\s{0,3}(?:([-*_])\s*){3,}$$".r
 
-    codeBlockState match {
+    def nextState(codeBlockState: Option[CodeBlockState]): HighlightState =
+      HighlightState(
+        codeBlockState = codeBlockState,
+        listContentIndent = nextListContentIndent(line, state.listContentIndent)
+      )
+
+    state.codeBlockState match {
       case Some(openFence) =>
         openFence match {
           case fenced: FencedCodeBlock =>
@@ -358,16 +368,22 @@ object MarkdownEditor {
                     Token(marker, Some("syntax fence")),
                     Token(rest, Option.when(rest.nonEmpty)("syntax info-string"))
                   ),
-                  None
+                  nextState(None)
                 )
               case _ =>
-                (Seq(Token(line, Some("code-block-text"))), codeBlockState)
+                (
+                  Seq(Token(line, Some("code-block-text"))),
+                  nextState(state.codeBlockState)
+                )
             }
           case IndentedCodeBlock =>
-            if (isIndentedCodeLine(line) || line.isBlank)
-              (Seq(Token(line, Some("code-block-text"))), Some(IndentedCodeBlock))
+            if (isIndentedCodeLine(line, state.listContentIndent) || line.isBlank)
+              (
+                Seq(Token(line, Some("code-block-text"))),
+                nextState(Some(IndentedCodeBlock))
+              )
             else
-              tokenizeLine(line, None)
+              tokenizeLine(line, state.copy(codeBlockState = None))
         }
       case None =>
         parseFence(line) match {
@@ -377,10 +393,13 @@ object MarkdownEditor {
                 Token(marker, Some("syntax fence")),
                 Token(rest, Option.when(rest.nonEmpty)("syntax info-string"))
               ),
-              Some(FencedCodeBlock(marker.last, marker.trim.length))
+              nextState(Some(FencedCodeBlock(marker.last, marker.trim.length)))
             )
-          case _ if isIndentedCodeLine(line) =>
-            (Seq(Token(line, Some("code-block-text"))), Some(IndentedCodeBlock))
+          case _ if isIndentedCodeLine(line, state.listContentIndent) =>
+            (
+              Seq(Token(line, Some("code-block-text"))),
+              nextState(Some(IndentedCodeBlock))
+            )
           case _ =>
             line match {
               case heading(marker, space, rest) =>
@@ -388,13 +407,13 @@ object MarkdownEditor {
                   Seq(Token(marker, Some("syntax heading-marker"))) ++
                     Seq(Token(space)) ++
                     tokenizeInline(rest, Some("heading-text")),
-                  None
+                  nextState(None)
                 )
               case blockquote(marker, rest) =>
                 (
                   Seq(Token(marker, Some("syntax quote-marker"))) ++
                     tokenizeInline(rest, Some("quote-text")),
-                  None
+                  nextState(None)
                 )
               case unorderedList(indent, marker, space, rest) =>
                 (
@@ -403,7 +422,7 @@ object MarkdownEditor {
                     Token(marker, Some("syntax list-marker")),
                     Token(space)
                   ) ++ tokenizeInline(rest),
-                  None
+                  nextState(None)
                 )
               case orderedList(indent, marker, space, rest) =>
                 (
@@ -412,19 +431,37 @@ object MarkdownEditor {
                     Token(marker, Some("syntax list-marker")),
                     Token(space)
                   ) ++ tokenizeInline(rest),
-                  None
+                  nextState(None)
                 )
               case thematicBreak() =>
-                (Seq(Token(line, Some("syntax thematic-break"))), None)
+                (Seq(Token(line, Some("syntax thematic-break"))), nextState(None))
               case _ =>
-                (tokenizeInline(line), None)
+                (tokenizeInline(line), nextState(None))
             }
         }
     }
   }
 
-  private def isIndentedCodeLine(line: String): Boolean =
-    line.startsWith("\t") || leadingSpaces(line) >= IndentUnit.length
+  private def isIndentedCodeLine(
+      line: String,
+      listContentIndent: Option[Int]
+  ): Boolean = {
+    val indentWidth = leadingIndentWidth(line)
+    val minimumIndent =
+      listContentIndent.map(_ + IndentUnit.length).getOrElse(IndentUnit.length)
+
+    indentWidth >= minimumIndent && parseListItem(line).isEmpty
+  }
+
+  private def nextListContentIndent(
+      line: String,
+      currentIndent: Option[Int]
+  ): Option[Int] =
+    if (line.isBlank) currentIndent
+    else
+      parseListItem(line)
+        .map(_.prefix.length)
+        .orElse(currentIndent.filter(leadingIndentWidth(line) >= _))
 
   private def parseFence(line: String): Option[(String, String)] = {
     val trimmed = line.dropWhile(_ == ' ')
@@ -607,4 +644,7 @@ object MarkdownEditor {
 
   private def leadingSpaces(text: String): Int =
     text.takeWhile(_ == ' ').length
+
+  private def leadingIndentWidth(text: String): Int =
+    if (text.startsWith("\t")) IndentUnit.length else leadingSpaces(text)
 }
