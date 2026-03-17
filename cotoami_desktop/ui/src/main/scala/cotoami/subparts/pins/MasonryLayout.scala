@@ -6,17 +6,12 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import marubinotto.optionalClasses
-import marubinotto.libs.masonic._
+import marubinotto.components.Masonry
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Ito, OrderContext, Siblings}
 import cotoami.subparts.{PartsNode, SectionPins}
 
-// TODO: Migrate to `MasonryScroller` to support incremental rendering (virtualization).
-// - `Masonry` seems to assume that the window is a scroll container.
-// - `MasonryScroller` has to be used for scrolling in a div element.
-// - The scroll container (`ScrollArea`) is in SectionPins.sectionPins and
-//   we probably have to move the `ScrollArea` into this component.
 object MasonryLayout {
 
   val MinColumnWidth = 100
@@ -71,10 +66,7 @@ object MasonryLayout {
               },
               columnWidth = columnWidth,
               columnGutter = Some(16),
-              rowGutter = Some(20),
-              // Disable the virtualization to ensure to display all the cotos
-              // https://github.com/jaredLunde/masonic/issues/120
-              overscanBy = Double.PositiveInfinity
+              rowGutter = Some(20)
             )
           )
         }*
