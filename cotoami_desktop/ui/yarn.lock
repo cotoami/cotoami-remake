@@ -737,36 +737,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@essentials/memoize-one@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "@essentials/memoize-one@npm:1.1.0"
-  checksum: 10c0/5614c8a5a038223e32b7e1f79f04eaf3ae4c7bf027232a8dc2ad8865f38bfecf65960745ca60442cf9082bccabb64ebfff2dbfb5e238258eadf41399b0037cfe
-  languageName: node
-  linkType: hard
-
-"@essentials/one-key-map@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "@essentials/one-key-map@npm:1.2.0"
-  checksum: 10c0/956cbd200be1c19d1b59afa72ecd9df941891141549639ad665d4edd75f32f1a279eef3b54800fda3ccdb4c07cacc2fe6d7fc6f1f1a6b9adf7cdc385693d7fbb
-  languageName: node
-  linkType: hard
-
-"@essentials/raf@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "@essentials/raf@npm:1.2.0"
-  checksum: 10c0/3f697fc165086bea4f88d6f73aa46a46a44daca1ccf1dd74ac56c5d2fd666aaa7ea6d626c978b789ec01e3f58ec32b375f2b73ca8b6ed2ab413fc08d748deb1d
-  languageName: node
-  linkType: hard
-
-"@essentials/request-timeout@npm:^1.3.0":
-  version: 1.3.0
-  resolution: "@essentials/request-timeout@npm:1.3.0"
-  dependencies:
-    "@essentials/raf": "npm:^1.2.0"
-  checksum: 10c0/3c5c38e55c9c5da1afb691a25edfe2673d30cd1a9fdffbf263a44bb8826d6db7917cd60dd1cd571c61320ee1794405de65b6479fa34f770829d6eb691b837118
-  languageName: node
-  linkType: hard
-
 "@floating-ui/core@npm:^1.6.0":
   version: 1.6.9
   resolution: "@floating-ui/core@npm:1.6.9"
@@ -1102,80 +1072,6 @@ __metadata:
   bin:
     generate_style: src/cli.ts
   checksum: 10c0/03294520f2f851ab7b7ca2187149858f54f381a37b79f82a09f8fcccf24da7ee631eacce48a9748ccf80087489bfeb326f9b7cc7e0e39a765f06325e82ef8c93
-  languageName: node
-  linkType: hard
-
-"@react-hook/debounce@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "@react-hook/debounce@npm:3.0.0"
-  dependencies:
-    "@react-hook/latest": "npm:^1.0.2"
-  peerDependencies:
-    react: ">=16.8"
-  checksum: 10c0/12db70a62b82061f3aaa9cbcc3d4c2ec6c40b150f4edf658f22931349743a91d8297a75b65edb1b946f8feb7e3110aae8fde22694770d10f30bf2302e007f5a0
-  languageName: node
-  linkType: hard
-
-"@react-hook/event@npm:^1.2.1, @react-hook/event@npm:^1.2.6":
-  version: 1.2.6
-  resolution: "@react-hook/event@npm:1.2.6"
-  peerDependencies:
-    react: ">=16.8"
-  checksum: 10c0/72a185b6ffd4e7e6729a2807c83c4d8cca3f83cf9c03065b9be2ae47f6623998799c0effe939fd70602efe148537353f03d7250cc876372d2b092d52fd4c3513
-  languageName: node
-  linkType: hard
-
-"@react-hook/latest@npm:^1.0.2, @react-hook/latest@npm:^1.0.3":
-  version: 1.0.3
-  resolution: "@react-hook/latest@npm:1.0.3"
-  peerDependencies:
-    react: ">=16.8"
-  checksum: 10c0/d6a166c21121da519a516e8089ba28a2779d37b6017732ab55476c0d354754ad215394135765254f8752a7c6661c3fb868d088769a644848602f00f8821248ed
-  languageName: node
-  linkType: hard
-
-"@react-hook/passive-layout-effect@npm:^1.2.1":
-  version: 1.2.1
-  resolution: "@react-hook/passive-layout-effect@npm:1.2.1"
-  peerDependencies:
-    react: ">=16.8"
-  checksum: 10c0/5c9e6b3df1c91fc2b1d4f711ca96b5f8cb3f6a13a2e97dac7cce623e58d7ee57999c45db3778d0af0b2522b3a5b7463232ef21cb3ee9900437172d48f766d933
-  languageName: node
-  linkType: hard
-
-"@react-hook/throttle@npm:^2.2.0":
-  version: 2.2.0
-  resolution: "@react-hook/throttle@npm:2.2.0"
-  dependencies:
-    "@react-hook/latest": "npm:^1.0.2"
-  peerDependencies:
-    react: ">=16.8"
-  checksum: 10c0/a8c99314fcd4401cb482330c5d1e16fa871371d327a8529efdbcfc1c2b97cc11bf43b668dadaf4e993286fb6b8904275f8ee6f80721631ece4f2bdc7a9612e18
-  languageName: node
-  linkType: hard
-
-"@react-hook/window-scroll@npm:^1.3.0":
-  version: 1.3.0
-  resolution: "@react-hook/window-scroll@npm:1.3.0"
-  dependencies:
-    "@react-hook/event": "npm:^1.2.1"
-    "@react-hook/throttle": "npm:^2.2.0"
-  peerDependencies:
-    react: ">=16.8"
-  checksum: 10c0/3e56750ff7001b70908ee51984201b1edcbe6381af57a61deed26512376842c4077844d90be24d61bb4acfc81e8e87cef7ead4887c4d6427c987b1941ce8746c
-  languageName: node
-  linkType: hard
-
-"@react-hook/window-size@npm:^3.1.1":
-  version: 3.1.1
-  resolution: "@react-hook/window-size@npm:3.1.1"
-  dependencies:
-    "@react-hook/debounce": "npm:^3.0.0"
-    "@react-hook/event": "npm:^1.2.1"
-    "@react-hook/throttle": "npm:^2.2.0"
-  peerDependencies:
-    react: ">=16.8"
-  checksum: 10c0/01b6ebc9d184c203bf9bc18db47172b30d2df697e1acd38865511afc7124cc6b5bd4311906667ae713b0e0e836f79e9498ae123f9d37a85a1a1301629941dae4
   languageName: node
   linkType: hard
 
@@ -1682,7 +1578,6 @@ __metadata:
     "@tauri-apps/plugin-updater": "npm:^2.8.1"
     exifr: "npm:^7.1.3"
     maplibre-gl: "npm:^4.5.1"
-    masonic: "npm:^4.1.0"
     pmtiles: "npm:^4.3.0"
     react: "npm:18.3.1"
     react-dom: "npm:18.3.1"
@@ -2675,27 +2570,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"masonic@npm:^4.1.0":
-  version: 4.1.0
-  resolution: "masonic@npm:4.1.0"
-  dependencies:
-    "@essentials/memoize-one": "npm:^1.1.0"
-    "@essentials/one-key-map": "npm:^1.2.0"
-    "@essentials/request-timeout": "npm:^1.3.0"
-    "@react-hook/event": "npm:^1.2.6"
-    "@react-hook/latest": "npm:^1.0.3"
-    "@react-hook/passive-layout-effect": "npm:^1.2.1"
-    "@react-hook/throttle": "npm:^2.2.0"
-    "@react-hook/window-scroll": "npm:^1.3.0"
-    "@react-hook/window-size": "npm:^3.1.1"
-    raf-schd: "npm:^4.0.3"
-    trie-memoize: "npm:^1.2.0"
-  peerDependencies:
-    react: ">=16.8"
-  checksum: 10c0/4b6319df4d0908ae1918572e3839455e5a670133d17b17cc7f937d4836546037e3cb8b966ddefc82518b62d5e9db3c3ea5a1656c719ae99dc94b8c33852f9783
-  languageName: node
-  linkType: hard
-
 "mdast-util-find-and-replace@npm:^3.0.0":
   version: 3.0.2
   resolution: "mdast-util-find-and-replace@npm:3.0.2"
@@ -3611,13 +3485,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"raf-schd@npm:^4.0.3":
-  version: 4.0.3
-  resolution: "raf-schd@npm:4.0.3"
-  checksum: 10c0/ecabf0957c05fad059779bddcd992f1a9d3a35dfea439a6f0935c382fcf4f7f7fa60489e467b4c2db357a3665167d2a379782586b59712bb36c766e02824709b
-  languageName: node
-  linkType: hard
-
 "react-deep-force-update@npm:^1.0.0":
   version: 1.1.2
   resolution: "react-deep-force-update@npm:1.1.2"
@@ -4235,13 +4102,6 @@ __metadata:
   dependencies:
     is-number: "npm:^7.0.0"
   checksum: 10c0/487988b0a19c654ff3e1961b87f471702e708fa8a8dd02a298ef16da7206692e8552a0250e8b3e8759270f62e9d8314616f6da274734d3b558b1fc7b7724e892
-  languageName: node
-  linkType: hard
-
-"trie-memoize@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "trie-memoize@npm:1.2.0"
-  checksum: 10c0/451efc2dff71364c82a7f2a6c6633481e4acbcd66097fdf08a975c49e54df054b26aa4ff60940e1918fd66d77e2fd93426375b9de08175a9d40b47bd2fac8786
   languageName: node
   linkType: hard
 
