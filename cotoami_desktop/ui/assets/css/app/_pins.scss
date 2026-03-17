@@ -478,6 +478,10 @@ section.pins {
   }
 
   div.masonry-layout {
+    .scrollable-pins {
+      padding-bottom: 1rem;
+    }
+
     section.pinned-cotos {
       padding-top: 0;
       padding-left: 16px;
