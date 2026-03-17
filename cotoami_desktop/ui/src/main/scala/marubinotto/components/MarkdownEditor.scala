@@ -26,6 +26,7 @@ object MarkdownEditor {
   )
 
   private case class Token(text: String, className: Option[String] = None)
+  private case class FencedCodeBlock(markerChar: Char, markerLength: Int)
   private case class SelectionEdit(
       value: String,
       selectionStart: Int,
@@ -123,6 +124,7 @@ object MarkdownEditor {
 
     val lines = props.value.split("\n", -1).toSeq
     val lineCount = lines.length
+    val renderedLines = tokenizeLines(lines)
 
     useEffect(
       () => {
@@ -259,8 +261,8 @@ object MarkdownEditor {
       },
       div(className := "editor-surface", ref := editorSurfaceRef)(
         pre(className := "highlight-layer", ref := highlightRef)(
-          lines.zipWithIndex.map { case (line, lineIndex) =>
-            val rendered = renderLine(line, lineIndex)
+          renderedLines.zipWithIndex.map { case (lineTokens, lineIndex) =>
+            val rendered = renderLine(lineTokens, lineIndex)
             Fragment(
               (if (lineIndex == lineCount - 1) rendered
                else rendered :+ br(key := s"line-break-$lineIndex"))*
@@ -268,12 +270,12 @@ object MarkdownEditor {
           }*
         ),
         div(className := "measure-layer", ref := measureRef)(
-          lines.zipWithIndex.map { case (line, lineIndex) =>
+          renderedLines.zipWithIndex.map { case (lineTokens, lineIndex) =>
             div(
               key := s"measure-line-$lineIndex",
               className := "measure-line"
             )(
-              renderMeasureLine(line, lineIndex)
+              renderMeasureLine(lineTokens, lineIndex)
             )
           }*
         ),
@@ -297,8 +299,11 @@ object MarkdownEditor {
     )
   }
 
-  private def renderLine(line: String, lineIndex: Int): Seq[ReactElement] =
-    tokenizeLine(line).zipWithIndex.map { case (token, tokenIndex) =>
+  private def renderLine(
+      lineTokens: Seq[Token],
+      lineIndex: Int
+  ): Seq[ReactElement] =
+    lineTokens.zipWithIndex.map { case (token, tokenIndex) =>
       span(
         key := s"$lineIndex-$tokenIndex",
         className := token.className.getOrElse("")
@@ -306,47 +311,130 @@ object MarkdownEditor {
     }
 
   private def renderMeasureLine(
-      line: String,
+      lineTokens: Seq[Token],
       lineIndex: Int
   ): Seq[ReactElement] =
-    if (line.isEmpty)
+    if (lineTokens.forall(_.text.isEmpty))
       Seq(span(key := s"measure-empty-$lineIndex")("\u00a0"))
     else
-      renderLine(line, lineIndex)
+      renderLine(lineTokens, lineIndex)
 
-  private def tokenizeLine(line: String): Seq[Token] = {
+  private def tokenizeLines(lines: Seq[String]): Seq[Seq[Token]] = {
+    val rendered = Seq.newBuilder[Seq[Token]]
+    var fencedCodeBlock = Option.empty[FencedCodeBlock]
+
+    lines.foreach { line =>
+      val (tokens, nextFencedCodeBlock) = tokenizeLine(line, fencedCodeBlock)
+      rendered += tokens
+      fencedCodeBlock = nextFencedCodeBlock
+    }
+
+    rendered.result()
+  }
+
+  private def tokenizeLine(
+      line: String,
+      fencedCodeBlock: Option[FencedCodeBlock]
+  ): (Seq[Token], Option[FencedCodeBlock]) = {
     val heading = raw"^(\s{0,3}#{1,6})(\s+)(.*)$$".r
-    val fencedCode = raw"^(\s{0,3}```+|(?:\s{0,3}~~~+))(.*)$$".r
     val blockquote = raw"^(\s{0,3}>\s?)(.*)$$".r
     val unorderedList = raw"^(\s*)([-+*])(\s+)(.*)$$".r
     val orderedList = raw"^(\s*)(\d+\.)(\s+)(.*)$$".r
     val thematicBreak = raw"^\s{0,3}(?:([-*_])\s*){3,}$$".r
 
-    line match {
-      case fencedCode(marker, rest) =>
-        Seq(
-          Token(marker, Some("syntax fence")),
-          Token(rest, Option.when(rest.nonEmpty)("syntax info-string"))
-        )
-      case heading(marker, space, rest) =>
-        Seq(Token(marker, Some("syntax heading-marker"))) ++
-          Seq(Token(space)) ++
-          tokenizeInline(rest, Some("heading-text"))
-      case blockquote(marker, rest) =>
-        Seq(Token(marker, Some("syntax quote-marker"))) ++
-          tokenizeInline(rest, Some("quote-text"))
-      case unorderedList(indent, marker, space, rest) =>
-        Seq(Token(indent), Token(marker, Some("syntax list-marker")), Token(space)) ++
-          tokenizeInline(rest)
-      case orderedList(indent, marker, space, rest) =>
-        Seq(Token(indent), Token(marker, Some("syntax list-marker")), Token(space)) ++
-          tokenizeInline(rest)
-      case thematicBreak() =>
-        Seq(Token(line, Some("syntax thematic-break")))
-      case _ =>
-        tokenizeInline(line)
+    fencedCodeBlock match {
+      case Some(openFence) =>
+        parseFence(line) match {
+          case Some((marker, rest)) if isClosingFence(marker, rest, openFence) =>
+            (
+              Seq(
+                Token(marker, Some("syntax fence")),
+                Token(rest, Option.when(rest.nonEmpty)("syntax info-string"))
+              ),
+              None
+            )
+          case _ =>
+            (Seq(Token(line)), fencedCodeBlock)
+        }
+      case None =>
+        parseFence(line) match {
+          case Some((marker, rest)) =>
+            (
+              Seq(
+                Token(marker, Some("syntax fence")),
+                Token(rest, Option.when(rest.nonEmpty)("syntax info-string"))
+              ),
+              Some(FencedCodeBlock(marker.last, marker.trim.length))
+            )
+          case _ =>
+            line match {
+              case heading(marker, space, rest) =>
+                (
+                  Seq(Token(marker, Some("syntax heading-marker"))) ++
+                    Seq(Token(space)) ++
+                    tokenizeInline(rest, Some("heading-text")),
+                  None
+                )
+              case blockquote(marker, rest) =>
+                (
+                  Seq(Token(marker, Some("syntax quote-marker"))) ++
+                    tokenizeInline(rest, Some("quote-text")),
+                  None
+                )
+              case unorderedList(indent, marker, space, rest) =>
+                (
+                  Seq(
+                    Token(indent),
+                    Token(marker, Some("syntax list-marker")),
+                    Token(space)
+                  ) ++ tokenizeInline(rest),
+                  None
+                )
+              case orderedList(indent, marker, space, rest) =>
+                (
+                  Seq(
+                    Token(indent),
+                    Token(marker, Some("syntax list-marker")),
+                    Token(space)
+                  ) ++ tokenizeInline(rest),
+                  None
+                )
+              case thematicBreak() =>
+                (Seq(Token(line, Some("syntax thematic-break"))), None)
+              case _ =>
+                (tokenizeInline(line), None)
+            }
+        }
     }
   }
+
+  private def parseFence(line: String): Option[(String, String)] = {
+    val trimmed = line.dropWhile(_ == ' ')
+    val indentLength = line.length - trimmed.length
+
+    if (indentLength > 3 || trimmed.isEmpty) None
+    else {
+      val markerChar = trimmed.head
+      if (markerChar != '`' && markerChar != '~') None
+      else {
+        val markerLength = trimmed.takeWhile(_ == markerChar).length
+        if (markerLength < 3) None
+        else {
+          val marker = line.take(indentLength + markerLength)
+          Some((marker, line.drop(indentLength + markerLength)))
+        }
+      }
+    }
+  }
+
+  private def isClosingFence(
+      marker: String,
+      rest: String,
+      openFence: FencedCodeBlock
+  ): Boolean =
+    marker.last == openFence.markerChar &&
+      marker.trim.length >= openFence.markerLength &&
+      rest.trim.isEmpty
 
   private def tokenizeInline(
       text: String,
