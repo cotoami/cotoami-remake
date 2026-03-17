@@ -135,8 +135,11 @@
   }
 
   .code-block-text {
-    color: color-mix(in srgb, var(--color) 82%, var(--muted-color));
-    background-color: color-mix(in srgb, var(--background-color) 78%, transparent);
+    font-size: 0.875em;
+    font-family: var(--font-family);
+    background: var(--code-background-color);
+    color: var(--code-color);
+    font-weight: var(--font-weight);
   }
 
   .bold {
