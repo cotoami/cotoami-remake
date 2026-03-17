@@ -354,7 +354,7 @@ object MarkdownEditor {
               None
             )
           case _ =>
-            (Seq(Token(line)), fencedCodeBlock)
+            (Seq(Token(line, Some("code-block-text"))), fencedCodeBlock)
         }
       case None =>
         parseFence(line) match {
