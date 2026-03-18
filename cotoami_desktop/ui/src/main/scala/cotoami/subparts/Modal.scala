@@ -127,14 +127,6 @@ object Modal {
       )
   }
 
-  case class EditCoto(model: ModalEditCoto.Model) extends Modal
-  object EditCoto {
-    def apply(coto: Coto): (EditCoto, Cmd[AppMsg]) = {
-      val (model, cmd) = ModalEditCoto.Model(coto)
-      (EditCoto(model), cmd)
-    }
-  }
-
   case class Promote(model: ModalPromote.Model) extends Modal
   object Promote {
     def apply(coto: Coto): (Promote, Cmd[AppMsg]) = {
@@ -234,7 +226,6 @@ object Modal {
     case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
     case class AppUpdateMsg(msg: ModalAppUpdate.Msg) extends Msg
     case class InputPasswordMsg(msg: ModalInputPassword.Msg) extends Msg
-    case class EditCotoMsg(msg: ModalEditCoto.Msg) extends Msg
     case class PromoteMsg(msg: ModalPromote.Msg) extends Msg
     case class EditItoMsg(msg: ModalEditIto.Msg) extends Msg
     case class SelectionMsg(msg: ModalSelection.Msg) extends Msg
@@ -296,18 +287,6 @@ object Modal {
           ModalInputPassword.update(modalMsg, modal).pipe {
             case (modal, cmds) =>
               (updateModal(InputPassword(modal), model), cmds)
-          }
-        }
-
-      case Msg.EditCotoMsg(modalMsg) =>
-        stack.get[EditCoto].map { case EditCoto(modal) =>
-          ModalEditCoto.update(modalMsg, modal).pipe {
-            case (modal, geomap, cmds) =>
-              (
-                updateModal(EditCoto(modal), model)
-                  .modify(_.geomap).setTo(geomap),
-                cmds
-              )
           }
         }
 
@@ -498,8 +477,6 @@ object Modal {
       case InputPassword(modal) => Some(ModalInputPassword(modal))
 
       case NewPassword(modal) => Some(ModalNewPassword(modal))
-
-      case EditCoto(modal) => Some(ModalEditCoto(modal))
 
       case Promote(modal) => Some(ModalPromote(modal))
 

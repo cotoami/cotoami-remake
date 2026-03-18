@@ -11,6 +11,7 @@ import cotoami.backend._
 import cotoami.repository._
 import cotoami.models._
 import cotoami.subparts._
+import cotoami.subparts.modeless.ModelessEditCoto
 import cotoami.subparts.modeless.ModelessNewCoto
 
 trait Context {
@@ -56,6 +57,7 @@ case class Model(
 
     // subparts
     modalStack: Modal.Stack = Modal.Stack(),
+    modelessEditCoto: Option[ModelessEditCoto.Model] = None,
     modelessNewCoto: Option[ModelessNewCoto.Model] = None,
     viewMessages: ViewMessages.Model = ViewMessages.Model(),
     navCotonomas: NavCotonomas.Model = NavCotonomas.Model(),

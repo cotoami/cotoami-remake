@@ -1,8 +1,5 @@
-dialog.edit-coto {
-  article {
-    width: calc(var(--max-article-width) + (var(--block-spacing-horizontal) * 2));
-    max-width: none;
-
+.modeless-edit-coto {
+  > article {
     div.modal-body {
       height: 70vh;
 

@@ -149,9 +149,9 @@ object ModelessDialogFrame {
       Seq(position.left, position.top)
     )
 
-    div(className := "modeless-new-coto-layer")(
+    div(className := "modeless-dialog-layer")(
       div(
-        className := optionalClasses(props.dialogClasses),
+        className := optionalClasses(("modeless-dialog", true) +: props.dialogClasses),
         ref := panelRef,
         style := js.Dynamic.literal(
           left = s"${position.left}px",

@@ -7,6 +7,7 @@ import marubinotto.components.toolButton
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Ito}
 import cotoami.repository.Root
+import cotoami.subparts.modeless.ModelessEditCoto
 
 object ToolbarCoto {
 
@@ -57,7 +58,7 @@ object ToolbarCoto {
           tipPlacement = "left",
           onClick = e => {
             e.stopPropagation()
-            dispatch(Modal.Msg.OpenModal(Modal.EditCoto(coto)))
+            dispatch(ModelessEditCoto.Msg.Open(coto))
           }
         )
       },

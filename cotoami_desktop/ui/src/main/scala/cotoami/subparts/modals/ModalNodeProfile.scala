@@ -11,6 +11,7 @@ import marubinotto.components.{materialSymbol, ScrollArea}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ChildNode, Coto, Id, Node, Server}
 import cotoami.repository.{Nodes, Root}
+import cotoami.subparts.modeless.ModelessEditCoto
 import cotoami.subparts.{Modal, PartsCoto, PartsNode}
 
 object ModalNodeProfile {
@@ -290,7 +291,7 @@ object ModalNodeProfile {
   ): ReactElement =
     Option.when(model.isSelf) {
       div(className := "edit")(
-        buttonEdit(_ => dispatch(Modal.Msg.OpenModal(Modal.EditCoto(rootCoto))))
+        buttonEdit(_ => dispatch(ModelessEditCoto.Msg.Open(rootCoto)))
       )
     }
 }
