@@ -112,6 +112,7 @@ object SectionFlowInput {
   object Msg {
     case object SetCotoForm extends Msg
     case object SetCotonomaForm extends Msg
+    case object OpenNewCotoModal extends Msg
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
     case class CotonomaFormMsg(submsg: CotonomaForm.Msg) extends Msg
     case class ContentRestored(content: Option[String]) extends Msg
@@ -168,6 +169,9 @@ object SectionFlowInput {
             SectionTimeline.Msg.SetOnlyCotonomas(true).into
           )
         )
+
+      case (Msg.OpenNewCotoModal, _, Some(_)) =>
+        default.copy(_4 = Modal.open(Modal.NewCoto()))
 
       case (Msg.CotoFormMsg(submsg), cotoForm: CotoForm.Model, _) => {
         val (form, geomap, subcmd) = CotoForm.update(submsg, cotoForm)
@@ -418,6 +422,14 @@ object SectionFlowInput {
             )
           )
         }
+      ),
+      div(className := "header-actions")(
+        Option.when(model.form.isInstanceOf[CotoForm.Model]) {
+          buttonOpenNewCotoModal(
+            model = model,
+            classes = "default open-new-coto-modal folded-only"
+          )
+        }
       )
     )
 
@@ -459,6 +471,10 @@ object SectionFlowInput {
               )
             },
             div(className := "buttons")(
+              buttonOpenNewCotoModal(
+                model = model,
+                classes = "default open-new-coto-modal"
+              ),
               CotoForm.buttonPreview(form)(using
                 context,
                 submsg => dispatch(Msg.CotoFormMsg(submsg))
@@ -504,5 +520,18 @@ object SectionFlowInput {
     )(
       context.i18n.text.Post,
       span(className := "shortcut-help")("(Ctrl + Enter)")
+    )
+
+  private def buttonOpenNewCotoModal(
+      model: Model,
+      classes: String
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    button(
+      className := classes,
+      title := context.i18n.text.ModalNewCoto_title,
+      disabled := model.posting,
+      onClick := (_ => dispatch(Msg.OpenNewCotoModal))
+    )(
+      materialSymbol("open_in_full")
     )
 }

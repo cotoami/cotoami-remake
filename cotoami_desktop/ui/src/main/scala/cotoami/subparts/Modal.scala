@@ -159,6 +159,9 @@ object Modal {
     def apply(cotoId: Id[Coto]): NewIto = NewIto(ModalNewIto.Model(cotoId))
   }
 
+  case class NewCoto(model: ModalNewCoto.Model = ModalNewCoto.Model())
+      extends Modal
+
   case class Subcoto(model: ModalSubcoto.Model) extends Modal
   object Subcoto {
     def apply(
@@ -239,6 +242,7 @@ object Modal {
     case class EditItoMsg(msg: ModalEditIto.Msg) extends Msg
     case class SelectionMsg(msg: ModalSelection.Msg) extends Msg
     case class NewItoMsg(msg: ModalNewIto.Msg) extends Msg
+    case class NewCotoMsg(msg: ModalNewCoto.Msg) extends Msg
     case class SubcotoMsg(msg: ModalSubcoto.Msg) extends Msg
     case class IncorporateMsg(msg: ModalIncorporate.Msg) extends Msg
     case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
@@ -344,6 +348,18 @@ object Modal {
               (
                 updateModal(NewIto(modal), model)
                   .modify(_.repo.cotos).setTo(cotos),
+                cmds
+              )
+          }
+        }
+
+      case Msg.NewCotoMsg(modalMsg) =>
+        stack.get[NewCoto].map { case NewCoto(modal) =>
+          ModalNewCoto.update(modalMsg, modal).pipe {
+            case (modal, geomap, cmds) =>
+              (
+                updateModal(NewCoto(modal), model)
+                  .modify(_.geomap).setTo(geomap),
                 cmds
               )
           }
@@ -508,6 +524,8 @@ object Modal {
       case Selection(modal) => Some(ModalSelection(modal))
 
       case NewIto(modal) => Some(ModalNewIto(modal))
+
+      case NewCoto(modal) => Some(ModalNewCoto(modal))
 
       case Subcoto(modal) => Some(ModalSubcoto(modal))
 

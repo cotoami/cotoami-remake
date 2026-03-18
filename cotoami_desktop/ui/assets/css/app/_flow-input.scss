@@ -92,6 +92,21 @@ section.flow-input {
       }
     }
 
+    div.header-actions {
+      flex: 1;
+
+      display: flex;
+      flex-direction: row;
+      justify-content: end;
+      align-items: center;
+
+      padding-right: 8px;
+
+      button.open-new-coto-modal {
+        display: none;
+      }
+    }
+
     button.tool:disabled {
       opacity: 0.5;
     }
@@ -173,6 +188,7 @@ section.flow-input {
         display: flex;
         flex-direction: row;
         justify-content: end;
+        align-items: center;
 
         padding-right: 10px;
 
@@ -184,6 +200,20 @@ section.flow-input {
 
         button.preview {
           margin-right: 5px;
+        }
+
+        button.open-new-coto-modal {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 36px;
+          padding: 0;
+          margin-right: 5px;
+          opacity: 0.6;
+
+          &:hover {
+            opacity: 1;
+          }
         }
       }
     }
@@ -221,6 +251,20 @@ section.flow-input {
 
     div.post {
       display: none;
+    }
+
+    >header div.header-actions button.open-new-coto-modal.folded-only {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      opacity: 0.6;
+
+      &:hover {
+        opacity: 1;
+      }
     }
   }
 }
