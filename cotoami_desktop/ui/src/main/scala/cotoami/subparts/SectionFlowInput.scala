@@ -170,8 +170,15 @@ object SectionFlowInput {
           )
         )
 
-      case (Msg.OpenNewCotoModal, _, Some(_)) =>
-        default.copy(_4 = Modal.open(Modal.NewCoto()))
+      case (Msg.OpenNewCotoModal, form: CotoForm.Model, Some(_)) =>
+        val cleared = model.clear
+        default.copy(
+          _1 = cleared,
+          _4 = Cmd.Batch(
+            Modal.open(Modal.NewCoto(form)),
+            cleared.save
+          )
+        )
 
       case (Msg.CotoFormMsg(submsg), cotoForm: CotoForm.Model, _) => {
         val (form, geomap, subcmd) = CotoForm.update(submsg, cotoForm)

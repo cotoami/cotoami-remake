@@ -161,6 +161,12 @@ object Modal {
 
   case class NewCoto(model: ModalNewCoto.Model = ModalNewCoto.Model())
       extends Modal
+  object NewCoto {
+    def apply(cotoForm: EditorCoto.CotoForm.Model): (NewCoto, Cmd[AppMsg]) = {
+      val (model, cmd) = ModalNewCoto.Model(cotoForm)
+      (NewCoto(model), cmd)
+    }
+  }
 
   case class Subcoto(model: ModalSubcoto.Model) extends Modal
   object Subcoto {

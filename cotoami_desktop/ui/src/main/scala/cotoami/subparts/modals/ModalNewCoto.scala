@@ -37,6 +37,14 @@ object ModalNewCoto {
       )
   }
 
+  object Model {
+    def apply(cotoForm: CotoForm.Model): (Model, Cmd[AppMsg]) =
+      (
+        Model(cotoForm = cotoForm),
+        cotoForm.scanMediaMetadata.map(Msg.CotoFormMsg.apply).map(_.into)
+      )
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   // Update
   /////////////////////////////////////////////////////////////////////////////
