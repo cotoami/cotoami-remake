@@ -183,6 +183,7 @@ object ko extends Text {
   val ModalNewIto_clearSelection = "연결 시 선택 지우기"
   val ModalNewIto_connect = "연결"
 
+  val ModalNewCoto_title = "새 Coto"
   val ModalSubcoto_title = "새 하위 Coto"
 
   val ModalNodeProfile_title = "노드 프로필"

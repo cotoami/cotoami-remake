@@ -183,6 +183,7 @@ object en extends Text {
   val ModalNewIto_clearSelection = "Clear selection on connect"
   val ModalNewIto_connect = "Connect"
 
+  val ModalNewCoto_title = "New Coto"
   val ModalSubcoto_title = "New Sub-coto"
 
   val ModalNodeProfile_title = "Node Profile"

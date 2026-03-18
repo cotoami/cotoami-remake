@@ -45,7 +45,7 @@ object SectionFlowInput {
       copy(posting = false).pipe { model =>
         form match {
           case form: CotoForm.Model if form.hasContents => model
-          case _ =>
+          case _                                        =>
             model.copy(
               form = CotoForm.Model(),
               folded = true
@@ -112,6 +112,7 @@ object SectionFlowInput {
   object Msg {
     case object SetCotoForm extends Msg
     case object SetCotonomaForm extends Msg
+    case object OpenNewCotoModal extends Msg
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
     case class CotonomaFormMsg(submsg: CotonomaForm.Msg) extends Msg
     case class ContentRestored(content: Option[String]) extends Msg
@@ -166,6 +167,16 @@ object SectionFlowInput {
               context.geomap,
           _4 = Browser.send(
             SectionTimeline.Msg.SetOnlyCotonomas(true).into
+          )
+        )
+
+      case (Msg.OpenNewCotoModal, form: CotoForm.Model, Some(_)) =>
+        val cleared = model.clear
+        default.copy(
+          _1 = cleared,
+          _4 = Cmd.Batch(
+            Modal.open(Modal.NewCoto(form)),
+            cleared.save
           )
         )
 
@@ -352,8 +363,8 @@ object SectionFlowInput {
             onEditorHeightChanged
           )
 
-          CotoForm.sectionMediaPreview(form)(using submsg =>
-            dispatch(Msg.CotoFormMsg(submsg))
+          CotoForm.sectionMediaPreview(form)(using
+            submsg => dispatch(Msg.CotoFormMsg(submsg))
           ) match {
             case Some(mediaPreview) =>
               SplitPane(
@@ -433,12 +444,20 @@ object SectionFlowInput {
       resizable = !model.folded,
       onPrimarySizeChanged = Some(onEditorHeightChanged),
       primary = SplitPane.Primary.Props(className = Some("coto-form-pane"))(
-        CotoForm.sectionEditorOrPreview(
-          form = form,
-          onCtrlEnter = Some(() => dispatch(Msg.Post)),
-          onFocus = Some(() => dispatch(Msg.Unfold)),
-          showLineNumbers = !model.folded
-        )(using context, submsg => dispatch(Msg.CotoFormMsg(submsg)))
+        div(className := "flow-input-editor-shell")(
+          CotoForm.sectionEditorOrPreview(
+            form = form,
+            onCtrlEnter = Some(() => dispatch(Msg.Post)),
+            onFocus = Some(() => dispatch(Msg.Unfold)),
+            showLineNumbers = !model.folded
+          )(using context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
+          Option.when(!form.inPreview) {
+            buttonOpenNewCotoModal(
+              model = model,
+              classes = "default open-new-coto-modal overlay"
+            )
+          }
+        )
       ),
       secondary = SplitPane.Secondary.Props()(
         CotoForm.ulAttributes(form)(using
@@ -504,5 +523,18 @@ object SectionFlowInput {
     )(
       context.i18n.text.Post,
       span(className := "shortcut-help")("(Ctrl + Enter)")
+    )
+
+  private def buttonOpenNewCotoModal(
+      model: Model,
+      classes: String
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    button(
+      className := classes,
+      title := context.i18n.text.ModalNewCoto_title,
+      disabled := model.posting,
+      onClick := (_ => dispatch(Msg.OpenNewCotoModal))
+    )(
+      materialSymbol("open_in_new")
     )
 }
