@@ -11,6 +11,7 @@ import cotoami.backend._
 import cotoami.repository._
 import cotoami.models._
 import cotoami.subparts._
+import cotoami.subparts.modeless.ModelessNewCoto
 
 trait Context {
   def time: Time
@@ -55,6 +56,7 @@ case class Model(
 
     // subparts
     modalStack: Modal.Stack = Modal.Stack(),
+    modelessNewCoto: Option[ModelessNewCoto.Model] = None,
     viewMessages: ViewMessages.Model = ViewMessages.Model(),
     navCotonomas: NavCotonomas.Model = NavCotonomas.Model(),
     nodeTools: SectionNodeTools.Model = SectionNodeTools.Model(),

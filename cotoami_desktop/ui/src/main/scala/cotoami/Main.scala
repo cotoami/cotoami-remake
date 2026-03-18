@@ -23,6 +23,7 @@ import cotoami.repository._
 import cotoami.models._
 import cotoami.updates._
 import cotoami.subparts._
+import cotoami.subparts.modeless.ModelessNewCoto
 import cotoami.subparts.modals.ModalAppUpdate
 
 object Main {
@@ -377,6 +378,28 @@ object Main {
 
       case Msg.ModalMsg(submsg) => Modal.update(submsg, model)
 
+      case Msg.ModelessNewCotoMsg(submsg) =>
+        submsg match {
+          case ModelessNewCoto.Msg.Open(dialog) =>
+            (model.copy(modelessNewCoto = Some(dialog)), Cmd.none)
+
+          case ModelessNewCoto.Msg.Close =>
+            (model.copy(modelessNewCoto = None), Cmd.none)
+
+          case _ =>
+            model.modelessNewCoto
+              .map(ModelessNewCoto.update(submsg, _))
+              .map { case (dialog, geomap, cmd) =>
+                (
+                  model
+                    .modify(_.modelessNewCoto).setTo(dialog)
+                    .modify(_.geomap).setTo(geomap),
+                  cmd
+                )
+              }
+              .getOrElse((model, Cmd.none))
+        }
+
       case Msg.ViewMessagesMsg(submsg) => {
         val (viewMessages, cmd) =
           ViewMessages.update(submsg, model.viewMessages)
@@ -549,6 +572,7 @@ object Main {
       AppBody(model),
       AppFooter(model),
       ViewMessages(model.viewMessages),
+      model.modelessNewCoto.map(ModelessNewCoto(_)),
       Modal(model)
     )
   }

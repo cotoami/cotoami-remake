@@ -1,0 +1,121 @@
+.modeless-new-coto-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 11;
+  pointer-events: none;
+}
+
+.modeless-new-coto {
+  --panel-min-width: min(720px, calc(100vw - 32px));
+  --panel-min-height: 420px;
+
+  position: fixed;
+  display: flex;
+  min-width: var(--panel-min-width);
+  min-height: var(--panel-min-height);
+  max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 24px);
+  box-sizing: border-box;
+  pointer-events: auto;
+  resize: both;
+  overflow: hidden;
+
+  > article {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    padding-bottom: 10px;
+    overflow: hidden;
+
+    > header.drag-handle {
+      flex-shrink: 0;
+      cursor: move;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 0;
+      padding: 15px 20px;
+
+      h1 {
+        flex: 1;
+        min-width: 0;
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 800;
+      }
+
+      .title-icon {
+        margin-right: 5px;
+
+        span.material-symbols {
+          vertical-align: -4px;
+          font-size: 21px;
+          opacity: 0.6;
+        }
+      }
+
+      button.close {
+        flex-shrink: 0;
+        cursor: pointer;
+      }
+    }
+
+    > .error {
+      flex-shrink: 0;
+      margin-top: 10px;
+      color: var(--error-color);
+      font-size: 95%;
+    }
+
+    > div.modal-body {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+      padding-top: 20px;
+      padding-bottom: var(--spacing);
+      overflow: hidden;
+
+      section.post-to {
+        flex-shrink: 0;
+        min-width: 0;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+
+        .label {
+          font-weight: 700;
+        }
+
+        .name {
+          opacity: 0.7;
+        }
+      }
+
+      div.coto-form {
+        flex: 1;
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      div.buttons {
+        flex-shrink: 0;
+        min-width: 0;
+        display: flex;
+        flex-direction: row;
+        justify-content: end;
+        margin-top: var(--spacing);
+      }
+    }
+  }
+}
