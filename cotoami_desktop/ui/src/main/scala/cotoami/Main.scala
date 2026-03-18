@@ -382,12 +382,12 @@ object Main {
       case Msg.ModalMsg(submsg) => Modal.update(submsg, model)
 
       case Msg.ModelessEditCotoMsg(submsg) =>
-        ModelessEditCoto.update(submsg, model.modelessEditCoto).pipe {
+        ModelessEditCoto.update(submsg, model.modeless.editCoto).pipe {
           case (dialog, geomap, cmd) =>
             (
               ModelessDialogOrder(
                 model
-                  .modify(_.modelessEditCoto).setTo(dialog)
+                  .modify(_.modeless.editCoto).setTo(dialog)
                   .modify(_.geomap).setTo(geomap),
                 ModelessEditCoto.DialogId,
                 ModelessEditCoto.dialogOrderAction(submsg)
@@ -397,12 +397,12 @@ object Main {
         }
 
       case Msg.ModelessNewCotoMsg(submsg) =>
-        ModelessNewCoto.update(submsg, model.modelessNewCoto).pipe {
+        ModelessNewCoto.update(submsg, model.modeless.newCoto).pipe {
           case (dialog, geomap, cmd) =>
             (
               ModelessDialogOrder(
                 model
-                  .modify(_.modelessNewCoto).setTo(dialog)
+                  .modify(_.modeless.newCoto).setTo(dialog)
                   .modify(_.geomap).setTo(geomap),
                 ModelessNewCoto.DialogId,
                 ModelessNewCoto.dialogOrderAction(submsg)
@@ -412,12 +412,12 @@ object Main {
         }
 
       case Msg.ModelessSubcotoMsg(submsg) =>
-        ModelessSubcoto.update(submsg, model.modelessSubcoto).pipe {
+        ModelessSubcoto.update(submsg, model.modeless.subcoto).pipe {
           case (dialog, geomap, cmd) =>
             (
               ModelessDialogOrder(
                 model
-                  .modify(_.modelessSubcoto).setTo(dialog)
+                  .modify(_.modeless.subcoto).setTo(dialog)
                   .modify(_.geomap).setTo(geomap),
                 ModelessSubcoto.DialogId,
                 ModelessSubcoto.dialogOrderAction(submsg)
@@ -598,9 +598,9 @@ object Main {
       AppBody(model),
       AppFooter(model),
       ViewMessages(model.viewMessages),
-      model.modelessEditCoto.map(ModelessEditCoto(_)),
-      model.modelessNewCoto.map(ModelessNewCoto(_)),
-      model.modelessSubcoto.map(ModelessSubcoto(_)),
+      model.modeless.editCoto.map(ModelessEditCoto(_)),
+      model.modeless.newCoto.map(ModelessNewCoto(_)),
+      model.modeless.subcoto.map(ModelessSubcoto(_)),
       Modal(model)
     )
   }

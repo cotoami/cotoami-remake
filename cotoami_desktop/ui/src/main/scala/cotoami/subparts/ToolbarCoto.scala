@@ -56,9 +56,9 @@ object ToolbarCoto {
           classes = "edit-coto",
           symbol = "edit",
           tip =
-            Option.when(!context.modelessEditCotoOpen)(context.i18n.text.Edit),
+            Option.when(!context.modeless.isOpen(ModelessEditCoto.DialogId))(context.i18n.text.Edit),
           tipPlacement = "left",
-          disabled = context.modelessEditCotoOpen,
+          disabled = context.modeless.isOpen(ModelessEditCoto.DialogId),
           onClick = e => {
             e.stopPropagation()
             dispatch(ModelessEditCoto.Msg.Open(coto))
@@ -69,11 +69,11 @@ object ToolbarCoto {
         toolButton(
           classes = "add-sub-coto",
           symbol = "add",
-          tip = Option.when(!context.modelessSubcotoOpen)(
+          tip = Option.when(!context.modeless.isOpen(ModelessSubcoto.DialogId))(
             context.i18n.text.WriteSubcoto
           ),
           tipPlacement = "left",
-          disabled = context.modelessSubcotoOpen,
+          disabled = context.modeless.isOpen(ModelessSubcoto.DialogId),
           onClick = e => {
             e.stopPropagation()
             dispatch(ModelessSubcoto.Msg.Open(coto.id, None, None))

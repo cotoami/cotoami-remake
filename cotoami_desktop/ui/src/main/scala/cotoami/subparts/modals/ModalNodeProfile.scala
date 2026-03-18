@@ -293,7 +293,7 @@ object ModalNodeProfile {
       div(className := "edit")(
         buttonEdit(
           _ => dispatch(ModelessEditCoto.Msg.Open(rootCoto)),
-          disabled = context.modelessEditCotoOpen
+          disabled = context.modeless.isOpen(ModelessEditCoto.DialogId)
         )
       )
     }

@@ -136,7 +136,7 @@ object ModelessNewCoto {
       ),
       onClose = () => dispatch(Msg.Close),
       onFocus = () => dispatch(Msg.Focus),
-      zIndex = context.modelessDialogZIndex(DialogId),
+      zIndex = context.modeless.dialogZIndex(DialogId),
       error = model.error
     )(
       context.repo.currentCotonoma.map(sectionPostTo),

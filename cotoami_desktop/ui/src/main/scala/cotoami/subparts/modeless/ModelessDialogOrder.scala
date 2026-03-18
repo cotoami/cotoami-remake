@@ -14,8 +14,8 @@ object ModelessDialogOrder {
       action: Option[Action]
   ): Model =
     action match {
-      case Some(Action.Focus) => model.focusModelessDialog(dialogId)
-      case Some(Action.Close) => model.closeModelessDialog(dialogId)
+      case Some(Action.Focus) => model.copy(modeless = model.modeless.focusDialog(dialogId))
+      case Some(Action.Close) => model.copy(modeless = model.modeless.closeDialog(dialogId))
       case None               => model
     }
 }

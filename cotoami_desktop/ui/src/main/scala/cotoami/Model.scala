@@ -23,9 +23,7 @@ trait Context {
   def uiState: Option[UiState]
   def repo: Root
   def geomap: SectionGeomap.Model
-  def modelessEditCotoOpen: Boolean = false
-  def modelessSubcotoOpen: Boolean = false
-  def modelessDialogZIndex(dialogId: ModelessDialogId): Int = 20
+  def modeless: ModelessState
 
   // Synchronously convert a device file path to an URL that can be loaded by the webview.
   def resolveResource(path: String): Option[String] = {
@@ -62,10 +60,7 @@ case class Model(
 
     // subparts
     modalStack: Modal.Stack = Modal.Stack(),
-    modelessDialogOrder: Seq[ModelessDialogId] = Seq.empty,
-    modelessEditCoto: Option[ModelessEditCoto.Model] = None,
-    modelessNewCoto: Option[ModelessNewCoto.Model] = None,
-    modelessSubcoto: Option[ModelessSubcoto.Model] = None,
+    modeless: ModelessState = ModelessState(),
     viewMessages: ViewMessages.Model = ViewMessages.Model(),
     navCotonomas: NavCotonomas.Model = NavCotonomas.Model(),
     nodeTools: SectionNodeTools.Model = SectionNodeTools.Model(),
@@ -77,17 +72,11 @@ case class Model(
 ) extends Context {
   def path: String = url.pathname + url.search + url.hash
 
-  override def modelessEditCotoOpen: Boolean = modelessEditCoto.nonEmpty
-  override def modelessSubcotoOpen: Boolean = modelessSubcoto.nonEmpty
-
   def focusModelessDialog(dialogId: ModelessDialogId): Model =
-    copy(modelessDialogOrder = modelessDialogOrder.filterNot(_ == dialogId) :+ dialogId)
+    copy(modeless = modeless.focusDialog(dialogId))
 
   def closeModelessDialog(dialogId: ModelessDialogId): Model =
-    copy(modelessDialogOrder = modelessDialogOrder.filterNot(_ == dialogId))
-
-  override def modelessDialogZIndex(dialogId: ModelessDialogId): Int =
-    20 + modelessDialogOrder.indexOf(dialogId).max(0)
+    copy(modeless = modeless.closeDialog(dialogId))
 
   def setSystemInfo(info: SystemInfoJson): Model =
     this
@@ -121,4 +110,27 @@ case class Model(
       url = url,
       traversals = SectionTraversals.Model()
     )
+}
+
+case class ModelessState(
+    dialogOrder: Seq[ModelessDialogId] = Seq.empty,
+    editCoto: Option[ModelessEditCoto.Model] = None,
+    newCoto: Option[ModelessNewCoto.Model] = None,
+    subcoto: Option[ModelessSubcoto.Model] = None
+) {
+  def isOpen(dialogId: ModelessDialogId): Boolean =
+    dialogId match {
+      case ModelessDialogId.EditCoto => editCoto.nonEmpty
+      case ModelessDialogId.NewCoto  => newCoto.nonEmpty
+      case ModelessDialogId.Subcoto  => subcoto.nonEmpty
+    }
+
+  def focusDialog(dialogId: ModelessDialogId): ModelessState =
+    copy(dialogOrder = dialogOrder.filterNot(_ == dialogId) :+ dialogId)
+
+  def closeDialog(dialogId: ModelessDialogId): ModelessState =
+    copy(dialogOrder = dialogOrder.filterNot(_ == dialogId))
+
+  def dialogZIndex(dialogId: ModelessDialogId): Int =
+    20 + dialogOrder.indexOf(dialogId).max(0)
 }

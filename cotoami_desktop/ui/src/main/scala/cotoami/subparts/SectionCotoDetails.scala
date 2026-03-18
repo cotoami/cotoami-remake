@@ -53,7 +53,7 @@ object SectionCotoDetails {
         tip = Some(context.i18n.text.Insert),
         tipPlacement = "bottom",
         classes = "insert-sub-coto",
-        disabled = context.modelessSubcotoOpen,
+        disabled = context.modeless.isOpen(ModelessSubcoto.DialogId),
         onClick = _ =>
           dispatch(
             ModelessSubcoto.Msg.Open(sourceCotoId, order, defaultCotonomaId)
