@@ -379,25 +379,14 @@ object Main {
       case Msg.ModalMsg(submsg) => Modal.update(submsg, model)
 
       case Msg.ModelessNewCotoMsg(submsg) =>
-        submsg match {
-          case ModelessNewCoto.Msg.Open(dialog) =>
-            (model.copy(modelessNewCoto = Some(dialog)), Cmd.none)
-
-          case ModelessNewCoto.Msg.Close =>
-            (model.copy(modelessNewCoto = None), Cmd.none)
-
-          case _ =>
-            model.modelessNewCoto
-              .map(ModelessNewCoto.update(submsg, _))
-              .map { case (dialog, geomap, cmd) =>
-                (
-                  model
-                    .modify(_.modelessNewCoto).setTo(dialog)
-                    .modify(_.geomap).setTo(geomap),
-                  cmd
-                )
-              }
-              .getOrElse((model, Cmd.none))
+        ModelessNewCoto.update(submsg, model.modelessNewCoto).pipe {
+          case (dialog, geomap, cmd) =>
+            (
+              model
+                .modify(_.modelessNewCoto).setTo(dialog)
+                .modify(_.geomap).setTo(geomap),
+              cmd
+            )
         }
 
       case Msg.ViewMessagesMsg(submsg) => {

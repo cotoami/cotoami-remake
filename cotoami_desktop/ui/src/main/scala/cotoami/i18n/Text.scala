@@ -146,7 +146,7 @@ trait Text {
   val ModalNewIto_clearSelection: String
   val ModalNewIto_connect: String
 
-  val ModalNewCoto_title: String
+  val ModelessNewCoto_title: String
   val ModalSubcoto_title: String
 
   val ModalNodeProfile_title: String
