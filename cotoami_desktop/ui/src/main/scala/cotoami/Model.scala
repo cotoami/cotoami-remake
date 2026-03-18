@@ -13,6 +13,7 @@ import cotoami.models._
 import cotoami.subparts._
 import cotoami.subparts.modeless.ModelessEditCoto
 import cotoami.subparts.modeless.ModelessNewCoto
+import cotoami.subparts.modeless.ModelessSubcoto
 
 trait Context {
   def time: Time
@@ -60,6 +61,7 @@ case class Model(
     modelessDialogOrder: Seq[String] = Seq.empty,
     modelessEditCoto: Option[ModelessEditCoto.Model] = None,
     modelessNewCoto: Option[ModelessNewCoto.Model] = None,
+    modelessSubcoto: Option[ModelessSubcoto.Model] = None,
     viewMessages: ViewMessages.Model = ViewMessages.Model(),
     navCotonomas: NavCotonomas.Model = NavCotonomas.Model(),
     nodeTools: SectionNodeTools.Model = SectionNodeTools.Model(),

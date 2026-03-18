@@ -9,6 +9,7 @@ import marubinotto.components.{toolButton, ScrollArea}
 import cotoami.{Into, Msg => AppMsg}
 import cotoami.Context
 import cotoami.models.{Coto, Cotonoma, Id, Siblings}
+import cotoami.subparts.modeless.ModelessSubcoto
 
 object SectionCotoDetails {
 
@@ -54,9 +55,7 @@ object SectionCotoDetails {
         classes = "insert-sub-coto",
         onClick = _ =>
           dispatch(
-            Modal.Msg.OpenModal(
-              Modal.Subcoto(sourceCotoId, order, defaultCotonomaId)
-            )
+            ModelessSubcoto.Msg.Open(sourceCotoId, order, defaultCotonomaId)
           )
       )
     )

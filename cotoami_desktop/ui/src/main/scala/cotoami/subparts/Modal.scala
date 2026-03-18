@@ -11,7 +11,7 @@ import marubinotto.libs.tauri
 import marubinotto.components.materialSymbol
 
 import cotoami.{Context, Into, Model => AppModel, Msg => AppMsg}
-import cotoami.models.{Coto, Cotonoma, Id, Ito, Node}
+import cotoami.models.{Coto, Id, Ito, Node}
 import cotoami.repository.Root
 import cotoami.subparts.modals._
 
@@ -151,18 +151,6 @@ object Modal {
     def apply(cotoId: Id[Coto]): NewIto = NewIto(ModalNewIto.Model(cotoId))
   }
 
-  case class Subcoto(model: ModalSubcoto.Model) extends Modal
-  object Subcoto {
-    def apply(
-        sourceCotoId: Id[Coto],
-        order: Option[Int],
-        defaultCotonomaId: Option[Id[Cotonoma]] = None
-    )(using
-        context: Context
-    ): Subcoto =
-      Subcoto(ModalSubcoto.Model(sourceCotoId, order, defaultCotonomaId))
-  }
-
   case class Incorporate(
       model: ModalIncorporate.Model = ModalIncorporate.Model()
   ) extends Modal
@@ -230,7 +218,6 @@ object Modal {
     case class EditItoMsg(msg: ModalEditIto.Msg) extends Msg
     case class SelectionMsg(msg: ModalSelection.Msg) extends Msg
     case class NewItoMsg(msg: ModalNewIto.Msg) extends Msg
-    case class SubcotoMsg(msg: ModalSubcoto.Msg) extends Msg
     case class IncorporateMsg(msg: ModalIncorporate.Msg) extends Msg
     case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
     case class SwitchNodeMsg(msg: ModalSwitchNode.Msg) extends Msg
@@ -323,18 +310,6 @@ object Modal {
               (
                 updateModal(NewIto(modal), model)
                   .modify(_.repo.cotos).setTo(cotos),
-                cmds
-              )
-          }
-        }
-
-      case Msg.SubcotoMsg(modalMsg) =>
-        stack.get[Subcoto].map { case Subcoto(modal) =>
-          ModalSubcoto.update(modalMsg, modal).pipe {
-            case (modal, geomap, cmds) =>
-              (
-                updateModal(Subcoto(modal), model)
-                  .modify(_.geomap).setTo(geomap),
                 cmds
               )
           }
@@ -485,8 +460,6 @@ object Modal {
       case Selection(modal) => Some(ModalSelection(modal))
 
       case NewIto(modal) => Some(ModalNewIto(modal))
-
-      case Subcoto(modal) => Some(ModalSubcoto(modal))
 
       case Incorporate(modal) => Some(ModalIncorporate(modal))
 

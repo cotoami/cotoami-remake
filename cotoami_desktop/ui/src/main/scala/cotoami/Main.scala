@@ -25,6 +25,7 @@ import cotoami.updates._
 import cotoami.subparts._
 import cotoami.subparts.modeless.ModelessEditCoto
 import cotoami.subparts.modeless.ModelessNewCoto
+import cotoami.subparts.modeless.ModelessSubcoto
 import cotoami.subparts.modals.ModalAppUpdate
 
 object Main {
@@ -409,6 +410,21 @@ object Main {
             )
         }
 
+      case Msg.ModelessSubcotoMsg(submsg) =>
+        ModelessSubcoto.update(submsg, model.modelessSubcoto).pipe {
+          case (dialog, geomap, cmd) =>
+            (
+              updateModelessDialogOrder(
+                model
+                  .modify(_.modelessSubcoto).setTo(dialog)
+                  .modify(_.geomap).setTo(geomap),
+                ModelessSubcoto.DialogId,
+                submsg
+              ),
+              cmd
+            )
+        }
+
       case Msg.ViewMessagesMsg(submsg) => {
         val (viewMessages, cmd) =
           ViewMessages.update(submsg, model.viewMessages)
@@ -583,6 +599,7 @@ object Main {
       ViewMessages(model.viewMessages),
       model.modelessEditCoto.map(ModelessEditCoto(_)),
       model.modelessNewCoto.map(ModelessNewCoto(_)),
+      model.modelessSubcoto.map(ModelessSubcoto(_)),
       Modal(model)
     )
   }
@@ -604,6 +621,12 @@ object Main {
       case ModelessNewCoto.Msg.Focus =>
         model.focusModelessDialog(dialogId)
       case ModelessNewCoto.Msg.Close =>
+        model.closeModelessDialog(dialogId)
+      case ModelessSubcoto.Msg.Open(_, _, _) =>
+        model.focusModelessDialog(dialogId)
+      case ModelessSubcoto.Msg.Focus =>
+        model.focusModelessDialog(dialogId)
+      case ModelessSubcoto.Msg.Close =>
         model.closeModelessDialog(dialogId)
       case _ => model
     }
