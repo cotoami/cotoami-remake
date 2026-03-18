@@ -61,13 +61,13 @@
       display: flex;
       align-items: center;
       margin-bottom: 0;
-      padding: 15px 30px;
+      padding: 10px 30px;
       padding-right: 52px;
 
       h1 {
         min-width: 0;
         margin: 0;
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         font-weight: 800;
       }
 
@@ -83,7 +83,7 @@
 
       button.close {
         position: absolute;
-        top: 20px;
+        top: 16px;
         right: 30px;
         display: block;
         width: 1rem;
