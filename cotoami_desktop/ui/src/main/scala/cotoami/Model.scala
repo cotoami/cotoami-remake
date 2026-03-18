@@ -23,6 +23,7 @@ trait Context {
   def uiState: Option[UiState]
   def repo: Root
   def geomap: SectionGeomap.Model
+  def modelessDialogZIndex(dialogId: ModelessDialogId): Int = 20
 
   // Synchronously convert a device file path to an URL that can be loaded by the webview.
   def resolveResource(path: String): Option[String] = {
@@ -80,7 +81,7 @@ case class Model(
   def closeModelessDialog(dialogId: ModelessDialogId): Model =
     copy(modelessDialogOrder = modelessDialogOrder.filterNot(_ == dialogId))
 
-  def modelessDialogZIndex(dialogId: ModelessDialogId): Int =
+  override def modelessDialogZIndex(dialogId: ModelessDialogId): Int =
     20 + modelessDialogOrder.indexOf(dialogId).max(0)
 
   def setSystemInfo(info: SystemInfoJson): Model =

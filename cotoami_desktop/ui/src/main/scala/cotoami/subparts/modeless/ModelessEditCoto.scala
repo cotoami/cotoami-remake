@@ -203,7 +203,7 @@ object ModelessEditCoto {
       title = dialogTitle(model.original),
       onClose = () => dispatch(Msg.Close),
       onFocus = () => dispatch(Msg.Focus),
-      zIndex = context.asInstanceOf[cotoami.Model].modelessDialogZIndex(DialogId),
+      zIndex = context.modelessDialogZIndex(DialogId),
       initialWidth =
         "min(calc(var(--max-article-width) + (var(--block-spacing-horizontal) * 2)), calc(100vw - 32px))",
       error = model.error
