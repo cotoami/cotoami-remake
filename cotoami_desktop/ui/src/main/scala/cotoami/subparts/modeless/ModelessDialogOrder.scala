@@ -10,7 +10,7 @@ object ModelessDialogOrder {
 
   def apply(
       model: Model,
-      dialogId: String,
+      dialogId: ModelessDialogId,
       action: Option[Action]
   ): Model =
     action match {

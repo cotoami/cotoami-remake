@@ -16,7 +16,7 @@ import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object ModelessNewCoto {
 
-  val DialogId = "modeless-new-coto"
+  val DialogId = ModelessDialogId.NewCoto
 
   case class Model(
       cotoForm: CotoForm.Model = CotoForm.Model(),

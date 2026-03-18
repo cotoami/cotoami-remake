@@ -19,7 +19,7 @@ import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object ModelessSubcoto {
 
-  val DialogId = "modeless-subcoto"
+  val DialogId = ModelessDialogId.Subcoto
 
   case class Model(
       sourceCotoId: Id[Coto],

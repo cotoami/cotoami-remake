@@ -11,6 +11,7 @@ import cotoami.backend._
 import cotoami.repository._
 import cotoami.models._
 import cotoami.subparts._
+import cotoami.subparts.modeless.ModelessDialogId
 import cotoami.subparts.modeless.ModelessEditCoto
 import cotoami.subparts.modeless.ModelessNewCoto
 import cotoami.subparts.modeless.ModelessSubcoto
@@ -58,7 +59,7 @@ case class Model(
 
     // subparts
     modalStack: Modal.Stack = Modal.Stack(),
-    modelessDialogOrder: Seq[String] = Seq.empty,
+    modelessDialogOrder: Seq[ModelessDialogId] = Seq.empty,
     modelessEditCoto: Option[ModelessEditCoto.Model] = None,
     modelessNewCoto: Option[ModelessNewCoto.Model] = None,
     modelessSubcoto: Option[ModelessSubcoto.Model] = None,
@@ -73,13 +74,13 @@ case class Model(
 ) extends Context {
   def path: String = url.pathname + url.search + url.hash
 
-  def focusModelessDialog(dialogId: String): Model =
+  def focusModelessDialog(dialogId: ModelessDialogId): Model =
     copy(modelessDialogOrder = modelessDialogOrder.filterNot(_ == dialogId) :+ dialogId)
 
-  def closeModelessDialog(dialogId: String): Model =
+  def closeModelessDialog(dialogId: ModelessDialogId): Model =
     copy(modelessDialogOrder = modelessDialogOrder.filterNot(_ == dialogId))
 
-  def modelessDialogZIndex(dialogId: String): Int =
+  def modelessDialogZIndex(dialogId: ModelessDialogId): Int =
     20 + modelessDialogOrder.indexOf(dialogId).max(0)
 
   def setSystemInfo(info: SystemInfoJson): Model =
