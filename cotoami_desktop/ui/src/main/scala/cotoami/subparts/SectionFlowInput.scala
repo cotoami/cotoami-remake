@@ -422,14 +422,6 @@ object SectionFlowInput {
             )
           )
         }
-      ),
-      div(className := "header-actions")(
-        Option.when(model.form.isInstanceOf[CotoForm.Model]) {
-          buttonOpenNewCotoModal(
-            model = model,
-            classes = "default open-new-coto-modal folded-only"
-          )
-        }
       )
     )
 
@@ -445,12 +437,20 @@ object SectionFlowInput {
       resizable = !model.folded,
       onPrimarySizeChanged = Some(onEditorHeightChanged),
       primary = SplitPane.Primary.Props(className = Some("coto-form-pane"))(
-        CotoForm.sectionEditorOrPreview(
-          form = form,
-          onCtrlEnter = Some(() => dispatch(Msg.Post)),
-          onFocus = Some(() => dispatch(Msg.Unfold)),
-          showLineNumbers = !model.folded
-        )(using context, submsg => dispatch(Msg.CotoFormMsg(submsg)))
+        div(className := "flow-input-editor-shell")(
+          CotoForm.sectionEditorOrPreview(
+            form = form,
+            onCtrlEnter = Some(() => dispatch(Msg.Post)),
+            onFocus = Some(() => dispatch(Msg.Unfold)),
+            showLineNumbers = !model.folded
+          )(using context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
+          Option.when(!form.inPreview) {
+            buttonOpenNewCotoModal(
+              model = model,
+              classes = "default open-new-coto-modal overlay"
+            )
+          }
+        )
       ),
       secondary = SplitPane.Secondary.Props()(
         CotoForm.ulAttributes(form)(using
@@ -471,10 +471,6 @@ object SectionFlowInput {
               )
             },
             div(className := "buttons")(
-              buttonOpenNewCotoModal(
-                model = model,
-                classes = "default open-new-coto-modal"
-              ),
               CotoForm.buttonPreview(form)(using
                 context,
                 submsg => dispatch(Msg.CotoFormMsg(submsg))
