@@ -254,7 +254,7 @@ object ModelessNewCoto {
         style := js.Dynamic.literal(
           left = s"${position.left}px",
           top = s"${position.top}px",
-          width = "min(960px, calc(100vw - 48px))",
+          width = "min(720px, calc(100vw - 32px))",
           height = "min(760px, calc(100vh - 48px))"
         )
       )(
