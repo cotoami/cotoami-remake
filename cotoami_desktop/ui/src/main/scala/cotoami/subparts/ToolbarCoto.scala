@@ -69,8 +69,11 @@ object ToolbarCoto {
         toolButton(
           classes = "add-sub-coto",
           symbol = "add",
-          tip = Some(context.i18n.text.WriteSubcoto),
+          tip = Option.when(!context.modelessSubcotoOpen)(
+            context.i18n.text.WriteSubcoto
+          ),
           tipPlacement = "left",
+          disabled = context.modelessSubcotoOpen,
           onClick = e => {
             e.stopPropagation()
             dispatch(ModelessSubcoto.Msg.Open(coto.id, None, None))

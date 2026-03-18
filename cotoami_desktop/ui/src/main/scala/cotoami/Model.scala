@@ -24,6 +24,7 @@ trait Context {
   def repo: Root
   def geomap: SectionGeomap.Model
   def modelessEditCotoOpen: Boolean = false
+  def modelessSubcotoOpen: Boolean = false
   def modelessDialogZIndex(dialogId: ModelessDialogId): Int = 20
 
   // Synchronously convert a device file path to an URL that can be loaded by the webview.
@@ -77,6 +78,7 @@ case class Model(
   def path: String = url.pathname + url.search + url.hash
 
   override def modelessEditCotoOpen: Boolean = modelessEditCoto.nonEmpty
+  override def modelessSubcotoOpen: Boolean = modelessSubcoto.nonEmpty
 
   def focusModelessDialog(dialogId: ModelessDialogId): Model =
     copy(modelessDialogOrder = modelessDialogOrder.filterNot(_ == dialogId) :+ dialogId)
