@@ -291,7 +291,10 @@ object ModalNodeProfile {
   ): ReactElement =
     Option.when(model.isSelf) {
       div(className := "edit")(
-        buttonEdit(_ => dispatch(ModelessEditCoto.Msg.Open(rootCoto)))
+        buttonEdit(
+          _ => dispatch(ModelessEditCoto.Msg.Open(rootCoto)),
+          disabled = context.modelessEditCotoOpen
+        )
       )
     }
 }

@@ -12,12 +12,14 @@ import marubinotto.components.toolButton
 package object modals {
 
   def buttonEdit(
-      onClick: SyntheticMouseEvent[?] => Unit
+      onClick: SyntheticMouseEvent[?] => Unit,
+      disabled: Boolean = false
   )(using context: Context): ReactElement =
     toolButton(
       classes = "edit",
       symbol = "edit",
-      tip = Some(context.i18n.text.Edit),
+      tip = Option.when(!disabled)(context.i18n.text.Edit),
+      disabled = disabled,
       onClick = onClick
     )
 

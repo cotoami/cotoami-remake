@@ -55,8 +55,10 @@ object ToolbarCoto {
         toolButton(
           classes = "edit-coto",
           symbol = "edit",
-          tip = Some(context.i18n.text.Edit),
+          tip =
+            Option.when(!context.modelessEditCotoOpen)(context.i18n.text.Edit),
           tipPlacement = "left",
+          disabled = context.modelessEditCotoOpen,
           onClick = e => {
             e.stopPropagation()
             dispatch(ModelessEditCoto.Msg.Open(coto))
