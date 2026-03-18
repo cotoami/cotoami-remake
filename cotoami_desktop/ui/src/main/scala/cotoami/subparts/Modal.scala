@@ -11,7 +11,7 @@ import marubinotto.libs.tauri
 import marubinotto.components.materialSymbol
 
 import cotoami.{Context, Into, Model => AppModel, Msg => AppMsg}
-import cotoami.models.{Coto, Cotonoma, Id, Ito, Node}
+import cotoami.models.{Coto, Id, Ito, Node}
 import cotoami.repository.Root
 import cotoami.subparts.modals._
 
@@ -127,14 +127,6 @@ object Modal {
       )
   }
 
-  case class EditCoto(model: ModalEditCoto.Model) extends Modal
-  object EditCoto {
-    def apply(coto: Coto): (EditCoto, Cmd[AppMsg]) = {
-      val (model, cmd) = ModalEditCoto.Model(coto)
-      (EditCoto(model), cmd)
-    }
-  }
-
   case class Promote(model: ModalPromote.Model) extends Modal
   object Promote {
     def apply(coto: Coto): (Promote, Cmd[AppMsg]) = {
@@ -157,27 +149,6 @@ object Modal {
   case class NewIto(model: ModalNewIto.Model) extends Modal
   object NewIto {
     def apply(cotoId: Id[Coto]): NewIto = NewIto(ModalNewIto.Model(cotoId))
-  }
-
-  case class NewCoto(model: ModalNewCoto.Model = ModalNewCoto.Model())
-      extends Modal
-  object NewCoto {
-    def apply(cotoForm: EditorCoto.CotoForm.Model): (NewCoto, Cmd[AppMsg]) = {
-      val (model, cmd) = ModalNewCoto.Model(cotoForm)
-      (NewCoto(model), cmd)
-    }
-  }
-
-  case class Subcoto(model: ModalSubcoto.Model) extends Modal
-  object Subcoto {
-    def apply(
-        sourceCotoId: Id[Coto],
-        order: Option[Int],
-        defaultCotonomaId: Option[Id[Cotonoma]] = None
-    )(using
-        context: Context
-    ): Subcoto =
-      Subcoto(ModalSubcoto.Model(sourceCotoId, order, defaultCotonomaId))
   }
 
   case class Incorporate(
@@ -243,13 +214,10 @@ object Modal {
     case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
     case class AppUpdateMsg(msg: ModalAppUpdate.Msg) extends Msg
     case class InputPasswordMsg(msg: ModalInputPassword.Msg) extends Msg
-    case class EditCotoMsg(msg: ModalEditCoto.Msg) extends Msg
     case class PromoteMsg(msg: ModalPromote.Msg) extends Msg
     case class EditItoMsg(msg: ModalEditIto.Msg) extends Msg
     case class SelectionMsg(msg: ModalSelection.Msg) extends Msg
     case class NewItoMsg(msg: ModalNewIto.Msg) extends Msg
-    case class NewCotoMsg(msg: ModalNewCoto.Msg) extends Msg
-    case class SubcotoMsg(msg: ModalSubcoto.Msg) extends Msg
     case class IncorporateMsg(msg: ModalIncorporate.Msg) extends Msg
     case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
     case class SwitchNodeMsg(msg: ModalSwitchNode.Msg) extends Msg
@@ -309,18 +277,6 @@ object Modal {
           }
         }
 
-      case Msg.EditCotoMsg(modalMsg) =>
-        stack.get[EditCoto].map { case EditCoto(modal) =>
-          ModalEditCoto.update(modalMsg, modal).pipe {
-            case (modal, geomap, cmds) =>
-              (
-                updateModal(EditCoto(modal), model)
-                  .modify(_.geomap).setTo(geomap),
-                cmds
-              )
-          }
-        }
-
       case Msg.PromoteMsg(modalMsg) =>
         stack.get[Promote].map { case Promote(modal) =>
           ModalPromote.update(modalMsg, modal).pipe { case (modal, cmds) =>
@@ -354,30 +310,6 @@ object Modal {
               (
                 updateModal(NewIto(modal), model)
                   .modify(_.repo.cotos).setTo(cotos),
-                cmds
-              )
-          }
-        }
-
-      case Msg.NewCotoMsg(modalMsg) =>
-        stack.get[NewCoto].map { case NewCoto(modal) =>
-          ModalNewCoto.update(modalMsg, modal).pipe {
-            case (modal, geomap, cmds) =>
-              (
-                updateModal(NewCoto(modal), model)
-                  .modify(_.geomap).setTo(geomap),
-                cmds
-              )
-          }
-        }
-
-      case Msg.SubcotoMsg(modalMsg) =>
-        stack.get[Subcoto].map { case Subcoto(modal) =>
-          ModalSubcoto.update(modalMsg, modal).pipe {
-            case (modal, geomap, cmds) =>
-              (
-                updateModal(Subcoto(modal), model)
-                  .modify(_.geomap).setTo(geomap),
                 cmds
               )
           }
@@ -521,8 +453,6 @@ object Modal {
 
       case NewPassword(modal) => Some(ModalNewPassword(modal))
 
-      case EditCoto(modal) => Some(ModalEditCoto(modal))
-
       case Promote(modal) => Some(ModalPromote(modal))
 
       case EditIto(modal) => Some(ModalEditIto(modal))
@@ -530,10 +460,6 @@ object Modal {
       case Selection(modal) => Some(ModalSelection(modal))
 
       case NewIto(modal) => Some(ModalNewIto(modal))
-
-      case NewCoto(modal) => Some(ModalNewCoto(modal))
-
-      case Subcoto(modal) => Some(ModalSubcoto(modal))
 
       case Incorporate(modal) => Some(ModalIncorporate(modal))
 

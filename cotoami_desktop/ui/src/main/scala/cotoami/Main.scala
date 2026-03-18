@@ -23,6 +23,10 @@ import cotoami.repository._
 import cotoami.models._
 import cotoami.updates._
 import cotoami.subparts._
+import cotoami.subparts.modeless.ModelessEditCoto
+import cotoami.subparts.modeless.ModelessDialogOrder
+import cotoami.subparts.modeless.ModelessNewCoto
+import cotoami.subparts.modeless.ModelessSubcoto
 import cotoami.subparts.modals.ModalAppUpdate
 
 object Main {
@@ -377,6 +381,51 @@ object Main {
 
       case Msg.ModalMsg(submsg) => Modal.update(submsg, model)
 
+      case Msg.ModelessEditCotoMsg(submsg) =>
+        ModelessEditCoto.update(submsg, model.modelessEditCoto).pipe {
+          case (dialog, geomap, cmd) =>
+            (
+              ModelessDialogOrder(
+                model
+                  .modify(_.modelessEditCoto).setTo(dialog)
+                  .modify(_.geomap).setTo(geomap),
+                ModelessEditCoto.DialogId,
+                ModelessEditCoto.dialogOrderAction(submsg)
+              ),
+              cmd
+            )
+        }
+
+      case Msg.ModelessNewCotoMsg(submsg) =>
+        ModelessNewCoto.update(submsg, model.modelessNewCoto).pipe {
+          case (dialog, geomap, cmd) =>
+            (
+              ModelessDialogOrder(
+                model
+                  .modify(_.modelessNewCoto).setTo(dialog)
+                  .modify(_.geomap).setTo(geomap),
+                ModelessNewCoto.DialogId,
+                ModelessNewCoto.dialogOrderAction(submsg)
+              ),
+              cmd
+            )
+        }
+
+      case Msg.ModelessSubcotoMsg(submsg) =>
+        ModelessSubcoto.update(submsg, model.modelessSubcoto).pipe {
+          case (dialog, geomap, cmd) =>
+            (
+              ModelessDialogOrder(
+                model
+                  .modify(_.modelessSubcoto).setTo(dialog)
+                  .modify(_.geomap).setTo(geomap),
+                ModelessSubcoto.DialogId,
+                ModelessSubcoto.dialogOrderAction(submsg)
+              ),
+              cmd
+            )
+        }
+
       case Msg.ViewMessagesMsg(submsg) => {
         val (viewMessages, cmd) =
           ViewMessages.update(submsg, model.viewMessages)
@@ -549,7 +598,11 @@ object Main {
       AppBody(model),
       AppFooter(model),
       ViewMessages(model.viewMessages),
+      model.modelessEditCoto.map(ModelessEditCoto(_)),
+      model.modelessNewCoto.map(ModelessNewCoto(_)),
+      model.modelessSubcoto.map(ModelessSubcoto(_)),
       Modal(model)
     )
   }
+
 }

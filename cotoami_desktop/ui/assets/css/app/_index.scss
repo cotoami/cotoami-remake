@@ -40,13 +40,14 @@
 @forward "modal-app-update";
 @forward "modal-input-password";
 @forward "modal-new-password";
-@forward "modal-edit-coto";
+@forward "modeless";
+@forward "modeless-edit-coto";
 @forward "modal-promote";
 @forward "modal-edit-ito";
 @forward "modal-selection";
 @forward "modal-new-ito";
-@forward "modal-new-coto";
-@forward "modal-subcoto";
+@forward "modeless-new-coto";
+@forward "modeless-subcoto";
 @forward "modal-incorporate";
 @forward "modal-parent-sync";
 @forward "modal-switch-node";

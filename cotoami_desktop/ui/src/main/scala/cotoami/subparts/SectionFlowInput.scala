@@ -27,6 +27,7 @@ import cotoami.models.{
 }
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
 import cotoami.subparts.EditorCoto._
+import cotoami.subparts.modeless.ModelessNewCoto
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object SectionFlowInput {
@@ -174,10 +175,7 @@ object SectionFlowInput {
         val cleared = model.clear
         default.copy(
           _1 = cleared,
-          _4 = Cmd.Batch(
-            Modal.open(Modal.NewCoto(form)),
-            cleared.save
-          )
+          _4 = Cmd.Batch(ModelessNewCoto.open(form), cleared.save)
         )
 
       case (Msg.CotoFormMsg(submsg), cotoForm: CotoForm.Model, _) => {
@@ -531,7 +529,7 @@ object SectionFlowInput {
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     button(
       className := classes,
-      title := context.i18n.text.ModalNewCoto_title,
+      title := context.i18n.text.ModelessNewCoto_title,
       disabled := model.posting,
       onClick := (_ => dispatch(Msg.OpenNewCotoModal))
     )(

@@ -11,6 +11,10 @@ import cotoami.backend._
 import cotoami.repository._
 import cotoami.models._
 import cotoami.subparts._
+import cotoami.subparts.modeless.ModelessDialogId
+import cotoami.subparts.modeless.ModelessEditCoto
+import cotoami.subparts.modeless.ModelessNewCoto
+import cotoami.subparts.modeless.ModelessSubcoto
 
 trait Context {
   def time: Time
@@ -19,6 +23,7 @@ trait Context {
   def uiState: Option[UiState]
   def repo: Root
   def geomap: SectionGeomap.Model
+  def modelessDialogZIndex(dialogId: ModelessDialogId): Int = 20
 
   // Synchronously convert a device file path to an URL that can be loaded by the webview.
   def resolveResource(path: String): Option[String] = {
@@ -55,6 +60,10 @@ case class Model(
 
     // subparts
     modalStack: Modal.Stack = Modal.Stack(),
+    modelessDialogOrder: Seq[ModelessDialogId] = Seq.empty,
+    modelessEditCoto: Option[ModelessEditCoto.Model] = None,
+    modelessNewCoto: Option[ModelessNewCoto.Model] = None,
+    modelessSubcoto: Option[ModelessSubcoto.Model] = None,
     viewMessages: ViewMessages.Model = ViewMessages.Model(),
     navCotonomas: NavCotonomas.Model = NavCotonomas.Model(),
     nodeTools: SectionNodeTools.Model = SectionNodeTools.Model(),
@@ -65,6 +74,15 @@ case class Model(
     geomap: SectionGeomap.Model
 ) extends Context {
   def path: String = url.pathname + url.search + url.hash
+
+  def focusModelessDialog(dialogId: ModelessDialogId): Model =
+    copy(modelessDialogOrder = modelessDialogOrder.filterNot(_ == dialogId) :+ dialogId)
+
+  def closeModelessDialog(dialogId: ModelessDialogId): Model =
+    copy(modelessDialogOrder = modelessDialogOrder.filterNot(_ == dialogId))
+
+  override def modelessDialogZIndex(dialogId: ModelessDialogId): Int =
+    20 + modelessDialogOrder.indexOf(dialogId).max(0)
 
   def setSystemInfo(info: SystemInfoJson): Model =
     this

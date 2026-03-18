@@ -1,27 +1,24 @@
-package cotoami.subparts.modals
+package cotoami.subparts.modeless
 
 import scala.util.chaining._
 
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import marubinotto.optionalClasses
-import marubinotto.fui.{Browser, Cmd}
 import marubinotto.Validation
+import marubinotto.fui.{Browser, Cmd}
+import marubinotto.components.materialSymbol
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Node}
 import cotoami.repository.Cotonomas
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
-import cotoami.subparts.Modal
 import cotoami.subparts.EditorCoto._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
-object ModalEditCoto {
+object ModelessEditCoto {
 
-  /////////////////////////////////////////////////////////////////////////////
-  // Model
-  /////////////////////////////////////////////////////////////////////////////
+  val DialogId = ModelessDialogId.EditCoto
 
   case class Model(
       original: Coto,
@@ -42,29 +39,25 @@ object ModalEditCoto {
         diffGeolocation.isDefined
 
     def diffSummary: Option[Option[String]] =
-      Option.when(cotoForm.summary != original.summary) {
-        cotoForm.summary
-      }
+      Option.when(cotoForm.summary != original.summary)(cotoForm.summary)
 
     def diffContent: Option[String] =
-      Option.when(cotoForm.content != original.content.getOrElse("")) {
+      Option.when(cotoForm.content != original.content.getOrElse(""))(
         cotoForm.content
-      }
+      )
 
     def diffMediaContent: Option[Option[(String, String)]] =
-      Option.when(mediaContentChanged) {
-        cotoForm.mediaBase64
-      }
+      Option.when(mediaContentChanged)(cotoForm.mediaBase64)
 
     def diffDateTimeRange: Option[Option[DateTimeRange]] =
-      Option.when(cotoForm.dateTimeRange != original.dateTimeRange) {
+      Option.when(cotoForm.dateTimeRange != original.dateTimeRange)(
         cotoForm.dateTimeRange
-      }
+      )
 
     def diffGeolocation: Option[Option[Geolocation]] =
-      Option.when(cotoForm.geolocation != original.geolocation) {
+      Option.when(cotoForm.geolocation != original.geolocation)(
         cotoForm.geolocation
-      }
+      )
 
     lazy val readyToSave: Boolean =
       edited && !saving && cotoForm.hasValidContents &&
@@ -73,10 +66,7 @@ object ModalEditCoto {
     def save(cotonomas: Cotonomas): (Model, Cmd.One[AppMsg]) =
       (
         copy(saving = true),
-        if (original.isCotonoma)
-          saveCotonoma(cotonomas)
-        else
-          saveCoto
+        if (original.isCotonoma) saveCotonoma(cotonomas) else saveCoto
       )
 
     private def saveCoto: Cmd.One[AppMsg] =
@@ -92,9 +82,7 @@ object ModalEditCoto {
       else
         Browser.send(Msg.Saved(Right(original)).into)
 
-    private def saveCotonoma(
-        cotonomas: Cotonomas
-    ): Cmd.One[AppMsg] =
+    private def saveCotonoma(cotonomas: Cotonomas): Cmd.One[AppMsg] =
       (cotonomaForm.edited, cotonomas.asCotonoma(original)) match {
         case (true, Some(cotonoma)) =>
           CotonomaBackend.rename(cotonoma.id, cotonomaForm.name)
@@ -107,9 +95,7 @@ object ModalEditCoto {
     def apply(coto: Coto): (Model, Cmd[AppMsg]) = {
       val cotoForm = CotoForm.Model.forUpdate(coto)
       val cotonomaForm =
-        CotonomaForm.Model.forUpdate(
-          coto.nameAsCotonoma.getOrElse("")
-        )
+        CotonomaForm.Model.forUpdate(coto.nameAsCotonoma.getOrElse(""))
       (
         Model(coto, cotoForm, cotonomaForm),
         cotoForm.scanMediaMetadata.map(Msg.CotoFormMsg.apply).map(_.into)
@@ -117,103 +103,110 @@ object ModalEditCoto {
     }
   }
 
-  /////////////////////////////////////////////////////////////////////////////
-  // Update
-  /////////////////////////////////////////////////////////////////////////////
-
   sealed trait Msg extends Into[AppMsg] {
-    override def into: AppMsg =
-      Modal.Msg.EditCotoMsg(this).pipe(AppMsg.ModalMsg.apply)
+    override def into: AppMsg = AppMsg.ModelessEditCotoMsg(this)
   }
 
   object Msg {
+    case class Open(coto: Coto) extends Msg
+    case object Focus extends Msg
+    case object Close extends Msg
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
     case class CotonomaFormMsg(submsg: CotonomaForm.Msg) extends Msg
     case object Save extends Msg
     case class Saved(result: Either[ErrorJson, Coto]) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(using
-      context: Context
-  ): (Model, Geomap, Cmd[AppMsg]) = {
-    val default = (model, context.geomap, Cmd.none)
+  def dialogOrderAction(msg: Msg): Option[ModelessDialogOrder.Action] =
     msg match {
-      case Msg.CotoFormMsg(submsg) => {
-        val (form, geomap, subcmd) = CotoForm.update(submsg, model.cotoForm)
-        default.copy(
-          _1 = model.copy(
-            cotoForm = form,
-            mediaContentChanged = submsg match {
-              case CotoForm.Msg.FileInput(_)       => true
-              case CotoForm.Msg.DeleteMediaContent => true
-              case _                               => model.mediaContentChanged
-            }
-          ),
-          _2 = geomap,
-          _3 = subcmd.map(Msg.CotoFormMsg.apply).map(_.into)
-        )
-      }
+      case Msg.Open(_) => Some(ModelessDialogOrder.Action.Focus)
+      case Msg.Focus   => Some(ModelessDialogOrder.Action.Focus)
+      case Msg.Close   => Some(ModelessDialogOrder.Action.Close)
+      case _           => None
+    }
 
-      case Msg.CotonomaFormMsg(submsg) => {
-        val (form, subcmd) = CotonomaForm.update(submsg, model.cotonomaForm)
-        default.copy(
-          _1 = model.copy(cotonomaForm = form),
-          _3 = subcmd.map(Msg.CotonomaFormMsg.apply).map(_.into)
-        )
-      }
+  def open(coto: Coto): Cmd.One[AppMsg] =
+    Browser.send(Msg.Open(coto).into)
 
-      case Msg.Save =>
-        model.save(context.repo.cotonomas).pipe { case (model, cmd) =>
-          default.copy(_1 = model, _3 = cmd)
+  def close: Cmd.One[AppMsg] =
+    Browser.send(Msg.Close.into)
+
+  def update(msg: Msg, model: Option[Model])(using
+      context: Context
+  ): (Option[Model], Geomap, Cmd[AppMsg]) = {
+    val default = (model, context.geomap, Cmd.none)
+
+    (msg, model) match {
+      case (Msg.Open(coto), _) =>
+        Model(coto).pipe { case (opened, cmd) =>
+          (Some(opened), context.geomap, cmd)
         }
 
-      case Msg.Saved(Right(_)) =>
-        default.copy(
-          _1 = model.copy(saving = false),
-          _3 = Modal.close(classOf[Modal.EditCoto])
+      case (Msg.Focus, _) =>
+        default
+
+      case (Msg.Close, _) =>
+        default.copy(_1 = None)
+
+      case (_, None) =>
+        default
+
+      case (Msg.CotoFormMsg(submsg), Some(current)) =>
+        val (form, geomap, subcmd) = CotoForm.update(submsg, current.cotoForm)
+        (
+          Some(
+            current.copy(
+              cotoForm = form,
+              mediaContentChanged = submsg match {
+                case CotoForm.Msg.FileInput(_)       => true
+                case CotoForm.Msg.DeleteMediaContent => true
+                case _                               => current.mediaContentChanged
+              }
+            )
+          ),
+          geomap,
+          subcmd.map(Msg.CotoFormMsg.apply).map(_.into)
         )
 
-      case Msg.Saved(Left(e)) =>
+      case (Msg.CotonomaFormMsg(submsg), Some(current)) =>
+        val (form, subcmd) = CotonomaForm.update(submsg, current.cotonomaForm)
+        (
+          Some(current.copy(cotonomaForm = form)),
+          context.geomap,
+          subcmd.map(Msg.CotonomaFormMsg.apply).map(_.into)
+        )
+
+      case (Msg.Save, Some(current)) =>
+        current.save(context.repo.cotonomas).pipe { case (updated, cmd) =>
+          default.copy(_1 = Some(updated), _3 = cmd)
+        }
+
+      case (Msg.Saved(Right(_)), Some(current)) =>
+        (Some(current.copy(saving = false)), context.geomap, close)
+
+      case (Msg.Saved(Left(e)), Some(current)) =>
         default.copy(
-          _1 = model.copy(saving = false, error = Some(e.default_message))
+          _1 = Some(current.copy(saving = false, error = Some(e.default_message)))
         )
     }
   }
-
-  /////////////////////////////////////////////////////////////////////////////
-  // View
-  /////////////////////////////////////////////////////////////////////////////
 
   def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
-    Modal.view(
-      dialogClasses = optionalClasses(
-        Seq(
-          ("edit-coto", true),
-          ("with-media-content", model.cotoForm.mediaBlob.isDefined)
-        )
+    ModelessDialogFrame(
+      dialogClasses = Seq(
+        "modeless-edit-coto" -> true,
+        "with-media-content" -> model.cotoForm.mediaBlob.isDefined
       ),
-      closeButton = Some((classOf[Modal.EditCoto], dispatch)),
+      title = dialogTitle(model.original),
+      onClose = () => dispatch(Msg.Close),
+      onFocus = () => dispatch(Msg.Focus),
+      zIndex = context.modelessDialogZIndex(DialogId),
+      initialWidth =
+        "min(calc(var(--max-article-width) + (var(--block-spacing-horizontal) * 2)), calc(100vw - 32px))",
       error = model.error
-    )(
-      if (model.original.isCotonoma)
-        if (context.repo.isNodeRoot(model.original.id))
-          Fragment(
-            Modal.spanTitleIcon(Node.IconName),
-            context.i18n.text.Node_root
-          )
-        else
-          Fragment(
-            Modal.spanTitleIcon(Cotonoma.IconName),
-            context.i18n.text.Cotonoma
-          )
-      else
-        Fragment(
-          Modal.spanTitleIcon(Coto.IconName),
-          context.i18n.text.Coto
-        )
     )(
       Option.when(model.original.isCotonoma) {
         div(className := "cotonoma-form")(
@@ -250,4 +243,22 @@ object ModalEditCoto {
         )
       )
     )
+
+  private def dialogTitle(original: Coto)(using context: Context): ReactElement =
+    if (original.isCotonoma)
+      if (context.repo.isNodeRoot(original.id))
+        Fragment(
+          span(className := "title-icon")(materialSymbol(Node.IconName)),
+          context.i18n.text.Node_root
+        )
+      else
+        Fragment(
+          span(className := "title-icon")(materialSymbol(Cotonoma.IconName)),
+          context.i18n.text.Cotonoma
+        )
+    else
+      Fragment(
+        span(className := "title-icon")(materialSymbol(Coto.IconName)),
+        context.i18n.text.Coto
+      )
 }

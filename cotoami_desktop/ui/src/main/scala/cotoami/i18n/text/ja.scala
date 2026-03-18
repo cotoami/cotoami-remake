@@ -182,7 +182,7 @@ object ja extends Text {
   val ModalNewIto_clearSelection = "接続時にコトの選択を解除"
   val ModalNewIto_connect = "接続"
 
-  val ModalNewCoto_title = "新規コト"
+  val ModelessNewCoto_title = "新規コト"
   val ModalSubcoto_title = "子コトの追加"
 
   val ModalNodeProfile_title = "ノード情報"

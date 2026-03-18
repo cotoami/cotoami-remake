@@ -6,6 +6,9 @@ import cotoami.backend._
 import cotoami.repository._
 import cotoami.models._
 import cotoami.subparts._
+import cotoami.subparts.modeless.ModelessEditCoto
+import cotoami.subparts.modeless.ModelessNewCoto
+import cotoami.subparts.modeless.ModelessSubcoto
 
 sealed trait Msg extends Into[Msg] {
   override def into: Msg = this
@@ -69,6 +72,9 @@ object Msg {
 
   // Subparts
   case class ModalMsg(submsg: Modal.Msg) extends Msg
+  case class ModelessEditCotoMsg(submsg: ModelessEditCoto.Msg) extends Msg
+  case class ModelessNewCotoMsg(submsg: ModelessNewCoto.Msg) extends Msg
+  case class ModelessSubcotoMsg(submsg: ModelessSubcoto.Msg) extends Msg
   case class ViewMessagesMsg(submsg: ViewMessages.Msg) extends Msg
   case class NavCotonomasMsg(submsg: NavCotonomas.Msg) extends Msg
   case class SectionNodeToolsMsg(submsg: SectionNodeTools.Msg) extends Msg

@@ -183,7 +183,7 @@ object zh_cn extends Text {
   val ModalNewIto_clearSelection = "连接时清除选择"
   val ModalNewIto_connect = "连接"
 
-  val ModalNewCoto_title = "新 Coto"
+  val ModelessNewCoto_title = "新 Coto"
   val ModalSubcoto_title = "新子 Coto"
 
   val ModalNodeProfile_title = "节点配置文件"

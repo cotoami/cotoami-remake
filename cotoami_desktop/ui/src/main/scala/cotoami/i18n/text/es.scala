@@ -185,7 +185,7 @@ object es extends Text {
   val ModalNewIto_clearSelection = "Limpiar selección al conectar"
   val ModalNewIto_connect = "Conectar"
 
-  val ModalNewCoto_title = "Nuevo Coto"
+  val ModelessNewCoto_title = "Nuevo Coto"
   val ModalSubcoto_title = "Nuevo Sub-coto"
 
   val ModalNodeProfile_title = "Perfil del Nodo"

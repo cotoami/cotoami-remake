@@ -185,7 +185,7 @@ object de extends Text {
   val ModalNewIto_clearSelection = "Auswahl beim Verbinden löschen"
   val ModalNewIto_connect = "Verbinden"
 
-  val ModalNewCoto_title = "Neues Coto"
+  val ModelessNewCoto_title = "Neues Coto"
   val ModalSubcoto_title = "Neues Sub-Coto"
 
   val ModalNodeProfile_title = "Knoten-Profil"

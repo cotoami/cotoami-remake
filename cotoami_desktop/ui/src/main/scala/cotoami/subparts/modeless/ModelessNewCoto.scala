@@ -1,25 +1,22 @@
-package cotoami.subparts.modals
+package cotoami.subparts.modeless
 
 import scala.util.chaining._
 
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import marubinotto.optionalClasses
-import marubinotto.fui.Cmd
+import marubinotto.fui.{Browser, Cmd}
+import marubinotto.components.materialSymbol
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma}
 import cotoami.backend.{CotoBackend, ErrorJson}
-import cotoami.subparts.Modal
 import cotoami.subparts.EditorCoto._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
-object ModalNewCoto {
+object ModelessNewCoto {
 
-  /////////////////////////////////////////////////////////////////////////////
-  // Model
-  /////////////////////////////////////////////////////////////////////////////
+  val DialogId = ModelessDialogId.NewCoto
 
   case class Model(
       cotoForm: CotoForm.Model = CotoForm.Model(),
@@ -45,76 +42,102 @@ object ModalNewCoto {
       )
   }
 
-  /////////////////////////////////////////////////////////////////////////////
-  // Update
-  /////////////////////////////////////////////////////////////////////////////
-
   sealed trait Msg extends Into[AppMsg] {
-    override def into: AppMsg =
-      Modal.Msg.NewCotoMsg(this).pipe(AppMsg.ModalMsg.apply)
+    override def into: AppMsg = AppMsg.ModelessNewCotoMsg(this)
   }
 
   object Msg {
+    case class Open(cotoForm: CotoForm.Model) extends Msg
+    case object Focus extends Msg
+    case object Close extends Msg
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
     case object Post extends Msg
     case class Posted(result: Either[ErrorJson, Coto]) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(using
-      context: Context
-  ): (Model, Geomap, Cmd[AppMsg]) = {
-    val default = (model, context.geomap, Cmd.none)
+  def dialogOrderAction(msg: Msg): Option[ModelessDialogOrder.Action] =
     msg match {
-      case Msg.CotoFormMsg(submsg) =>
-        val (form, geomap, subcmd) = CotoForm.update(submsg, model.cotoForm)
-        default.copy(
-          _1 = model.copy(cotoForm = form),
-          _2 = geomap,
-          _3 = subcmd.map(Msg.CotoFormMsg.apply).map(_.into)
+      case Msg.Open(_) => Some(ModelessDialogOrder.Action.Focus)
+      case Msg.Focus   => Some(ModelessDialogOrder.Action.Focus)
+      case Msg.Close   => Some(ModelessDialogOrder.Action.Close)
+      case _           => None
+    }
+
+  def open(cotoForm: CotoForm.Model): Cmd.One[AppMsg] =
+    Browser.send(Msg.Open(cotoForm).into)
+
+  def close: Cmd.One[AppMsg] =
+    Browser.send(Msg.Close.into)
+
+  def update(msg: Msg, model: Option[Model])(using
+      context: Context
+  ): (Option[Model], Geomap, Cmd[AppMsg]) = {
+    val default = (model, context.geomap, Cmd.none)
+
+    (msg, model) match {
+      case (Msg.Open(cotoForm), _) =>
+        Model(cotoForm).pipe { case (opened, cmd) =>
+          (Some(opened), context.geomap, cmd)
+        }
+
+      case (Msg.Focus, _) =>
+        default
+
+      case (Msg.Close, _) =>
+        default.copy(_1 = None)
+
+      case (_, None) =>
+        default
+
+      case (Msg.CotoFormMsg(submsg), Some(current)) =>
+        val (form, geomap, subcmd) = CotoForm.update(submsg, current.cotoForm)
+        (
+          Some(current.copy(cotoForm = form)),
+          geomap,
+          subcmd.map(Msg.CotoFormMsg.apply).map(_.into)
         )
 
-      case Msg.Post =>
+      case (Msg.Post, Some(current)) =>
         context.repo.currentCotonoma match {
           case Some(cotonoma) =>
-            model.post(cotonoma).pipe { case (model, cmd) =>
-              default.copy(_1 = model, _3 = cmd)
+            current.post(cotonoma).pipe { case (updated, cmd) =>
+              default.copy(_1 = Some(updated), _3 = cmd)
             }
           case None => default
         }
 
-      case Msg.Posted(Right(_)) =>
-        default.copy(
-          _1 = model.copy(posting = false),
-          _3 = Modal.close(classOf[Modal.NewCoto])
+      case (Msg.Posted(Right(_)), Some(current)) =>
+        (
+          Some(current.copy(posting = false)),
+          context.geomap,
+          close
         )
 
-      case Msg.Posted(Left(e)) =>
+      case (Msg.Posted(Left(e)), Some(current)) =>
         default.copy(
-          _1 = model.copy(posting = false, error = Some(e.default_message))
+          _1 =
+            Some(current.copy(posting = false, error = Some(e.default_message)))
         )
     }
   }
-
-  /////////////////////////////////////////////////////////////////////////////
-  // View
-  /////////////////////////////////////////////////////////////////////////////
 
   def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
-    Modal.view(
-      dialogClasses = optionalClasses(
-        Seq(
-          ("new-coto", true),
-          ("with-media-content", model.cotoForm.mediaBlob.isDefined)
-        )
+    ModelessDialogFrame(
+      dialogClasses = Seq(
+        "modeless-new-coto" -> true,
+        "with-media-content" -> model.cotoForm.mediaBlob.isDefined
       ),
-      closeButton = Some((classOf[Modal.NewCoto], dispatch)),
+      title = Fragment(
+        span(className := "title-icon")(materialSymbol(Coto.IconName)),
+        context.i18n.text.ModelessNewCoto_title
+      ),
+      onClose = () => dispatch(Msg.Close),
+      onFocus = () => dispatch(Msg.Focus),
+      zIndex = context.modelessDialogZIndex(DialogId),
       error = model.error
-    )(
-      Modal.spanTitleIcon(Coto.IconName),
-      context.i18n.text.ModalNewCoto_title
     )(
       context.repo.currentCotonoma.map(sectionPostTo),
       CotoForm(
