@@ -383,9 +383,13 @@ object Main {
         ModelessEditCoto.update(submsg, model.modelessEditCoto).pipe {
           case (dialog, geomap, cmd) =>
             (
-              model
-                .modify(_.modelessEditCoto).setTo(dialog)
-                .modify(_.geomap).setTo(geomap),
+              updateModelessDialogOrder(
+                model
+                  .modify(_.modelessEditCoto).setTo(dialog)
+                  .modify(_.geomap).setTo(geomap),
+                ModelessEditCoto.DialogId,
+                submsg
+              ),
               cmd
             )
         }
@@ -394,9 +398,13 @@ object Main {
         ModelessNewCoto.update(submsg, model.modelessNewCoto).pipe {
           case (dialog, geomap, cmd) =>
             (
-              model
-                .modify(_.modelessNewCoto).setTo(dialog)
-                .modify(_.geomap).setTo(geomap),
+              updateModelessDialogOrder(
+                model
+                  .modify(_.modelessNewCoto).setTo(dialog)
+                  .modify(_.geomap).setTo(geomap),
+                ModelessNewCoto.DialogId,
+                submsg
+              ),
               cmd
             )
         }
@@ -578,4 +586,25 @@ object Main {
       Modal(model)
     )
   }
+
+  private def updateModelessDialogOrder(
+      model: Model,
+      dialogId: String,
+      msg: Any
+  ): Model =
+    msg match {
+      case ModelessEditCoto.Msg.Open(_) =>
+        model.focusModelessDialog(dialogId)
+      case ModelessEditCoto.Msg.Focus =>
+        model.focusModelessDialog(dialogId)
+      case ModelessEditCoto.Msg.Close =>
+        model.closeModelessDialog(dialogId)
+      case ModelessNewCoto.Msg.Open(_) =>
+        model.focusModelessDialog(dialogId)
+      case ModelessNewCoto.Msg.Focus =>
+        model.focusModelessDialog(dialogId)
+      case ModelessNewCoto.Msg.Close =>
+        model.closeModelessDialog(dialogId)
+      case _ => model
+    }
 }

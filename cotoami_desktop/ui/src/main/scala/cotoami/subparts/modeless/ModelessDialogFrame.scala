@@ -49,6 +49,8 @@ object ModelessDialogFrame {
       dialogClasses: Seq[(String, Boolean)],
       title: ReactElement,
       onClose: () => Unit,
+      onFocus: () => Unit,
+      zIndex: Int,
       initialWidth: String = Defaults.Width,
       initialHeight: String = Defaults.Height,
       error: Option[String] = None
@@ -60,6 +62,8 @@ object ModelessDialogFrame {
       dialogClasses: Seq[(String, Boolean)],
       title: ReactElement,
       onClose: () => Unit,
+      onFocus: () => Unit,
+      zIndex: Int,
       initialWidth: String = Defaults.Width,
       initialHeight: String = Defaults.Height,
       error: Option[String] = None
@@ -69,6 +73,8 @@ object ModelessDialogFrame {
         dialogClasses,
         title,
         onClose,
+        onFocus,
+        zIndex,
         initialWidth,
         initialHeight,
         error
@@ -149,10 +155,16 @@ object ModelessDialogFrame {
       Seq(position.left, position.top)
     )
 
-    div(className := "modeless-dialog-layer")(
+    div(
+      className := "modeless-dialog-layer",
+      style := js.Dynamic.literal(
+        zIndex = props.zIndex
+      )
+    )(
       div(
         className := optionalClasses(("modeless-dialog", true) +: props.dialogClasses),
         ref := panelRef,
+        onMouseDown := (_ => props.onFocus()),
         style := js.Dynamic.literal(
           left = s"${position.left}px",
           top = s"${position.top}px",

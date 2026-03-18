@@ -18,6 +18,8 @@ import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object ModelessEditCoto {
 
+  val DialogId = "modeless-edit-coto"
+
   case class Model(
       original: Coto,
       cotoForm: CotoForm.Model,
@@ -107,6 +109,7 @@ object ModelessEditCoto {
 
   object Msg {
     case class Open(coto: Coto) extends Msg
+    case object Focus extends Msg
     case object Close extends Msg
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
     case class CotonomaFormMsg(submsg: CotonomaForm.Msg) extends Msg
@@ -130,6 +133,9 @@ object ModelessEditCoto {
         Model(coto).pipe { case (opened, cmd) =>
           (Some(opened), context.geomap, cmd)
         }
+
+      case (Msg.Focus, _) =>
+        default
 
       case (Msg.Close, _) =>
         default.copy(_1 = None)
@@ -188,6 +194,8 @@ object ModelessEditCoto {
       ),
       title = dialogTitle(model.original),
       onClose = () => dispatch(Msg.Close),
+      onFocus = () => dispatch(Msg.Focus),
+      zIndex = context.asInstanceOf[cotoami.Model].modelessDialogZIndex(DialogId),
       initialWidth =
         "min(calc(var(--max-article-width) + (var(--block-spacing-horizontal) * 2)), calc(100vw - 32px))",
       error = model.error

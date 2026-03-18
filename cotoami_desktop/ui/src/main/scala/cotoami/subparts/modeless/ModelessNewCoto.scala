@@ -16,6 +16,8 @@ import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object ModelessNewCoto {
 
+  val DialogId = "modeless-new-coto"
+
   case class Model(
       cotoForm: CotoForm.Model = CotoForm.Model(),
       posting: Boolean = false,
@@ -46,6 +48,7 @@ object ModelessNewCoto {
 
   object Msg {
     case class Open(cotoForm: CotoForm.Model) extends Msg
+    case object Focus extends Msg
     case object Close extends Msg
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
     case object Post extends Msg
@@ -68,6 +71,9 @@ object ModelessNewCoto {
         Model(cotoForm).pipe { case (opened, cmd) =>
           (Some(opened), context.geomap, cmd)
         }
+
+      case (Msg.Focus, _) =>
+        default
 
       case (Msg.Close, _) =>
         default.copy(_1 = None)
@@ -121,6 +127,8 @@ object ModelessNewCoto {
         context.i18n.text.ModelessNewCoto_title
       ),
       onClose = () => dispatch(Msg.Close),
+      onFocus = () => dispatch(Msg.Focus),
+      zIndex = context.asInstanceOf[cotoami.Model].modelessDialogZIndex(DialogId),
       error = model.error
     )(
       context.repo.currentCotonoma.map(sectionPostTo),

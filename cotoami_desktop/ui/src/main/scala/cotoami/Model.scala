@@ -57,6 +57,7 @@ case class Model(
 
     // subparts
     modalStack: Modal.Stack = Modal.Stack(),
+    modelessDialogOrder: Seq[String] = Seq.empty,
     modelessEditCoto: Option[ModelessEditCoto.Model] = None,
     modelessNewCoto: Option[ModelessNewCoto.Model] = None,
     viewMessages: ViewMessages.Model = ViewMessages.Model(),
@@ -69,6 +70,15 @@ case class Model(
     geomap: SectionGeomap.Model
 ) extends Context {
   def path: String = url.pathname + url.search + url.hash
+
+  def focusModelessDialog(dialogId: String): Model =
+    copy(modelessDialogOrder = modelessDialogOrder.filterNot(_ == dialogId) :+ dialogId)
+
+  def closeModelessDialog(dialogId: String): Model =
+    copy(modelessDialogOrder = modelessDialogOrder.filterNot(_ == dialogId))
+
+  def modelessDialogZIndex(dialogId: String): Int =
+    20 + modelessDialogOrder.indexOf(dialogId).max(0)
 
   def setSystemInfo(info: SystemInfoJson): Model =
     this
