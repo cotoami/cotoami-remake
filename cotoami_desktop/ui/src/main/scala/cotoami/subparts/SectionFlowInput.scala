@@ -45,7 +45,7 @@ object SectionFlowInput {
       copy(posting = false).pipe { model =>
         form match {
           case form: CotoForm.Model if form.hasContents => model
-          case _ =>
+          case _                                        =>
             model.copy(
               form = CotoForm.Model(),
               folded = true
@@ -356,8 +356,8 @@ object SectionFlowInput {
             onEditorHeightChanged
           )
 
-          CotoForm.sectionMediaPreview(form)(using submsg =>
-            dispatch(Msg.CotoFormMsg(submsg))
+          CotoForm.sectionMediaPreview(form)(using
+            submsg => dispatch(Msg.CotoFormMsg(submsg))
           ) match {
             case Some(mediaPreview) =>
               SplitPane(
@@ -528,6 +528,6 @@ object SectionFlowInput {
       disabled := model.posting,
       onClick := (_ => dispatch(Msg.OpenNewCotoModal))
     )(
-      materialSymbol("open_in_full")
+      materialSymbol("open_in_new")
     )
 }
