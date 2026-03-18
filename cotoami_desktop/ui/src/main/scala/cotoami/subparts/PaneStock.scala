@@ -133,7 +133,7 @@ object PaneStock {
         SectionGeomap(model.geomap)
       },
       toolButton(
-        classes = "change-split-orientation",
+        classes = "default change-split-orientation overlay",
         symbol =
           if (uiState.mapVertical)
             "splitscreen_top"
