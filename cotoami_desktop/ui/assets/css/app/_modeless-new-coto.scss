@@ -19,6 +19,9 @@
   pointer-events: auto;
   resize: both;
   overflow: hidden;
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.18),
+    0 4px 12px rgba(0, 0, 0, 0.12);
 
   > article {
     display: flex;
