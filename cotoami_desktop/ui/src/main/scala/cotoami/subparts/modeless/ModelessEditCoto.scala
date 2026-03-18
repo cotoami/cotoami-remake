@@ -117,6 +117,14 @@ object ModelessEditCoto {
     case class Saved(result: Either[ErrorJson, Coto]) extends Msg
   }
 
+  def dialogOrderAction(msg: Msg): Option[ModelessDialogOrder.Action] =
+    msg match {
+      case Msg.Open(_) => Some(ModelessDialogOrder.Action.Focus)
+      case Msg.Focus   => Some(ModelessDialogOrder.Action.Focus)
+      case Msg.Close   => Some(ModelessDialogOrder.Action.Close)
+      case _           => None
+    }
+
   def open(coto: Coto): Cmd.One[AppMsg] =
     Browser.send(Msg.Open(coto).into)
 

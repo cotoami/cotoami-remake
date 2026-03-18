@@ -24,6 +24,7 @@ import cotoami.models._
 import cotoami.updates._
 import cotoami.subparts._
 import cotoami.subparts.modeless.ModelessEditCoto
+import cotoami.subparts.modeless.ModelessDialogOrder
 import cotoami.subparts.modeless.ModelessNewCoto
 import cotoami.subparts.modeless.ModelessSubcoto
 import cotoami.subparts.modals.ModalAppUpdate
@@ -384,12 +385,12 @@ object Main {
         ModelessEditCoto.update(submsg, model.modelessEditCoto).pipe {
           case (dialog, geomap, cmd) =>
             (
-              updateModelessDialogOrder(
+              ModelessDialogOrder(
                 model
                   .modify(_.modelessEditCoto).setTo(dialog)
                   .modify(_.geomap).setTo(geomap),
                 ModelessEditCoto.DialogId,
-                submsg
+                ModelessEditCoto.dialogOrderAction(submsg)
               ),
               cmd
             )
@@ -399,12 +400,12 @@ object Main {
         ModelessNewCoto.update(submsg, model.modelessNewCoto).pipe {
           case (dialog, geomap, cmd) =>
             (
-              updateModelessDialogOrder(
+              ModelessDialogOrder(
                 model
                   .modify(_.modelessNewCoto).setTo(dialog)
                   .modify(_.geomap).setTo(geomap),
                 ModelessNewCoto.DialogId,
-                submsg
+                ModelessNewCoto.dialogOrderAction(submsg)
               ),
               cmd
             )
@@ -414,12 +415,12 @@ object Main {
         ModelessSubcoto.update(submsg, model.modelessSubcoto).pipe {
           case (dialog, geomap, cmd) =>
             (
-              updateModelessDialogOrder(
+              ModelessDialogOrder(
                 model
                   .modify(_.modelessSubcoto).setTo(dialog)
                   .modify(_.geomap).setTo(geomap),
                 ModelessSubcoto.DialogId,
-                submsg
+                ModelessSubcoto.dialogOrderAction(submsg)
               ),
               cmd
             )
@@ -604,30 +605,4 @@ object Main {
     )
   }
 
-  private def updateModelessDialogOrder(
-      model: Model,
-      dialogId: String,
-      msg: Any
-  ): Model =
-    msg match {
-      case ModelessEditCoto.Msg.Open(_) =>
-        model.focusModelessDialog(dialogId)
-      case ModelessEditCoto.Msg.Focus =>
-        model.focusModelessDialog(dialogId)
-      case ModelessEditCoto.Msg.Close =>
-        model.closeModelessDialog(dialogId)
-      case ModelessNewCoto.Msg.Open(_) =>
-        model.focusModelessDialog(dialogId)
-      case ModelessNewCoto.Msg.Focus =>
-        model.focusModelessDialog(dialogId)
-      case ModelessNewCoto.Msg.Close =>
-        model.closeModelessDialog(dialogId)
-      case ModelessSubcoto.Msg.Open(_, _, _) =>
-        model.focusModelessDialog(dialogId)
-      case ModelessSubcoto.Msg.Focus =>
-        model.focusModelessDialog(dialogId)
-      case ModelessSubcoto.Msg.Close =>
-        model.closeModelessDialog(dialogId)
-      case _ => model
-    }
 }

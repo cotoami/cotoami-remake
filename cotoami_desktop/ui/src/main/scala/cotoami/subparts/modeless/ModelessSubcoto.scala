@@ -119,6 +119,14 @@ object ModelessSubcoto {
     case class Posted(result: Either[ErrorJson, (Coto, Ito)]) extends Msg
   }
 
+  def dialogOrderAction(msg: Msg): Option[ModelessDialogOrder.Action] =
+    msg match {
+      case Msg.Open(_, _, _) => Some(ModelessDialogOrder.Action.Focus)
+      case Msg.Focus         => Some(ModelessDialogOrder.Action.Focus)
+      case Msg.Close         => Some(ModelessDialogOrder.Action.Close)
+      case _                 => None
+    }
+
   def open(
       sourceCotoId: Id[Coto],
       order: Option[Int],
