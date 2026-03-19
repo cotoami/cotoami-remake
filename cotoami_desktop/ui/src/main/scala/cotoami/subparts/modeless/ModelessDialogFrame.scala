@@ -45,6 +45,15 @@ object ModelessDialogFrame {
     )
   }
 
+  private def centerPosition(bounds: PanelBounds): Position =
+    clampPosition(
+      Position(
+        left = (dom.window.innerWidth - bounds.width) / 2.0,
+        top = (dom.window.innerHeight - bounds.height) / 2.0
+      ),
+      bounds
+    )
+
   case class Props(
       dialogClasses: Seq[(String, Boolean)],
       title: ReactElement,
@@ -85,18 +94,20 @@ object ModelessDialogFrame {
     val panelRef = useRef[html.Div](null)
     val dragRef = useRef(Option.empty[DragState])
     val (position, setPosition) =
-      useState(Position(Defaults.Left, Defaults.Top))
+      useState(Option.empty[Position])
 
     val onMouseMove: js.Function1[dom.MouseEvent, Unit] = useCallback(
       (e: dom.MouseEvent) => {
         dragRef.current.foreach { drag =>
           setPosition(
-            clampPosition(
-              Position(
-                drag.left + e.clientX - drag.mouseX,
-                drag.top + e.clientY - drag.mouseY
-              ),
-              panelBoundsOf(panelRef)
+            _.map(_ =>
+              clampPosition(
+                Position(
+                  drag.left + e.clientX - drag.mouseX,
+                  drag.top + e.clientY - drag.mouseY
+                ),
+                panelBoundsOf(panelRef)
+              )
             )
           )
         }
@@ -126,9 +137,21 @@ object ModelessDialogFrame {
 
     useEffect(
       () => {
+        if (position.isEmpty) {
+          val bounds = panelBoundsOf(panelRef)
+          if (bounds.width > 0.0 && bounds.height > 0.0) {
+            setPosition(_ => Some(centerPosition(bounds)))
+          }
+        }
+      },
+      Seq(position.isEmpty)
+    )
+
+    useEffect(
+      () => {
         val clampToViewport: js.Function1[dom.Event, Unit] =
           (_: dom.Event) =>
-            setPosition(current => clampPosition(current, panelBoundsOf(panelRef)))
+            setPosition(_.map(current => clampPosition(current, panelBoundsOf(panelRef))))
 
         clampToViewport(new dom.Event("resize"))
         dom.window.addEventListener("resize", clampToViewport)
@@ -141,19 +164,24 @@ object ModelessDialogFrame {
     val startDragging = useCallback(
       (e: SyntheticMouseEvent[dom.Element]) => {
         if (e.button == 0) {
-          dragRef.current = Some(
-            DragState(
-              mouseX = e.clientX,
-              mouseY = e.clientY,
-              left = position.left,
-              top = position.top
+          position.foreach { current =>
+            dragRef.current = Some(
+              DragState(
+                mouseX = e.clientX,
+                mouseY = e.clientY,
+                left = current.left,
+                top = current.top
+              )
             )
-          )
+          }
           e.preventDefault()
         }
       },
-      Seq(position.left, position.top)
+      Seq(position.map(_.left).getOrElse(0.0), position.map(_.top).getOrElse(0.0))
     )
+
+    val displayPosition = position.getOrElse(Position(0.0, 0.0))
+    val visible = position.isDefined
 
     div(
       className := "modeless-dialog-layer",
@@ -166,10 +194,11 @@ object ModelessDialogFrame {
         ref := panelRef,
         onMouseDown := (_ => props.onFocus()),
         style := js.Dynamic.literal(
-          left = s"${position.left}px",
-          top = s"${position.top}px",
+          left = s"${displayPosition.left}px",
+          top = s"${displayPosition.top}px",
           width = props.initialWidth,
-          height = props.initialHeight
+          height = props.initialHeight,
+          visibility = if (visible) "visible" else "hidden"
         )
       )(
         article()(
