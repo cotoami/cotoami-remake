@@ -20,8 +20,8 @@ section.stock {
       align-items: center;
       justify-content: center;
 
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       padding: 0;
 
       border: 1px solid #{pico.$grey-100};
@@ -40,7 +40,6 @@ section.stock {
 
       span.material-symbols {
         color: hsl(205, 20%, 32%);
-        font-size: 24px;
       }
     }
 
