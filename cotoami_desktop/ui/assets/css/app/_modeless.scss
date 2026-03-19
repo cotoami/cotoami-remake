@@ -17,7 +17,6 @@
   max-height: calc(100vh - 24px);
   box-sizing: border-box;
   pointer-events: auto;
-  resize: both;
   overflow: hidden;
   border: 1px solid var(--pane-border-color);
   border-radius: var(--border-radius);
@@ -25,19 +24,36 @@
     0 18px 42px rgba(0, 0, 0, 0.18),
     0 4px 12px rgba(0, 0, 0, 0.12);
 
-  &::after {
-    content: "";
+  > .resize-handle {
     position: absolute;
-    right: 6px;
-    bottom: 6px;
-    width: 14px;
-    height: 14px;
-    pointer-events: none;
-    opacity: 0.55;
-    background:
-      linear-gradient(135deg, transparent 0 42%, var(--muted-color) 42% 52%, transparent 52% 100%),
-      linear-gradient(135deg, transparent 0 58%, var(--muted-color) 58% 68%, transparent 68% 100%),
-      linear-gradient(135deg, transparent 0 74%, var(--muted-color) 74% 84%, transparent 84% 100%);
+    z-index: 2;
+    width: 16px;
+    height: 16px;
+    background: transparent;
+
+    &.top-left {
+      top: 0;
+      left: 0;
+      cursor: nwse-resize;
+    }
+
+    &.top-right {
+      top: 0;
+      right: 0;
+      cursor: nesw-resize;
+    }
+
+    &.bottom-left {
+      bottom: 0;
+      left: 0;
+      cursor: nesw-resize;
+    }
+
+    &.bottom-right {
+      right: 0;
+      bottom: 0;
+      cursor: nwse-resize;
+    }
   }
 
   > article {
