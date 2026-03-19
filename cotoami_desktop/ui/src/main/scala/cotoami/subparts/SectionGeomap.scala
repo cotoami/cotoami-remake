@@ -268,10 +268,11 @@ object SectionGeomap {
       case Msg.MarkerClicked(id) =>
         id.split(IdSeparator).toSeq match {
           case Seq(id) =>
-            context.uiState match {
-              case Some(uiState) if uiState.paneOpened(PaneFlow.PaneName) =>
-                default.copy(_3 = Browser.send(AppMsg.FocusCoto(Id(id), false)))
-              case _ =>
+            context.repo.cotonomas.getByCotoId(Id(id)) match {
+              case Some(cotonoma) =>
+                default.copy(_3 = Browser.send(AppMsg.FocusCotonoma(cotonoma)))
+
+              case None =>
                 default.copy(_3 =
                   Browser.send(
                     SectionTraversals.Msg.OpenTraversal(Id(id)).into
