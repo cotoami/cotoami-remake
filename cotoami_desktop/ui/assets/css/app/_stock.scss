@@ -14,6 +14,16 @@ section.stock {
       position: absolute;
       top: 10px;
       left: 10px;
+    }
+
+    button.open-modeless-geomap {
+      position: absolute;
+      top: 50px;
+      left: 10px;
+    }
+
+    button.change-split-orientation,
+    button.open-modeless-geomap {
       z-index: 2;
 
       display: inline-flex;

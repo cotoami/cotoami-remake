@@ -94,6 +94,7 @@ object ko extends Text {
 
   val PaneStock_map_dockLeft = "왼쪽에 도킹"
   val PaneStock_map_dockTop = "위쪽에 도킹"
+  val PaneStock_map_openModeless = "창으로 열기"
 
   val SectionPins_layout_document = "문서"
   val SectionPins_layout_columns = "열"
@@ -183,6 +184,7 @@ object ko extends Text {
   val ModalNewIto_clearSelection = "연결 시 선택 지우기"
   val ModalNewIto_connect = "연결"
 
+  val ModelessGeomap_title = "지도"
   val ModelessNewCoto_title = "새 Coto"
   val ModalSubcoto_title = "새 하위 Coto"
 

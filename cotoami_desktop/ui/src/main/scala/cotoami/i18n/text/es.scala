@@ -94,6 +94,7 @@ object es extends Text {
 
   val PaneStock_map_dockLeft = "Acoplar a la Izquierda"
   val PaneStock_map_dockTop = "Acoplar Arriba"
+  val PaneStock_map_openModeless = "Abrir en Ventana"
 
   val SectionPins_layout_document = "Documento"
   val SectionPins_layout_columns = "Columnas"
@@ -185,6 +186,7 @@ object es extends Text {
   val ModalNewIto_clearSelection = "Limpiar selección al conectar"
   val ModalNewIto_connect = "Conectar"
 
+  val ModelessGeomap_title = "Mapa"
   val ModelessNewCoto_title = "Nuevo Coto"
   val ModalSubcoto_title = "Nuevo Sub-coto"
 

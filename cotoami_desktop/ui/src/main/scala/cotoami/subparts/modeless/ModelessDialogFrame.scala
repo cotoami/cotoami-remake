@@ -22,11 +22,26 @@ object ModelessDialogFrame {
   }
 
   private case class Position(left: Double, top: Double)
+  private case class MinimumSize(width: Double, height: Double)
   private case class DragState(
       mouseX: Double,
       mouseY: Double,
       left: Double,
       top: Double
+  )
+  private enum ResizeCorner {
+    case TopLeft, TopRight, BottomLeft, BottomRight
+  }
+  private case class ResizeState(
+      corner: ResizeCorner,
+      mouseX: Double,
+      mouseY: Double,
+      left: Double,
+      top: Double,
+      width: Double,
+      height: Double,
+      minWidth: Double,
+      minHeight: Double
   )
   private case class PanelBounds(width: Double, height: Double)
 
@@ -43,6 +58,67 @@ object ModelessDialogFrame {
       position.left.max(0.0).min(maxLeft),
       position.top.max(0.0).min(maxTop)
     )
+  }
+
+  private def minimumSizeOf(panelRef: ReactRef[html.Div]): MinimumSize =
+    Option(panelRef.current).map { panel =>
+      val style = dom.window.getComputedStyle(panel)
+      MinimumSize(
+        width = style.minWidth.stripSuffix("px").toDoubleOption.getOrElse(0.0),
+        height = style.minHeight.stripSuffix("px").toDoubleOption.getOrElse(0.0)
+      )
+    }.getOrElse(MinimumSize(0.0, 0.0))
+
+  private def clampSize(
+      position: Position,
+      bounds: PanelBounds,
+      minimum: MinimumSize
+  ): PanelBounds = {
+    val maxWidth = (dom.window.innerWidth - position.left).max(0.0)
+    val maxHeight = (dom.window.innerHeight - position.top).max(0.0)
+    PanelBounds(
+      width = bounds.width.max(minimum.width.min(maxWidth)).min(maxWidth),
+      height = bounds.height.max(minimum.height.min(maxHeight)).min(maxHeight)
+    )
+  }
+
+  private def resizedRect(state: ResizeState, mouseX: Double, mouseY: Double): (
+      Position,
+      PanelBounds
+  ) = {
+    val dx = mouseX - state.mouseX
+    val dy = mouseY - state.mouseY
+    val right = state.left + state.width
+    val bottom = state.top + state.height
+    state.corner match {
+      case ResizeCorner.TopLeft =>
+        val left = (state.left + dx).max(0.0).min(right - state.minWidth)
+        val top = (state.top + dy).max(0.0).min(bottom - state.minHeight)
+        (Position(left, top), PanelBounds(right - left, bottom - top))
+      case ResizeCorner.TopRight =>
+        val newRight = (right + dx)
+          .max(state.left + state.minWidth)
+          .min(dom.window.innerWidth.toDouble)
+        val top = (state.top + dy).max(0.0).min(bottom - state.minHeight)
+        (Position(state.left, top), PanelBounds(newRight - state.left, bottom - top))
+      case ResizeCorner.BottomLeft =>
+        val left = (state.left + dx).max(0.0).min(right - state.minWidth)
+        val newBottom = (bottom + dy)
+          .max(state.top + state.minHeight)
+          .min(dom.window.innerHeight.toDouble)
+        (Position(left, state.top), PanelBounds(right - left, newBottom - state.top))
+      case ResizeCorner.BottomRight =>
+        val newRight = (right + dx)
+          .max(state.left + state.minWidth)
+          .min(dom.window.innerWidth.toDouble)
+        val newBottom = (bottom + dy)
+          .max(state.top + state.minHeight)
+          .min(dom.window.innerHeight.toDouble)
+        (
+          Position(state.left, state.top),
+          PanelBounds(newRight - state.left, newBottom - state.top)
+        )
+    }
   }
 
   private def centerPosition(bounds: PanelBounds): Position =
@@ -93,31 +169,43 @@ object ModelessDialogFrame {
   private val component = FunctionalComponent[Props] { props =>
     val panelRef = useRef[html.Div](null)
     val dragRef = useRef(Option.empty[DragState])
+    val resizeRef = useRef(Option.empty[ResizeState])
     val (position, setPosition) =
       useState(Option.empty[Position])
+    val (size, setSize) =
+      useState(Option.empty[PanelBounds])
 
     val onMouseMove: js.Function1[dom.MouseEvent, Unit] = useCallback(
       (e: dom.MouseEvent) => {
-        dragRef.current.foreach { drag =>
-          setPosition(
-            _.map(_ =>
-              clampPosition(
-                Position(
-                  drag.left + e.clientX - drag.mouseX,
-                  drag.top + e.clientY - drag.mouseY
-                ),
-                panelBoundsOf(panelRef)
+        resizeRef.current.foreach { resize =>
+          val (newPosition, newSize) =
+            resizedRect(resize, e.clientX, e.clientY)
+          setPosition(_ => Some(newPosition))
+          setSize(_ => Some(newSize))
+        }
+        Option.when(resizeRef.current.isEmpty) {
+          dragRef.current.foreach { drag =>
+            setPosition(
+              _.map(_ =>
+                clampPosition(
+                  Position(
+                    drag.left + e.clientX - drag.mouseX,
+                    drag.top + e.clientY - drag.mouseY
+                  ),
+                  size.getOrElse(panelBoundsOf(panelRef))
+                )
               )
             )
-          )
+          }
         }
       },
-      Seq()
+      Seq(size.map(_.width).getOrElse(0.0), size.map(_.height).getOrElse(0.0))
     )
 
     val onMouseUp: js.Function1[dom.MouseEvent, Unit] = useCallback(
       (_: dom.MouseEvent) => {
         dragRef.current = None
+        resizeRef.current = None
       },
       Seq()
     )
@@ -141,6 +229,7 @@ object ModelessDialogFrame {
           val bounds = panelBoundsOf(panelRef)
           if (bounds.width > 0.0 && bounds.height > 0.0) {
             setPosition(_ => Some(centerPosition(bounds)))
+            setSize(_ => Some(bounds))
           }
         }
       },
@@ -150,15 +239,33 @@ object ModelessDialogFrame {
     useEffect(
       () => {
         val clampToViewport: js.Function1[dom.Event, Unit] =
-          (_: dom.Event) =>
-            setPosition(_.map(current => clampPosition(current, panelBoundsOf(panelRef))))
+          (_: dom.Event) => {
+            val minimum = minimumSizeOf(panelRef)
+            val currentSize = size.getOrElse(panelBoundsOf(panelRef))
+            if (currentSize.width > 0.0 && currentSize.height > 0.0) {
+              setSize(_ => Some(currentSize))
+              position.foreach { currentPosition =>
+                val clampedPosition =
+                  clampPosition(currentPosition, currentSize)
+                val clampedSize =
+                  clampSize(clampedPosition, currentSize, minimum)
+                setPosition(_ => Some(clampPosition(clampedPosition, clampedSize)))
+                setSize(_ => Some(clampedSize))
+              }
+            }
+          }
 
         clampToViewport(new dom.Event("resize"))
         dom.window.addEventListener("resize", clampToViewport)
 
         () => dom.window.removeEventListener("resize", clampToViewport)
       },
-      Seq()
+      Seq(
+        position.map(_.left).getOrElse(0.0),
+        position.map(_.top).getOrElse(0.0),
+        size.map(_.width).getOrElse(0.0),
+        size.map(_.height).getOrElse(0.0)
+      )
     )
 
     val startDragging = useCallback(
@@ -180,7 +287,44 @@ object ModelessDialogFrame {
       Seq(position.map(_.left).getOrElse(0.0), position.map(_.top).getOrElse(0.0))
     )
 
+    val startResizing = useCallback(
+      (
+          corner: ResizeCorner,
+          e: SyntheticMouseEvent[dom.Element]
+      ) => {
+        if (e.button == 0) {
+          val bounds = panelBoundsOf(panelRef)
+          val minimum = minimumSizeOf(panelRef)
+          position.foreach { current =>
+            resizeRef.current = Some(
+              ResizeState(
+                corner = corner,
+                mouseX = e.clientX,
+                mouseY = e.clientY,
+                left = current.left,
+                top = current.top,
+                width = size.getOrElse(bounds).width,
+                height = size.getOrElse(bounds).height,
+                minWidth = minimum.width,
+                minHeight = minimum.height
+              )
+            )
+          }
+          props.onFocus()
+          e.stopPropagation()
+          e.preventDefault()
+        }
+      },
+      Seq(
+        position.map(_.left).getOrElse(0.0),
+        position.map(_.top).getOrElse(0.0),
+        size.map(_.width).getOrElse(0.0),
+        size.map(_.height).getOrElse(0.0)
+      )
+    )
+
     val displayPosition = position.getOrElse(Position(0.0, 0.0))
+    val displaySize = size.getOrElse(panelBoundsOf(panelRef))
     val visible = position.isDefined
 
     div(
@@ -196,11 +340,29 @@ object ModelessDialogFrame {
         style := js.Dynamic.literal(
           left = s"${displayPosition.left}px",
           top = s"${displayPosition.top}px",
-          width = props.initialWidth,
-          height = props.initialHeight,
+          width =
+            if (size.isDefined) s"${displaySize.width}px" else props.initialWidth,
+          height =
+            if (size.isDefined) s"${displaySize.height}px" else props.initialHeight,
           visibility = if (visible) "visible" else "hidden"
         )
       )(
+        div(
+          className := "resize-handle top-left",
+          onMouseDown := (e => startResizing(ResizeCorner.TopLeft, e))
+        ),
+        div(
+          className := "resize-handle top-right",
+          onMouseDown := (e => startResizing(ResizeCorner.TopRight, e))
+        ),
+        div(
+          className := "resize-handle bottom-left",
+          onMouseDown := (e => startResizing(ResizeCorner.BottomLeft, e))
+        ),
+        div(
+          className := "resize-handle bottom-right",
+          onMouseDown := (e => startResizing(ResizeCorner.BottomRight, e))
+        ),
         article()(
           header(
             className := "drag-handle",

@@ -94,6 +94,7 @@ object zh_tw extends Text {
 
   val PaneStock_map_dockLeft = "停靠左側"
   val PaneStock_map_dockTop = "停靠頂部"
+  val PaneStock_map_openModeless = "在視窗中開啟"
 
   val SectionPins_layout_document = "文件"
   val SectionPins_layout_columns = "欄"
@@ -183,6 +184,7 @@ object zh_tw extends Text {
   val ModalNewIto_clearSelection = "連接時清除選擇"
   val ModalNewIto_connect = "連接"
 
+  val ModelessGeomap_title = "地圖"
   val ModelessNewCoto_title = "新 Coto"
   val ModalSubcoto_title = "新子 Coto"
 
