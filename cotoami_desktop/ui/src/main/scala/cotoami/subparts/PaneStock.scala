@@ -19,6 +19,7 @@ import marubinotto.components.{
 
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Geolocation, UiState}
+import cotoami.subparts.modeless.ModelessGeomap
 import cotoami.updates
 
 object PaneStock {
@@ -45,6 +46,7 @@ object PaneStock {
 
   object Msg {
     case object OpenGeomap extends Msg
+    case object OpenModelessGeomap extends Msg
     case object CloseMap extends Msg
     case class SetMapOrientation(vertical: Boolean) extends Msg
     case class FocusGeolocation(location: Geolocation) extends Msg
@@ -55,11 +57,20 @@ object PaneStock {
     msg match {
       case Msg.OpenGeomap =>
         model
+          .closeModelessDialog(ModelessGeomap.DialogId)
+          .modify(_.modeless.geomap).setTo(None)
           .pipe(updates.uiState(_.openGeomap))
           .pipe(
             updates.addCmd((_: Model) =>
               Browser.send(AppMain.Msg.SetPaneStockOpen(true).into)
             )
+          )
+
+      case Msg.OpenModelessGeomap =>
+        model
+          .pipe(updates.uiState(_.closeMap))
+          .pipe(
+            updates.addCmd((_: Model) => ModelessGeomap.open)
           )
 
       case Msg.CloseMap =>
@@ -145,6 +156,12 @@ object PaneStock {
           else
             Some(context.i18n.text.PaneStock_map_dockLeft),
         onClick = _ => dispatch(Msg.SetMapOrientation(!uiState.mapVertical))
+      ),
+      toolButton(
+        classes = "default open-modeless-geomap overlay",
+        symbol = "open_in_new",
+        tip = Some(context.i18n.text.PaneStock_map_openModeless),
+        onClick = _ => dispatch(Msg.OpenModelessGeomap)
       ),
       button(
         className := "default close-map",

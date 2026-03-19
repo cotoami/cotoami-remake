@@ -13,6 +13,7 @@ import cotoami.models._
 import cotoami.subparts._
 import cotoami.subparts.modeless.ModelessDialogId
 import cotoami.subparts.modeless.ModelessEditCoto
+import cotoami.subparts.modeless.ModelessGeomap
 import cotoami.subparts.modeless.ModelessNewCoto
 import cotoami.subparts.modeless.ModelessSubcoto
 
@@ -115,12 +116,14 @@ case class Model(
 case class ModelessState(
     dialogOrder: Seq[ModelessDialogId] = Seq.empty,
     editCoto: Option[ModelessEditCoto.Model] = None,
+    geomap: Option[ModelessGeomap.Model] = None,
     newCoto: Option[ModelessNewCoto.Model] = None,
     subcoto: Option[ModelessSubcoto.Model] = None
 ) {
   def isOpen(dialogId: ModelessDialogId): Boolean =
     dialogId match {
       case ModelessDialogId.EditCoto => editCoto.nonEmpty
+      case ModelessDialogId.Geomap   => geomap.nonEmpty
       case ModelessDialogId.NewCoto  => newCoto.nonEmpty
       case ModelessDialogId.Subcoto  => subcoto.nonEmpty
     }

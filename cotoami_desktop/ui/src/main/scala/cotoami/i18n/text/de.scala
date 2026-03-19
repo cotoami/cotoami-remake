@@ -95,6 +95,7 @@ object de extends Text {
 
   val PaneStock_map_dockLeft = "Links andocken"
   val PaneStock_map_dockTop = "Oben andocken"
+  val PaneStock_map_openModeless = "Im Fenster offnen"
 
   val SectionPins_layout_document = "Dokument"
   val SectionPins_layout_columns = "Spalten"
@@ -185,6 +186,7 @@ object de extends Text {
   val ModalNewIto_clearSelection = "Auswahl beim Verbinden löschen"
   val ModalNewIto_connect = "Verbinden"
 
+  val ModelessGeomap_title = "Karte"
   val ModelessNewCoto_title = "Neues Coto"
   val ModalSubcoto_title = "Neues Sub-Coto"
 

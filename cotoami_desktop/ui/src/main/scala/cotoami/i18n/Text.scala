@@ -83,6 +83,7 @@ trait Text {
 
   val PaneStock_map_dockLeft: String
   val PaneStock_map_dockTop: String
+  val PaneStock_map_openModeless: String
 
   val SectionPins_layout_document: String
   val SectionPins_layout_columns: String
@@ -146,6 +147,7 @@ trait Text {
   val ModalNewIto_clearSelection: String
   val ModalNewIto_connect: String
 
+  val ModelessGeomap_title: String
   val ModelessNewCoto_title: String
   val ModalSubcoto_title: String
 

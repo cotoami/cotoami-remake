@@ -94,6 +94,7 @@ object ja extends Text {
 
   val PaneStock_map_dockLeft = "左側に配置"
   val PaneStock_map_dockTop = "上側に配置"
+  val PaneStock_map_openModeless = "ウィンドウで開く"
 
   val SectionPins_layout_document = "ドキュメント"
   val SectionPins_layout_columns = "カラム"
@@ -182,6 +183,7 @@ object ja extends Text {
   val ModalNewIto_clearSelection = "接続時にコトの選択を解除"
   val ModalNewIto_connect = "接続"
 
+  val ModelessGeomap_title = "地図"
   val ModelessNewCoto_title = "新規コト"
   val ModalSubcoto_title = "子コトの追加"
 

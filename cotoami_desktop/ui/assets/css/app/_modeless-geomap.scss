@@ -1,0 +1,26 @@
+.modeless-geomap {
+  --panel-min-width: min(760px, calc(100vw - 32px));
+  --panel-min-height: min(520px, calc(100vh - 48px));
+
+  > article {
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+
+    > header.drag-handle {
+      padding-left: 20px;
+      padding-right: 52px;
+    }
+
+    > div.modal-body {
+      padding-top: 0;
+      padding-bottom: 0;
+
+      > .maplibre-map,
+      > div.maplibre-map {
+        flex: 1;
+        min-height: 0;
+      }
+    }
+  }
+}
