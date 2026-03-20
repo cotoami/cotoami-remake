@@ -31,6 +31,7 @@ import cotoami.repository._
 import cotoami.backend.{ErrorJson, NodeBackend, PaginatedCotos}
 
 object SectionTimeline {
+  val LatestScrollTopThreshold = 48
 
   /////////////////////////////////////////////////////////////////////////////
   // Model
@@ -53,6 +54,9 @@ object SectionTimeline {
       scrollPos: Option[(Id[Cotonoma], Double)] = None,
 
       // State
+      atLatest: Boolean = true,
+      newPostsAvailable: Boolean = false,
+      scrollToLatestKey: Int = 0,
       imeActive: Boolean = false,
       loading: Boolean = false,
       markingAsRead: Boolean = false
@@ -64,6 +68,8 @@ object SectionTimeline {
         onlyCotonomas = false,
         queryInput = "",
         fetchNumber = 0,
+        atLatest = true,
+        newPostsAvailable = false,
         loading = false,
         imeActive = false
       ).fetchFirst
@@ -87,16 +93,33 @@ object SectionTimeline {
       scrollPos.flatMap(pos => Option.when(pos._1 == key)(pos._2))
 
     def post(cotoId: Id[Coto]): Model =
-      this
-        .modify(_.cotoIds).using(cotoIds =>
-          if (queryInput.isEmpty)
-            cotoIds.prependId(cotoId)
-          else
-            cotoIds
+      if (queryInput.isEmpty)
+        copy(
+          cotoIds = cotoIds.prependId(cotoId),
+          newPostsAvailable = !atLatest,
+          scrollToLatestKey =
+            if (atLatest) scrollToLatestKey + 1 else scrollToLatestKey
         )
+      else
+        this
+
+    def onScroll(scrollTop: Double): Model = {
+      val atLatest = scrollTop <= LatestScrollTopThreshold
+      copy(
+        atLatest = atLatest,
+        newPostsAvailable = if (atLatest) false else newPostsAvailable
+      )
+    }
+
+    def jumpToLatest: Model =
+      copy(
+        atLatest = true,
+        newPostsAvailable = false,
+        scrollToLatestKey = scrollToLatestKey + 1
+      )
 
     def fetchFirst(using context: Context): (Model, Cmd.One[AppMsg]) =
-      fetching.pipe { model =>
+      fetching(resetLatestState = true).pipe { model =>
         (
           model,
           fetchInFocus(
@@ -114,22 +137,28 @@ object SectionTimeline {
         (this, Cmd.none)
       else
         cotoIds.nextPageIndex.map(i =>
-          fetching.pipe { model =>
+          fetching().pipe { nextModel =>
             (
-              model,
+              nextModel,
               fetchInFocus(
                 context.repo,
                 onlyCotonomas,
                 Some(queryInput),
                 i,
-                model.fetchNumber
+                nextModel.fetchNumber
               )
             )
           }
         ).getOrElse((this, Cmd.none)) // no more
 
-    private def fetching: Model =
-      copy(fetchNumber = fetchNumber + 1, loading = true)
+    private def fetching(resetLatestState: Boolean = false): Model =
+      copy(
+        fetchNumber = fetchNumber + 1,
+        atLatest = if (resetLatestState) true else atLatest,
+        newPostsAvailable =
+          if (resetLatestState) false else newPostsAvailable,
+        loading = true
+      )
 
     def inputQuery(
         query: String
@@ -162,6 +191,8 @@ object SectionTimeline {
         extends Msg
     case class ScrollAreaUnmounted(cotonomaId: Id[Cotonoma], scrollPos: Double)
         extends Msg
+    case class ScrollTopChanged(scrollTop: Double) extends Msg
+    case object JumpToLatest extends Msg
     case object MarkAsRead extends Msg
     case class MarkedAsRead(
         nodeId: Option[Id[Node]],
@@ -226,6 +257,12 @@ object SectionTimeline {
 
       case Msg.ScrollAreaUnmounted(cotonomaId, scrollPos) =>
         default.copy(_1 = model.saveScrollPos(cotonomaId, scrollPos))
+
+      case Msg.ScrollTopChanged(scrollTop) =>
+        default.copy(_1 = model.onScroll(scrollTop))
+
+      case Msg.JumpToLatest =>
+        default.copy(_1 = model.jumpToLatest)
 
       case Msg.MarkAsRead => {
         val focusedNodeId = context.repo.nodes.focusedId
@@ -335,7 +372,14 @@ object SectionTimeline {
       div(className := "coto-flow body")(
         ScrollArea(
           setScrollTop = model.getScrollPos(currentCotonomaId),
+          scrollToTopWhen =
+            Option.when(model.scrollToLatestKey > 0)(
+              model.scrollToLatestKey.toString()
+            ),
           onScrollToBottom = Some(() => dispatch(Msg.FetchMore)),
+          onScrollTopChange = Some(scrollTop =>
+            dispatch(Msg.ScrollTopChanged(scrollTop))
+          ),
           onUnmounted = Some(scrollTop =>
             dispatch(
               Msg.ScrollAreaUnmounted(currentCotonomaId, scrollTop)
@@ -358,7 +402,17 @@ object SectionTimeline {
                 aria - "busy" := model.loading.toString()
               )())*
           )
-        )
+        ),
+        Option.when(model.newPostsAvailable) {
+          button(
+            className := "new-message-indicator default",
+            `type` := "button",
+            aria - "label" := "Jump to latest message",
+            onClick := (_ => dispatch(Msg.JumpToLatest))
+          )(
+            materialSymbol("arrow_upward")
+          )
+        }
       )
     )
 

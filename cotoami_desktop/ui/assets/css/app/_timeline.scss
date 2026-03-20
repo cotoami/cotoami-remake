@@ -52,8 +52,37 @@ section.timeline {
   }
 
   >div.body {
+    position: relative;
     overflow-x: hidden;
     overflow-y: hidden;
+
+    button.new-message-indicator {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      border-radius: 999px;
+      border: 1px solid var(--pane-border-color);
+      background: var(--card-background-color);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+
+      span.material-symbols {
+        font-size: 20px;
+      }
+
+      &:hover {
+        transform: translateX(-50%) translateY(-1px);
+      }
+    }
   }
 
   .repost-header {
