@@ -21,6 +21,7 @@ import cotoami.backend.{
   NodeJson
 }
 import cotoami.subparts.Modal
+import cotoami.subparts.forms.{field, fieldInput}
 
 object ModalWelcome {
 

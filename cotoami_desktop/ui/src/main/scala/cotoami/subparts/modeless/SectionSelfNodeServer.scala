@@ -16,8 +16,8 @@ import cotoami.backend.{
   LocalServer,
   ServerConfig
 }
+import cotoami.subparts.forms.{buttonEdit, field, fieldInput}
 import cotoami.subparts.{sectionClientNodesCount, Modal}
-import cotoami.subparts.modals.{buttonEdit, field, fieldInput}
 
 object SectionSelfNodeServer {
 

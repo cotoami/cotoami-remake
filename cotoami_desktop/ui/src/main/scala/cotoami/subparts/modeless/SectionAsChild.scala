@@ -10,8 +10,8 @@ import marubinotto.fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ChildNode, Id, Node}
 import cotoami.backend.{ChildNodeBackend, ChildNodeInput, ErrorJson}
+import cotoami.subparts.forms.{FieldEdit, fieldEditable}
 import cotoami.subparts.PartsNode
-import cotoami.subparts.modals.{FieldEdit, fieldEditable}
 
 object SectionAsChild {
 

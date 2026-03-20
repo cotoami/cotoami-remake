@@ -10,7 +10,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Id, LocalNode, Node}
 import cotoami.repository.Nodes
 import cotoami.backend.{ErrorJson, LocalNodeBackend}
-import cotoami.subparts.modals.{FieldEdit, fieldEditable}
+import cotoami.subparts.forms.{FieldEdit, fieldEditable}
 
 object FieldImageMaxSize {
 

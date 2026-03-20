@@ -8,8 +8,8 @@ import marubinotto.fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Id, Node}
 import cotoami.backend.{DatabaseInfo, ErrorJson}
+import cotoami.subparts.forms.field
 import cotoami.subparts.Modal
-import cotoami.subparts.modals.field
 
 object FieldOwnerPassword {
 

@@ -19,6 +19,7 @@ import cotoami.backend.{
   ClientNodeBackend,
   ErrorJson
 }
+import cotoami.subparts.forms.{field, fieldInput}
 import cotoami.subparts.Modal
 import cotoami.subparts.PartsNode
 

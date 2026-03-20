@@ -11,6 +11,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Node, Server, ServerNode}
 import cotoami.backend.{ClientNodeSession, ErrorJson, ServerBackend}
 import cotoami.repository.{Nodes, Root}
+import cotoami.subparts.forms.fieldInput
 import cotoami.subparts.{Modal, PartsCoto, PartsNode}
 
 object ModalIncorporate {

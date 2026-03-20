@@ -8,8 +8,8 @@ import marubinotto.fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ActiveClient, Client, ClientNode, Id, Node}
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
+import cotoami.subparts.forms.{field, fieldInput}
 import cotoami.subparts.Modal
-import cotoami.subparts.modals.{field, fieldInput}
 
 object SectionAsClient {
 

@@ -9,7 +9,7 @@ import cotoami.Context
 import marubinotto.{optionalClasses, Validation}
 import marubinotto.components.toolButton
 
-package object modals {
+package object forms {
 
   def buttonEdit(
       onClick: SyntheticMouseEvent[?] => Unit,
