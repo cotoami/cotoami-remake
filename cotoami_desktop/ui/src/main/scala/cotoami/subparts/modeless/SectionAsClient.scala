@@ -1,4 +1,4 @@
-package cotoami.subparts.modals
+package cotoami.subparts.modeless
 
 import scala.util.chaining._
 import slinky.core.facade.ReactElement
@@ -9,6 +9,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ActiveClient, Client, ClientNode, Id, Node}
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
 import cotoami.subparts.Modal
+import cotoami.subparts.modals.{field, fieldInput}
 
 object SectionAsClient {
 
@@ -47,9 +48,8 @@ object SectionAsClient {
 
   sealed trait Msg extends Into[AppMsg] {
     override def into: AppMsg =
-      ModalNodeProfile.Msg.SectionAsClientMsg(this)
-        .pipe(Modal.Msg.NodeProfileMsg.apply)
-        .pipe(AppMsg.ModalMsg.apply)
+      ModelessNodeProfile.Msg.SectionAsClientMsg(this)
+        .pipe(AppMsg.ModelessNodeProfileMsg.apply)
   }
 
   object Msg {

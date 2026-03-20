@@ -9,6 +9,7 @@ import cotoami.subparts._
 import cotoami.subparts.modeless.ModelessEditCoto
 import cotoami.subparts.modeless.ModelessGeomap
 import cotoami.subparts.modeless.ModelessNewCoto
+import cotoami.subparts.modeless.ModelessNodeProfile
 import cotoami.subparts.modeless.ModelessSubcoto
 
 sealed trait Msg extends Into[Msg] {
@@ -76,6 +77,7 @@ object Msg {
   case class ModelessEditCotoMsg(submsg: ModelessEditCoto.Msg) extends Msg
   case class ModelessGeomapMsg(submsg: ModelessGeomap.Msg) extends Msg
   case class ModelessNewCotoMsg(submsg: ModelessNewCoto.Msg) extends Msg
+  case class ModelessNodeProfileMsg(submsg: ModelessNodeProfile.Msg) extends Msg
   case class ModelessSubcotoMsg(submsg: ModelessSubcoto.Msg) extends Msg
   case class ViewMessagesMsg(submsg: ViewMessages.Msg) extends Msg
   case class NavCotonomasMsg(submsg: NavCotonomas.Msg) extends Msg

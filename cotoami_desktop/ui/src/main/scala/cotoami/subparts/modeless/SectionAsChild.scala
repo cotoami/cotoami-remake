@@ -1,4 +1,4 @@
-package cotoami.subparts.modals
+package cotoami.subparts.modeless
 
 import scala.util.chaining._
 import com.softwaremill.quicklens._
@@ -10,7 +10,8 @@ import marubinotto.fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ChildNode, Id, Node}
 import cotoami.backend.{ChildNodeBackend, ChildNodeInput, ErrorJson}
-import cotoami.subparts.{Modal, PartsNode}
+import cotoami.subparts.PartsNode
+import cotoami.subparts.modals.{FieldEdit, fieldEditable}
 
 object SectionAsChild {
 
@@ -64,9 +65,8 @@ object SectionAsChild {
 
   sealed trait Msg extends Into[AppMsg] {
     override def into: AppMsg =
-      ModalNodeProfile.Msg.SectionAsChildMsg(this)
-        .pipe(Modal.Msg.NodeProfileMsg.apply)
-        .pipe(AppMsg.ModalMsg.apply)
+      ModelessNodeProfile.Msg.SectionAsChildMsg(this)
+        .pipe(AppMsg.ModelessNodeProfileMsg.apply)
   }
 
   object Msg {
@@ -160,7 +160,7 @@ object SectionAsChild {
       name = context.i18n.text.ChildPrivileges,
       classes = "privileges",
       edit = FieldEdit(
-        disabled = model.isLocal, // prevent changing self privileges
+        disabled = model.isLocal,
         onEditClick = _ => dispatch(Msg.Edit.into),
         onSaveClick = _ => dispatch(Msg.Save.into),
         onCancelClick = _ => dispatch(Msg.CancelEditing.into),

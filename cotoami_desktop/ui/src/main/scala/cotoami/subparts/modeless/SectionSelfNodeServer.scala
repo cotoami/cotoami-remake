@@ -1,4 +1,4 @@
-package cotoami.subparts.modals
+package cotoami.subparts.modeless
 
 import scala.util.chaining._
 import com.softwaremill.quicklens._
@@ -17,6 +17,7 @@ import cotoami.backend.{
   ServerConfig
 }
 import cotoami.subparts.{sectionClientNodesCount, Modal}
+import cotoami.subparts.modals.{buttonEdit, field, fieldInput}
 
 object SectionSelfNodeServer {
 
@@ -54,9 +55,8 @@ object SectionSelfNodeServer {
 
   sealed trait Msg extends Into[AppMsg] {
     override def into: AppMsg =
-      ModalNodeProfile.Msg.SectionSelfNodeServerMsg(this)
-        .pipe(Modal.Msg.NodeProfileMsg.apply)
-        .pipe(AppMsg.ModalMsg.apply)
+      ModelessNodeProfile.Msg.SectionSelfNodeServerMsg(this)
+        .pipe(AppMsg.ModelessNodeProfileMsg.apply)
   }
 
   object Msg {
@@ -193,13 +193,13 @@ object SectionSelfNodeServer {
         disabled := model.enablingAnonymousRead,
         onChange := (_ =>
           if (anonymousReadEnabled)
-            dispatch(Msg.EnableAnonymousRead(false)) // disable
+            dispatch(Msg.EnableAnonymousRead(false))
           else
             dispatch(
               Modal.Msg.OpenModal(
                 Modal.Confirm(
                   context.i18n.text.SelfNodeServer_confirmEnableAnonymousRead,
-                  Msg.EnableAnonymousRead(true) // enable
+                  Msg.EnableAnonymousRead(true)
                 )
               )
             )

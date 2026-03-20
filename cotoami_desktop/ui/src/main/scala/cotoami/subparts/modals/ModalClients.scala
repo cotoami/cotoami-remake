@@ -15,6 +15,7 @@ import cotoami.models.{Client, ClientNode, Id, Node, Page, PaginatedItems}
 import cotoami.repository.Nodes
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
 import cotoami.subparts.{sectionClientNodesCount, Modal, PartsNode}
+import cotoami.subparts.modeless.ModelessNodeProfile
 
 object ModalClients {
 
@@ -257,8 +258,7 @@ object ModalClients {
         toolButton(
           symbol = "settings",
           disabled = isLocal,
-          onClick = _ =>
-            dispatch(Modal.Msg.OpenModal(Modal.NodeProfile(client.node.id)))
+          onClick = _ => dispatch(ModelessNodeProfile.Msg.Open(client.node.id))
         )
       )
     )

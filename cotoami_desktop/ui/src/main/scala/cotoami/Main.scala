@@ -27,6 +27,7 @@ import cotoami.subparts.modeless.ModelessEditCoto
 import cotoami.subparts.modeless.ModelessDialogOrder
 import cotoami.subparts.modeless.ModelessGeomap
 import cotoami.subparts.modeless.ModelessNewCoto
+import cotoami.subparts.modeless.ModelessNodeProfile
 import cotoami.subparts.modeless.ModelessSubcoto
 import cotoami.subparts.modals.ModalAppUpdate
 
@@ -432,6 +433,21 @@ object Main {
             )
         }
 
+      case Msg.ModelessNodeProfileMsg(submsg) =>
+        ModelessNodeProfile.update(submsg, model.modeless.nodeProfile).pipe {
+          case (dialog, nodes, cmd) =>
+            (
+              ModelessDialogOrder(
+                model
+                  .modify(_.modeless.nodeProfile).setTo(dialog)
+                  .modify(_.repo.nodes).setTo(nodes),
+                ModelessNodeProfile.DialogId,
+                ModelessNodeProfile.dialogOrderAction(submsg)
+              ),
+              cmd
+            )
+        }
+
       case Msg.ModelessSubcotoMsg(submsg) =>
         ModelessSubcoto.update(submsg, model.modeless.subcoto).pipe {
           case (dialog, geomap, cmd) =>
@@ -622,6 +638,7 @@ object Main {
       model.modeless.editCoto.map(ModelessEditCoto(_)),
       model.modeless.geomap.map(ModelessGeomap(_)),
       model.modeless.newCoto.map(ModelessNewCoto(_)),
+      model.modeless.nodeProfile.map(ModelessNodeProfile(_)),
       model.modeless.subcoto.map(ModelessSubcoto(_)),
       Modal(model)
     )

@@ -4,5 +4,6 @@ enum ModelessDialogId {
   case EditCoto
   case Geomap
   case NewCoto
+  case NodeProfile
   case Subcoto
 }

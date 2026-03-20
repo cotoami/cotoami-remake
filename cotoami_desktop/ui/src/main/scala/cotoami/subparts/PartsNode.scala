@@ -10,6 +10,7 @@ import marubinotto.components.toolButton
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ChildNode, Node}
 import cotoami.backend.ChildNodeInput
+import cotoami.subparts.modeless.ModelessNodeProfile
 
 object PartsNode {
 
@@ -22,12 +23,10 @@ object PartsNode {
 
   def spanNode(
       node: Node
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using dispatch: Into[AppMsg] => Unit): ReactElement =
     span(
       className := "node",
-      onClick := (_ =>
-        dispatch(Modal.Msg.OpenModal(Modal.NodeProfile(node.id)))
-      )
+      onClick := (_ => dispatch(ModelessNodeProfile.Msg.Open(node.id)))
     )(
       imgNode(node),
       span(className := "name")(node.name)

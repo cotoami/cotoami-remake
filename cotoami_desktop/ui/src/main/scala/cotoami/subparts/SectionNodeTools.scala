@@ -9,6 +9,7 @@ import marubinotto.components.toolButton
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Id, Node, ServerNode}
 import cotoami.backend.{ErrorJson, ServerNodeBackend}
+import cotoami.subparts.modeless.ModelessNodeProfile
 
 object SectionNodeTools {
 
@@ -94,8 +95,7 @@ object SectionNodeTools {
           symbol = "settings",
           tip = Some(context.i18n.text.Node_settings),
           classes = "settings",
-          onClick =
-            _ => dispatch(Modal.Msg.OpenModal(Modal.NodeProfile(node.id)))
+          onClick = _ => dispatch(ModelessNodeProfile.Msg.Open(node.id))
         ),
         PartsNode.buttonSwitchNode(node)
       )

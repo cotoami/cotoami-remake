@@ -1,4 +1,4 @@
-package cotoami.subparts.modals
+package cotoami.subparts.modeless
 
 import scala.util.chaining._
 import slinky.core.facade.ReactElement
@@ -9,6 +9,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Id, Node}
 import cotoami.backend.{DatabaseInfo, ErrorJson}
 import cotoami.subparts.Modal
+import cotoami.subparts.modals.field
 
 object FieldOwnerPassword {
 
@@ -34,9 +35,8 @@ object FieldOwnerPassword {
 
   sealed trait Msg extends Into[AppMsg] {
     override def into: AppMsg =
-      ModalNodeProfile.Msg.FieldOwnerPasswordMsg(this)
-        .pipe(Modal.Msg.NodeProfileMsg.apply)
-        .pipe(AppMsg.ModalMsg.apply)
+      ModelessNodeProfile.Msg.FieldOwnerPasswordMsg(this)
+        .pipe(AppMsg.ModelessNodeProfileMsg.apply)
   }
 
   object Msg {

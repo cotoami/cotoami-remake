@@ -15,6 +15,7 @@ import marubinotto.components.{materialSymbol, toolButton, Markdown}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, CotoContent, Cotonoma, Id, Ito, Node, WaitingPost}
+import cotoami.subparts.modeless.ModelessNodeProfile
 
 object PartsCoto {
 
@@ -70,9 +71,7 @@ object PartsCoto {
           div(
             className := "remote-node-icon",
             title := context.i18n.text.Coto_inRemoteNode(node.name),
-            onClick := (_ =>
-              dispatch(Modal.Msg.OpenModal(Modal.NodeProfile(node.id)))
-            )
+            onClick := (_ => dispatch(ModelessNodeProfile.Msg.Open(node.id)))
           )(
             PartsNode.imgNode(node)
           )

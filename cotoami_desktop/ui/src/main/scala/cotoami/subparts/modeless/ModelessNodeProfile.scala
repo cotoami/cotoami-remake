@@ -1,30 +1,26 @@
-package cotoami.subparts.modals
+package cotoami.subparts.modeless
 
 import scala.util.chaining._
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import marubinotto.optionalClasses
-import marubinotto.fui.Cmd
+import marubinotto.fui.{Browser, Cmd}
 import marubinotto.components.{materialSymbol, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ChildNode, Coto, Id, Node, Server}
 import cotoami.repository.{Nodes, Root}
-import cotoami.subparts.modeless.ModelessEditCoto
-import cotoami.subparts.{Modal, PartsCoto, PartsNode}
+import cotoami.subparts.modals.{buttonEdit, field, fieldInput}
+import cotoami.subparts.{PartsCoto, PartsNode}
 
-object ModalNodeProfile {
+object ModelessNodeProfile {
 
-  /////////////////////////////////////////////////////////////////////////////
-  // Model
-  /////////////////////////////////////////////////////////////////////////////
+  val DialogId = ModelessDialogId.NodeProfile
 
   case class Model(
       nodeId: Id[Node],
       error: Option[String] = None,
-
-      // Fields
       imageMaxSize: FieldImageMaxSize.Model,
       ownerPassword: FieldOwnerPassword.Model,
       selfNodeServer: SectionSelfNodeServer.Model,
@@ -57,9 +53,7 @@ object ModalNodeProfile {
   }
 
   object Model {
-    def apply(
-        nodeId: Id[Node]
-    )(using context: Context): (Model, Cmd[AppMsg]) = {
+    def apply(nodeId: Id[Node])(using context: Context): (Model, Cmd[AppMsg]) = {
       val (selfNodeServer, selfNodeServerCmd) =
         SectionSelfNodeServer.Model(nodeId)
       val (asClient, asClientCmd) = SectionAsClient.Model(nodeId)
@@ -81,16 +75,14 @@ object ModalNodeProfile {
     }
   }
 
-  /////////////////////////////////////////////////////////////////////////////
-  // Update
-  /////////////////////////////////////////////////////////////////////////////
-
   sealed trait Msg extends Into[AppMsg] {
-    override def into: AppMsg =
-      Modal.Msg.NodeProfileMsg(this).pipe(AppMsg.ModalMsg.apply)
+    override def into: AppMsg = AppMsg.ModelessNodeProfileMsg(this)
   }
 
   object Msg {
+    case class Open(nodeId: Id[Node]) extends Msg
+    case object Focus extends Msg
+    case object Close extends Msg
     case class FieldImageMaxSizeMsg(submsg: FieldImageMaxSize.Msg) extends Msg
     case class FieldOwnerPasswordMsg(submsg: FieldOwnerPassword.Msg) extends Msg
     case class SectionSelfNodeServerMsg(submsg: SectionSelfNodeServer.Msg)
@@ -99,61 +91,110 @@ object ModalNodeProfile {
     case class SectionAsChildMsg(submsg: SectionAsChild.Msg) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(using
-      context: Context
-  ): (Model, Nodes, Cmd[AppMsg]) =
+  def dialogOrderAction(msg: Msg): Option[ModelessDialogOrder.Action] =
     msg match {
-      case Msg.FieldImageMaxSizeMsg(submsg) => {
-        val (imageMaxSize, nodes, cmd) =
-          FieldImageMaxSize.update(submsg, model.imageMaxSize)
-        (model.copy(imageMaxSize = imageMaxSize), nodes, cmd)
-      }
-
-      case Msg.FieldOwnerPasswordMsg(submsg) => {
-        val (ownerPassword, cmd) =
-          FieldOwnerPassword.update(submsg, model.ownerPassword)
-        (model.copy(ownerPassword = ownerPassword), context.repo.nodes, cmd)
-      }
-
-      case Msg.SectionSelfNodeServerMsg(submsg) => {
-        val (selfNodeServer, nodes, cmd) =
-          SectionSelfNodeServer.update(submsg, model.selfNodeServer)
-        (model.copy(selfNodeServer = selfNodeServer), nodes, cmd)
-      }
-
-      case Msg.SectionAsClientMsg(submsg) => {
-        val (asClient, cmd) = SectionAsClient.update(submsg, model.asClient)
-        (model.copy(asClient = asClient), context.repo.nodes, cmd)
-      }
-
-      case Msg.SectionAsChildMsg(submsg) => {
-        val (asChild, cmd) = SectionAsChild.update(submsg, model.asChild)
-        (model.copy(asChild = asChild), context.repo.nodes, cmd)
-      }
+      case Msg.Open(_) => Some(ModelessDialogOrder.Action.Focus)
+      case Msg.Focus   => Some(ModelessDialogOrder.Action.Focus)
+      case Msg.Close   => Some(ModelessDialogOrder.Action.Close)
+      case _           => None
     }
 
-  /////////////////////////////////////////////////////////////////////////////
-  // View
-  /////////////////////////////////////////////////////////////////////////////
+  def open(nodeId: Id[Node]): Cmd.One[AppMsg] =
+    Browser.send(Msg.Open(nodeId).into)
+
+  def close: Cmd.One[AppMsg] =
+    Browser.send(Msg.Close.into)
+
+  def update(msg: Msg, model: Option[Model])(using
+      context: Context
+  ): (Option[Model], Nodes, Cmd[AppMsg]) = {
+    val default = (model, context.repo.nodes, Cmd.none)
+
+    (msg, model) match {
+      case (Msg.Open(nodeId), _) =>
+        Model(nodeId).pipe { case (opened, cmd) =>
+          (Some(opened), context.repo.nodes, cmd)
+        }
+
+      case (Msg.Focus, _) =>
+        default
+
+      case (Msg.Close, _) =>
+        default.copy(_1 = None)
+
+      case (_, None) =>
+        default
+
+      case (Msg.FieldImageMaxSizeMsg(submsg), Some(current)) =>
+        val (imageMaxSize, nodes, cmd) =
+          FieldImageMaxSize.update(submsg, current.imageMaxSize)
+        (
+          Some(current.copy(imageMaxSize = imageMaxSize)),
+          nodes,
+          cmd
+        )
+
+      case (Msg.FieldOwnerPasswordMsg(submsg), Some(current)) =>
+        val (ownerPassword, cmd) =
+          FieldOwnerPassword.update(submsg, current.ownerPassword)
+        (
+          Some(current.copy(ownerPassword = ownerPassword)),
+          context.repo.nodes,
+          cmd
+        )
+
+      case (Msg.SectionSelfNodeServerMsg(submsg), Some(current)) =>
+        val (selfNodeServer, nodes, cmd) =
+          SectionSelfNodeServer.update(submsg, current.selfNodeServer)
+        (
+          Some(current.copy(selfNodeServer = selfNodeServer)),
+          nodes,
+          cmd
+        )
+
+      case (Msg.SectionAsClientMsg(submsg), Some(current)) =>
+        val (asClient, cmd) = SectionAsClient.update(submsg, current.asClient)
+        (
+          Some(current.copy(asClient = asClient)),
+          context.repo.nodes,
+          cmd
+        )
+
+      case (Msg.SectionAsChildMsg(submsg), Some(current)) =>
+        val (asChild, cmd) = SectionAsChild.update(submsg, current.asChild)
+        (
+          Some(current.copy(asChild = asChild)),
+          context.repo.nodes,
+          cmd
+        )
+    }
+  }
 
   def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
-    Modal.view(
-      dialogClasses = "node-profile",
-      closeButton = Some((classOf[Modal.NodeProfile], dispatch)),
+    ModelessDialogFrame(
+      dialogClasses = Seq("modeless-node-profile" -> true),
+      title = Fragment(
+        span(className := "title-icon")(materialSymbol(Node.IconName)),
+        context.i18n.text.ModalNodeProfile_title
+      ),
+      onClose = () => dispatch(Msg.Close),
+      onFocus = () => dispatch(Msg.Focus),
+      zIndex = context.modeless.dialogZIndex(DialogId),
+      resizable = false,
+      lockMeasuredSize = false,
+      initialWidth = "600px",
+      initialHeight = "auto",
       error = model.error
     )(
-      Modal.spanTitleIcon(Node.IconName),
-      context.i18n.text.ModalNodeProfile_title
-    )(
       context.repo.nodes.get(model.nodeId)
-        .map(modalContent(_, model))
+        .map(modelessContent(_, model))
         .getOrElse(s"Node ${model.nodeId} not found.")
     )
 
-  private def modalContent(node: Node, model: Model)(using
+  private def modelessContent(node: Node, model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
@@ -196,7 +237,7 @@ object ModalNodeProfile {
           Fragment(
             PartsNode.imgNode(node),
             Option.when(model.isSelf) {
-              buttonEdit(_ => dispatch(Modal.Msg.OpenModal(Modal.NodeIcon())))
+              buttonEdit(_ => dispatch(cotoami.subparts.Modal.Msg.OpenModal(cotoami.subparts.Modal.NodeIcon())))
             }
           )
         else
@@ -253,8 +294,7 @@ object ModalNodeProfile {
       readOnly = true
     )
 
-  private def fieldName(node: Node, rootCoto: Option[Coto], model: Model)(
-      using
+  private def fieldName(node: Node, rootCoto: Option[Coto], model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =

@@ -9,6 +9,7 @@ import marubinotto.components.{materialSymbol, toolButton}
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Cotonoma, Node, UiState}
 import cotoami.repository.Root
+import cotoami.subparts.modeless.ModelessNodeProfile
 
 object AppHeader {
 
@@ -186,11 +187,9 @@ object AppHeader {
       node: Node
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     button(
-      className := "node-profile, default",
+      className := "node-profile default",
       title := context.i18n.text.ModalNodeProfile_title,
-      onClick := (_ =>
-        dispatch(Modal.Msg.OpenModal(Modal.NodeProfile(node.id)))
-      )
+      onClick := (_ => dispatch(ModelessNodeProfile.Msg.Open(node.id)))
     )(
       PartsNode.imgNode(node)
     )

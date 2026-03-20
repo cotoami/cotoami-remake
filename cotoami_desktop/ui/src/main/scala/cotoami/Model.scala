@@ -15,6 +15,7 @@ import cotoami.subparts.modeless.ModelessDialogId
 import cotoami.subparts.modeless.ModelessEditCoto
 import cotoami.subparts.modeless.ModelessGeomap
 import cotoami.subparts.modeless.ModelessNewCoto
+import cotoami.subparts.modeless.ModelessNodeProfile
 import cotoami.subparts.modeless.ModelessSubcoto
 
 trait Context {
@@ -118,6 +119,7 @@ case class ModelessState(
     editCoto: Option[ModelessEditCoto.Model] = None,
     geomap: Option[ModelessGeomap.Model] = None,
     newCoto: Option[ModelessNewCoto.Model] = None,
+    nodeProfile: Option[ModelessNodeProfile.Model] = None,
     subcoto: Option[ModelessSubcoto.Model] = None
 ) {
   def isOpen(dialogId: ModelessDialogId): Boolean =
@@ -125,6 +127,7 @@ case class ModelessState(
       case ModelessDialogId.EditCoto => editCoto.nonEmpty
       case ModelessDialogId.Geomap   => geomap.nonEmpty
       case ModelessDialogId.NewCoto  => newCoto.nonEmpty
+      case ModelessDialogId.NodeProfile => nodeProfile.nonEmpty
       case ModelessDialogId.Subcoto  => subcoto.nonEmpty
     }
 

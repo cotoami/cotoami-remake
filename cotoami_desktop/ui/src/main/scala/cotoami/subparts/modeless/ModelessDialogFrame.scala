@@ -5,7 +5,7 @@ import org.scalajs.dom
 import org.scalajs.dom.html
 
 import slinky.core._
-import slinky.core.facade.{ReactElement, ReactRef}
+import slinky.core.facade.{Fragment, ReactElement, ReactRef}
 import slinky.core.facade.Hooks._
 import slinky.web.SyntheticMouseEvent
 import slinky.web.html._
@@ -136,6 +136,8 @@ object ModelessDialogFrame {
       onClose: () => Unit,
       onFocus: () => Unit,
       zIndex: Int,
+      resizable: Boolean = true,
+      lockMeasuredSize: Boolean = true,
       initialWidth: String = Defaults.Width,
       initialHeight: String = Defaults.Height,
       error: Option[String] = None
@@ -149,6 +151,8 @@ object ModelessDialogFrame {
       onClose: () => Unit,
       onFocus: () => Unit,
       zIndex: Int,
+      resizable: Boolean = true,
+      lockMeasuredSize: Boolean = true,
       initialWidth: String = Defaults.Width,
       initialHeight: String = Defaults.Height,
       error: Option[String] = None
@@ -160,6 +164,8 @@ object ModelessDialogFrame {
         onClose,
         onFocus,
         zIndex,
+        resizable,
+        lockMeasuredSize,
         initialWidth,
         initialHeight,
         error
@@ -229,11 +235,13 @@ object ModelessDialogFrame {
           val bounds = panelBoundsOf(panelRef)
           if (bounds.width > 0.0 && bounds.height > 0.0) {
             setPosition(_ => Some(centerPosition(bounds)))
-            setSize(_ => Some(bounds))
+            Option.when(props.lockMeasuredSize) {
+              setSize(_ => Some(bounds))
+            }
           }
         }
       },
-      Seq(position.isEmpty)
+      Seq(position.isEmpty, props.lockMeasuredSize)
     )
 
     useEffect(
@@ -243,14 +251,18 @@ object ModelessDialogFrame {
             val minimum = minimumSizeOf(panelRef)
             val currentSize = size.getOrElse(panelBoundsOf(panelRef))
             if (currentSize.width > 0.0 && currentSize.height > 0.0) {
-              setSize(_ => Some(currentSize))
+              Option.when(props.lockMeasuredSize) {
+                setSize(_ => Some(currentSize))
+              }
               position.foreach { currentPosition =>
                 val clampedPosition =
                   clampPosition(currentPosition, currentSize)
                 val clampedSize =
                   clampSize(clampedPosition, currentSize, minimum)
                 setPosition(_ => Some(clampPosition(clampedPosition, clampedSize)))
-                setSize(_ => Some(clampedSize))
+                Option.when(props.lockMeasuredSize) {
+                  setSize(_ => Some(clampedSize))
+                }
               }
             }
           }
@@ -341,28 +353,34 @@ object ModelessDialogFrame {
           left = s"${displayPosition.left}px",
           top = s"${displayPosition.top}px",
           width =
-            if (size.isDefined) s"${displaySize.width}px" else props.initialWidth,
+            if (props.lockMeasuredSize && size.isDefined) s"${displaySize.width}px"
+            else props.initialWidth,
           height =
-            if (size.isDefined) s"${displaySize.height}px" else props.initialHeight,
+            if (props.lockMeasuredSize && size.isDefined) s"${displaySize.height}px"
+            else props.initialHeight,
           visibility = if (visible) "visible" else "hidden"
         )
       )(
-        div(
-          className := "resize-handle top-left",
-          onMouseDown := (e => startResizing(ResizeCorner.TopLeft, e))
-        ),
-        div(
-          className := "resize-handle top-right",
-          onMouseDown := (e => startResizing(ResizeCorner.TopRight, e))
-        ),
-        div(
-          className := "resize-handle bottom-left",
-          onMouseDown := (e => startResizing(ResizeCorner.BottomLeft, e))
-        ),
-        div(
-          className := "resize-handle bottom-right",
-          onMouseDown := (e => startResizing(ResizeCorner.BottomRight, e))
-        ),
+        Option.when(props.resizable) {
+          Fragment(
+            div(
+              className := "resize-handle top-left",
+              onMouseDown := (e => startResizing(ResizeCorner.TopLeft, e))
+            ),
+            div(
+              className := "resize-handle top-right",
+              onMouseDown := (e => startResizing(ResizeCorner.TopRight, e))
+            ),
+            div(
+              className := "resize-handle bottom-left",
+              onMouseDown := (e => startResizing(ResizeCorner.BottomLeft, e))
+            ),
+            div(
+              className := "resize-handle bottom-right",
+              onMouseDown := (e => startResizing(ResizeCorner.BottomRight, e))
+            )
+          )
+        },
         article()(
           header(
             className := "drag-handle",

@@ -164,16 +164,6 @@ object Modal {
       SwitchNode(ModalSwitchNode.Model(current, switchingTo))
   }
 
-  case class NodeProfile(model: ModalNodeProfile.Model) extends Modal
-  object NodeProfile {
-    def apply(
-        nodeId: Id[Node]
-    )(using context: Context): (NodeProfile, Cmd[AppMsg]) = {
-      val (model, cmd) = ModalNodeProfile.Model(nodeId)
-      (NodeProfile(model), cmd)
-    }
-  }
-
   case class NodeIcon(model: ModalNodeIcon.Model = ModalNodeIcon.Model())
       extends Modal
 
@@ -221,7 +211,6 @@ object Modal {
     case class IncorporateMsg(msg: ModalIncorporate.Msg) extends Msg
     case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
     case class SwitchNodeMsg(msg: ModalSwitchNode.Msg) extends Msg
-    case class NodeProfileMsg(msg: ModalNodeProfile.Msg) extends Msg
     case class NodeIconMsg(msg: ModalNodeIcon.Msg) extends Msg
     case class ClientsMsg(msg: ModalClients.Msg) extends Msg
     case class NewClientMsg(msg: ModalNewClient.Msg) extends Msg
@@ -341,18 +330,6 @@ object Modal {
           }
         }
 
-      case Msg.NodeProfileMsg(modalMsg) =>
-        stack.get[NodeProfile].map { case NodeProfile(modal) =>
-          ModalNodeProfile.update(modalMsg, modal).pipe {
-            case (modal, nodes, cmds) =>
-              (
-                updateModal(NodeProfile(modal), model)
-                  .modify(_.repo.nodes).setTo(nodes),
-                cmds
-              )
-          }
-        }
-
       case Msg.NodeIconMsg(modalMsg) =>
         stack.get[NodeIcon].map { case NodeIcon(modal) =>
           ModalNodeIcon.update(modalMsg, modal).pipe {
@@ -466,8 +443,6 @@ object Modal {
       case ParentSync(modal) => Some(ModalParentSync(modal, model.parentSync))
 
       case SwitchNode(modal) => Some(ModalSwitchNode(modal))
-
-      case NodeProfile(modal) => Some(ModalNodeProfile(modal))
 
       case NodeIcon(modal) => Some(ModalNodeIcon(modal))
 

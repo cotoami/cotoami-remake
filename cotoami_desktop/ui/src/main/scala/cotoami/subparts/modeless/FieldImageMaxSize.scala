@@ -1,4 +1,4 @@
-package cotoami.subparts.modals
+package cotoami.subparts.modeless
 
 import scala.util.chaining._
 import com.softwaremill.quicklens._
@@ -10,7 +10,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Id, LocalNode, Node}
 import cotoami.repository.Nodes
 import cotoami.backend.{ErrorJson, LocalNodeBackend}
-import cotoami.subparts.Modal
+import cotoami.subparts.modals.{FieldEdit, fieldEditable}
 
 object FieldImageMaxSize {
 
@@ -87,9 +87,8 @@ object FieldImageMaxSize {
 
   sealed trait Msg extends Into[AppMsg] {
     override def into: AppMsg =
-      ModalNodeProfile.Msg.FieldImageMaxSizeMsg(this)
-        .pipe(Modal.Msg.NodeProfileMsg.apply)
-        .pipe(AppMsg.ModalMsg.apply)
+      ModelessNodeProfile.Msg.FieldImageMaxSizeMsg(this)
+        .pipe(AppMsg.ModelessNodeProfileMsg.apply)
   }
 
   object Msg {

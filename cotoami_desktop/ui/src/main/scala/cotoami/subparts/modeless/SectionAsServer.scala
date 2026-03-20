@@ -1,4 +1,4 @@
-package cotoami.subparts.modals
+package cotoami.subparts.modeless
 
 import slinky.core.facade.ReactElement
 import slinky.web.html._
@@ -6,6 +6,7 @@ import slinky.web.html._
 import cotoami.Context
 import cotoami.models.Server
 import cotoami.subparts.{PartsNode, ViewConnectionStatus}
+import cotoami.subparts.modals.field
 
 object SectionAsServer {
 
