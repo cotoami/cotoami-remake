@@ -398,7 +398,7 @@ object ModelessDialogFrame {
             )
           ),
           props.error.map(e => section(className := "error")(e)),
-          div(className := "modal-body")(props.body*)
+          div(className := "dialog-body")(props.body*)
         )
       )
     )

@@ -1,13 +1,13 @@
 .modeless-dialog.modeless-node-profile {
   --panel-min-height: 0;
 
-  > article > div.modal-body {
+  > article > div.dialog-body {
     flex: none;
     min-height: auto;
     overflow: visible;
   }
 
-  div.modal-body {
+  div.dialog-body {
     display: flex;
     flex-direction: row;
 

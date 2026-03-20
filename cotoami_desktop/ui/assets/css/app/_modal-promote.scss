@@ -7,7 +7,7 @@ dialog.promote {
       margin-right: 10px;
     }
 
-    div.modal-body {
+    div.dialog-body {
       height: 60vh;
 
       display: flex;
@@ -19,7 +19,7 @@ dialog.promote {
     }
   }
 
-  &.with-media-content div.modal-body {
+  &.with-media-content div.dialog-body {
     height: 70vh;
   }
 }

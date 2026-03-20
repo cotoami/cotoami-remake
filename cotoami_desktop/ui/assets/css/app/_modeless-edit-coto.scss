@@ -1,6 +1,6 @@
 .modeless-edit-coto {
   > article {
-    div.modal-body {
+    div.dialog-body {
       height: 70vh;
 
       display: flex;
@@ -12,7 +12,7 @@
     }
   }
 
-  &.with-media-content div.modal-body {
+  &.with-media-content div.dialog-body {
     height: 80vh;
   }
 }
