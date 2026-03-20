@@ -15,9 +15,11 @@ object ScrollArea {
       scrollableElementId: Option[String] = None,
       scrollableClassName: Option[String] = None,
       scrollToRightWhen: Option[String] = None,
+      scrollToTopWhen: Option[String] = None,
       autoHide: Boolean = true,
       bottomThreshold: Option[Int] = None,
       onScrollToBottom: Option[() => Unit] = None,
+      onScrollTopChange: Option[Double => Unit] = None,
 
       // Notify when being unmounted with the scroll position (scrollTop).
       onUnmounted: Option[Double => Unit] = None,
@@ -39,9 +41,11 @@ object ScrollArea {
       scrollableElementId: Option[String] = None,
       scrollableClassName: Option[String] = None,
       scrollToRightWhen: Option[String] = None,
+      scrollToTopWhen: Option[String] = None,
       autoHide: Boolean = true,
       bottomThreshold: Option[Int] = None,
       onScrollToBottom: Option[() => Unit] = None,
+      onScrollTopChange: Option[Double => Unit] = None,
       onUnmounted: Option[Double => Unit] = None,
       setScrollTop: Option[Double] = None
   )(children: ReactElement*) =
@@ -51,9 +55,11 @@ object ScrollArea {
         scrollableElementId,
         scrollableClassName,
         scrollToRightWhen,
+        scrollToTopWhen,
         autoHide,
         bottomThreshold,
         onScrollToBottom,
+        onScrollTopChange,
         onUnmounted,
         setScrollTop
       )(children*)
@@ -75,13 +81,14 @@ object ScrollArea {
         val scrollHeight = target.scrollHeight
         val scrollTop = target.scrollTop.toFloat.round
         val clientHeight = target.clientHeight
+        props.onScrollTopChange.map(_(scrollTop))
         val isBottomReached =
           (scrollHeight - clientHeight - scrollTop).abs <= bottomThreshold
         if (isBottomReached) {
           props.onScrollToBottom.map(_())
         }
       },
-      Seq(props.onScrollToBottom)
+      Seq(props.onScrollToBottom, props.onScrollTopChange)
     )
 
     // setScrollTop
@@ -89,9 +96,26 @@ object ScrollArea {
       () => {
         props.setScrollTop.foreach { scrollTop =>
           scrollableNodeRef.current.scrollTop = scrollTop
+          props.onScrollTopChange.map(_(scrollTop))
         }
       },
       Seq(props.setScrollTop.getOrElse(-1))
+    )
+
+    // scroll to top when requested.
+    useEffect(
+      () => {
+        props.scrollToTopWhen.foreach { _ =>
+          val scrollable = scrollableNodeRef.current
+          scrollable
+            .asInstanceOf[js.Dynamic]
+            .scrollTo(
+              js.Dynamic.literal(top = 0, behavior = "smooth")
+            )
+          props.onScrollTopChange.map(_(0))
+        }
+      },
+      Seq(props.scrollToTopWhen.getOrElse(""))
     )
 
     // scroll to right end after the content width has settled.
