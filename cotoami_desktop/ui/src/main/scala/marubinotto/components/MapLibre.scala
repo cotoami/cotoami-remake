@@ -3,6 +3,7 @@ package marubinotto.components
 import scala.collection.immutable.TreeMap
 import scala.collection.mutable.{Map => MutableMap}
 import scala.scalajs.js
+import scala.scalajs.js.timers.{clearTimeout, setTimeout, SetTimeoutHandle}
 
 import org.scalajs.dom
 import org.scalajs.dom.document.createElement
@@ -362,9 +363,12 @@ object MapLibre {
       onMarkerClick: Option[String => Unit] = None,
       onFocusedLocationClick: Option[() => Unit] = None
   ) extends Map(options) {
+    private val PopupOpenDelayMs = 200
+
     var focusedLocationMarker: Option[Marker] = None
     val markers: MutableMap[String, Marker] = MutableMap.empty
     val openPopups: MutableMap[String, Popup] = MutableMap.empty
+    val popupOpenTimers: MutableMap[String, SetTimeoutHandle] = MutableMap.empty
     var focusedMarkerId: Option[String] = None
 
     def disableRotation(): Unit = {
@@ -405,12 +409,14 @@ object MapLibre {
     }
 
     def clearMarkers(): Unit = {
+      clearAllPopupOpenTimers()
       closeAllPopups()
       markers.values.foreach(_.remove())
       markers.clear()
     }
 
     def removeMarker(id: String): Unit =
+      cancelPopupOpen(id)
       closePopup(id)
       markers.remove(id).foreach(_.remove())
 
@@ -455,6 +461,26 @@ object MapLibre {
     def openPopup(id: String, popup: Popup): Unit = {
       closePopup(id)
       openPopups.put(id, popup)
+    }
+
+    def schedulePopupOpen(id: String, popup: Popup)(open: => Unit): Unit = {
+      cancelPopupOpen(id)
+      popupOpenTimers.put(
+        id,
+        setTimeout(PopupOpenDelayMs) {
+          popupOpenTimers.remove(id)
+          openPopup(id, popup)
+          open
+        }
+      )
+    }
+
+    def cancelPopupOpen(id: String): Unit =
+      popupOpenTimers.remove(id).foreach(clearTimeout)
+
+    def clearAllPopupOpenTimers(): Unit = {
+      popupOpenTimers.values.foreach(clearTimeout)
+      popupOpenTimers.clear()
     }
 
     def closePopup(id: String): Unit =
@@ -505,13 +531,15 @@ object MapLibre {
         marker.getElement().addEventListener(
           "mouseenter",
           (_: dom.MouseEvent) => {
-            map.openPopup(id, popup)
-            popup.setLngLat(jsLngLat).setHTML(html).addTo(map)
+            map.schedulePopupOpen(id, popup) {
+              popup.setLngLat(jsLngLat).setHTML(html).addTo(map)
+            }
           }
         )
         marker.getElement().addEventListener(
           "mouseleave",
           (_: dom.MouseEvent) => {
+            map.cancelPopupOpen(id)
             map.closePopup(id)
           }
         )
