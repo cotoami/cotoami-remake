@@ -51,6 +51,7 @@ object MapLibre {
       createMap: Action[Unit] = Action.default,
       applyCenterZoom: Action[Unit] = Action.default,
       fitBounds: Action[Unit] = Action.default,
+      closePopups: Action[Unit] = Action.default,
       refreshMarkers: Action[Unit] = Action.default,
       updateMarker: Action[String] = Action.default,
 
@@ -82,6 +83,7 @@ object MapLibre {
       createMap: Action[Unit] = Action.default,
       applyCenterZoom: Action[Unit] = Action.default,
       fitBounds: Action[Unit] = Action.default,
+      closePopups: Action[Unit] = Action.default,
       refreshMarkers: Action[Unit] = Action.default,
       updateMarker: Action[String] = Action.default,
       onInit: Option[LngLatBounds => Unit] = None,
@@ -108,6 +110,7 @@ object MapLibre {
         createMap,
         applyCenterZoom,
         fitBounds,
+        closePopups,
         refreshMarkers,
         updateMarker,
         onInit,
@@ -312,6 +315,16 @@ object MapLibre {
       Seq(props.refreshMarkers.triggered)
     )
 
+    // closePopups
+    useEffect(
+      () => {
+        if (props.closePopups.triggered > 0) { // prevent being executed during init
+          mapRef.current.foreach(_.closeAllPopups())
+        }
+      },
+      Seq(props.closePopups.triggered)
+    )
+
     // updateMarker
     useEffect(
       () => {
@@ -351,6 +364,7 @@ object MapLibre {
   ) extends Map(options) {
     var focusedLocationMarker: Option[Marker] = None
     val markers: MutableMap[String, Marker] = MutableMap.empty
+    val openPopups: MutableMap[String, Popup] = MutableMap.empty
     var focusedMarkerId: Option[String] = None
 
     def disableRotation(): Unit = {
@@ -391,11 +405,13 @@ object MapLibre {
     }
 
     def clearMarkers(): Unit = {
+      closeAllPopups()
       markers.values.foreach(_.remove())
       markers.clear()
     }
 
     def removeMarker(id: String): Unit =
+      closePopup(id)
       markers.remove(id).foreach(_.remove())
 
     def focusMarker(id: String): Unit = {
@@ -435,6 +451,19 @@ object MapLibre {
       clearMarkers()
       markerDefs.foreach(putMarker)
     }
+
+    def openPopup(id: String, popup: Popup): Unit = {
+      closePopup(id)
+      openPopups.put(id, popup)
+    }
+
+    def closePopup(id: String): Unit =
+      openPopups.remove(id).foreach(_.remove())
+
+    def closeAllPopups(): Unit = {
+      openPopups.values.foreach(_.remove())
+      openPopups.clear()
+    }
   }
 
   case class MarkerDef(
@@ -444,7 +473,7 @@ object MapLibre {
       popupHtml: Option[String]
   ) {
     def createMarker(
-        map: Map,
+        map: ExtendedMap,
         onClick: Option[String => Unit] = None
     ): Marker = {
       val jsLngLat = js.Tuple2.fromScalaTuple2(lngLat)
@@ -476,13 +505,14 @@ object MapLibre {
         marker.getElement().addEventListener(
           "mouseenter",
           (_: dom.MouseEvent) => {
+            map.openPopup(id, popup)
             popup.setLngLat(jsLngLat).setHTML(html).addTo(map)
           }
         )
         marker.getElement().addEventListener(
           "mouseleave",
           (_: dom.MouseEvent) => {
-            popup.remove()
+            map.closePopup(id)
           }
         )
       }

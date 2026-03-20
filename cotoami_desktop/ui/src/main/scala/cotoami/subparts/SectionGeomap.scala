@@ -58,6 +58,7 @@ object SectionGeomap {
       _createMap: Action[Unit] = Action.default,
       _applyCenterZoom: Action[Unit] = Action.default,
       _fitBounds: Action[Unit] = Action.default,
+      _closePopups: Action[Unit] = Action.default,
       _refreshMarkers: Action[Unit] = Action.default,
       _updateMarker: Action[String] = Action.default
   ) {
@@ -69,7 +70,7 @@ object SectionGeomap {
         .orElse(repo.nodes.focusedId.map(Scope.ByNode(_)))
         .getOrElse(Scope.All)
       (
-        unfocus.copy(fetchingCotosInFocus = true),
+        unfocus.closePopups.copy(fetchingCotosInFocus = true),
         GeolocatedCotos.fetch(scope)
           .map(Msg.CotosInFocusFetched(_).into)
       )
@@ -102,6 +103,9 @@ object SectionGeomap {
 
     def fitBounds(bounds: GeoBounds): Model =
       copy(bounds = Some(bounds)).fitBounds
+
+    def closePopups: Model =
+      this.modify(_._closePopups).using(_.trigger)
 
     def focus(location: Geolocation): Model =
       if (currentBounds.map(_.contains(location)).getOrElse(false))
@@ -351,6 +355,7 @@ object SectionGeomap {
         refreshMarkers = model._refreshMarkers,
         updateMarker = model._updateMarker,
         fitBounds = model._fitBounds,
+        closePopups = model._closePopups,
         onInit = Some(lngLatBounds => {
           val bounds = GeoBounds.fromMapLibre(lngLatBounds)
           dispatch(Msg.MapInitialized(bounds))
