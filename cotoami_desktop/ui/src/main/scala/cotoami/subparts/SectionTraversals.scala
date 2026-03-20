@@ -22,6 +22,8 @@ import cotoami.repository.{Itos, Root}
 
 object SectionTraversals {
 
+  private final val MaxScrollRenderRetries = 20
+
   /////////////////////////////////////////////////////////////////////////////
   // Model
   /////////////////////////////////////////////////////////////////////////////
@@ -154,22 +156,6 @@ object SectionTraversals {
           model.openTraversal(start),
           Cmd.Batch(
             Browser.send(AppMain.Msg.SetPaneStockOpen(true).into),
-            // scroll to the right end on opening a traversal.
-            Cmd(IO.async { cb =>
-              IO {
-                js.timers.setTimeout(10) {
-                  dom.document.getElementById(
-                    PaneStock.CotoGraphScrollableElementId
-                  ) match {
-                    case element: HTMLElement =>
-                      element.scrollLeft = element.scrollWidth.toDouble
-                    case _ => ()
-                  }
-                  cb(Right(None))
-                }
-                None // no finalizer on cancellation
-              }
-            }),
             context.repo.lazyFetchGraphFrom(start),
             // Reload the start coto with its parents.
             Root.fetchCotoDetails(start)
@@ -184,21 +170,16 @@ object SectionTraversals {
           model.step(traversalIndex, stepIndex, step),
           // scroll to the new step
           Cmd.Batch(
-            Cmd(IO.async { cb =>
-              IO {
-                js.timers.setTimeout(10) {
-                  dom.document.getElementById(
-                    stepElementId(traversalIndex, Some(stepIndex))
-                  ) match {
-                    case element: HTMLElement =>
-                      element.scrollIntoView(true)
-                    case _ => ()
-                  }
-                  cb(Right(None))
-                }
-                None // no finalizer on cancellation
+            scrollAfterRender { _ =>
+              dom.document.getElementById(
+                stepElementId(traversalIndex, Some(stepIndex))
+              ) match {
+                case element: HTMLElement if element.offsetHeight > 0 =>
+                  smoothScrollIntoView(element)
+                  true
+                case _ => false
               }
-            }),
+            },
             context.repo.lazyFetchGraphFrom(step)
           )
         )
@@ -245,6 +226,35 @@ object SectionTraversals {
         )
       )
     )
+
+  private def scrollAfterRender(action: Int => Boolean): Cmd.One[AppMsg] =
+    Cmd(IO.async { cb =>
+      IO {
+        def loop(attempt: Int): Unit =
+          dom.window.requestAnimationFrame { _ =>
+            val done = action(attempt)
+            if (done || attempt >= MaxScrollRenderRetries) {
+              cb(Right(None))
+            } else {
+              loop(attempt + 1)
+            }
+          }
+
+        loop(0)
+        None // no finalizer on cancellation
+      }
+    })
+
+  private def smoothScrollIntoView(element: HTMLElement): Unit =
+    element
+      .asInstanceOf[js.Dynamic]
+      .scrollIntoView(
+        js.Dynamic.literal(
+          behavior = "smooth",
+          block = "start",
+          inline = "nearest"
+        )
+      )
 
   private def divParents(
       parents: Seq[(Coto, Ito)],

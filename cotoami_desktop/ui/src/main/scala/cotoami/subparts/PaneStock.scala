@@ -194,7 +194,10 @@ object PaneStock {
       if (sectionTraversals.isDefined)
         ScrollArea(
           scrollableClassName = Some("scrollable-coto-graph"),
-          scrollableElementId = Some(CotoGraphScrollableElementId)
+          scrollableElementId = Some(CotoGraphScrollableElementId),
+          scrollToRightWhen = Some(
+            model.traversals.traversals.map(_.id).mkString(",")
+          )
         )(contents)
       else
         contents

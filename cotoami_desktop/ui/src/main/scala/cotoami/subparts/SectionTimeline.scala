@@ -503,7 +503,6 @@ object SectionTimeline {
     )
 
   private def reposter(coto: Coto, nodes: Nodes)(using
-      context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     address(className := "reposter")(

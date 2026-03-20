@@ -14,6 +14,7 @@ object ScrollArea {
       className: Option[String] = None,
       scrollableElementId: Option[String] = None,
       scrollableClassName: Option[String] = None,
+      scrollToRightWhen: Option[String] = None,
       autoHide: Boolean = true,
       bottomThreshold: Option[Int] = None,
       onScrollToBottom: Option[() => Unit] = None,
@@ -37,6 +38,7 @@ object ScrollArea {
       className: Option[String] = None,
       scrollableElementId: Option[String] = None,
       scrollableClassName: Option[String] = None,
+      scrollToRightWhen: Option[String] = None,
       autoHide: Boolean = true,
       bottomThreshold: Option[Int] = None,
       onScrollToBottom: Option[() => Unit] = None,
@@ -48,6 +50,7 @@ object ScrollArea {
         className,
         scrollableElementId,
         scrollableClassName,
+        scrollToRightWhen,
         autoHide,
         bottomThreshold,
         onScrollToBottom,
@@ -58,6 +61,7 @@ object ScrollArea {
 
   val DefaultClassName = "scroll-area"
   val DefaultBottomThreshold = 1
+  val DefaultScrollToRightMaxFrames = 30
 
   val component = FunctionalComponent[Props] { props =>
     val scrollableNodeRef = useRef[html.Div](null)
@@ -88,6 +92,45 @@ object ScrollArea {
         }
       },
       Seq(props.setScrollTop.getOrElse(-1))
+    )
+
+    // scroll to right end after the content width has settled.
+    useEffect(
+      () => {
+        props.scrollToRightWhen.foreach { _ =>
+          val scrollable = scrollableNodeRef.current
+          var frameCount = 0
+          var stableFrames = 0
+          var lastTarget = -1.0
+
+          def targetLeft: Double =
+            (scrollable.scrollWidth - scrollable.clientWidth).max(0).toDouble
+
+          def loop(): Unit =
+            dom.window.requestAnimationFrame { _ =>
+              val nextTarget = targetLeft
+              val targetChanged = (nextTarget - lastTarget).abs > 1
+              if (targetChanged) {
+                stableFrames = 0
+                scrollable
+                  .asInstanceOf[js.Dynamic]
+                  .scrollTo(
+                    js.Dynamic.literal(left = nextTarget, behavior = "smooth")
+                  )
+              } else {
+                stableFrames = stableFrames + 1
+              }
+
+              lastTarget = nextTarget
+              frameCount = frameCount + 1
+              if (stableFrames < 2 && frameCount < DefaultScrollToRightMaxFrames)
+                loop()
+            }
+
+          loop()
+        }
+      },
+      Seq(props.scrollToRightWhen.getOrElse(""))
     )
 
     // Register onScroll
