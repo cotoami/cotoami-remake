@@ -1,3 +1,43 @@
+@use "../pico-customized" as pico;
+
+.maplibre-map.geomap-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+
+  button.post-coto-from-geomap {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    z-index: 2;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 40px;
+    height: 40px;
+    padding: 0;
+
+    border: 1px solid hsl(206, 78%, 40%);
+    border-radius: 999px;
+    background-color: color-mix(in srgb, #1e90ff 64%, #fffdf7);
+    backdrop-filter: blur(2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    opacity: 0.85;
+
+    &:hover {
+      background-color: color-mix(in srgb, #1e90ff 72%, #fffdf7);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.24);
+      opacity: 1;
+    }
+
+    span.material-symbols {
+      color: white;
+    }
+  }
+}
+
 section.geomap {
   --marker-size: 30px;
   --marker-padding: 2px;

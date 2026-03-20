@@ -7,12 +7,13 @@ import org.scalajs.dom
 import org.scalajs.dom.document.createElement
 import com.softwaremill.quicklens._
 import slinky.core.facade.ReactElement
+import slinky.web.html._
 
 import marubinotto.optionalClasses
 import marubinotto.Action
 import marubinotto.fui.{Browser, Cmd}
 import marubinotto.libs.geomap
-import marubinotto.components.MapLibre
+import marubinotto.components.{toolButton, MapLibre}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{
@@ -25,6 +26,8 @@ import cotoami.models.{
 }
 import cotoami.repository.Root
 import cotoami.backend.{ErrorJson, GeolocatedCotos}
+import cotoami.subparts.EditorCoto.CotoForm
+import cotoami.subparts.modeless.ModelessNewCoto
 
 object SectionGeomap {
 
@@ -330,52 +333,69 @@ object SectionGeomap {
       model: Model
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     model.remotePmtilesAvailable.map(remotePmtiles =>
-      MapLibre(
-        id = "main-geomap",
-        style = () =>
-          generateStyle(
-            if (remotePmtiles) Some(model.remotePmtilesUrl) else None,
-            DefaultFlavor,
-            context.i18n.langWithScript
+      div(className := "maplibre-map geomap-shell")(
+        MapLibre(
+          id = "main-geomap",
+          style = () =>
+            generateStyle(
+              if (remotePmtiles) Some(model.remotePmtilesUrl) else None,
+              DefaultFlavor,
+              context.i18n.langWithScript
+            ),
+          center = model.center.getOrElse(Geolocation.default).toMapLibre,
+          zoom = model.zoom.getOrElse(4),
+          detectZoomClass = Some(zoom =>
+            if (zoom <= 7)
+              Some("hide-labels")
+            else
+              None
           ),
-        center = model.center.getOrElse(Geolocation.default).toMapLibre,
-        zoom = model.zoom.getOrElse(4),
-        detectZoomClass = Some(zoom =>
-          if (zoom <= 7)
-            Some("hide-labels")
-          else
-            None
+          focusedLocation = model.focusedLocation.map(_.toMapLibre),
+          markerDefs = toMarkerDefs(context.repo.cotoMarkers),
+          focusedMarkerId = context.repo.focusedCotoId.map(_.uuid),
+          bounds = model.bounds.map(_.toMapLibre),
+          createMap = model._createMap,
+          applyCenterZoom = model._applyCenterZoom,
+          refreshMarkers = model._refreshMarkers,
+          updateMarker = model._updateMarker,
+          fitBounds = model._fitBounds,
+          closePopups = model._closePopups,
+          onInit = Some(lngLatBounds => {
+            val bounds = GeoBounds.fromMapLibre(lngLatBounds)
+            dispatch(Msg.MapInitialized(bounds))
+          }),
+          onClick = Some(e => {
+            val location = Geolocation.fromMapLibre(e.lngLat)
+            dispatch(Msg.FocusLocation(Some(location)))
+          }),
+          onZoomChanged = Some(zoom => dispatch(Msg.ZoomChanged(zoom))),
+          onCenterMoved = Some(center => {
+            val location = Geolocation.fromMapLibre(center)
+            dispatch(Msg.CenterMoved(location))
+          }),
+          onBoundsChanged = Some(lngLatBounds => {
+            val bounds = GeoBounds.fromMapLibre(lngLatBounds)
+            dispatch(Msg.BoundsChanged(bounds))
+          }),
+          onMarkerClick = Some(id => dispatch(Msg.MarkerClicked(id))),
+          onFocusedLocationClick = Some(() => dispatch(Msg.FocusLocation(None)))
         ),
-        focusedLocation = model.focusedLocation.map(_.toMapLibre),
-        markerDefs = toMarkerDefs(context.repo.cotoMarkers),
-        focusedMarkerId = context.repo.focusedCotoId.map(_.uuid),
-        bounds = model.bounds.map(_.toMapLibre),
-        createMap = model._createMap,
-        applyCenterZoom = model._applyCenterZoom,
-        refreshMarkers = model._refreshMarkers,
-        updateMarker = model._updateMarker,
-        fitBounds = model._fitBounds,
-        closePopups = model._closePopups,
-        onInit = Some(lngLatBounds => {
-          val bounds = GeoBounds.fromMapLibre(lngLatBounds)
-          dispatch(Msg.MapInitialized(bounds))
-        }),
-        onClick = Some(e => {
-          val location = Geolocation.fromMapLibre(e.lngLat)
-          dispatch(Msg.FocusLocation(Some(location)))
-        }),
-        onZoomChanged = Some(zoom => dispatch(Msg.ZoomChanged(zoom))),
-        onCenterMoved = Some(center => {
-          val location = Geolocation.fromMapLibre(center)
-          dispatch(Msg.CenterMoved(location))
-        }),
-        onBoundsChanged = Some(lngLatBounds => {
-          val bounds = GeoBounds.fromMapLibre(lngLatBounds)
-          dispatch(Msg.BoundsChanged(bounds))
-        }),
-        onMarkerClick = Some(id => dispatch(Msg.MarkerClicked(id))),
-        onFocusedLocationClick = Some(() => dispatch(Msg.FocusLocation(None)))
+        model.focusedLocation.map(buttonPostCoto)
       )
+    )
+
+  private def buttonPostCoto(
+      location: Geolocation
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    toolButton(
+      classes = "default post-coto-from-geomap overlay",
+      symbol = "edit",
+      tip = Some(context.i18n.text.ModelessNewCoto_title),
+      tipPlacement = "right",
+      onClick = _ =>
+        dispatch(
+          ModelessNewCoto.Msg.Open(CotoForm.Model(geolocation = Some(location)))
+        )
     )
 
   private def toMarkerDefs(
