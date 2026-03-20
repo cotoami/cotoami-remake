@@ -2,7 +2,7 @@ package cotoami.subparts.modeless
 
 import scala.annotation.unused
 
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import marubinotto.components.materialSymbol
@@ -10,6 +10,7 @@ import marubinotto.fui.{Browser, Cmd}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.subparts.SectionGeomap
+import cotoami.subparts.PartsNode
 
 object ModelessGeomap {
 
@@ -53,10 +54,7 @@ object ModelessGeomap {
   ): ReactElement =
     ModelessDialogFrame(
       dialogClasses = Seq("modeless-geomap" -> true),
-      title = span()(
-        span(className := "title-icon")(materialSymbol("public")),
-        context.i18n.text.ModelessGeomap_title
-      ),
+      title = dialogTitle,
       onClose = () => dispatch(Msg.Close),
       onFocus = () => dispatch(Msg.Focus),
       zIndex = context.modeless.dialogZIndex(DialogId),
@@ -65,4 +63,17 @@ object ModelessGeomap {
     )(
       SectionGeomap(context.geomap)
     )
+
+  private def dialogTitle(using context: Context): ReactElement =
+    context.repo.cotonomas.focused.flatMap(cotonoma =>
+      context.repo.nodes.get(cotonoma.nodeId).map(node => (cotonoma, node))
+    ) match {
+      case Some((cotonoma, node)) =>
+        Fragment(
+          span(className := "title-icon")(PartsNode.imgNode(node)),
+          span(className := "cotonoma-name")(cotonoma.name)
+        )
+      case None =>
+        span(className := "title-icon")(materialSymbol("public"))
+    }
 }
