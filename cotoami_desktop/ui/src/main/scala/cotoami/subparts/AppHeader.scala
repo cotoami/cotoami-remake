@@ -114,10 +114,11 @@ object AppHeader {
       input(
         `type` := "search",
         name := "query",
-        value := search.queryInput,
+        key := search.queryInputKey.toString(),
+        defaultValue := search.queryInput,
         onChange := (e => dispatch(QueryInput(e.target.value))),
         onCompositionStart := (_ => dispatch(ImeCompositionStart)),
-        onCompositionEnd := (_ => dispatch(ImeCompositionEnd))
+        onCompositionEnd := (e => dispatch(ImeCompositionEnd(e.target.value)))
       ),
       Option.when(!search.queryInput.isBlank) {
         button(

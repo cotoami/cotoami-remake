@@ -26,6 +26,9 @@ object PaneSearch {
   case class Model(
       queryInput: String = "",
 
+      // To clear the uncontrolled input value by incrementing this key
+      queryInputKey: Int = 0,
+
       // To avoid rendering old results unintentionally
       fetchNumber: Int = 0,
 
@@ -62,6 +65,7 @@ object PaneSearch {
     def clear: Model =
       copy(
         queryInput = "",
+        queryInputKey = queryInputKey + 1,
         fetchNumber = 0,
         executedQuery = None,
         cotoIds = PaginatedIds(),
@@ -113,7 +117,7 @@ object PaneSearch {
     case class QueryInput(query: String) extends Msg
     case object ClearQuery extends Msg
     case object ImeCompositionStart extends Msg
-    case object ImeCompositionEnd extends Msg
+    case class ImeCompositionEnd(query: String) extends Msg
     case object FetchMore extends Msg
     case class Fetched(
         number: Int,
@@ -137,12 +141,12 @@ object PaneSearch {
       case Msg.ImeCompositionStart =>
         default.copy(_1 = model.copy(imeActive = true))
 
-      case Msg.ImeCompositionEnd =>
-        model.fetchFirst.pipe { case (model, cmd) =>
-          default.copy(
-            _1 = model.copy(imeActive = false),
-            _3 = cmd
-          )
+      case Msg.ImeCompositionEnd(query) =>
+        model
+          .copy(imeActive = false)
+          .inputQuery(query)
+          .pipe { case (model, cmd) =>
+            default.copy(_1 = model, _3 = cmd)
         }
 
       case Msg.FetchMore =>

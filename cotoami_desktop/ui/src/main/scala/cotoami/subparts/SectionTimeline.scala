@@ -46,6 +46,7 @@ object SectionTimeline {
       // Filter criteria for cotos in this timeline
       onlyCotonomas: Boolean = false,
       queryInput: String = "",
+      queryInputKey: Int = 0,
 
       // To avoid rendering old results unintentionally
       fetchNumber: Int = 0,
@@ -67,6 +68,7 @@ object SectionTimeline {
         waitingPosts = WaitingPosts(),
         onlyCotonomas = false,
         queryInput = "",
+        queryInputKey = queryInputKey + 1,
         fetchNumber = 0,
         atLatest = true,
         newPostsAvailable = false,
@@ -185,7 +187,7 @@ object SectionTimeline {
     case class QueryInput(query: String) extends Msg
     case object ClearQuery extends Msg
     case object ImeCompositionStart extends Msg
-    case object ImeCompositionEnd extends Msg
+    case class ImeCompositionEnd(query: String) extends Msg
     case object FetchMore extends Msg
     case class Fetched(number: Int, result: Either[ErrorJson, PaginatedCotos])
         extends Msg
@@ -220,20 +222,25 @@ object SectionTimeline {
         }
 
       case Msg.ClearQuery =>
-        model.inputQuery("").pipe { case (model, cmd) =>
-          default.copy(_1 = model, _3 = cmd)
-        }
+        model
+          .inputQuery("")
+          .pipe { case (nextModel, cmd) =>
+            default.copy(_1 = nextModel, _3 = cmd)
+          }
+          .pipe { case (next, repo, cmd) =>
+            (next.modify(_.queryInputKey).using(_ + 1), repo, cmd)
+          }
 
       case Msg.ImeCompositionStart =>
         default.copy(_1 = model.copy(imeActive = true))
 
-      case Msg.ImeCompositionEnd =>
-        model.fetchFirst.pipe { case (model, cmd) =>
-          default.copy(
-            _1 = model.copy(imeActive = false),
-            _3 = cmd
-          )
-        }
+      case Msg.ImeCompositionEnd(query) =>
+        model
+          .copy(imeActive = false)
+          .inputQuery(query)
+          .pipe { case (model, cmd) =>
+            default.copy(_1 = model, _3 = cmd)
+          }
 
       case Msg.FetchMore =>
         model.fetchMore.pipe { case (model, cmd) =>
@@ -435,10 +442,11 @@ object SectionTimeline {
         input(
           `type` := "search",
           name := "query",
-          value := model.queryInput,
+          key := model.queryInputKey.toString(),
+          defaultValue := model.queryInput,
           onChange := ((e) => dispatch(Msg.QueryInput(e.target.value))),
           onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart)),
-          onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd))
+          onCompositionEnd := (e => dispatch(Msg.ImeCompositionEnd(e.target.value)))
         ),
         Option.when(!model.queryInput.isBlank) {
           button(
