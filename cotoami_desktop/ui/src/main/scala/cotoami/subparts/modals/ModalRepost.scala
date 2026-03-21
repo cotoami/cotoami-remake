@@ -157,7 +157,13 @@ object ModalRepost {
         )
 
       case Msg.DestinationSelected(dest) =>
-        default.copy(_1 = model.copy(dest = dest))
+        default.copy(_1 =
+          model.copy(
+            dest = dest,
+            query = "",
+            options = Seq.empty
+          )
+        )
 
       case Msg.Repost =>
         model.dest match {
@@ -247,16 +253,14 @@ object ModalRepost {
           className = "cotonoma-select",
           options = model.options,
           placeholder = Some(s"${context.i18n.text.ModalRepost_repostTo}..."),
-          inputValue = model.query,
           value = model.dest,
-          onInputChange =
-            Some((input, actionMeta) => {
-              if (actionMeta.action == "input-change")
-                dispatch(Msg.CotonomaQueryInput(input))
-              else if (input != model.query)
-                dispatch(Msg.CotonomaQueryInput(input))
-              input
-            }),
+          onInputChange = Some((input, actionMeta) => {
+            if (actionMeta.action == "input-change")
+              dispatch(Msg.CotonomaQueryInput(input))
+            else if (input != model.query)
+              dispatch(Msg.CotonomaQueryInput(input))
+            input
+          }),
           noOptionsMessage =
             Some(_ => div()(context.i18n.text.ModalRepost_typeCotonomaName)),
           formatOptionLabel = Some(divSelectOption(_, context.repo.nodes)),
