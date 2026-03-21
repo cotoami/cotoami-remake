@@ -150,6 +150,7 @@ trait Text {
 
   val ModelessGeomap_title: String
   val ModelessNewCoto_title: String
+  val ModelessNewCoto_confirmDiscardDraft: String
   val ModalSubcoto_title: String
 
   val ModalNodeProfile_title: String

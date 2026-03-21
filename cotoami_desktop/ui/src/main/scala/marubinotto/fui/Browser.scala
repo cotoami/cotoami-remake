@@ -148,6 +148,23 @@ object Browser {
       None
     })
 
+  def setLocalStorage[Msg](key: String, value: String): Cmd.One[Msg] =
+    Cmd(IO {
+      dom.window.localStorage.setItem(key, value)
+      None
+    })
+
+  def getLocalStorage(key: String): Cmd.One[Option[String]] =
+    Cmd(IO {
+      Some(Option(dom.window.localStorage.getItem(key)))
+    })
+
+  def removeLocalStorage[Msg](key: String): Cmd.One[Msg] =
+    Cmd(IO {
+      dom.window.localStorage.removeItem(key)
+      None
+    })
+
   def encodeAsBase64(
       blob: dom.Blob,
       removePadding: Boolean = false

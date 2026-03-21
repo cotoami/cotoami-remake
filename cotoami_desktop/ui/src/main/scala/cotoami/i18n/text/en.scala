@@ -187,6 +187,7 @@ object en extends Text {
 
   val ModelessGeomap_title = "Map"
   val ModelessNewCoto_title = "New Coto"
+  val ModelessNewCoto_confirmDiscardDraft = "Discard your draft?"
   val ModalSubcoto_title = "New Sub-coto"
 
   val ModalNodeProfile_title = "Node Profile"

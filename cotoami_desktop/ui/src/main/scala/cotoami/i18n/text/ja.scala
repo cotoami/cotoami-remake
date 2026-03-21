@@ -186,6 +186,7 @@ object ja extends Text {
 
   val ModelessGeomap_title = "地図"
   val ModelessNewCoto_title = "新規コト"
+  val ModelessNewCoto_confirmDiscardDraft = "下書きを破棄しますか？"
   val ModalSubcoto_title = "子コトの追加"
 
   val ModalNodeProfile_title = "ノード情報"

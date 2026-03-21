@@ -189,6 +189,7 @@ object fr extends Text {
 
   val ModelessGeomap_title = "Carte"
   val ModelessNewCoto_title = "Nouveau Coto"
+  val ModelessNewCoto_confirmDiscardDraft = "Supprimer votre brouillon ?"
   val ModalSubcoto_title = "Nouveau Sous-coto"
 
   val ModalNodeProfile_title = "Profil du Nœud"

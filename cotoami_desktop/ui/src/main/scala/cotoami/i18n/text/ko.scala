@@ -187,6 +187,7 @@ object ko extends Text {
 
   val ModelessGeomap_title = "지도"
   val ModelessNewCoto_title = "새 Coto"
+  val ModelessNewCoto_confirmDiscardDraft = "임시 저장한 내용을 버릴까요?"
   val ModalSubcoto_title = "새 하위 Coto"
 
   val ModalNodeProfile_title = "노드 프로필"

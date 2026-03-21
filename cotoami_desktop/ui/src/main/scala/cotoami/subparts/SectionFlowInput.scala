@@ -3,12 +3,10 @@ package cotoami.subparts
 import scala.util.chaining._
 import scala.annotation.unused
 import scala.scalajs.js
-import org.scalajs.dom
 
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cats.effect.IO
 import com.softwaremill.quicklens._
 
 import marubinotto.optionalClasses
@@ -78,23 +76,16 @@ object SectionFlowInput {
     def save: Cmd.One[AppMsg] =
       form match {
         case form: CotoForm.Model =>
-          Cmd(IO {
-            dom.window.localStorage.setItem(DraftStorageKey, form.contentInput)
-            None
-          })
+          Browser.setLocalStorage(DraftStorageKey, form.contentInput)
         case _ => Cmd.none
       }
 
     def restore: Cmd.One[AppMsg] =
       form match {
         case form: CotoForm.Model =>
-          restoreTextContent.map(Msg.ContentRestored(_).into)
+          Browser.getLocalStorage(DraftStorageKey).map(Msg.ContentRestored(_).into)
         case _ => Cmd.none
       }
-
-    private def restoreTextContent: Cmd.One[Option[String]] = Cmd(IO {
-      Some(Option(dom.window.localStorage.getItem(DraftStorageKey)))
-    })
   }
 
   def init: (Model, Cmd.One[AppMsg]) = {

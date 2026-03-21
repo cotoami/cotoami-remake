@@ -187,6 +187,7 @@ object zh_tw extends Text {
 
   val ModelessGeomap_title = "地圖"
   val ModelessNewCoto_title = "新 Coto"
+  val ModelessNewCoto_confirmDiscardDraft = "要捨棄草稿嗎？"
   val ModalSubcoto_title = "新子 Coto"
 
   val ModalNodeProfile_title = "節點設定檔"

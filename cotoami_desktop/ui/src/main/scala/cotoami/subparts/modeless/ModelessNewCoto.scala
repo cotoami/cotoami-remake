@@ -12,6 +12,8 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma}
 import cotoami.backend.{CotoBackend, ErrorJson}
 import cotoami.subparts.EditorCoto._
+import cotoami.subparts.Modal
+import cotoami.subparts.SectionFlowInput
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object ModelessNewCoto {
@@ -32,14 +34,27 @@ object ModelessNewCoto {
         CotoBackend.post(cotoForm.toBackendInput, postTo.id)
           .map(Msg.Posted(_).into)
       )
+
+    def save: Cmd.One[AppMsg] =
+      Browser.setLocalStorage(
+        SectionFlowInput.DraftStorageKey,
+        cotoForm.contentInput
+      )
+
+    def restore: Cmd.One[AppMsg] =
+      Browser.getLocalStorage(SectionFlowInput.DraftStorageKey)
+        .map(Msg.ContentRestored(_).into)
   }
 
   object Model {
     def apply(cotoForm: CotoForm.Model): (Model, Cmd[AppMsg]) =
-      (
-        Model(cotoForm = cotoForm),
-        cotoForm.scanMediaMetadata.map(Msg.CotoFormMsg.apply).map(_.into)
-      )
+      new Model(cotoForm = cotoForm).pipe { model =>
+        (
+          model,
+          model.restore ++
+            cotoForm.scanMediaMetadata.map(Msg.CotoFormMsg.apply).map(_.into)
+        )
+      }
   }
 
   sealed trait Msg extends Into[AppMsg] {
@@ -49,8 +64,10 @@ object ModelessNewCoto {
   object Msg {
     case class Open(cotoForm: CotoForm.Model) extends Msg
     case object Focus extends Msg
+    case object RequestClose extends Msg
     case object Close extends Msg
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
+    case class ContentRestored(content: Option[String]) extends Msg
     case object Post extends Msg
     case class Posted(result: Either[ErrorJson, Coto]) extends Msg
   }
@@ -69,6 +86,9 @@ object ModelessNewCoto {
   def close: Cmd.One[AppMsg] =
     Browser.send(Msg.Close.into)
 
+  private def clearDraft: Cmd.One[AppMsg] =
+    Browser.removeLocalStorage(SectionFlowInput.DraftStorageKey)
+
   def update(msg: Msg, model: Option[Model])(using
       context: Context
   ): (Option[Model], Geomap, Cmd[AppMsg]) = {
@@ -83,19 +103,53 @@ object ModelessNewCoto {
       case (Msg.Focus, _) =>
         default
 
+      case (Msg.RequestClose, Some(current)) =>
+        if (current.cotoForm.hasContents)
+          default.copy(
+            _3 = Modal.open(
+              Modal.Confirm(
+                context.i18n.text.ModelessNewCoto_confirmDiscardDraft,
+                Msg.Close
+              )
+            )
+          )
+        else
+          default.copy(_1 = None, _3 = clearDraft)
+
+      case (Msg.RequestClose, None) =>
+        default
+
       case (Msg.Close, _) =>
-        default.copy(_1 = None)
+        default.copy(_1 = None, _3 = clearDraft)
 
       case (_, None) =>
         default
 
       case (Msg.CotoFormMsg(submsg), Some(current)) =>
         val (form, geomap, subcmd) = CotoForm.update(submsg, current.cotoForm)
-        (
-          Some(current.copy(cotoForm = form)),
-          geomap,
-          subcmd.map(Msg.CotoFormMsg.apply).map(_.into)
-        )
+        current.copy(cotoForm = form).pipe { updated =>
+          (
+            Some(updated),
+            geomap,
+            submsg match {
+              case CotoForm.Msg.ContentInput(_) => updated.save
+              case _ => subcmd.map(Msg.CotoFormMsg.apply).map(_.into)
+            }
+          )
+        }
+
+      case (Msg.ContentRestored(Some(content)), Some(current)) =>
+        current.cotoForm.pipe { form =>
+          if (form.contentInput.isBlank)
+            default.copy(
+              _1 = Some(current.copy(cotoForm = form.copy(contentInput = content)))
+            )
+          else
+            default
+        }
+
+      case (Msg.ContentRestored(None), Some(_)) =>
+        default
 
       case (Msg.Post, Some(current)) =>
         context.repo.currentCotonoma match {
@@ -134,7 +188,7 @@ object ModelessNewCoto {
         span(className := "title-icon")(materialSymbol(Coto.IconName)),
         context.i18n.text.ModelessNewCoto_title
       ),
-      onClose = () => dispatch(Msg.Close),
+      onClose = () => dispatch(Msg.RequestClose),
       onFocus = () => dispatch(Msg.Focus),
       zIndex = context.modeless.dialogZIndex(DialogId),
       error = model.error
