@@ -160,7 +160,7 @@ object ModelessEditCoto {
               mediaContentChanged = submsg match {
                 case CotoForm.Msg.FileInput(_)       => true
                 case CotoForm.Msg.DeleteMediaContent => true
-                case _                               => current.mediaContentChanged
+                case _ => current.mediaContentChanged
               }
             )
           ),
@@ -186,7 +186,8 @@ object ModelessEditCoto {
 
       case (Msg.Saved(Left(e)), Some(current)) =>
         default.copy(
-          _1 = Some(current.copy(saving = false, error = Some(e.default_message)))
+          _1 =
+            Some(current.copy(saving = false, error = Some(e.default_message)))
         )
     }
   }
@@ -244,21 +245,23 @@ object ModelessEditCoto {
       )
     )
 
-  private def dialogTitle(original: Coto)(using context: Context): ReactElement =
+  private def dialogTitle(
+      original: Coto
+  )(using context: Context): ReactElement =
     if (original.isCotonoma)
       if (context.repo.isNodeRoot(original.id))
         Fragment(
           span(className := "title-icon")(materialSymbol(Node.IconName)),
-          context.i18n.text.Node_root
+          context.i18n.text.Edit(context.i18n.text.Node_root)
         )
       else
         Fragment(
           span(className := "title-icon")(materialSymbol(Cotonoma.IconName)),
-          context.i18n.text.Cotonoma
+          context.i18n.text.Edit(context.i18n.text.Cotonoma)
         )
     else
       Fragment(
         span(className := "title-icon")(materialSymbol(Coto.IconName)),
-        context.i18n.text.Coto
+        context.i18n.text.Edit(context.i18n.text.Coto)
       )
 }

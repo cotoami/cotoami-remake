@@ -46,6 +46,7 @@ object ko extends Text {
   val MarkAllAsRead = "모두 읽음으로 표시"
   val PostTo = "게시 위치"
 
+  def Edit(what: String): String = s"${what} 편집"
   def Coto_inRemoteNode(nodeName: String) = s"${nodeName}에서 (원격)"
 
   val Node_id = "노드 ID"

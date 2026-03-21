@@ -46,6 +46,7 @@ object ja extends Text {
   val MarkAllAsRead = "すべて既読"
   val PostTo = "投稿先"
 
+  def Edit(what: String): String = s"${what}の編集"
   def Coto_inRemoteNode(nodeName: String) = s"In ${nodeName} (リモート)"
 
   val Node_id = "ノードID"

@@ -43,6 +43,7 @@ trait Text {
   val MarkAllAsRead: String
   val PostTo: String
 
+  def Edit(what: String): String
   def Coto_inRemoteNode(nodeName: String): String
 
   val Node_id: String

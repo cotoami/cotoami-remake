@@ -46,6 +46,7 @@ object zh_cn extends Text {
   val MarkAllAsRead = "全部标记为已读"
   val PostTo = "发布到"
 
+  def Edit(what: String): String = s"编辑${what}"
   def Coto_inRemoteNode(nodeName: String) = s"在 ${nodeName} (远程)"
 
   val Node_id = "节点ID"

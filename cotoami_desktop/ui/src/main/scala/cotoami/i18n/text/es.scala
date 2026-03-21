@@ -46,6 +46,7 @@ object es extends Text {
   val MarkAllAsRead = "Marcar Todo como Leído"
   val PostTo = "Publicar en"
 
+  def Edit(what: String): String = s"Editar ${what}"
   def Coto_inRemoteNode(nodeName: String) = s"En ${nodeName} (remoto)"
 
   val Node_id = "ID del Nodo"
