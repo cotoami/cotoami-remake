@@ -10,12 +10,7 @@ import slinky.web.html._
 
 import marubinotto.optionalClasses
 import marubinotto.fui.{Browser, Cmd}
-import marubinotto.components.{
-  materialSymbol,
-  toolButton,
-  ScrollArea,
-  SplitPane
-}
+import marubinotto.components.{toolButton, ScrollArea, SplitPane}
 
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Geolocation, UiState}
@@ -155,19 +150,15 @@ object PaneStock {
             Some(context.i18n.text.PaneStock_map_dockTop)
           else
             Some(context.i18n.text.PaneStock_map_dockLeft),
+        tipPlacement = "right",
         onClick = _ => dispatch(Msg.SetMapOrientation(!uiState.mapVertical))
       ),
       toolButton(
         classes = "default open-modeless-geomap overlay",
         symbol = "open_in_new",
         tip = Some(context.i18n.text.PaneStock_map_openModeless),
+        tipPlacement = "right",
         onClick = _ => dispatch(Msg.OpenModelessGeomap)
-      ),
-      button(
-        className := "default close-map",
-        onClick := (_ => dispatch(Msg.CloseMap))
-      )(
-        materialSymbol("arrow_drop_up")
       )
     )
 
