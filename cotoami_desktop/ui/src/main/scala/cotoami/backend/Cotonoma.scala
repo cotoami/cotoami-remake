@@ -58,6 +58,12 @@ object CotonomaJson {
   ): Cmd.One[Either[ErrorJson, js.Array[CotonomaJson]]] =
     Commands.send(Commands.CotonomasByPrefix(prefix, nodes))
 
+  def fetchByPartial(
+      partial: String,
+      nodes: Option[js.Array[Id[Node]]]
+  ): Cmd.One[Either[ErrorJson, js.Array[CotonomaJson]]] =
+    Commands.send(Commands.CotonomasByPartial(partial, nodes))
+
   def post(
       name: String,
       location: Option[Geolocation],
@@ -119,6 +125,13 @@ object CotonomaBackend {
       nodes: Option[js.Array[Id[Node]]]
   ): Cmd.One[Either[ErrorJson, js.Array[Cotonoma]]] =
     CotonomaJson.fetchByPrefix(prefix, nodes)
+      .map(_.map(_.map(toModel)))
+
+  def fetchByPartial(
+      partial: String,
+      nodes: Option[js.Array[Id[Node]]]
+  ): Cmd.One[Either[ErrorJson, js.Array[Cotonoma]]] =
+    CotonomaJson.fetchByPartial(partial, nodes)
       .map(_.map(_.map(toModel)))
 
   def post(

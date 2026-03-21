@@ -149,6 +149,14 @@ object Commands {
       )
     )
 
+  def CotonomasByPartial(partial: String, nodes: Option[js.Array[Id[Node]]]) =
+    jso(CotonomasByPartial =
+      jso(
+        partial = partial,
+        nodes = nodes.map(_.map(_.uuid)).getOrElse((null))
+      )
+    )
+
   def Cotonoma(id: Id[Cotonoma]) = jso(Cotonoma = jso(id = id.uuid))
 
   def CotonomaDetails(id: Id[Cotonoma]) =

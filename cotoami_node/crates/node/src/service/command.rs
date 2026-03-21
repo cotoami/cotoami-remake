@@ -80,6 +80,12 @@ pub enum Command {
         nodes: Option<Vec<Id<Node>>>,
     },
 
+    /// Request a [Vec<Cotonoma>] in `target_nodes` whose name partially matches the given `partial`.
+    CotonomasByPartial {
+        partial: String,
+        nodes: Option<Vec<Id<Node>>>,
+    },
+
     /// Request a tuple of [Cotonoma] and [Coto] `(Cotonoma, Coto)` of the given cotonoma ID.
     Cotonoma { id: Id<Cotonoma> },
 

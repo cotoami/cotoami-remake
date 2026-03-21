@@ -76,6 +76,9 @@ impl NodeState {
             Command::CotonomasByPrefix { prefix, nodes } => {
                 format.serialize(self.cotonomas_by_prefix(prefix, nodes).await)
             }
+            Command::CotonomasByPartial { partial, nodes } => {
+                format.serialize(self.cotonomas_by_partial(partial, nodes).await)
+            }
             Command::Cotonoma { id } => format.serialize(self.cotonoma_pair(id).await),
             Command::CotonomaDetails { id } => format.serialize(self.cotonoma_details(id).await),
             Command::CotonomaByCotoId { id } => {

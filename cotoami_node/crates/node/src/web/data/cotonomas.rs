@@ -25,6 +25,7 @@ pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotonomas))
         .route("/prefix/{prefix}", get(cotonomas_by_prefix))
+        .route("/partial/{partial}", get(cotonomas_by_partial))
         .route("/{cotonoma_id}", get(cotonoma))
         .route("/{cotonoma_id}/details", get(cotonoma_details))
         .route("/{cotonoma_id}/graph", get(graph))
@@ -65,6 +66,22 @@ async fn cotonomas_by_prefix(
 ) -> Result<Content<Vec<Cotonoma>>, ServiceError> {
     state
         .cotonomas_by_prefix(prefix, target_nodes.node)
+        .await
+        .map(|cotonomas| Content(cotonomas, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/data/cotonomas/partial/{partial}
+/////////////////////////////////////////////////////////////////////////////
+
+async fn cotonomas_by_partial(
+    State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(partial): Path<String>,
+    Query(target_nodes): Query<TargetNodesQuery>,
+) -> Result<Content<Vec<Cotonoma>>, ServiceError> {
+    state
+        .cotonomas_by_partial(partial, target_nodes.node)
         .await
         .map(|cotonomas| Content(cotonomas, accept))
 }

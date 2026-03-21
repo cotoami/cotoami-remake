@@ -169,6 +169,16 @@ impl HttpClient {
                 self.get(&format!("{API_PATH_COTONOMAS}/prefix/{prefix}"))
                     .query(&nodes)
             }
+            Command::CotonomasByPartial { partial, nodes } => {
+                let partial = utf8_percent_encode(&partial, NON_ALPHANUMERIC).to_string();
+                let nodes = if let Some(nodes) = nodes {
+                    nodes.into_iter().map(|id| ("node", id)).collect()
+                } else {
+                    Vec::new()
+                };
+                self.get(&format!("{API_PATH_COTONOMAS}/partial/{partial}"))
+                    .query(&nodes)
+            }
             Command::Cotonoma { id } => self.get(&format!("{API_PATH_COTONOMAS}/{id}")),
             Command::CotonomaDetails { id } => {
                 self.get(&format!("{API_PATH_COTONOMAS}/{id}/details"))

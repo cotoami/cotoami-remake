@@ -16,6 +16,7 @@ use crate::{
 const DEFAULT_SUB_PAGE_SIZE: i64 = 10;
 const DEFAULT_RECENT_PAGE_SIZE: i64 = 100;
 const DEFAULT_COTONOMAS_BY_PREFIX_LIMIT: i64 = 10;
+const DEFAULT_COTONOMAS_BY_PARTIAL_LIMIT: i64 = 10;
 
 impl NodeState {
     pub async fn recent_cotonomas(
@@ -47,6 +48,17 @@ impl NodeState {
     ) -> Result<Vec<Cotonoma>, ServiceError> {
         self.get(move |ds| {
             ds.cotonomas_by_prefix(&prefix, nodes, DEFAULT_COTONOMAS_BY_PREFIX_LIMIT)
+        })
+        .await
+    }
+
+    pub async fn cotonomas_by_partial(
+        &self,
+        partial: String,
+        nodes: Option<Vec<Id<Node>>>,
+    ) -> Result<Vec<Cotonoma>, ServiceError> {
+        self.get(move |ds| {
+            ds.cotonomas_by_partial(&partial, nodes, DEFAULT_COTONOMAS_BY_PARTIAL_LIMIT)
         })
         .await
     }
