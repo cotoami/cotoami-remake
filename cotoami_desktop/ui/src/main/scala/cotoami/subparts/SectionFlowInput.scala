@@ -31,7 +31,7 @@ import cotoami.subparts.modeless.ModelessNewCoto
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object SectionFlowInput {
-  final val StorageKey = "FlowInput"
+  final val DraftStorageKey = "NewCotoDraft"
 
   /////////////////////////////////////////////////////////////////////////////
   // Model
@@ -79,7 +79,7 @@ object SectionFlowInput {
       form match {
         case form: CotoForm.Model =>
           Cmd(IO {
-            dom.window.localStorage.setItem(StorageKey, form.contentInput)
+            dom.window.localStorage.setItem(DraftStorageKey, form.contentInput)
             None
           })
         case _ => Cmd.none
@@ -93,7 +93,7 @@ object SectionFlowInput {
       }
 
     private def restoreTextContent: Cmd.One[Option[String]] = Cmd(IO {
-      Some(Option(dom.window.localStorage.getItem(StorageKey)))
+      Some(Option(dom.window.localStorage.getItem(DraftStorageKey)))
     })
   }
 
