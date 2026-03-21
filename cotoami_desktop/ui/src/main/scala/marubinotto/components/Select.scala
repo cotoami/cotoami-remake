@@ -16,14 +16,14 @@ object Select extends ExternalComponent {
       inputValue: String = "",
       defaultValue: Option[SelectOption] = None,
       value: Option[SelectOption] = None,
-      onInputChange: Option[String => Unit] = None,
+      onInputChange: Option[(String, InputActionMeta) => String] = None,
       formatOptionLabel: Option[SelectOption => ReactElement] = None,
       isLoading: Boolean = false,
       noOptionsMessage: Option[NoOptionsMessageArg => ReactElement] = None,
       isClearable: Boolean = false,
       autoFocus: Boolean = false,
       menuPlacement: String = "auto", // "auto" / "bottom" / "top"
-      onChange: Option[Nullable[SelectOption] => Unit] = None
+      onChange: Option[(Nullable[SelectOption], ActionMeta) => Unit] = None
   )
 
   def apply(
@@ -33,14 +33,14 @@ object Select extends ExternalComponent {
       inputValue: String = "",
       defaultValue: Option[SelectOption] = None,
       value: Option[SelectOption] = None,
-      onInputChange: Option[String => Unit] = None,
+      onInputChange: Option[(String, InputActionMeta) => String] = None,
       formatOptionLabel: Option[SelectOption => ReactElement] = None,
       isLoading: Boolean = false,
       noOptionsMessage: Option[NoOptionsMessageArg => ReactElement] = None,
       isClearable: Boolean = false,
       autoFocus: Boolean = false,
       menuPlacement: String = "auto",
-      onChange: Option[Nullable[SelectOption] => Unit] = None
+      onChange: Option[(Nullable[SelectOption], ActionMeta) => Unit] = None
   ) =
     super.apply(
       Props(
@@ -70,6 +70,17 @@ object Select extends ExternalComponent {
   @js.native
   trait NoOptionsMessageArg extends js.Object {
     val inputValue: String = js.native
+  }
+
+  @js.native
+  trait InputActionMeta extends js.Object {
+    val action: String = js.native
+    val prevInputValue: String = js.native
+  }
+
+  @js.native
+  trait ActionMeta extends js.Object {
+    val action: String = js.native
   }
 
   override val component = ReactSelect

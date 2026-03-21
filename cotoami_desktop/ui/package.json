@@ -25,7 +25,7 @@
     "react-flip-toolkit": "^7.2.4",
     "react-markdown": "^9.0.1",
     "react-proxy": "1.1.8",
-    "react-select": "^5.8.2",
+    "react-select": "5.10.2",
     "rehype-external-links": "^3.0.0",
     "rehype-highlight": "^7.0.2",
     "remark": "^15.0.1",

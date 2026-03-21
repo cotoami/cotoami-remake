@@ -250,14 +250,20 @@ object ModalRepost {
           inputValue = model.query,
           value = model.dest,
           onInputChange =
-            Some(input => dispatch(Msg.CotonomaQueryInput(input))),
+            Some((input, actionMeta) => {
+              if (actionMeta.action == "input-change")
+                dispatch(Msg.CotonomaQueryInput(input))
+              else if (input != model.query)
+                dispatch(Msg.CotonomaQueryInput(input))
+              input
+            }),
           noOptionsMessage =
             Some(_ => div()(context.i18n.text.ModalRepost_typeCotonomaName)),
           formatOptionLabel = Some(divSelectOption(_, context.repo.nodes)),
           isLoading = model.optionsLoading,
           isClearable = true,
           autoFocus = true,
-          onChange = Some(option => {
+          onChange = Some((option, _) => {
             dispatch(
               Msg.DestinationSelected(
                 Nullable.toOption(option).map(_.asInstanceOf[Destination])

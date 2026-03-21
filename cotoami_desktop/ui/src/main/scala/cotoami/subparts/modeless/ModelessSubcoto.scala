@@ -253,7 +253,7 @@ object ModelessSubcoto {
           options = model.targetCotonomas,
           formatOptionLabel = Some(divSelectOption(_, context.repo)),
           value = model.postTo,
-          onChange = Some(option => {
+          onChange = Some((option, _) => {
             dispatch(
               Msg.TargetCotonomaSelected(
                 Nullable.toOption(option).map(_.asInstanceOf[TargetCotonoma])
