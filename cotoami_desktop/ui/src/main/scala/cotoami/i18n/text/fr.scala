@@ -190,12 +190,6 @@ object fr extends Text {
   val ModelessGeomap_title = "Carte"
   val ModelessNewCoto_title = "Nouveau Coto"
   val ModelessNewCoto_confirmDiscardDraft = "Supprimer votre brouillon ?"
-  val ModalSubcoto_title = "Nouveau Sous-coto"
-
-  val ModalNodeProfile_title = "Profil du Nœud"
-  val ModalNodeProfile_selfNode = "Vous"
-  val ModalNodeProfile_switched = "basculé"
-  val ModalNodeProfile_description = "Description"
 
   val FieldImageMaxSize = "Seuil de Redimensionnement d'Image (pixels)"
   val FieldImageMaxSize_placeholder = "Pas de redimensionnement"
@@ -281,4 +275,10 @@ object fr extends Text {
     br(),
     "ou cliquez pour en sélectionner un"
   )
+
+  val ModelessSubcoto_title = "Nouveau Sous-coto"
+  val ModelessNodeProfile_title = "Profil du Nœud"
+  val ModelessNodeProfile_selfNode = "Vous"
+  val ModelessNodeProfile_switched = "basculé"
+  val ModelessNodeProfile_description = "Description"
 }

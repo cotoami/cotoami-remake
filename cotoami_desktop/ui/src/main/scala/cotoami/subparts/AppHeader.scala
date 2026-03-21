@@ -188,7 +188,7 @@ object AppHeader {
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     button(
       className := "node-profile default",
-      title := context.i18n.text.ModalNodeProfile_title,
+      title := context.i18n.text.ModelessNodeProfile_title,
       onClick := (_ => dispatch(ModelessNodeProfile.Msg.Open(node.id)))
     )(
       PartsNode.imgNode(node)

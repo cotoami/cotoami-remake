@@ -187,12 +187,6 @@ object ja extends Text {
   val ModelessGeomap_title = "地図"
   val ModelessNewCoto_title = "新規コト"
   val ModelessNewCoto_confirmDiscardDraft = "下書きを破棄しますか？"
-  val ModalSubcoto_title = "子コトの追加"
-
-  val ModalNodeProfile_title = "ノード情報"
-  val ModalNodeProfile_selfNode = "あなた"
-  val ModalNodeProfile_switched = "切替中"
-  val ModalNodeProfile_description = "説明"
 
   val FieldImageMaxSize = "画像リサイズの閾値（ピクセル）"
   val FieldImageMaxSize_placeholder = "リサイズなし"
@@ -277,4 +271,10 @@ object ja extends Text {
     br(),
     "あるいはここをクリックして選択"
   )
+
+  val ModelessSubcoto_title = "子コトの追加"
+  val ModelessNodeProfile_title = "ノード情報"
+  val ModelessNodeProfile_selfNode = "あなた"
+  val ModelessNodeProfile_switched = "切替中"
+  val ModelessNodeProfile_description = "説明"
 }

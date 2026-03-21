@@ -188,12 +188,6 @@ object en extends Text {
   val ModelessGeomap_title = "Map"
   val ModelessNewCoto_title = "New Coto"
   val ModelessNewCoto_confirmDiscardDraft = "Discard your draft?"
-  val ModalSubcoto_title = "New Sub-coto"
-
-  val ModalNodeProfile_title = "Node Profile"
-  val ModalNodeProfile_selfNode = "You"
-  val ModalNodeProfile_switched = "switched"
-  val ModalNodeProfile_description = "Description"
 
   val FieldImageMaxSize = "Image Resize Threshold (pixels)"
   val FieldImageMaxSize_placeholder = "No resizing"
@@ -279,4 +273,10 @@ object en extends Text {
     br(),
     "or click to select one"
   )
+
+  val ModelessSubcoto_title = "New Sub-coto"
+  val ModelessNodeProfile_title = "Node Profile"
+  val ModelessNodeProfile_selfNode = "You"
+  val ModelessNodeProfile_switched = "switched"
+  val ModelessNodeProfile_description = "Description"
 }

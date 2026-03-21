@@ -190,12 +190,6 @@ object de extends Text {
   val ModelessGeomap_title = "Karte"
   val ModelessNewCoto_title = "Neues Coto"
   val ModelessNewCoto_confirmDiscardDraft = "Entwurf verwerfen?"
-  val ModalSubcoto_title = "Neues Sub-Coto"
-
-  val ModalNodeProfile_title = "Knoten-Profil"
-  val ModalNodeProfile_selfNode = "Sie"
-  val ModalNodeProfile_switched = "gewechselt"
-  val ModalNodeProfile_description = "Beschreibung"
 
   val FieldImageMaxSize = "Schwellenwert für Bildgrößenänderung (Pixel)"
   val FieldImageMaxSize_placeholder = "Keine Größenänderung"
@@ -281,4 +275,10 @@ object de extends Text {
     br(),
     "oder klicken Sie, um eine auszuwählen"
   )
+
+  val ModelessSubcoto_title = "Neues Sub-Coto"
+  val ModelessNodeProfile_title = "Knoten-Profil"
+  val ModelessNodeProfile_selfNode = "Sie"
+  val ModelessNodeProfile_switched = "gewechselt"
+  val ModelessNodeProfile_description = "Beschreibung"
 }

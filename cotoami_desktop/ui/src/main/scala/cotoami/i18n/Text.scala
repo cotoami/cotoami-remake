@@ -148,16 +148,6 @@ trait Text {
   val ModalNewIto_clearSelection: String
   val ModalNewIto_connect: String
 
-  val ModelessGeomap_title: String
-  val ModelessNewCoto_title: String
-  val ModelessNewCoto_confirmDiscardDraft: String
-  val ModalSubcoto_title: String
-
-  val ModalNodeProfile_title: String
-  val ModalNodeProfile_selfNode: String
-  val ModalNodeProfile_switched: String
-  val ModalNodeProfile_description: String
-
   val FieldImageMaxSize: String
   val FieldImageMaxSize_placeholder: String
 
@@ -218,6 +208,15 @@ trait Text {
 
   val ModalNodeIcon_title: String
   val ModalNodeIcon_inputImage: ReactElement
+
+  val ModelessGeomap_title: String
+  val ModelessNewCoto_title: String
+  val ModelessNewCoto_confirmDiscardDraft: String
+  val ModelessSubcoto_title: String
+  val ModelessNodeProfile_title: String
+  val ModelessNodeProfile_selfNode: String
+  val ModelessNodeProfile_switched: String
+  val ModelessNodeProfile_description: String
 }
 
 object Text {

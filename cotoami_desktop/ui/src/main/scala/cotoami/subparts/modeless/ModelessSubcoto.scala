@@ -196,7 +196,7 @@ object ModelessSubcoto {
           materialSymbol("subdirectory_arrow_right", "arrow"),
           materialSymbol(Coto.IconName)
         ),
-        context.i18n.text.ModalSubcoto_title
+        context.i18n.text.ModelessSubcoto_title
       ),
       onClose = () => dispatch(Msg.Close),
       onFocus = () => dispatch(Msg.Focus),

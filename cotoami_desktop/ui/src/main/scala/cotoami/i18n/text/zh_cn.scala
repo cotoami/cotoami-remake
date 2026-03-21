@@ -188,12 +188,6 @@ object zh_cn extends Text {
   val ModelessGeomap_title = "地图"
   val ModelessNewCoto_title = "新 Coto"
   val ModelessNewCoto_confirmDiscardDraft = "要丢弃草稿吗？"
-  val ModalSubcoto_title = "新子 Coto"
-
-  val ModalNodeProfile_title = "节点配置文件"
-  val ModalNodeProfile_selfNode = "您"
-  val ModalNodeProfile_switched = "已切换"
-  val ModalNodeProfile_description = "描述"
 
   val FieldImageMaxSize = "图片调整大小阈值 (像素)"
   val FieldImageMaxSize_placeholder = "不调整大小"
@@ -279,4 +273,10 @@ object zh_cn extends Text {
     br(),
     "或点击选择一个"
   )
+
+  val ModelessSubcoto_title = "新子 Coto"
+  val ModelessNodeProfile_title = "节点配置文件"
+  val ModelessNodeProfile_selfNode = "您"
+  val ModelessNodeProfile_switched = "已切换"
+  val ModelessNodeProfile_description = "描述"
 }

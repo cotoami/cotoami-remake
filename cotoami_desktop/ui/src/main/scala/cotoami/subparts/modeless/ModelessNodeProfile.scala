@@ -39,9 +39,9 @@ object ModelessNodeProfile {
     def nodeRoleName(using context: Context): Option[String] =
       if (isSelf)
         Some(
-          context.i18n.text.ModalNodeProfile_selfNode ++
+          context.i18n.text.ModelessNodeProfile_selfNode ++
             Option.when(!isLocal)(
-              s" (${context.i18n.text.ModalNodeProfile_switched})"
+              s" (${context.i18n.text.ModelessNodeProfile_switched})"
             ).getOrElse("")
         )
       else if (asServer.isDefined)
@@ -178,7 +178,7 @@ object ModelessNodeProfile {
       dialogClasses = Seq("modeless-node-profile" -> true),
       title = Fragment(
         span(className := "title-icon")(materialSymbol(Node.IconName)),
-        context.i18n.text.ModalNodeProfile_title
+        context.i18n.text.ModelessNodeProfile_title
       ),
       onClose = () => dispatch(Msg.Close),
       onFocus = () => dispatch(Msg.Focus),
@@ -316,7 +316,7 @@ object ModelessNodeProfile {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     field(
-      name = context.i18n.text.ModalNodeProfile_description,
+      name = context.i18n.text.ModelessNodeProfile_description,
       classes = "node-description"
     )(
       section(className := "node-description")(

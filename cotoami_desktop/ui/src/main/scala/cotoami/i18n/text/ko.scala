@@ -188,12 +188,6 @@ object ko extends Text {
   val ModelessGeomap_title = "지도"
   val ModelessNewCoto_title = "새 Coto"
   val ModelessNewCoto_confirmDiscardDraft = "임시 저장한 내용을 버릴까요?"
-  val ModalSubcoto_title = "새 하위 Coto"
-
-  val ModalNodeProfile_title = "노드 프로필"
-  val ModalNodeProfile_selfNode = "당신"
-  val ModalNodeProfile_switched = "전환됨"
-  val ModalNodeProfile_description = "설명"
 
   val FieldImageMaxSize = "이미지 크기 조정 임계값 (픽셀)"
   val FieldImageMaxSize_placeholder = "크기 조정 없음"
@@ -279,4 +273,10 @@ object ko extends Text {
     br(),
     "클릭하여 선택하세요"
   )
+
+  val ModelessSubcoto_title = "새 하위 Coto"
+  val ModelessNodeProfile_title = "노드 프로필"
+  val ModelessNodeProfile_selfNode = "당신"
+  val ModelessNodeProfile_switched = "전환됨"
+  val ModelessNodeProfile_description = "설명"
 }
