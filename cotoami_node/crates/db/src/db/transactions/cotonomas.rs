@@ -100,6 +100,15 @@ impl DatabaseSession<'_> {
         self.read_transaction(cotonoma_ops::search_by_prefix(prefix, node_ids, limit))
     }
 
+    pub fn cotonomas_by_partial(
+        &mut self,
+        partial: &str,
+        node_ids: Option<Vec<Id<Node>>>,
+        limit: i64,
+    ) -> Result<Vec<Cotonoma>> {
+        self.read_transaction(cotonoma_ops::search_by_partial(partial, node_ids, limit))
+    }
+
     pub fn all_cotonomas(&mut self) -> Result<Vec<Cotonoma>> {
         self.read_transaction(cotonoma_ops::all())
     }

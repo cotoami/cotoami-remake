@@ -5,7 +5,7 @@ use googletest::prelude::*;
 pub mod common;
 
 #[test]
-fn cotonomas_by_prefix() -> Result<()> {
+fn cotonomas_like() -> Result<()> {
     // Setup
     let (_root_dir, db, _node) = common::setup_db("My Node")?;
     let mut ds = db.new_session()?;
@@ -16,8 +16,9 @@ fn cotonomas_by_prefix() -> Result<()> {
     let _ = ds.post_cotonoma(&CotonomaInput::new("abcdef"), &root, &opr)?;
     let _ = ds.post_cotonoma(&CotonomaInput::new("foo"), &root, &opr)?;
     let _ = ds.post_cotonoma(&CotonomaInput::new("abcabc"), &root, &opr)?;
+    let _ = ds.post_cotonoma(&CotonomaInput::new("xxxfooxxx"), &root, &opr)?;
 
-    // When: limit 1 (only exact matches)
+    // Prefix search / limit 1 (only exact matches)
     let cotonomas = ds.cotonomas_by_prefix("abc", None, 1)?;
     assert_that!(
         cotonomas,
@@ -27,7 +28,7 @@ fn cotonomas_by_prefix() -> Result<()> {
         }),]
     );
 
-    // When: limit 2 (both exact and prefix matches)
+    // Prefix search / limit 2 (both exact and prefix matches)
     let cotonomas = ds.cotonomas_by_prefix("abc", None, 2)?;
     assert_that!(
         cotonomas,
@@ -44,7 +45,7 @@ fn cotonomas_by_prefix() -> Result<()> {
         ]
     );
 
-    // When: limit 5 (all)
+    // Prefix search / limit 5 (all)
     let cotonomas = ds.cotonomas_by_prefix("abc", None, 5)?;
     assert_that!(
         cotonomas,
@@ -65,9 +66,26 @@ fn cotonomas_by_prefix() -> Result<()> {
         ]
     );
 
-    // When: '%' should be escaped
+    // Prefix search / '%' should be escaped
     let cotonomas = ds.cotonomas_by_prefix("%cde", None, 5)?;
     assert_that!(cotonomas, is_empty());
+
+    // Partial search
+    let cotonomas = ds.cotonomas_by_partial("foo", None, 5)?;
+    assert_that!(
+        cotonomas,
+        elements_are![
+            // exact matches should come first
+            pat!(Cotonoma {
+                name: eq("foo"),
+                ..
+            }),
+            pat!(Cotonoma {
+                name: eq("xxxfooxxx"),
+                ..
+            }),
+        ]
+    );
 
     Ok(())
 }

@@ -122,14 +122,31 @@ pub(crate) fn search_by_prefix<Conn: ReadConn>(
     node_ids: Option<Vec<Id<Node>>>,
     limit: i64,
 ) -> impl Operation<Conn, Vec<Cotonoma>> + '_ {
+    search_with_like(prefix, |prefix| format!("{prefix}%"), node_ids, limit)
+}
+
+pub(crate) fn search_by_partial<Conn: ReadConn>(
+    partial: &str,
+    node_ids: Option<Vec<Id<Node>>>,
+    limit: i64,
+) -> impl Operation<Conn, Vec<Cotonoma>> + '_ {
+    search_with_like(partial, |partial| format!("%{partial}%"), node_ids, limit)
+}
+
+fn search_with_like<'a, Conn: ReadConn, P: Fn(&str) -> String + 'a>(
+    string: &'a str,
+    make_pattern: P,
+    node_ids: Option<Vec<Id<Node>>>,
+    limit: i64,
+) -> impl Operation<Conn, Vec<Cotonoma>> + 'a {
     read_op(move |conn| {
         // Search by exact match first
         let query = cotonomas::table
-            .filter(cotonomas::name.eq(prefix))
+            .filter(cotonomas::name.eq(string))
             .order(cotonomas::updated_at.desc())
             .limit(limit)
             .into_boxed();
-        let mut exact_matches: Vec<Cotonoma> = if let Some(ref node_ids) = node_ids {
+        let exact_matches: Vec<Cotonoma> = if let Some(ref node_ids) = node_ids {
             query.filter(cotonomas::node_id.eq_any(node_ids))
         } else {
             query
@@ -139,21 +156,21 @@ pub(crate) fn search_by_prefix<Conn: ReadConn>(
         if exact_matches.len() as i64 == limit {
             Ok(exact_matches)
         } else {
-            // Then, search by prefix
-            let prefix = escape_like_pattern(prefix, '\\');
+            // Then, search by pattern
+            let string = escape_like_pattern(string, '\\');
             let query = cotonomas::table
-                .filter(cotonomas::name.like(format!("{prefix}_%")).escape('\\'))
+                .filter(cotonomas::name.ne(&string))
+                .filter(cotonomas::name.like(make_pattern(&string)).escape('\\'))
                 .order(cotonomas::updated_at.desc())
                 .limit(limit - exact_matches.len() as i64)
                 .into_boxed();
-            let mut prefix_matches = if let Some(ref node_ids) = node_ids {
+            let pattern_matches = if let Some(ref node_ids) = node_ids {
                 query.filter(cotonomas::node_id.eq_any(node_ids))
             } else {
                 query
             }
             .load(conn)?;
-            exact_matches.append(&mut prefix_matches);
-            Ok(exact_matches)
+            Ok(exact_matches.into_iter().chain(pattern_matches).collect())
         }
     })
 }
