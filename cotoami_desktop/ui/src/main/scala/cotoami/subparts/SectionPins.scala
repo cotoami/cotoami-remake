@@ -46,9 +46,9 @@ object SectionPins {
       Seq(Document.toString, Columns.toString, classOf[Masonry].getSimpleName)
 
     def fromString(s: String): Option[Layout] = s match {
-      case "Document" => Some(Document)
-      case "Columns"  => Some(Columns)
-      case "Masonry"  => Some(Masonry())
+      case "Document"                    => Some(Document)
+      case "Columns"                     => Some(Columns)
+      case "Masonry"                     => Some(Masonry())
       case m if m.startsWith("Masonry:") =>
         m.stripPrefix("Masonry:").toIntOption.map(Masonry(_))
       case _ => None
@@ -131,7 +131,16 @@ object SectionPins {
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val (cotonoma, cotonomaCoto) = currentCotonoma
     val layout = uiState.pinsLayout(cotonoma.id).getOrElse(Layout.Document)
-    section(className := "pins header-and-body fill")(
+    section(
+      className := optionalClasses(
+        Seq(
+          ("pins", true),
+          ("header-and-body", true),
+          ("fill", true),
+          ("selected", context.repo.cotos.isSelecting(cotonomaCoto.id))
+        )
+      )
+    )(
       header(cotonoma, cotonomaCoto, layout),
       div(
         className := s"body ${layout.name.toLowerCase()}-layout",

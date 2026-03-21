@@ -1,6 +1,12 @@
 @use "../mixins";
 
 section.pins {
+  border: 2px solid transparent; // for focus and selection
+  
+  &.selected {
+    border: 2px dotted var(--selection-color);
+  }
+
   >header {
     --padding-horizontal: 140px;
 
