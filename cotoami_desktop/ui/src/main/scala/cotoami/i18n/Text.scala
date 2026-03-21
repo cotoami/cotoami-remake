@@ -11,6 +11,7 @@ trait Text {
   val Owner: String
   val Server: String
   val Client: String
+  val Window: String
 
   val Id: String
   val Name: String

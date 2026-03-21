@@ -14,6 +14,7 @@ object zh_cn extends Text {
   val Owner = "所有者"
   val Server = "服务器"
   val Client = "客户端"
+  val Window = "窗口"
 
   val Id = "ID"
   val Name = "名称"

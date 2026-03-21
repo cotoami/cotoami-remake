@@ -14,6 +14,7 @@ object en extends Text {
   val Owner = "Owner"
   val Server = "Server"
   val Client = "Client"
+  val Window = "Window"
 
   val Id = "ID"
   val Name = "Name"

@@ -14,6 +14,7 @@ object de extends Text {
   val Owner = "Eigentümer"
   val Server = "Server"
   val Client = "Client"
+  val Window = "Fenster"
 
   val Id = "ID"
   val Name = "Name"

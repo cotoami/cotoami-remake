@@ -14,6 +14,7 @@ object ja extends Text {
   val Owner = "オーナー"
   val Server = "サーバー"
   val Client = "クライアント"
+  val Window = "ウィンドウ"
 
   val Id = "ID"
   val Name = "名前"

@@ -14,6 +14,7 @@ object ko extends Text {
   val Owner = "소유자"
   val Server = "서버"
   val Client = "클라이언트"
+  val Window = "창"
 
   val Id = "ID"
   val Name = "이름"

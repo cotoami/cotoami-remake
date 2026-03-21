@@ -14,6 +14,7 @@ object fr extends Text {
   val Owner = "Propriétaire"
   val Server = "Serveur"
   val Client = "Client"
+  val Window = "Fenetre"
 
   val Id = "ID"
   val Name = "Nom"
