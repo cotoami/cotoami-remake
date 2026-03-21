@@ -5,8 +5,9 @@ import org.scalajs.dom.HTMLElement
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
+import marubinotto.components.toolButton
 import cotoami.{Context, Into, Model, Msg => AppMsg}
-import cotoami.models.UiState
+import cotoami.models.{Coto, UiState}
 
 object PaneFlow {
 
@@ -30,7 +31,7 @@ object PaneFlow {
       uiState: UiState
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(id := PaneId, className := "flow fill")(
-      model.repo.cotos.focused.map(SectionCotoDetails(_))
+      model.repo.cotos.focused.map(focusedCoto(_))
         .getOrElse(timeline(model, uiState))
     )
 
@@ -56,5 +57,28 @@ object PaneFlow {
         case _ => None
       },
       SectionTimeline(model.timeline)
+    )
+
+  private def focusedCoto(
+      coto: Coto
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    section(className := "focused-coto header-and-body")(
+      header(
+        toolButton(
+          classes = "back",
+          symbol = "arrow_back",
+          tip = Some(context.i18n.text.Back),
+          tipPlacement = "right",
+          onClick = _ => dom.window.history.back()
+        ),
+        toolButton(
+          classes = "close",
+          symbol = "close",
+          onClick = _ => dispatch(AppMsg.UnfocusCoto)
+        )
+      ),
+      div(className := "body")(
+        SectionCotoDetails(coto)
+      )
     )
 }

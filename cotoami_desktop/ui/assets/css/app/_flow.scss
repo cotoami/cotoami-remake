@@ -7,8 +7,28 @@ section.flow {
     min-height: 0; // let this item shrink below the content size
   }
 
-  section.coto-details {
+  section.focused-coto {
     flex: 1;
     min-height: 0; // let this item shrink below the content size
+
+    >header {
+      position: relative;
+      padding-top: 8px;
+      padding-left: 8px;
+
+      button.tool {
+        height: 24px;
+        line-height: 24px;
+
+        span.material-symbols {
+          font-size: 22px;
+        }
+      }
+
+      button.close {
+        position: absolute;
+        right: 20px;
+      }
+    }
   }
 }

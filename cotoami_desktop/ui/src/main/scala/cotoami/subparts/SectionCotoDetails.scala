@@ -1,7 +1,5 @@
 package cotoami.subparts
 
-import org.scalajs.dom
-
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
@@ -16,27 +14,11 @@ object SectionCotoDetails {
   def apply(
       coto: Coto
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    section(className := "coto-details header-and-body")(
-      header(
-        toolButton(
-          classes = "back",
-          symbol = "arrow_back",
-          tip = Some(context.i18n.text.Back),
-          tipPlacement = "right",
-          onClick = _ => dom.window.history.back()
-        ),
-        toolButton(
-          classes = "close",
-          symbol = "close",
-          onClick = _ => dispatch(AppMsg.UnfocusCoto)
-        )
-      ),
-      div(className := "body")(
-        ScrollArea()(
-          articleMainCoto(coto),
-          context.repo.childrenOf(coto.id).map(sectionSubCotos)
-        ).withKey(coto.id.uuid) // Reset the state when the coto is changed
-      )
+    section(className := "coto-details fill")(
+      ScrollArea()(
+        articleMainCoto(coto),
+        context.repo.childrenOf(coto.id).map(sectionSubCotos)
+      ).withKey(coto.id.uuid) // Reset the state when the coto is changed
     )
 
   private def divInsertSubCoto(
