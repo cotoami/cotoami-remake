@@ -110,7 +110,7 @@ object ModalRepost {
         else
           default.copy(
             _1 = model.copy(query = query),
-            _3 = CotonomaBackend.fetchByPrefix(
+            _3 = CotonomaBackend.fetchByPartial(
               query,
               Some(model.targetNodeIds(context.repo))
             ).map(Msg.CotonomasFetched(query, _).into)
