@@ -1,15 +1,10 @@
 package cotoami.subparts
 
-import scala.scalajs.js
-import org.scalajs.dom
-
-import slinky.core._
 import slinky.core.facade.{Fragment, ReactElement}
-import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import marubinotto.optionalClasses
-import marubinotto.components.{materialSymbol, toolButton}
+import marubinotto.components.{materialSymbol, shiftToolButton, toolButton}
 
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Cotonoma, Node, UiState}
@@ -175,13 +170,7 @@ object AppHeader {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
-    GeomapButton.component(
-      GeomapButton.Props(
-        uiState = uiState,
-        context = context,
-        dispatch = dispatch
-      )
-    )
+    GeomapButton(uiState)
 
   private def buttonNodeProfile(
       node: Node
@@ -195,73 +184,33 @@ object AppHeader {
     )
 
   private object GeomapButton {
-    case class Props(
-        uiState: UiState,
+    def apply(uiState: UiState)(using
         context: Context,
         dispatch: Into[AppMsg] => Unit
-    )
-
-    val component = FunctionalComponent[Props] { props =>
-      val (hovered, setHovered) = useState(false)
-      val (shiftPressed, setShiftPressed) = useState(false)
-
-      val canOpenModelessGeomap = props.context.modeless.geomap.isEmpty
-      val showWindowTip =
-        !props.uiState.geomapOpened &&
-          canOpenModelessGeomap &&
-          hovered &&
-          shiftPressed
-
-      val geomapTip =
-        if (props.uiState.geomapOpened) props.context.i18n.text.CloseMap
-        else if (showWindowTip)
-          s"${props.context.i18n.text.OpenMap} (${props.context.i18n.text.Window})"
-        else props.context.i18n.text.OpenMap
-
-      val handleKeyDown: js.Function1[dom.KeyboardEvent, Unit] =
-        (e: dom.KeyboardEvent) => setShiftPressed(_ => e.shiftKey)
-      val handleKeyUp: js.Function1[dom.KeyboardEvent, Unit] =
-        (e: dom.KeyboardEvent) => setShiftPressed(_ => e.shiftKey)
-
-      useEffect(
-        () => {
-          if (hovered) {
-            dom.window.addEventListener("keydown", handleKeyDown)
-            dom.window.addEventListener("keyup", handleKeyUp)
-          }
-
-          () => {
-            dom.window.removeEventListener("keydown", handleKeyDown)
-            dom.window.removeEventListener("keyup", handleKeyUp)
-          }
+    ): ReactElement = {
+      val canOpenModelessGeomap = context.modeless.geomap.isEmpty
+      shiftToolButton(
+        classes = optionalClasses(
+          Seq(
+            ("toggle-geomap", true),
+            ("opened", uiState.geomapOpened)
+          )
+        ),
+        symbol = "public",
+        tip =
+          if (uiState.geomapOpened) context.i18n.text.CloseMap
+          else context.i18n.text.OpenMap,
+        shiftTip = Option.when(!uiState.geomapOpened && canOpenModelessGeomap) {
+          s"${context.i18n.text.OpenMap} (${context.i18n.text.Window})"
         },
-        Seq(hovered)
-      )
-
-      button(
-        className := s"default tool ${optionalClasses(Seq(("toggle-geomap", true), ("opened", props.uiState.geomapOpened)))}",
-        data - "tooltip" := geomapTip,
-        data - "placement" := "bottom",
-        onClick := (e => {
-          if (props.uiState.geomapOpened)
-            props.dispatch(PaneStock.Msg.CloseMap)
+        onClick = e => {
+          if (uiState.geomapOpened)
+            dispatch(PaneStock.Msg.CloseMap)
           else if (e.shiftKey && canOpenModelessGeomap)
-            props.dispatch(ModelessGeomap.Msg.Open)
+            dispatch(ModelessGeomap.Msg.Open)
           else
-            props.dispatch(PaneStock.Msg.OpenGeomap)
-        }),
-        onMouseEnter := (e => {
-          setHovered(_ => true)
-          setShiftPressed(_ => e.shiftKey)
-        }),
-        onMouseMove := (e => setShiftPressed(_ => e.shiftKey)),
-        onMouseLeave := (_ => {
-          setHovered(_ => false)
-          setShiftPressed(_ => false)
-        }),
-        onMouseOver := (_.stopPropagation())
-      )(
-        materialSymbol("public")
+            dispatch(PaneStock.Msg.OpenGeomap)
+        }
       )
     }
   }
