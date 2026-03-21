@@ -1,9 +1,19 @@
 .cotonoma-select {
   color: var(--color-in-light-background);
 
-  // Reset the pico style
+  // Reset Pico's generic input styles for react-select's internal text input.
+  // react-select manages that input's size and positioning itself; forcing it
+  // to behave like a normal full-width form field causes the typed text to be
+  // clipped or shifted while editing.
   input {
     height: auto;
+    width: auto;
+    min-width: 2px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    appearance: auto;
+    background: transparent;
 
     &:is(:active, :focus) {
       box-shadow: none;
