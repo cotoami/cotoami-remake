@@ -48,4 +48,17 @@ section.text-content {
   li>p {
     margin-bottom: calc(var(--typography-spacing-vertical) * 0.25);
   }
+
+  h1 {
+    font-size: 1.4rem;
+  }
+  h2 {
+    font-size: 1.3rem;
+  }
+  h3 {
+    font-size: 1.2rem;
+  }
+  h4 {
+    font-size: 1.1rem;
+  }
 }
