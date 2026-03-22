@@ -330,7 +330,7 @@ object PartsCoto {
           classes = "open-details",
           onClick = e => {
             e.stopPropagation()
-            dispatch(AppMsg.FocusCoto(coto.id))
+            dispatch(ModelessCoto.Msg.Open(coto))
           }
         )
       )
