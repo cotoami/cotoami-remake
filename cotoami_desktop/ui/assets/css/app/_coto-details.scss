@@ -101,5 +101,16 @@ section.coto-details {
         opacity: 1;
       }
     }
+
+    div.has-outgoing-itos {
+      margin-top: 10px;
+      text-align: center;
+
+      button.move-down {
+        span.material-symbols {
+          font-size: 24px;
+        }
+      }
+    }
   }
 }

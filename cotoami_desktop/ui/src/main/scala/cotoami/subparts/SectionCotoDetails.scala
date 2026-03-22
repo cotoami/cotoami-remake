@@ -96,13 +96,36 @@ object SectionCotoDetails {
             ),
             PartsCoto.articleFooter(coto),
             div(className := "padding-bottom")(
-              PartsCoto.divOpenDetailsButton(coto)
+              divMoveDownButton(
+                coto,
+                coto => AppMsg.FocusCoto(coto.id)
+              )
             )
           )
         ),
         Option.when(order.isLast) {
           divInsertSubCoto(ito.sourceCotoId, None, addSubCotoTo)
         }
+      )
+    }
+
+  private def divMoveDownButton(
+      coto: Coto,
+      createMsg: Coto => AppMsg
+  )(using
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): Option[ReactElement] =
+    Option.when(context.repo.itos.anyFrom(coto.id)) {
+      div(className := "has-outgoing-itos")(
+        toolButton(
+          symbol = "arrow_downward",
+          classes = "move-down",
+          onClick = e => {
+            e.stopPropagation()
+            dispatch(createMsg(coto))
+          }
+        )
       )
     }
 }
