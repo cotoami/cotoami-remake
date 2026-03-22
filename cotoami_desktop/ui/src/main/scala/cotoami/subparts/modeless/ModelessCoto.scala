@@ -47,6 +47,8 @@ object ModelessCoto {
   def update(
       msg: Msg,
       dialogs: Seq[Model]
+  )(using
+      context: Context
   ): (Seq[Model], Option[ModelessDialogId], Cmd[AppMsg]) = {
     val default = (dialogs, Option.empty[ModelessDialogId], Cmd.none)
 
@@ -57,7 +59,11 @@ object ModelessCoto {
             (dialogs, Some(dialogId(existing.instanceId)), Cmd.none)
           case None =>
             val opened = Model(coto)
-            (dialogs :+ opened, Some(dialogId(opened.instanceId)), Cmd.none)
+            (
+              dialogs :+ opened,
+              Some(dialogId(opened.instanceId)),
+              context.repo.lazyFetchGraphFrom(coto.id)
+            )
         }
 
       case Msg.Show(instanceId, coto) =>
