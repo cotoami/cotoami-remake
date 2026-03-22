@@ -35,10 +35,10 @@ object ModelessCoto {
 
   def dialogOrderAction(msg: Msg): Option[ModelessDialogOrder.Action] =
     msg match {
-      case Msg.Open(_)     => Some(ModelessDialogOrder.Action.Focus)
-      case Msg.Show(_, _)  => Some(ModelessDialogOrder.Action.Focus)
-      case Msg.Focus(_)    => Some(ModelessDialogOrder.Action.Focus)
-      case Msg.Close(_)    => Some(ModelessDialogOrder.Action.Close)
+      case Msg.Open(_)    => Some(ModelessDialogOrder.Action.Focus)
+      case Msg.Show(_, _) => Some(ModelessDialogOrder.Action.Focus)
+      case Msg.Focus(_)   => Some(ModelessDialogOrder.Action.Focus)
+      case Msg.Close(_)   => Some(ModelessDialogOrder.Action.Close)
     }
 
   def open(coto: Coto): Cmd.One[AppMsg] =
