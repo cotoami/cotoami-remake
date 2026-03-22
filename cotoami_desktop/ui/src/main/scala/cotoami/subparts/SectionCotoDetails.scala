@@ -22,28 +22,6 @@ object SectionCotoDetails {
       ).withKey(coto.id.uuid) // Reset the state when the coto is changed
     )
 
-  private def divInsertSubCoto(
-      sourceCotoId: Id[Coto],
-      order: Option[Int],
-      defaultCotonomaId: Option[Id[Cotonoma]]
-  )(using
-      context: Context,
-      dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
-    div(className := "insert-sub-coto")(
-      toolButton(
-        symbol = "add_circle",
-        tip = Some(context.i18n.text.Insert),
-        tipPlacement = "bottom",
-        classes = "insert-sub-coto",
-        disabled = context.modeless.isOpen(ModelessSubcoto.DialogId),
-        onClick = _ =>
-          dispatch(
-            ModelessSubcoto.Msg.Open(sourceCotoId, order, defaultCotonomaId)
-          )
-      )
-    )
-
   private def articleMainCoto(
       coto: Coto,
       onNavigate: Id[Coto] => Into[AppMsg]
@@ -133,4 +111,26 @@ object SectionCotoDetails {
         )
       )
     }
+
+  private def divInsertSubCoto(
+      sourceCotoId: Id[Coto],
+      order: Option[Int],
+      defaultCotonomaId: Option[Id[Cotonoma]]
+  )(using
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
+    div(className := "insert-sub-coto")(
+      toolButton(
+        symbol = "add_circle",
+        tip = Some(context.i18n.text.Insert),
+        tipPlacement = "bottom",
+        classes = "insert-sub-coto",
+        disabled = context.modeless.isOpen(ModelessSubcoto.DialogId),
+        onClick = _ =>
+          dispatch(
+            ModelessSubcoto.Msg.Open(sourceCotoId, order, defaultCotonomaId)
+          )
+      )
+    )
 }

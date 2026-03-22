@@ -144,7 +144,11 @@ object ModelessSubcoto {
 
     (msg, model) match {
       case (Msg.Open(sourceCotoId, order, defaultCotonomaId), _) =>
-        (Some(Model(sourceCotoId, order, defaultCotonomaId)), context.geomap, Cmd.none)
+        (
+          Some(Model(sourceCotoId, order, defaultCotonomaId)),
+          context.geomap,
+          Cmd.none
+        )
 
       case (Msg.Focus, _) =>
         default
@@ -176,7 +180,8 @@ object ModelessSubcoto {
 
       case (Msg.Posted(Left(e)), Some(current)) =>
         default.copy(
-          _1 = Some(current.copy(posting = false, error = Some(e.default_message)))
+          _1 =
+            Some(current.copy(posting = false, error = Some(e.default_message)))
         )
     }
   }
