@@ -25,6 +25,7 @@ import cotoami.models.{
 }
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
 import cotoami.subparts.EditorCoto._
+import cotoami.subparts.modeless.ModelessCoto
 import cotoami.subparts.modeless.ModelessNewCoto
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
@@ -381,7 +382,8 @@ object SectionFlowInput {
       section(
         className := "posting-to",
         onDoubleClick := (_ =>
-          dispatch(AppMsg.FocusCoto(currentCotonoma.cotoId))
+          context.repo.cotos.get(currentCotonoma.cotoId)
+            .foreach(coto => dispatch(ModelessCoto.Msg.Open(coto)))
         )
       )(
         context.repo.nodes.get(currentCotonoma.nodeId)

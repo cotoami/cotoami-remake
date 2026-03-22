@@ -11,6 +11,7 @@ import cotoami.backend._
 import cotoami.repository._
 import cotoami.models._
 import cotoami.subparts._
+import cotoami.subparts.modeless.ModelessCoto
 import cotoami.subparts.modeless.ModelessDialogId
 import cotoami.subparts.modeless.ModelessEditCoto
 import cotoami.subparts.modeless.ModelessGeomap
@@ -116,6 +117,7 @@ case class Model(
 
 case class ModelessState(
     dialogOrder: Seq[ModelessDialogId] = Seq.empty,
+    cotos: Seq[ModelessCoto.Model] = Seq.empty,
     editCoto: Option[ModelessEditCoto.Model] = None,
     geomap: Option[ModelessGeomap.Model] = None,
     newCoto: Option[ModelessNewCoto.Model] = None,
@@ -124,6 +126,7 @@ case class ModelessState(
 ) {
   def isOpen(dialogId: ModelessDialogId): Boolean =
     dialogId match {
+      case ModelessDialogId.CotoDetails(id) => cotos.exists(_.cotoId == id)
       case ModelessDialogId.EditCoto => editCoto.nonEmpty
       case ModelessDialogId.Geomap   => geomap.nonEmpty
       case ModelessDialogId.NewCoto  => newCoto.nonEmpty
