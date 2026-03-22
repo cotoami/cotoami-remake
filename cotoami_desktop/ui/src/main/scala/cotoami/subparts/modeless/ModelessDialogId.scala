@@ -1,9 +1,7 @@
 package cotoami.subparts.modeless
 
-import cotoami.models.{Coto, Id}
-
 enum ModelessDialogId {
-  case CotoDetails(id: Id[Coto])
+  case CotoDetails(instanceId: String)
   case EditCoto
   case Geomap
   case NewCoto

@@ -126,7 +126,8 @@ case class ModelessState(
 ) {
   def isOpen(dialogId: ModelessDialogId): Boolean =
     dialogId match {
-      case ModelessDialogId.CotoDetails(id) => cotos.exists(_.cotoId == id)
+      case ModelessDialogId.CotoDetails(instanceId) =>
+        cotos.exists(_.instanceId == instanceId)
       case ModelessDialogId.EditCoto => editCoto.nonEmpty
       case ModelessDialogId.Geomap   => geomap.nonEmpty
       case ModelessDialogId.NewCoto  => newCoto.nonEmpty

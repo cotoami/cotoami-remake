@@ -12,12 +12,13 @@ import cotoami.subparts.modeless.ModelessSubcoto
 object SectionCotoDetails {
 
   def apply(
-      coto: Coto
+      coto: Coto,
+      onNavigate: Id[Coto] => Into[AppMsg] = AppMsg.FocusCoto(_)
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "coto-details fill")(
       ScrollArea()(
-        articleMainCoto(coto),
-        context.repo.childrenOf(coto.id).map(sectionSubCotos)
+        articleMainCoto(coto, onNavigate),
+        context.repo.childrenOf(coto.id).map(sectionSubCotos(_, onNavigate))
       ).withKey(coto.id.uuid) // Reset the state when the coto is changed
     )
 
@@ -43,7 +44,10 @@ object SectionCotoDetails {
       )
     )
 
-  private def articleMainCoto(coto: Coto)(using
+  private def articleMainCoto(
+      coto: Coto,
+      onNavigate: Id[Coto] => Into[AppMsg]
+  )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -51,7 +55,7 @@ object SectionCotoDetails {
       ToolbarCoto(coto),
       PartsCoto.ulParents(
         context.repo.parentsOf(coto.id),
-        AppMsg.FocusCoto(_)
+        onNavigate
       ),
       header()(
         PartsCoto.divAttributes(coto),
@@ -64,7 +68,8 @@ object SectionCotoDetails {
     )
 
   private def sectionSubCotos(
-      subCotos: Siblings
+      subCotos: Siblings,
+      onNavigate: Id[Coto] => Into[AppMsg]
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     PartsIto.sectionSiblings(subCotos, "sub-cotos") { case (ito, coto, order) =>
       val repo = context.repo
@@ -85,7 +90,7 @@ object SectionCotoDetails {
             PartsIto.buttonSubcotoIto(ito),
             PartsCoto.ulParents(
               repo.parentsOf(coto.id).filter(_._2.id != ito.id),
-              AppMsg.FocusCoto(_)
+              onNavigate
             ),
             header()(
               PartsCoto.divAttributes(coto),
@@ -98,7 +103,7 @@ object SectionCotoDetails {
             div(className := "padding-bottom")(
               divMoveDownButton(
                 coto,
-                coto => AppMsg.FocusCoto(coto.id)
+                coto => onNavigate(coto.id)
               )
             )
           )
@@ -111,7 +116,7 @@ object SectionCotoDetails {
 
   private def divMoveDownButton(
       coto: Coto,
-      createMsg: Coto => AppMsg
+      createMsg: Coto => Into[AppMsg]
   )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit

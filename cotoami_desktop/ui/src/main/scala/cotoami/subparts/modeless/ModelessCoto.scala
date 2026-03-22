@@ -12,11 +12,11 @@ import cotoami.subparts.SectionCotoDetails
 
 object ModelessCoto {
 
-  case class Model(cotoId: Id[Coto], coto: Coto)
+  case class Model(instanceId: String, cotoId: Id[Coto], coto: Coto)
 
   object Model {
     def apply(coto: Coto): Model =
-      Model(coto.id, coto)
+      Model(coto.id.uuid, coto.id, coto)
   }
 
   sealed trait Msg extends Into[AppMsg] {
@@ -25,18 +25,20 @@ object ModelessCoto {
 
   object Msg {
     case class Open(coto: Coto) extends Msg
-    case class Focus(cotoId: Id[Coto]) extends Msg
-    case class Close(cotoId: Id[Coto]) extends Msg
+    case class Show(instanceId: String, coto: Coto) extends Msg
+    case class Focus(instanceId: String) extends Msg
+    case class Close(instanceId: String) extends Msg
   }
 
-  def dialogId(cotoId: Id[Coto]): ModelessDialogId =
-    ModelessDialogId.CotoDetails(cotoId)
+  def dialogId(instanceId: String): ModelessDialogId =
+    ModelessDialogId.CotoDetails(instanceId)
 
   def dialogOrderAction(msg: Msg): Option[ModelessDialogOrder.Action] =
     msg match {
-      case Msg.Open(_)    => Some(ModelessDialogOrder.Action.Focus)
-      case Msg.Focus(_)   => Some(ModelessDialogOrder.Action.Focus)
-      case Msg.Close(_)   => Some(ModelessDialogOrder.Action.Close)
+      case Msg.Open(_)     => Some(ModelessDialogOrder.Action.Focus)
+      case Msg.Show(_, _)  => Some(ModelessDialogOrder.Action.Focus)
+      case Msg.Focus(_)    => Some(ModelessDialogOrder.Action.Focus)
+      case Msg.Close(_)    => Some(ModelessDialogOrder.Action.Close)
     }
 
   def open(coto: Coto): Cmd.One[AppMsg] =
@@ -50,21 +52,44 @@ object ModelessCoto {
 
     msg match {
       case Msg.Open(coto) =>
-        val opened = Model(coto)
-        val updated =
-          dialogs.indexWhere(_.cotoId == coto.id) match {
-            case -1    => dialogs :+ opened
-            case index => dialogs.updated(index, opened)
-          }
-        (updated, Some(dialogId(coto.id)), Cmd.none)
+        dialogs.find(_.cotoId == coto.id) match {
+          case Some(existing) =>
+            (dialogs, Some(dialogId(existing.instanceId)), Cmd.none)
+          case None =>
+            val opened = Model(coto)
+            (dialogs :+ opened, Some(dialogId(opened.instanceId)), Cmd.none)
+        }
 
-      case Msg.Focus(cotoId) =>
-        default.copy(_2 = Some(dialogId(cotoId)))
+      case Msg.Show(instanceId, coto) =>
+        dialogs.find(model =>
+          model.instanceId != instanceId && model.cotoId == coto.id
+        ) match {
+          case Some(existing) =>
+            (
+              dialogs.filterNot(_.instanceId == instanceId),
+              Some(dialogId(existing.instanceId)),
+              Cmd.none
+            )
+          case None =>
+            (
+              dialogs.map { model =>
+                if (model.instanceId == instanceId)
+                  model.copy(cotoId = coto.id, coto = coto)
+                else
+                  model
+              },
+              Some(dialogId(instanceId)),
+              Cmd.none
+            )
+        }
 
-      case Msg.Close(cotoId) =>
+      case Msg.Focus(instanceId) =>
+        default.copy(_2 = Some(dialogId(instanceId)))
+
+      case Msg.Close(instanceId) =>
         (
-          dialogs.filterNot(_.cotoId == cotoId),
-          Some(dialogId(cotoId)),
+          dialogs.filterNot(_.instanceId == instanceId),
+          Some(dialogId(instanceId)),
           Cmd.none
         )
     }
@@ -75,17 +100,23 @@ object ModelessCoto {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
     val coto = context.repo.cotos.get(model.cotoId).getOrElse(model.coto)
-    val id = dialogId(model.cotoId)
+    val id = dialogId(model.instanceId)
     ModelessDialogFrame(
       dialogClasses = Seq("modeless-coto" -> true),
       title = dialogTitle(coto),
-      onClose = () => dispatch(Msg.Close(model.cotoId)),
-      onFocus = () => dispatch(Msg.Focus(model.cotoId)),
+      onClose = () => dispatch(Msg.Close(model.instanceId)),
+      onFocus = () => dispatch(Msg.Focus(model.instanceId)),
       zIndex = context.modeless.dialogZIndex(id),
       initialWidth =
         "min(calc(var(--max-article-width) + (var(--block-spacing-horizontal) * 2)), calc(100vw - 32px))"
     )(
-      SectionCotoDetails(coto)
+      SectionCotoDetails(
+        coto,
+        onNavigate = cotoId =>
+          context.repo.cotos.get(cotoId)
+            .map(coto => Msg.Show(model.instanceId, coto))
+            .getOrElse(AppMsg.FocusCoto(cotoId))
+      )
     )
   }
 
