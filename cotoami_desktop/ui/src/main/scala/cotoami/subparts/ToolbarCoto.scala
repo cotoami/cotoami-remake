@@ -55,8 +55,9 @@ object ToolbarCoto {
         toolButton(
           classes = "edit-coto",
           symbol = "edit",
-          tip =
-            Option.when(!context.modeless.isOpen(ModelessEditCoto.DialogId))(context.i18n.text.Edit),
+          tip = Option.when(
+            !context.modeless.isOpen(ModelessEditCoto.DialogId)
+          )(context.i18n.text.Edit),
           tipPlacement = "left",
           disabled = context.modeless.isOpen(ModelessEditCoto.DialogId),
           onClick = e => {
@@ -134,7 +135,7 @@ object ToolbarCoto {
       Option.when(repo.itos.anyIto(coto.id)) {
         toolButton(
           classes = "traverse",
-          symbol = "graph_1",
+          symbol = "arrow_forward",
           tip = Some(context.i18n.text.Traverse),
           tipPlacement = "left",
           onClick = e => {
