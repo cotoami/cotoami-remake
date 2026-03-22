@@ -13,6 +13,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, PaginatedIds, Scope}
 import cotoami.repository.Root
 import cotoami.backend.{ErrorJson, PaginatedCotos}
+import cotoami.subparts.modeless.ModelessCoto
 
 object PaneSearch {
 
@@ -224,7 +225,7 @@ object PaneSearch {
         ToolbarCoto(coto),
         PartsCoto.ulParents(
           repo.parentsOf(coto.id),
-          AppMsg.FocusCoto(_),
+          ModelessCoto.Msg.Open(_),
           true
         ),
         header()(
@@ -235,7 +236,7 @@ object PaneSearch {
           PartsCoto.divContent(coto)
         ),
         PartsCoto.articleFooter(coto),
-        PartsCoto.divOpenDetailsButton(coto)
+        PartsCoto.divOpenDetailsButton(coto, ModelessCoto.Msg.Open(_))
       )
     )
   }

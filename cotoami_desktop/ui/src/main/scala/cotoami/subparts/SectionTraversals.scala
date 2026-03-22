@@ -401,7 +401,7 @@ object SectionTraversals {
       PartsIto.buttonSubcotoIto(ito),
       PartsCoto.ulParents(
         context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
-        Msg.OpenTraversal(_)
+        coto => Msg.OpenTraversal(coto.id)
       ),
       div(className := "body")(
         PartsCoto.divContent(coto),

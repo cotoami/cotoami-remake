@@ -289,7 +289,7 @@ object PartsCoto {
 
   def ulParents(
       parents: Seq[(Coto, Ito)],
-      onClickTagger: Id[Coto] => Into[AppMsg],
+      onClickTagger: Coto => Into[AppMsg],
       displayAuthorIcon: Boolean = false
   )(using
       context: Context,
@@ -301,7 +301,7 @@ object PartsCoto {
           li(key := ito.id.uuid)(
             button(
               className := "parent default",
-              onClick := (_ => dispatch(onClickTagger(parent.id)))
+              onClick := (_ => dispatch(onClickTagger(parent)))
             )(
               Option.when(
                 displayAuthorIcon &&
@@ -318,7 +318,8 @@ object PartsCoto {
     }
 
   def divOpenDetailsButton(
-      coto: Coto
+      coto: Coto,
+      onClickTagger: Coto => Into[AppMsg]
   )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
@@ -330,7 +331,7 @@ object PartsCoto {
           classes = "open-details",
           onClick = e => {
             e.stopPropagation()
-            dispatch(ModelessCoto.Msg.Open(coto))
+            dispatch(onClickTagger(coto))
           }
         )
       )

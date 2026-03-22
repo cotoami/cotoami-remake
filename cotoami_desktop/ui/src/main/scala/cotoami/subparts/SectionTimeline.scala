@@ -495,7 +495,7 @@ object SectionTimeline {
       sectionRepostHeader(post),
       PartsCoto.ulParents(
         repo.parentsOf(coto.id),
-        AppMsg.FocusCoto(_),
+        coto => AppMsg.FocusCoto(coto.id),
         true
       ),
       header()(
@@ -507,7 +507,7 @@ object SectionTimeline {
       ),
       PartsCoto.articleFooter(coto),
       div(className := "padding-bottom")(
-        PartsCoto.divOpenDetailsButton(coto)
+        PartsCoto.divOpenDetailsButton(coto, coto => AppMsg.FocusCoto(coto.id))
       )
     )
   }

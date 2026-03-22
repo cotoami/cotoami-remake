@@ -13,7 +13,7 @@ object SectionCotoDetails {
 
   def apply(
       coto: Coto,
-      onNavigate: Id[Coto] => Into[AppMsg] = AppMsg.FocusCoto(_)
+      onNavigate: Coto => Into[AppMsg] = coto => AppMsg.FocusCoto(coto.id)
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "coto-details fill")(
       ScrollArea()(
@@ -24,7 +24,7 @@ object SectionCotoDetails {
 
   private def articleMainCoto(
       coto: Coto,
-      onNavigate: Id[Coto] => Into[AppMsg]
+      onNavigate: Coto => Into[AppMsg]
   )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
@@ -47,7 +47,7 @@ object SectionCotoDetails {
 
   private def sectionSubCotos(
       subCotos: Siblings,
-      onNavigate: Id[Coto] => Into[AppMsg]
+      onNavigate: Coto => Into[AppMsg]
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     PartsIto.sectionSiblings(subCotos, "sub-cotos") { case (ito, coto, order) =>
       val repo = context.repo
@@ -79,10 +79,7 @@ object SectionCotoDetails {
             ),
             PartsCoto.articleFooter(coto),
             div(className := "padding-bottom")(
-              divMoveDownButton(
-                coto,
-                coto => onNavigate(coto.id)
-              )
+              divMoveDownButton(coto, onNavigate)
             )
           )
         ),
@@ -94,7 +91,7 @@ object SectionCotoDetails {
 
   private def divMoveDownButton(
       coto: Coto,
-      createMsg: Coto => Into[AppMsg]
+      onClickTagger: Coto => Into[AppMsg]
   )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
@@ -106,7 +103,7 @@ object SectionCotoDetails {
           classes = "move-down",
           onClick = e => {
             e.stopPropagation()
-            dispatch(createMsg(coto))
+            dispatch(onClickTagger(coto))
           }
         )
       )

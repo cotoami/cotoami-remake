@@ -51,7 +51,7 @@ package object pins {
         ToolbarReorder(pin, order),
         PartsCoto.ulParents(
           context.repo.parentsOf(coto.id).filter(_._2.id != pin.id),
-          SectionTraversals.Msg.OpenTraversal(_).into
+          coto => SectionTraversals.Msg.OpenTraversal(coto.id).into
         ),
         div(className := "body")(
           PartsCoto.divContent(coto)
@@ -92,7 +92,7 @@ package object pins {
           PartsIto.buttonSubcotoIto(ito),
           PartsCoto.ulParents(
             context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
-            SectionTraversals.Msg.OpenTraversal(_).into
+            coto => SectionTraversals.Msg.OpenTraversal(coto.id).into
           ),
           div(className := "body")(
             PartsCoto.divContent(coto),

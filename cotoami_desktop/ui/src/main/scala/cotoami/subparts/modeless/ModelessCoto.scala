@@ -102,10 +102,7 @@ object ModelessCoto {
     )(
       SectionCotoDetails(
         coto,
-        onNavigate = cotoId =>
-          context.repo.cotos.get(cotoId)
-            .map(coto => Msg.Show(model.instanceId, coto))
-            .getOrElse(AppMsg.FocusCoto(cotoId))
+        onNavigate = coto => Msg.Show(model.instanceId, coto)
       )
     )
   }
