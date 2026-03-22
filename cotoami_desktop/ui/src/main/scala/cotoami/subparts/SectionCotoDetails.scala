@@ -96,7 +96,7 @@ object SectionCotoDetails {
             ),
             PartsCoto.articleFooter(coto),
             div(className := "padding-bottom")(
-              PartsCoto.divDetailsButton(coto)
+              PartsCoto.divOpenDetailsButton(coto)
             )
           )
         ),

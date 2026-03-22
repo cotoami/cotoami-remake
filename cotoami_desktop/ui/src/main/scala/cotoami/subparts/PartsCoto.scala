@@ -317,7 +317,7 @@ object PartsCoto {
       )
     }
 
-  def divDetailsButton(
+  def divOpenDetailsButton(
       coto: Coto
   )(using
       context: Context,
