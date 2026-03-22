@@ -97,7 +97,8 @@ object ModelessCoto {
       onFocus = () => dispatch(Msg.Focus(model.instanceId)),
       zIndex = context.modeless.dialogZIndex(id),
       initialWidth =
-        "min(calc(var(--max-article-width) + (var(--block-spacing-horizontal) * 2)), calc(100vw - 32px))"
+        "min(calc(var(--max-article-width) + (var(--block-spacing-horizontal) * 2)), calc(100vw - 32px))",
+      initialHeight = "auto"
     )(
       SectionCotoDetails(
         coto,
