@@ -147,7 +147,7 @@ object PaneSearch {
           .inputQuery(query)
           .pipe { case (model, cmd) =>
             default.copy(_1 = model, _3 = cmd)
-        }
+          }
 
       case Msg.FetchMore =>
         model.fetchMore.pipe { case (model, cmd) =>
@@ -235,7 +235,7 @@ object PaneSearch {
           PartsCoto.divContent(coto)
         ),
         PartsCoto.articleFooter(coto),
-        PartsCoto.divDetailsButton(coto)
+        PartsCoto.divOpenDetailsButton(coto)
       )
     )
   }

@@ -6,6 +6,7 @@ import cotoami.backend._
 import cotoami.repository._
 import cotoami.models._
 import cotoami.subparts._
+import cotoami.subparts.modeless.ModelessCoto
 import cotoami.subparts.modeless.ModelessEditCoto
 import cotoami.subparts.modeless.ModelessGeomap
 import cotoami.subparts.modeless.ModelessNewCoto
@@ -74,6 +75,7 @@ object Msg {
 
   // Subparts
   case class ModalMsg(submsg: Modal.Msg) extends Msg
+  case class ModelessCotoMsg(submsg: ModelessCoto.Msg) extends Msg
   case class ModelessEditCotoMsg(submsg: ModelessEditCoto.Msg) extends Msg
   case class ModelessGeomapMsg(submsg: ModelessGeomap.Msg) extends Msg
   case class ModelessNewCotoMsg(submsg: ModelessNewCoto.Msg) extends Msg

@@ -31,6 +31,10 @@ section.coto-details {
       top: 0;
     }
 
+    >ul.parents {
+      margin-bottom: 1rem;
+    }
+
     >header {
       padding: 0 var(--block-spacing-horizontal);
     }
@@ -95,6 +99,17 @@ section.coto-details {
 
       &:hover button.insert-sub-coto {
         opacity: 1;
+      }
+    }
+
+    div.has-outgoing-itos {
+      margin-top: 10px;
+      text-align: center;
+
+      button.move-down {
+        span.material-symbols {
+          font-size: 24px;
+        }
       }
     }
   }

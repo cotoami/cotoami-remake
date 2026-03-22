@@ -15,6 +15,7 @@ import marubinotto.components.{materialSymbol, toolButton, Markdown}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, CotoContent, Cotonoma, Id, Ito, Node, WaitingPost}
+import cotoami.subparts.modeless.ModelessCoto
 import cotoami.subparts.modeless.ModelessNodeProfile
 
 object PartsCoto {
@@ -33,7 +34,7 @@ object PartsCoto {
           ("being-deleted", context.repo.beingDeleted(coto.id))
         ) ++ classes
       ),
-      onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
+      onDoubleClick := (_ => dispatch(ModelessCoto.Msg.Open(coto)))
     )(children*)
 
   def addressAuthor(
@@ -316,7 +317,7 @@ object PartsCoto {
       )
     }
 
-  def divDetailsButton(
+  def divOpenDetailsButton(
       coto: Coto
   )(using
       context: Context,
@@ -329,7 +330,7 @@ object PartsCoto {
           classes = "open-details",
           onClick = e => {
             e.stopPropagation()
-            dispatch(AppMsg.FocusCoto(coto.id))
+            dispatch(ModelessCoto.Msg.Open(coto))
           }
         )
       )

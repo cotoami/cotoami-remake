@@ -346,7 +346,11 @@ object ModelessDialogFrame {
       )
     )(
       div(
-        className := optionalClasses(("modeless-dialog", true) +: props.dialogClasses),
+        className := optionalClasses(
+          ("modeless-dialog", true) +:
+            ("size-locked", props.lockMeasuredSize && size.isDefined) +:
+            props.dialogClasses
+        ),
         ref := panelRef,
         onMouseDown := (_ => props.onFocus()),
         style := js.Dynamic.literal(

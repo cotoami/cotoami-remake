@@ -12,12 +12,13 @@ import cotoami.subparts.modeless.ModelessSubcoto
 object SectionCotoDetails {
 
   def apply(
-      coto: Coto
+      coto: Coto,
+      onNavigate: Id[Coto] => Into[AppMsg] = AppMsg.FocusCoto(_)
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "coto-details fill")(
       ScrollArea()(
-        articleMainCoto(coto),
-        context.repo.childrenOf(coto.id).map(sectionSubCotos)
+        articleMainCoto(coto, onNavigate),
+        context.repo.childrenOf(coto.id).map(sectionSubCotos(_, onNavigate))
       ).withKey(coto.id.uuid) // Reset the state when the coto is changed
     )
 
@@ -43,7 +44,10 @@ object SectionCotoDetails {
       )
     )
 
-  private def articleMainCoto(coto: Coto)(using
+  private def articleMainCoto(
+      coto: Coto,
+      onNavigate: Id[Coto] => Into[AppMsg]
+  )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -51,7 +55,7 @@ object SectionCotoDetails {
       ToolbarCoto(coto),
       PartsCoto.ulParents(
         context.repo.parentsOf(coto.id),
-        AppMsg.FocusCoto(_)
+        onNavigate
       ),
       header()(
         PartsCoto.divAttributes(coto),
@@ -64,7 +68,8 @@ object SectionCotoDetails {
     )
 
   private def sectionSubCotos(
-      subCotos: Siblings
+      subCotos: Siblings,
+      onNavigate: Id[Coto] => Into[AppMsg]
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     PartsIto.sectionSiblings(subCotos, "sub-cotos") { case (ito, coto, order) =>
       val repo = context.repo
@@ -85,7 +90,7 @@ object SectionCotoDetails {
             PartsIto.buttonSubcotoIto(ito),
             PartsCoto.ulParents(
               repo.parentsOf(coto.id).filter(_._2.id != ito.id),
-              AppMsg.FocusCoto(_)
+              onNavigate
             ),
             header()(
               PartsCoto.divAttributes(coto),
@@ -96,13 +101,36 @@ object SectionCotoDetails {
             ),
             PartsCoto.articleFooter(coto),
             div(className := "padding-bottom")(
-              PartsCoto.divDetailsButton(coto)
+              divMoveDownButton(
+                coto,
+                coto => onNavigate(coto.id)
+              )
             )
           )
         ),
         Option.when(order.isLast) {
           divInsertSubCoto(ito.sourceCotoId, None, addSubCotoTo)
         }
+      )
+    }
+
+  private def divMoveDownButton(
+      coto: Coto,
+      createMsg: Coto => Into[AppMsg]
+  )(using
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): Option[ReactElement] =
+    Option.when(context.repo.itos.anyFrom(coto.id)) {
+      div(className := "has-outgoing-itos")(
+        toolButton(
+          symbol = "arrow_downward",
+          classes = "move-down",
+          onClick = e => {
+            e.stopPropagation()
+            dispatch(createMsg(coto))
+          }
+        )
       )
     }
 }

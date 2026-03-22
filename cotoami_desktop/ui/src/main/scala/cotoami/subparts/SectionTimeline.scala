@@ -379,14 +379,12 @@ object SectionTimeline {
       div(className := "coto-flow body")(
         ScrollArea(
           setScrollTop = model.getScrollPos(currentCotonomaId),
-          scrollToTopWhen =
-            Option.when(model.scrollToLatestKey > 0)(
-              model.scrollToLatestKey.toString()
-            ),
-          onScrollToBottom = Some(() => dispatch(Msg.FetchMore)),
-          onScrollTopChange = Some(scrollTop =>
-            dispatch(Msg.ScrollTopChanged(scrollTop))
+          scrollToTopWhen = Option.when(model.scrollToLatestKey > 0)(
+            model.scrollToLatestKey.toString()
           ),
+          onScrollToBottom = Some(() => dispatch(Msg.FetchMore)),
+          onScrollTopChange =
+            Some(scrollTop => dispatch(Msg.ScrollTopChanged(scrollTop))),
           onUnmounted = Some(scrollTop =>
             dispatch(
               Msg.ScrollAreaUnmounted(currentCotonomaId, scrollTop)
@@ -446,7 +444,9 @@ object SectionTimeline {
           defaultValue := model.queryInput,
           onChange := ((e) => dispatch(Msg.QueryInput(e.target.value))),
           onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart)),
-          onCompositionEnd := (e => dispatch(Msg.ImeCompositionEnd(e.target.value)))
+          onCompositionEnd := (e =>
+            dispatch(Msg.ImeCompositionEnd(e.target.value))
+          )
         ),
         Option.when(!model.queryInput.isBlank) {
           button(
@@ -507,7 +507,7 @@ object SectionTimeline {
       ),
       PartsCoto.articleFooter(coto),
       div(className := "padding-bottom")(
-        PartsCoto.divDetailsButton(coto)
+        PartsCoto.divOpenDetailsButton(coto)
       )
     )
   }

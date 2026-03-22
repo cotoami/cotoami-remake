@@ -16,6 +16,7 @@ import marubinotto.components.{toolButton, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Ito, Siblings, UiState}
+import cotoami.subparts.modeless.ModelessCoto
 import cotoami.subparts.pins._
 
 object SectionPins {
@@ -187,7 +188,7 @@ object SectionPins {
       section(className := "title")(
         span(
           className := "current-cotonoma-name",
-          onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(cotonomaCoto.id)))
+          onDoubleClick := (_ => dispatch(ModelessCoto.Msg.Open(cotonomaCoto)))
         )(
           context.repo.nodes.get(cotonoma.nodeId).map(PartsNode.imgNode(_)),
           cotonoma.name
@@ -257,7 +258,7 @@ object SectionPins {
     PartsCoto.sectionCotonomaContent(cotonomaCoto).map(
       div(
         className := "cotonoma-content",
-        onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(cotonomaCoto.id)))
+        onDoubleClick := (_ => dispatch(ModelessCoto.Msg.Open(cotonomaCoto)))
       )(_)
     )
 
