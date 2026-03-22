@@ -61,27 +61,16 @@ object ModelessCoto {
         }
 
       case Msg.Show(instanceId, coto) =>
-        dialogs.find(model =>
-          model.instanceId != instanceId && model.cotoId == coto.id
-        ) match {
-          case Some(existing) =>
-            (
-              dialogs.filterNot(_.instanceId == instanceId),
-              Some(dialogId(existing.instanceId)),
-              Cmd.none
-            )
-          case None =>
-            (
-              dialogs.map { model =>
-                if (model.instanceId == instanceId)
-                  model.copy(cotoId = coto.id, coto = coto)
-                else
-                  model
-              },
-              Some(dialogId(instanceId)),
-              Cmd.none
-            )
-        }
+        (
+          dialogs.map { model =>
+            if (model.instanceId == instanceId)
+              model.copy(cotoId = coto.id, coto = coto)
+            else
+              model
+          },
+          Some(dialogId(instanceId)),
+          Cmd.none
+        )
 
       case Msg.Focus(instanceId) =>
         default.copy(_2 = Some(dialogId(instanceId)))
