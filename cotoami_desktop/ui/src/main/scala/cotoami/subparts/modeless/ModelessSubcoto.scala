@@ -41,7 +41,8 @@ object ModelessSubcoto {
             CotoBackend.postSubcoto(
               sourceCotoId,
               cotoForm.toBackendInput,
-              target.cotonoma.id
+              target.cotonoma.id,
+              order
             )
           )
           .getOrElse(Cmd.none)

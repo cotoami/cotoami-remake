@@ -213,5 +213,6 @@ pub enum Command {
         source_coto: Id<Coto>,
         input: CotoInput<'static>,
         post_to: Option<Id<Cotonoma>>,
+        order: Option<i32>,
     },
 }

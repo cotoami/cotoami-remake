@@ -153,7 +153,11 @@ impl NodeState {
                 source_coto,
                 input,
                 post_to,
-            } => format.serialize(self.post_subcoto(source_coto, input, post_to, opr?).await),
+                order,
+            } => format.serialize(
+                self.post_subcoto(source_coto, input, post_to, order, opr?)
+                    .await,
+            ),
         }
     }
 }
@@ -177,9 +181,7 @@ impl Service<Request> for NodeState {
 }
 
 impl NodeService for NodeState {
-    fn description(&self) -> Cow<'_, str> {
-        Cow::from("local-node")
-    }
+    fn description(&self) -> Cow<'_, str> { Cow::from("local-node") }
 }
 
 /////////////////////////////////////////////////////////////////////////////

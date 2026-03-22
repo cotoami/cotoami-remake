@@ -258,14 +258,15 @@ async fn post_subcoto(
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(source_coto_id): Path<Id<Coto>>,
-    Query(destination): Query<Destination>,
+    Query(params): Query<PostSubcotoParams>,
     Json(input): Json<CotoInput<'static>>,
 ) -> Result<(StatusCode, Content<(Coto, Ito)>), ServiceError> {
     state
         .post_subcoto(
             source_coto_id,
             input,
-            destination.post_to,
+            params.post_to,
+            params.order,
             Arc::new(operator),
         )
         .await
@@ -273,7 +274,9 @@ async fn post_subcoto(
 }
 
 #[derive(Debug, serde::Deserialize)]
-pub struct Destination {
+pub struct PostSubcotoParams {
     #[serde(default)]
     pub post_to: Option<Id<Cotonoma>>,
+    #[serde(default)]
+    pub order: Option<i32>,
 }

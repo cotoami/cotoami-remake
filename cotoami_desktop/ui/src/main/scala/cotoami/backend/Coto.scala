@@ -88,9 +88,10 @@ object CotoJson {
   def postSubcoto(
       sourceCotoId: Id[Coto],
       input: CotoInput,
-      postTo: Id[Cotonoma]
+      postTo: Id[Cotonoma],
+      order: Option[Int]
   ): Cmd.One[Either[ErrorJson, js.Tuple2[CotoJson, ItoJson]]] =
-    Commands.send(Commands.PostSubcoto(sourceCotoId, input, postTo))
+    Commands.send(Commands.PostSubcoto(sourceCotoId, input, postTo, order))
 }
 
 object CotoBackend {
@@ -172,9 +173,10 @@ object CotoBackend {
   def postSubcoto(
       sourceCotoId: Id[Coto],
       input: CotoInput,
-      postTo: Id[Cotonoma]
+      postTo: Id[Cotonoma],
+      order: Option[Int]
   ): Cmd.One[Either[ErrorJson, (Coto, Ito)]] =
-    CotoJson.postSubcoto(sourceCotoId, input, postTo).map(
+    CotoJson.postSubcoto(sourceCotoId, input, postTo, order).map(
       _.map(pair => (CotoBackend.toModel(pair._1), ItoBackend.toModel(pair._2)))
     )
 }

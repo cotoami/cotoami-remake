@@ -106,15 +106,14 @@ impl DatabaseSession<'_> {
         })
     }
 
-    pub fn geolocated_cotos(
-        &mut self,
-        scope: Scope,
-        limit: i64,
-    ) -> Result<Vec<Coto>> {
+    pub fn geolocated_cotos(&mut self, scope: Scope, limit: i64) -> Result<Vec<Coto>> {
         self.read_transaction(|ctx: &mut Context<'_, SqliteConnection>| {
             let scope = resolve_scope_filter(ctx, scope)?;
-            coto_ops::geolocated(scope.as_ref().map(|e| e.as_ref().map_right(Vec::as_slice)), limit)
-                .run(ctx)
+            coto_ops::geolocated(
+                scope.as_ref().map(|e| e.as_ref().map_right(Vec::as_slice)),
+                limit,
+            )
+            .run(ctx)
         })
     }
 
@@ -293,6 +292,7 @@ impl DatabaseSession<'_> {
         source_coto_id: &Id<Coto>,
         coto_input: &CotoInput,
         post_to: &Id<Cotonoma>,
+        order: Option<i32>,
         operator: &Operator,
     ) -> Result<((Coto, Ito), Vec<ChangelogEntry>)> {
         operator.can_post_cotos()?;
@@ -317,7 +317,8 @@ impl DatabaseSession<'_> {
 
             // Create an ito
             let ito_input = ItoInput::new(*source_coto_id, inserted_coto.uuid);
-            let new_ito = NewIto::new(&local_node.node_id, &poster, &ito_input)?;
+            let mut new_ito = NewIto::new(&local_node.node_id, &poster, &ito_input)?;
+            new_ito.order = order;
             let inserted_ito = ito_ops::insert(new_ito).run(ctx)?;
             let change = Change::CreateIto(inserted_ito.clone());
             let changelog2 = changelog_ops::log_change(&change, &local_node.node_id).run(ctx)?;

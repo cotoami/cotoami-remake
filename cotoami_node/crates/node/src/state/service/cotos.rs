@@ -39,10 +39,7 @@ impl NodeState {
         .await
     }
 
-    pub async fn geolocated_cotos(
-        &self,
-        scope: Scope,
-    ) -> Result<GeolocatedCotos, ServiceError> {
+    pub async fn geolocated_cotos(&self, scope: Scope) -> Result<GeolocatedCotos, ServiceError> {
         self.get(move |ds| {
             let cotos = ds.geolocated_cotos(scope, GEOLOCATED_COTOS_MAX_SIZE)?;
             GeolocatedCotos::new(cotos, ds)
@@ -199,6 +196,7 @@ impl NodeState {
         source_coto_id: Id<Coto>,
         input: CotoInput<'static>,
         post_to: Option<Id<Cotonoma>>,
+        order: Option<i32>,
         operator: Arc<Operator>,
     ) -> Result<(Coto, Ito), ServiceError> {
         if let Err(errors) = input.validate() {
@@ -231,6 +229,7 @@ impl NodeState {
                         &source_coto_id,
                         &input,
                         &post_to.uuid,
+                        order,
                         &operator,
                     )?;
                     for log in logs {
@@ -244,7 +243,7 @@ impl NodeState {
             // Send the change to a remote node.
             if let Some(parent_service) = self.parent_services().get(&post_to.node_id) {
                 parent_service
-                    .post_subcoto(source_coto_id, input, Some(post_to.uuid))
+                    .post_subcoto(source_coto_id, input, Some(post_to.uuid), order)
                     .await
                     .map_err(ServiceError::from)
             } else {

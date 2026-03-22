@@ -70,6 +70,7 @@ async fn change_remote() -> Result<()> {
         source_coto: posted_coto.uuid,
         input: CotoInput::new("I'm hanging onto you."),
         post_to: Some(parent_root_cotonoma.uuid),
+        order: None,
     }
     .into_request_from(child_owner.clone());
     let (subcoto, subito) = child_state.call(request).await?.content::<(Coto, Ito)>()?;

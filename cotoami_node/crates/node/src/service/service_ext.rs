@@ -107,11 +107,13 @@ pub trait NodeServiceExt: NodeService {
         source_coto: Id<Coto>,
         input: CotoInput<'static>,
         post_to: Option<Id<Cotonoma>>,
+        order: Option<i32>,
     ) -> Result<(Coto, Ito)> {
         let request = Command::PostSubcoto {
             source_coto,
             input,
             post_to,
+            order,
         }
         .into_request();
         let response = self.call(request).await?;

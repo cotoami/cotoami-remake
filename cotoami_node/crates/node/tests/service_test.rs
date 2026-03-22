@@ -400,6 +400,7 @@ where
         source_coto: posted_coto.uuid,
         input: CotoInput::new("Subcoto"),
         post_to: Some(backend_root_cotonoma.uuid),
+        order: None,
     }
     .into_request();
     let (subcoto, subito) = service.call(request).await?.content::<(Coto, Ito)>()?;
@@ -638,8 +639,14 @@ where
         .content::<PaginatedCotos>()?;
     let local_search_ids: Vec<_> = local_search.page.rows.iter().map(|c| c.uuid).collect();
     assert_that!(local_search_ids.contains(&scope_child1_coto.uuid), eq(true));
-    assert_that!(local_search_ids.contains(&scope_child2_coto.uuid), eq(false));
-    assert_that!(local_search_ids.contains(&scope_child3_coto.uuid), eq(false));
+    assert_that!(
+        local_search_ids.contains(&scope_child2_coto.uuid),
+        eq(false)
+    );
+    assert_that!(
+        local_search_ids.contains(&scope_child3_coto.uuid),
+        eq(false)
+    );
 
     let recursive_search = service
         .call(
@@ -654,10 +661,22 @@ where
         .await?
         .content::<PaginatedCotos>()?;
     let recursive_search_ids: Vec<_> = recursive_search.page.rows.iter().map(|c| c.uuid).collect();
-    assert_that!(recursive_search_ids.contains(&scope_child1_coto.uuid), eq(true));
-    assert_that!(recursive_search_ids.contains(&scope_child2_coto.uuid), eq(true));
-    assert_that!(recursive_search_ids.contains(&scope_child3_coto.uuid), eq(true));
-    assert_that!(recursive_search_ids.contains(&scope_root_coto.uuid), eq(false));
+    assert_that!(
+        recursive_search_ids.contains(&scope_child1_coto.uuid),
+        eq(true)
+    );
+    assert_that!(
+        recursive_search_ids.contains(&scope_child2_coto.uuid),
+        eq(true)
+    );
+    assert_that!(
+        recursive_search_ids.contains(&scope_child3_coto.uuid),
+        eq(true)
+    );
+    assert_that!(
+        recursive_search_ids.contains(&scope_root_coto.uuid),
+        eq(false)
+    );
 
     let depth_search = service
         .call(
@@ -674,7 +693,10 @@ where
     let depth_search_ids: Vec<_> = depth_search.page.rows.iter().map(|c| c.uuid).collect();
     assert_that!(depth_search_ids.contains(&scope_child1_coto.uuid), eq(true));
     assert_that!(depth_search_ids.contains(&scope_child2_coto.uuid), eq(true));
-    assert_that!(depth_search_ids.contains(&scope_child3_coto.uuid), eq(false));
+    assert_that!(
+        depth_search_ids.contains(&scope_child3_coto.uuid),
+        eq(false)
+    );
     assert_that!(depth_search_ids.contains(&scope_root_coto.uuid), eq(false));
 
     /////////////////////////////////////////////////////////////////////////////
@@ -704,10 +726,7 @@ where
     )?;
 
     let all_geolocated = service
-        .call(
-            Command::GeolocatedCotos { scope: Scope::All }
-                .into_request(),
-        )
+        .call(Command::GeolocatedCotos { scope: Scope::All }.into_request())
         .await?
         .content::<GeolocatedCotos>()?;
     let all_geo_ids: Vec<_> = all_geolocated.cotos.iter().map(|c| c.uuid).collect();

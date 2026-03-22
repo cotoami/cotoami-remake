@@ -355,13 +355,15 @@ object Commands {
   def PostSubcoto(
       sourceCotoId: Id[Coto],
       input: CotoInput,
-      postTo: Id[Cotonoma]
+      postTo: Id[Cotonoma],
+      order: Option[Int]
   ) =
     jso(PostSubcoto =
       jso(
         source_coto = sourceCotoId.uuid,
         input = input.toJson,
-        post_to = postTo.uuid
+        post_to = postTo.uuid,
+        order = order.getOrElse(null).asInstanceOf[js.Any]
       )
     )
 
@@ -374,10 +376,12 @@ object Commands {
 
   private def scopeJson(scope: Scope): js.Any =
     scope match {
-      case Scope.All => "All"
+      case Scope.All            => "All"
       case Scope.ByNode(nodeId) => jso(Node = nodeId.uuid)
       case Scope.ByCotonoma(cotonomaId, cotonomaScope) =>
-        jso(Cotonoma = js.Array(cotonomaId.uuid, cotonomaScopeJson(cotonomaScope)))
+        jso(Cotonoma =
+          js.Array(cotonomaId.uuid, cotonomaScopeJson(cotonomaScope))
+        )
     }
 
   private def cotonomaScopeJson(scope: CotonomaScope): js.Any =

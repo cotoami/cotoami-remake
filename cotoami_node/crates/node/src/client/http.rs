@@ -3,7 +3,7 @@
 //! This client is stateful and belongs to a single server ([HttpClient::url_prefix()]),
 //! so you need to prepare separate clients for each parent that requires plain HTTP access.
 
-use std::{borrow::Cow, sync::Arc};
+use std::{borrow::Cow, collections::HashMap, sync::Arc};
 
 use anyhow::{anyhow, ensure, Context, Result};
 use const_format::concatcp;
@@ -45,9 +45,7 @@ impl HttpClient {
         })
     }
 
-    pub fn url_prefix(&self) -> &Url {
-        &self.url_prefix
-    }
+    pub fn url_prefix(&self) -> &Url { &self.url_prefix }
 
     fn default_headers() -> HeaderMap {
         let mut headers = HeaderMap::new();
@@ -62,9 +60,7 @@ impl HttpClient {
         self.headers.write().insert(name, value);
     }
 
-    pub(crate) fn read_headers(&self) -> RwLockReadGuard<'_, HeaderMap> {
-        self.headers.read()
-    }
+    pub(crate) fn read_headers(&self) -> RwLockReadGuard<'_, HeaderMap> { self.headers.read() }
 
     fn url(&self, path: &str) -> Url {
         self.url_prefix
@@ -225,8 +221,9 @@ impl HttpClient {
                     self.get(&format!("{API_PATH_NODES}/{node_id}/cotos/geolocated"))
                 }
                 Scope::Cotonoma((cotonoma_id, cotonoma_scope)) => {
-                    let request =
-                        self.get(&format!("{API_PATH_COTONOMAS}/{cotonoma_id}/cotos/geolocated"));
+                    let request = self.get(&format!(
+                        "{API_PATH_COTONOMAS}/{cotonoma_id}/cotos/geolocated"
+                    ));
                     match cotonoma_scope {
                         CotonomaScope::Recursive => request.query(&[("recursive", true)]),
                         CotonomaScope::Depth(depth) => request.query(&[("depth", depth)]),
@@ -325,10 +322,19 @@ impl HttpClient {
                 source_coto,
                 input,
                 post_to,
-            } => self
-                .post(&format!("{API_PATH_COTOS}/{source_coto}/subcotos"))
-                .query(&vec![("post_to", post_to)])
-                .json(&input),
+                order,
+            } => {
+                let mut query = HashMap::new();
+                if let Some(post_to) = post_to {
+                    query.insert("post_to", post_to.to_string());
+                }
+                if let Some(order) = order {
+                    query.insert("order", order.to_string());
+                }
+                self.post(&format!("{API_PATH_COTOS}/{source_coto}/subcotos"))
+                    .query(&query)
+                    .json(&input)
+            }
         };
 
         // Set the "Accept" header from Request::accept()
