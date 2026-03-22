@@ -1,18 +1,37 @@
 .modeless-dialog.modeless-coto {
   --panel-min-height: 0;
 
-  > article > div.dialog-body {
-    flex: none;
-    min-height: auto;
-    overflow: visible;
+  &:not(.size-locked) {
+    > article > div.dialog-body {
+      flex: none;
+      min-height: auto;
+      overflow: visible;
+    }
+
+    section.coto-details.fill {
+      height: auto;
+    }
+
+    section.coto-details > div.scroll-area {
+      height: auto;
+      max-height: calc(100vh - 180px);
+    }
   }
 
-  section.coto-details.fill {
-    height: auto;
-  }
+  &.size-locked {
+    > article > div.dialog-body {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
 
-  section.coto-details > div.scroll-area {
-    height: auto;
-    max-height: calc(100vh - 180px);
+    section.coto-details.fill,
+    section.coto-details > div.scroll-area {
+      height: 100%;
+    }
+
+    section.coto-details > div.scroll-area {
+      max-height: none;
+    }
   }
 }
