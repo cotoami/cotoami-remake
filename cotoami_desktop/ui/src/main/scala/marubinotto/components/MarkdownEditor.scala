@@ -99,12 +99,31 @@ object MarkdownEditor {
       val highlight = highlightRef.current
       val lineNumbers = lineNumbersRef.current
 
-      if (textarea != null && highlight != null) {
-        highlight.scrollTop = textarea.scrollTop
+      def scaledScrollTop(
+          source: dom.HTMLElement,
+          target: dom.HTMLElement
+      ): Double = {
+        val sourceMaxScrollTop = source.scrollHeight - source.clientHeight
+        val targetMaxScrollTop = target.scrollHeight - target.clientHeight
+
+        if (sourceMaxScrollTop <= 0 || targetMaxScrollTop <= 0) 0.0
+        else {
+          // The textarea is the only real scrolling surface. Sync the mirrored
+          // layers by scroll ratio instead of raw scrollTop so they stay aligned
+          // even when their total scrollable heights differ slightly.
+          val scaled = source.scrollTop / sourceMaxScrollTop * targetMaxScrollTop
+          math.max(0.0, math.min(targetMaxScrollTop, scaled))
+        }
+      }
+
+      if (textarea == null) return
+
+      if (highlight != null) {
+        highlight.scrollTop = scaledScrollTop(textarea, highlight)
         highlight.scrollLeft = textarea.scrollLeft
       }
-      if (textarea != null && lineNumbers != null)
-        lineNumbers.scrollTop = textarea.scrollTop
+      if (lineNumbers != null)
+        lineNumbers.scrollTop = scaledScrollTop(textarea, lineNumbers)
     }
 
     def clearCompositionEndTimer(): Unit = {
@@ -116,7 +135,7 @@ object MarkdownEditor {
       () => {
         syncScroll()
       },
-      Seq(props.value)
+      Seq(props.value, lineHeights)
     )
     useEffect(
       () => {
@@ -141,7 +160,10 @@ object MarkdownEditor {
         if (measureRoot != null) {
           val measured =
             (0 until measureRoot.children.length).map { i =>
-              measureRoot.children(i).asInstanceOf[dom.HTMLElement].offsetHeight.toDouble
+              // Preserve subpixel heights for wrapped lines. Integer rounding here
+              // accumulates across many lines and makes the caret/line-number
+              // overlay drift near the bottom of the editor.
+              measureRoot.children(i).asInstanceOf[dom.HTMLElement].getBoundingClientRect().height
             }
           if (measured != lineHeights)
             setLineHeights(measured)
@@ -312,21 +334,31 @@ object MarkdownEditor {
       lineTokens: Seq[Token],
       lineIndex: Int
   ): Seq[ReactElement] =
-    lineTokens.zipWithIndex.map { case (token, tokenIndex) =>
-      span(
-        key := s"$lineIndex-$tokenIndex",
-        className := token.className.getOrElse("")
-      )(token.text)
-    }
+    renderTokens(lineTokens, lineIndex, s"line-empty-$lineIndex")
 
   private def renderMeasureLine(
       lineTokens: Seq[Token],
       lineIndex: Int
   ): Seq[ReactElement] =
+    renderTokens(lineTokens, lineIndex, s"measure-empty-$lineIndex")
+
+  private def renderTokens(
+      lineTokens: Seq[Token],
+      lineIndex: Int,
+      emptyKey: String
+  ): Seq[ReactElement] =
     if (lineTokens.forall(_.text.isEmpty))
-      Seq(span(key := s"measure-empty-$lineIndex")("\u00a0"))
+      // Trailing blank lines must still occupy visual height in both the
+      // highlight and measure layers. Otherwise line numbers advance while the
+      // visible text/caret appear to stay on the previous line.
+      Seq(span(key := emptyKey)("\u00a0"))
     else
-      renderLine(lineTokens, lineIndex)
+      lineTokens.zipWithIndex.map { case (token, tokenIndex) =>
+        span(
+          key := s"$lineIndex-$tokenIndex",
+          className := token.className.getOrElse("")
+        )(token.text)
+      }
 
   private def tokenizeLines(lines: Seq[String]): Seq[Seq[Token]] = {
     val rendered = Seq.newBuilder[Seq[Token]]

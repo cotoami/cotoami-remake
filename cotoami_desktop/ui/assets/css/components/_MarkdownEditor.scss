@@ -15,13 +15,20 @@
   }
 
   pre,
-  textarea {
-    margin: 0;
-    padding: 0.85rem 1rem;
+  textarea,
+  .measure-layer,
+  .line-numbers {
     font-family: var(--markdown-editor-font);
     font-size: 0.96rem;
     line-height: var(--markdown-editor-line-height);
     tab-size: 2;
+  }
+
+  pre,
+  textarea,
+  .measure-layer {
+    margin: 0;
+    padding: 0.85rem 1rem;
   }
 
   pre {
@@ -38,9 +45,6 @@
     border-right: 1px solid var(--form-element-border-color);
     border-radius: 0;
     padding: 0.85rem 0;
-    font-family: var(--markdown-editor-font);
-    font-size: 0.96rem;
-    line-height: var(--markdown-editor-line-height);
 
     .line-number {
       display: flex;
@@ -63,6 +67,8 @@
     .measure-layer {
       position: absolute;
       inset: 0;
+      box-sizing: border-box;
+      scrollbar-gutter: stable;
     }
 
     pre.highlight-layer {
@@ -92,11 +98,6 @@
       visibility: hidden;
       pointer-events: none;
       overflow: hidden;
-      padding: 0.85rem 1rem;
-      font-family: var(--markdown-editor-font);
-      font-size: 0.96rem;
-      line-height: var(--markdown-editor-line-height);
-      tab-size: 2;
 
       .measure-line {
         white-space: pre-wrap;
