@@ -84,7 +84,9 @@ object SectionFlowInput {
     def restore: Cmd.One[AppMsg] =
       form match {
         case form: CotoForm.Model =>
-          Browser.getLocalStorage(DraftStorageKey).map(Msg.ContentRestored(_).into)
+          Browser.getLocalStorage(DraftStorageKey).map(
+            Msg.ContentRestored(_).into
+          )
         case _ => Cmd.none
       }
   }
@@ -440,7 +442,7 @@ object SectionFlowInput {
             form = form,
             onCtrlEnter = Some(() => dispatch(Msg.Post)),
             onFocus = Some(() => dispatch(Msg.Unfold)),
-            showLineNumbers = !model.folded
+            showLineNumbers = false
           )(using context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
           Option.when(!form.inPreview) {
             buttonOpenNewCotoModal(
