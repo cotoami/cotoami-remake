@@ -2,7 +2,7 @@ use cotoami_db::prelude::*;
 
 use crate::service::models::*;
 
-#[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(derive_more::Debug, Clone)]
 pub enum Command {
     /// Request the local node as a [Node].
     LocalNode,

@@ -29,6 +29,7 @@ pub mod error;
 pub mod models;
 pub mod pubsub;
 pub mod service_ext;
+pub mod wire;
 
 pub(crate) use self::{
     command::*,
@@ -90,7 +91,7 @@ pub type NodeServiceFuture = BoxFuture<'static, Result<Response, anyhow::Error>>
 // Request
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone)]
 pub struct Request {
     id: Uuid,
 
@@ -98,7 +99,6 @@ pub struct Request {
     ///
     /// This field isn't meant to be sent from a client via network, instead should be
     /// set by a service provider that keeps track of who is the client.
-    #[serde(skip_serializing, skip_deserializing)]
     from: Option<Arc<Operator>>,
 
     accept: SerializeFormat,
