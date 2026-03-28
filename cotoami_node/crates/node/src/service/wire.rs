@@ -1,14 +1,10 @@
 use std::borrow::Cow;
 
-use cotoami_db::models::DateTimeRange;
-use cotoami_db::prelude::*;
+use cotoami_db::{models::DateTimeRange, prelude::*};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use uuid::Uuid;
 
-use crate::service::{
-    models::*,
-    Command, Request, SerializeFormat,
-};
+use crate::service::{models::*, Command, Request, SerializeFormat};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
@@ -207,9 +203,7 @@ pub enum ScopeSchema {
 pub enum CotonomaScopeSchema {
     Local,
     Recursive,
-    Depth {
-        depth: usize,
-    },
+    Depth { depth: usize },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -257,9 +251,7 @@ pub struct ItoInputSchema {
 pub enum FieldDiffSchema<T> {
     None,
     Delete,
-    Change {
-        value: T,
-    },
+    Change { value: T },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -338,9 +330,7 @@ impl From<Command> for CommandSchema {
             Command::InitialDataset => Self::InitialDataset,
             Command::ChunkOfChanges { from } => Self::ChunkOfChanges { from },
             Command::NodeDetails { id } => Self::NodeDetails { id },
-            Command::CreateClientNodeSession(session) => Self::CreateClientNodeSession {
-                session,
-            },
+            Command::CreateClientNodeSession(session) => Self::CreateClientNodeSession { session },
             Command::TryLogIntoServer(login) => Self::TryLogIntoServer { login },
             Command::AddServer(server) => Self::AddServer { server },
             Command::EditServer { id, values } => Self::EditServer { id, values },
@@ -416,7 +406,9 @@ impl From<Command> for CommandSchema {
             Command::RenameCotonoma { id, name } => Self::RenameCotonoma { id, name },
             Command::Ito { id } => Self::Ito { id },
             Command::SiblingItos { coto, node } => Self::SiblingItos { coto, node },
-            Command::CreateIto(input) => Self::CreateIto { input: input.into() },
+            Command::CreateIto(input) => Self::CreateIto {
+                input: input.into(),
+            },
             Command::EditIto { id, diff } => Self::EditIto {
                 id,
                 diff: diff.into(),
@@ -447,9 +439,7 @@ impl From<CommandSchema> for Command {
             CommandSchema::LocalServer => Self::LocalServer,
             CommandSchema::SetLocalNodeIcon { icon } => Self::SetLocalNodeIcon { icon },
             CommandSchema::SetImageMaxSize { size } => Self::SetImageMaxSize(size),
-            CommandSchema::EnableAnonymousRead { enable } => {
-                Self::EnableAnonymousRead { enable }
-            }
+            CommandSchema::EnableAnonymousRead { enable } => Self::EnableAnonymousRead { enable },
             CommandSchema::InitialDataset => Self::InitialDataset,
             CommandSchema::ChunkOfChanges { from } => Self::ChunkOfChanges { from },
             CommandSchema::NodeDetails { id } => Self::NodeDetails { id },
@@ -479,9 +469,7 @@ impl From<CommandSchema> for Command {
             CommandSchema::CotonomaDetails { id } => Self::CotonomaDetails { id },
             CommandSchema::CotonomaByCotoId { id } => Self::CotonomaByCotoId { id },
             CommandSchema::CotonomaByName { name, node } => Self::CotonomaByName { name, node },
-            CommandSchema::SubCotonomas { id, pagination } => {
-                Self::SubCotonomas { id, pagination }
-            }
+            CommandSchema::SubCotonomas { id, pagination } => Self::SubCotonomas { id, pagination },
             CommandSchema::RecentCotos {
                 scope,
                 only_cotonomas,
@@ -514,9 +502,7 @@ impl From<CommandSchema> for Command {
             },
             CommandSchema::CotoDetails { id } => Self::CotoDetails { id },
             CommandSchema::GraphFromCoto { coto } => Self::GraphFromCoto { coto },
-            CommandSchema::GraphFromCotonoma { cotonoma } => {
-                Self::GraphFromCotonoma { cotonoma }
-            }
+            CommandSchema::GraphFromCotonoma { cotonoma } => Self::GraphFromCotonoma { cotonoma },
             CommandSchema::PostCoto { input, post_to } => Self::PostCoto {
                 input: input.into(),
                 post_to,
@@ -611,10 +597,12 @@ impl From<CotoInput<'static>> for CotoInputSchema {
         Self {
             content: input.content.into_owned(),
             summary: input.summary.map(Cow::into_owned),
-            media_content: input.media_content.map(|(content, media_type)| MediaContentSchema {
-                content,
-                media_type: media_type.into_owned(),
-            }),
+            media_content: input
+                .media_content
+                .map(|(content, media_type)| MediaContentSchema {
+                    content,
+                    media_type: media_type.into_owned(),
+                }),
             geolocation: input.geolocation,
             datetime_range: input.datetime_range,
         }
@@ -747,9 +735,7 @@ fn string_field_diff_to_wire(diff: FieldDiff<Cow<'static, str>>) -> FieldDiffSch
     }
 }
 
-fn string_field_diff_from_wire(
-    diff: FieldDiffSchema<String>,
-) -> FieldDiff<Cow<'static, str>> {
+fn string_field_diff_from_wire(diff: FieldDiffSchema<String>) -> FieldDiff<Cow<'static, str>> {
     match diff {
         FieldDiffSchema::None => FieldDiff::None,
         FieldDiffSchema::Delete => FieldDiff::Delete,
@@ -907,6 +893,71 @@ mod tests {
                 assert_eq!(order, Some(4));
             }
             other => panic!("unexpected command after roundtrip: {other:?}"),
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn msgpack_adding_a_defaulted_field_should_remain_backward_compatible() -> Result<()> {
+        #[derive(Debug, Serialize)]
+        #[serde(tag = "type", rename_all = "snake_case")]
+        enum CommandSchemaV1 {
+            SetImageMaxSize { size: i32 },
+        }
+
+        #[derive(Debug, Deserialize)]
+        #[serde(tag = "type", rename_all = "snake_case")]
+        enum CommandSchemaV2 {
+            SetImageMaxSize {
+                #[serde(default)]
+                unit: Option<String>,
+                size: i32,
+            },
+        }
+
+        let bytes =
+            cotoami_db::rmp_serde::to_vec(&CommandSchemaV1::SetImageMaxSize { size: 1024 })?;
+
+        let restored: CommandSchemaV2 = cotoami_db::rmp_serde::from_slice(&bytes)?;
+        match restored {
+            CommandSchemaV2::SetImageMaxSize { size, unit } => {
+                assert_eq!(size, 1024);
+                assert_eq!(unit, None);
+            }
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn msgpack_reordering_fields_should_not_break_compatibility() -> Result<()> {
+        #[derive(Debug, Serialize)]
+        #[serde(tag = "type", rename_all = "snake_case")]
+        enum CommandSchemaV1 {
+            SearchCotos { query: String, only_cotonomas: bool },
+        }
+
+        #[derive(Debug, Deserialize)]
+        #[serde(tag = "type", rename_all = "snake_case")]
+        enum CommandSchemaV2 {
+            SearchCotos { only_cotonomas: bool, query: String },
+        }
+
+        let bytes = cotoami_db::rmp_serde::to_vec(&CommandSchemaV1::SearchCotos {
+            query: "rust".into(),
+            only_cotonomas: true,
+        })?;
+
+        let restored: CommandSchemaV2 = cotoami_db::rmp_serde::from_slice(&bytes)?;
+        match restored {
+            CommandSchemaV2::SearchCotos {
+                only_cotonomas,
+                query,
+            } => {
+                assert!(only_cotonomas);
+                assert_eq!(query, "rust");
+            }
         }
 
         Ok(())
