@@ -1,7 +1,7 @@
 @use "../mixins";
 
 div.app>header {
-  background-color: var(--card-sectionning-background-color);
+  background-color: var(--app-header-background-color);
 
   div.header-content {
     position: relative;

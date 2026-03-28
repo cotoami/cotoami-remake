@@ -19,6 +19,9 @@
   --color-in-light-background: #{pico.$grey-700};
   --embedded-cotobackground-color: rgb(246 247 249);
   --box-shadow: rgba(0, 0, 0, .1);
+
+  --app-header-background-color: #F1F5F9;
+  --nav-nodes-background-color: #F1F5F9;
 }
 
 @mixin dark-colors {
@@ -38,6 +41,9 @@
   --color-in-light-background: #{pico.$grey-700};
   --embedded-cotobackground-color: #{pico.$grey-900};
   --box-shadow: rgba(0, 0, 0, .8);
+
+  --app-header-background-color: var(--card-sectionning-background-color);
+  --nav-nodes-background-color: var(--card-sectionning-background-color);
 }
 
 // Default: Light theme
