@@ -1,3 +1,48 @@
+//! Transport-level schemas for the node service protocol.
+//!
+//! This module defines the stable wire contract used when service requests are
+//! serialized and deserialized for communication between cotoami nodes. These
+//! schema types are intentionally separate from the internal domain types such
+//! as [`super::Command`] and [`super::Request`].
+//!
+//! The separation is important because internal service types are free to
+//! evolve for implementation reasons, while the wire protocol needs a more
+//! deliberate compatibility policy. If node-to-node communication serialized
+//! the internal enums and structs directly, ordinary refactors such as changing
+//! variant layouts, reordering fields, or replacing borrowed data with owned
+//! data could accidentally break interoperability between versions.
+//!
+//! The role of this module is therefore:
+//!
+//! - to define explicit transport-facing schema types with stable names
+//! - to decouple the external protocol from in-process service/domain design
+//! - to centralize compatibility decisions in one place
+//! - to let multiple encodings such as JSON and MessagePack share the same
+//!   logical request/command schema
+//!
+//! The typical flow is:
+//!
+//! - outgoing: internal service type -> schema type -> serialized bytes
+//! - incoming: serialized bytes -> schema type -> internal service type
+//!
+//! In practice, [`CommandSchema`] is the stable schema for the command payload,
+//! while the private request envelope schema in this module controls how a
+//! [`super::Request`] is represented on the wire. Conversion code between the
+//! schema types and the internal service types is part of the protocol layer,
+//! not part of the domain model.
+//!
+//! The schema types in this module prefer:
+//!
+//! - explicit variant tags and field names
+//! - struct-like payloads instead of positional tuple forms
+//! - owned data where transport safety is more important than borrowing
+//! - `Option`/default-based tolerance where additive evolution is expected
+//!
+//! For MessagePack specifically, these schemas are intended to be serialized
+//! with named struct fields via [`crate::codec::to_msgpack_vec_named`] so that
+//! field-order changes and additive fields can evolve more safely than with the
+//! default compact positional encoding.
+//!
 use std::borrow::Cow;
 
 use cotoami_db::{models::DateTimeRange, prelude::*};
