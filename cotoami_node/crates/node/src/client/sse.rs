@@ -4,7 +4,7 @@ use std::{ops::ControlFlow, time::Duration};
 
 use anyhow::{bail, Result};
 use bytes::Bytes;
-use cotoami_db::{rmp_serde, ChangelogEntry, ChildNode};
+use cotoami_db::{ChangelogEntry, ChildNode};
 use futures::{sink::Sink, StreamExt};
 use reqwest_eventsource::{retry::ExponentialBackoff, Event as ESItem, EventSource, ReadyState};
 use tokio::task::JoinSet;
@@ -12,6 +12,7 @@ use tracing::{debug, error, info};
 
 use crate::{
     client::{ClientState, ConnectionState, HttpClient},
+    codec::to_msgpack_vec_named,
     event::{
         local::LocalNodeEvent,
         remote::{handle_event_from_operator, handle_event_from_parent, NodeSentEvent},
@@ -232,7 +233,7 @@ impl From<ReadyState> for ConnectionState {
 
 impl HttpClient {
     pub(crate) async fn post_event(&self, event: NodeSentEvent) -> Result<()> {
-        let bytes = rmp_serde::to_vec(&event).map(Bytes::from)?;
+        let bytes = to_msgpack_vec_named(&event).map(Bytes::from)?;
         let response = self.post("/api/events").body(bytes).send().await?;
         if response.status().is_success() {
             Ok(())

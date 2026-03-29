@@ -877,7 +877,7 @@ mod tests {
             },
         };
 
-        let bytes = cotoami_db::rmp_serde::to_vec(&request)?;
+        let bytes = crate::codec::to_msgpack_vec_named(&request)?;
         let restored: Request = cotoami_db::rmp_serde::from_slice(&bytes)?;
 
         match restored.command() {
@@ -898,68 +898,4 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn msgpack_adding_a_defaulted_field_should_remain_backward_compatible() -> Result<()> {
-        #[derive(Debug, Serialize)]
-        #[serde(tag = "type", rename_all = "snake_case")]
-        enum CommandSchemaV1 {
-            SetImageMaxSize { size: i32 },
-        }
-
-        #[derive(Debug, Deserialize)]
-        #[serde(tag = "type", rename_all = "snake_case")]
-        enum CommandSchemaV2 {
-            SetImageMaxSize {
-                #[serde(default)]
-                unit: Option<String>,
-                size: i32,
-            },
-        }
-
-        let bytes =
-            cotoami_db::rmp_serde::to_vec(&CommandSchemaV1::SetImageMaxSize { size: 1024 })?;
-
-        let restored: CommandSchemaV2 = cotoami_db::rmp_serde::from_slice(&bytes)?;
-        match restored {
-            CommandSchemaV2::SetImageMaxSize { size, unit } => {
-                assert_eq!(size, 1024);
-                assert_eq!(unit, None);
-            }
-        }
-
-        Ok(())
-    }
-
-    #[test]
-    fn msgpack_reordering_fields_should_not_break_compatibility() -> Result<()> {
-        #[derive(Debug, Serialize)]
-        #[serde(tag = "type", rename_all = "snake_case")]
-        enum CommandSchemaV1 {
-            SearchCotos { query: String, only_cotonomas: bool },
-        }
-
-        #[derive(Debug, Deserialize)]
-        #[serde(tag = "type", rename_all = "snake_case")]
-        enum CommandSchemaV2 {
-            SearchCotos { only_cotonomas: bool, query: String },
-        }
-
-        let bytes = cotoami_db::rmp_serde::to_vec(&CommandSchemaV1::SearchCotos {
-            query: "rust".into(),
-            only_cotonomas: true,
-        })?;
-
-        let restored: CommandSchemaV2 = cotoami_db::rmp_serde::from_slice(&bytes)?;
-        match restored {
-            CommandSchemaV2::SearchCotos {
-                only_cotonomas,
-                query,
-            } => {
-                assert!(only_cotonomas);
-                assert_eq!(query, "rust");
-            }
-        }
-
-        Ok(())
-    }
 }

@@ -16,6 +16,7 @@ use tokio_tungstenite::tungstenite::protocol::Message;
 use tracing::debug;
 
 use crate::{
+    codec::to_msgpack_vec_named,
     event::remote::{CommunicationError, NodeSentEvent},
     service::PubsubService,
     state::NodeState,
@@ -248,7 +249,7 @@ fn as_event_sink(
 
 impl From<NodeSentEvent> for Message {
     fn from(event: NodeSentEvent) -> Self {
-        let bytes = rmp_serde::to_vec(&event)
+        let bytes = to_msgpack_vec_named(&event)
             .map(Bytes::from)
             .expect("A NodeSentEvent should be serializable into MessagePack");
         Message::Binary(bytes)
