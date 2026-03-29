@@ -41,6 +41,8 @@ use uuid::Uuid;
 
 use crate::service::{models::*, Command, Request, SerializeFormat};
 
+pub(crate) mod legacy;
+
 impl Serialize for Request {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

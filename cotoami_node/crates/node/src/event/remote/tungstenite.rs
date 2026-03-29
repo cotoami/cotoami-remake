@@ -17,7 +17,7 @@ use tracing::debug;
 
 use crate::{
     event::remote::{CommunicationError, NodeSentEvent},
-    service::{wire::to_msgpack_vec_named, PubsubService},
+    service::{wire::legacy, PubsubService},
     state::NodeState,
     Abortables,
 };
@@ -248,7 +248,9 @@ fn as_event_sink(
 
 impl From<NodeSentEvent> for Message {
     fn from(event: NodeSentEvent) -> Self {
-        let bytes = to_msgpack_vec_named(&event)
+        // FIXME: after all servers are upgraded,
+        // switch sending to the new WS format by to_msgpack_vec_named
+        let bytes = legacy::to_legacy_msgpack_vec(&event)
             .map(Bytes::from)
             .expect("A NodeSentEvent should be serializable into MessagePack");
         Message::Binary(bytes)
@@ -270,7 +272,9 @@ async fn handle_message_stream<MsgStream, MsgStreamErr, H, F>(
     loop {
         match msg_stream.next().await {
             Some(Ok(msg)) => match msg {
-                Message::Binary(vec) => match rmp_serde::from_slice::<NodeSentEvent>(&vec) {
+                Message::Binary(vec) => match rmp_serde::from_slice::<NodeSentEvent>(&vec)
+                    .or_else(|_| legacy::from_legacy_msgpack_slice(&vec))
+                {
                     Ok(event) => {
                         if let ControlFlow::Break(e) = handler(event).await {
                             error.lock().replace(CommunicationError::EventHandling(e));
