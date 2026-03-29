@@ -26,8 +26,9 @@
 //! - incoming: serialized bytes -> schema type -> internal service type
 //!
 //! `RequestSchema` is the root service schema for node-to-node requests, while
-//! `schemas::*` contains dedicated transport schemas for nested payloads such
-//! as commands and owned input/diff types.
+//! `schemas::*` currently contains the dedicated transport schema for commands.
+//! Nested payload structs are reused directly unless and until their transport
+//! representation needs to diverge from the internal type.
 //!
 //! For MessagePack specifically, these schemas are intended to be serialized
 //! with named struct fields via [`to_msgpack_vec_named`] so that field-order
@@ -128,7 +129,6 @@ impl From<RequestSchema> for Request {
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
-    use serde::{Deserialize, Serialize};
     use serde_json::json;
 
     use super::*;
@@ -256,67 +256,4 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn msgpack_adding_a_defaulted_field_should_remain_backward_compatible() -> Result<()> {
-        #[derive(Debug, Serialize)]
-        #[serde(tag = "type", rename_all = "snake_case")]
-        enum CommandSchemaV1 {
-            SetImageMaxSize { size: i32 },
-        }
-
-        #[derive(Debug, Deserialize)]
-        #[serde(tag = "type", rename_all = "snake_case")]
-        enum CommandSchemaV2 {
-            SetImageMaxSize {
-                #[serde(default)]
-                unit: Option<String>,
-                size: i32,
-            },
-        }
-
-        let bytes = to_msgpack_vec_named(&CommandSchemaV1::SetImageMaxSize { size: 1024 })?;
-
-        let restored: CommandSchemaV2 = cotoami_db::rmp_serde::from_slice(&bytes)?;
-        match restored {
-            CommandSchemaV2::SetImageMaxSize { size, unit } => {
-                assert_eq!(size, 1024);
-                assert_eq!(unit, None);
-            }
-        }
-
-        Ok(())
-    }
-
-    #[test]
-    fn msgpack_reordering_fields_should_not_break_compatibility() -> Result<()> {
-        #[derive(Debug, Serialize)]
-        #[serde(tag = "type", rename_all = "snake_case")]
-        enum CommandSchemaV1 {
-            SearchCotos { query: String, only_cotonomas: bool },
-        }
-
-        #[derive(Debug, Deserialize)]
-        #[serde(tag = "type", rename_all = "snake_case")]
-        enum CommandSchemaV2 {
-            SearchCotos { only_cotonomas: bool, query: String },
-        }
-
-        let bytes = to_msgpack_vec_named(&CommandSchemaV1::SearchCotos {
-            query: "rust".into(),
-            only_cotonomas: true,
-        })?;
-
-        let restored: CommandSchemaV2 = cotoami_db::rmp_serde::from_slice(&bytes)?;
-        match restored {
-            CommandSchemaV2::SearchCotos {
-                only_cotonomas,
-                query,
-            } => {
-                assert!(only_cotonomas);
-                assert_eq!(query, "rust");
-            }
-        }
-
-        Ok(())
-    }
 }

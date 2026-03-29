@@ -2,17 +2,14 @@
 //!
 //! `Command` is the core service-domain enum and is likely to evolve for
 //! implementation reasons. This schema freezes the transport contract in terms
-//! of explicit variant names and schema-owned payloads.
+//! of explicit variant names. Nested payload structs currently reuse the
+//! internal service types directly, and can be split into dedicated schemas
+//! later if their wire representation ever needs to diverge.
 
 use cotoami_db::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::service::{models::*, Command};
-
-use super::{
-    CotoContentDiffSchema, CotoInputSchema, CotonomaInputSchema, ItoContentDiffSchema,
-    ItoInputSchema, ScopeSchema,
-};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
@@ -60,18 +57,18 @@ pub enum CommandSchema {
         pagination: Pagination,
     },
     RecentCotos {
-        scope: ScopeSchema,
+        scope: Scope,
         only_cotonomas: bool,
         pagination: Pagination,
     },
-    GeolocatedCotos { scope: ScopeSchema },
+    GeolocatedCotos { scope: Scope },
     CotosInGeoBounds {
         southwest: Geolocation,
         northeast: Geolocation,
     },
     SearchCotos {
         query: String,
-        scope: ScopeSchema,
+        scope: Scope,
         only_cotonomas: bool,
         pagination: Pagination,
     },
@@ -79,16 +76,16 @@ pub enum CommandSchema {
     GraphFromCoto { coto: Id<Coto> },
     GraphFromCotonoma { cotonoma: Id<Cotonoma> },
     PostCoto {
-        input: CotoInputSchema,
+        input: CotoInput<'static>,
         post_to: Id<Cotonoma>,
     },
     PostCotonoma {
-        input: CotonomaInputSchema,
+        input: CotonomaInput<'static>,
         post_to: Id<Cotonoma>,
     },
     EditCoto {
         id: Id<Coto>,
-        diff: CotoContentDiffSchema,
+        diff: CotoContentDiff<'static>,
     },
     Promote { id: Id<Coto> },
     DeleteCoto { id: Id<Coto> },
@@ -100,10 +97,10 @@ pub enum CommandSchema {
         #[serde(default)]
         node: Option<Id<Node>>,
     },
-    CreateIto { input: ItoInputSchema },
+    CreateIto { input: ItoInput<'static> },
     EditIto {
         id: Id<Ito>,
-        diff: ItoContentDiffSchema,
+        diff: ItoContentDiff<'static>,
     },
     DeleteIto { id: Id<Ito> },
     ChangeItoOrder { id: Id<Ito>, new_order: i32 },
@@ -114,7 +111,7 @@ pub enum CommandSchema {
     },
     PostSubcoto {
         source_coto: Id<Coto>,
-        input: CotoInputSchema,
+        input: CotoInput<'static>,
         #[serde(default)]
         post_to: Option<Id<Cotonoma>>,
         #[serde(default)]
@@ -153,43 +150,43 @@ impl From<Command> for CommandSchema {
             Command::CotonomaByName { name, node } => Self::CotonomaByName { name, node },
             Command::SubCotonomas { id, pagination } => Self::SubCotonomas { id, pagination },
             Command::RecentCotos { scope, only_cotonomas, pagination } => Self::RecentCotos {
-                scope: scope.into(),
+                scope,
                 only_cotonomas,
                 pagination,
             },
-            Command::GeolocatedCotos { scope } => Self::GeolocatedCotos { scope: scope.into() },
+            Command::GeolocatedCotos { scope } => Self::GeolocatedCotos { scope },
             Command::CotosInGeoBounds { southwest, northeast } => {
                 Self::CotosInGeoBounds { southwest, northeast }
             }
             Command::SearchCotos { query, scope, only_cotonomas, pagination } => Self::SearchCotos {
                 query,
-                scope: scope.into(),
+                scope,
                 only_cotonomas,
                 pagination,
             },
             Command::CotoDetails { id } => Self::CotoDetails { id },
             Command::GraphFromCoto { coto } => Self::GraphFromCoto { coto },
             Command::GraphFromCotonoma { cotonoma } => Self::GraphFromCotonoma { cotonoma },
-            Command::PostCoto { input, post_to } => Self::PostCoto { input: input.into(), post_to },
+            Command::PostCoto { input, post_to } => Self::PostCoto { input, post_to },
             Command::PostCotonoma { input, post_to } => {
-                Self::PostCotonoma { input: input.into(), post_to }
+                Self::PostCotonoma { input, post_to }
             }
-            Command::EditCoto { id, diff } => Self::EditCoto { id, diff: diff.into() },
+            Command::EditCoto { id, diff } => Self::EditCoto { id, diff },
             Command::Promote { id } => Self::Promote { id },
             Command::DeleteCoto { id } => Self::DeleteCoto { id },
             Command::Repost { id, dest } => Self::Repost { id, dest },
             Command::RenameCotonoma { id, name } => Self::RenameCotonoma { id, name },
             Command::Ito { id } => Self::Ito { id },
             Command::SiblingItos { coto, node } => Self::SiblingItos { coto, node },
-            Command::CreateIto(input) => Self::CreateIto { input: input.into() },
-            Command::EditIto { id, diff } => Self::EditIto { id, diff: diff.into() },
+            Command::CreateIto(input) => Self::CreateIto { input },
+            Command::EditIto { id, diff } => Self::EditIto { id, diff },
             Command::DeleteIto { id } => Self::DeleteIto { id },
             Command::ChangeItoOrder { id, new_order } => Self::ChangeItoOrder { id, new_order },
             Command::OthersLastPostedAt => Self::OthersLastPostedAt,
             Command::MarkAsRead { node } => Self::MarkAsRead { node },
             Command::PostSubcoto { source_coto, input, post_to, order } => Self::PostSubcoto {
                 source_coto,
-                input: input.into(),
+                input,
                 post_to,
                 order,
             },
@@ -228,43 +225,43 @@ impl From<CommandSchema> for Command {
             CommandSchema::CotonomaByName { name, node } => Self::CotonomaByName { name, node },
             CommandSchema::SubCotonomas { id, pagination } => Self::SubCotonomas { id, pagination },
             CommandSchema::RecentCotos { scope, only_cotonomas, pagination } => Self::RecentCotos {
-                scope: scope.into(),
+                scope,
                 only_cotonomas,
                 pagination,
             },
-            CommandSchema::GeolocatedCotos { scope } => Self::GeolocatedCotos { scope: scope.into() },
+            CommandSchema::GeolocatedCotos { scope } => Self::GeolocatedCotos { scope },
             CommandSchema::CotosInGeoBounds { southwest, northeast } => {
                 Self::CotosInGeoBounds { southwest, northeast }
             }
             CommandSchema::SearchCotos { query, scope, only_cotonomas, pagination } => Self::SearchCotos {
                 query,
-                scope: scope.into(),
+                scope,
                 only_cotonomas,
                 pagination,
             },
             CommandSchema::CotoDetails { id } => Self::CotoDetails { id },
             CommandSchema::GraphFromCoto { coto } => Self::GraphFromCoto { coto },
             CommandSchema::GraphFromCotonoma { cotonoma } => Self::GraphFromCotonoma { cotonoma },
-            CommandSchema::PostCoto { input, post_to } => Self::PostCoto { input: input.into(), post_to },
+            CommandSchema::PostCoto { input, post_to } => Self::PostCoto { input, post_to },
             CommandSchema::PostCotonoma { input, post_to } => {
-                Self::PostCotonoma { input: input.into(), post_to }
+                Self::PostCotonoma { input, post_to }
             }
-            CommandSchema::EditCoto { id, diff } => Self::EditCoto { id, diff: diff.into() },
+            CommandSchema::EditCoto { id, diff } => Self::EditCoto { id, diff },
             CommandSchema::Promote { id } => Self::Promote { id },
             CommandSchema::DeleteCoto { id } => Self::DeleteCoto { id },
             CommandSchema::Repost { id, dest } => Self::Repost { id, dest },
             CommandSchema::RenameCotonoma { id, name } => Self::RenameCotonoma { id, name },
             CommandSchema::Ito { id } => Self::Ito { id },
             CommandSchema::SiblingItos { coto, node } => Self::SiblingItos { coto, node },
-            CommandSchema::CreateIto { input } => Self::CreateIto(input.into()),
-            CommandSchema::EditIto { id, diff } => Self::EditIto { id, diff: diff.into() },
+            CommandSchema::CreateIto { input } => Self::CreateIto(input),
+            CommandSchema::EditIto { id, diff } => Self::EditIto { id, diff },
             CommandSchema::DeleteIto { id } => Self::DeleteIto { id },
             CommandSchema::ChangeItoOrder { id, new_order } => Self::ChangeItoOrder { id, new_order },
             CommandSchema::OthersLastPostedAt => Self::OthersLastPostedAt,
             CommandSchema::MarkAsRead { node } => Self::MarkAsRead { node },
             CommandSchema::PostSubcoto { source_coto, input, post_to, order } => Self::PostSubcoto {
                 source_coto,
-                input: input.into(),
+                input,
                 post_to,
                 order,
             },
