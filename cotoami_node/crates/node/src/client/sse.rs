@@ -12,12 +12,11 @@ use tracing::{debug, error, info};
 
 use crate::{
     client::{ClientState, ConnectionState, HttpClient},
-    codec::to_msgpack_vec_named,
     event::{
         local::LocalNodeEvent,
         remote::{handle_event_from_operator, handle_event_from_parent, NodeSentEvent},
     },
-    service::{models::NotConnected, Request, Response},
+    service::{models::NotConnected, wire::to_msgpack_vec_named, Request, Response},
     state::NodeState,
 };
 

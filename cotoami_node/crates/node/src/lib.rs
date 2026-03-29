@@ -6,7 +6,6 @@ use parking_lot::Mutex;
 use tokio::task::{AbortHandle, JoinHandle};
 
 mod client;
-pub mod codec;
 mod config;
 mod event;
 mod pubsub;

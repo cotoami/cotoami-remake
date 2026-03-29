@@ -16,9 +16,8 @@ use tokio_tungstenite::tungstenite::protocol::Message;
 use tracing::debug;
 
 use crate::{
-    codec::to_msgpack_vec_named,
     event::remote::{CommunicationError, NodeSentEvent},
-    service::PubsubService,
+    service::{wire::to_msgpack_vec_named, PubsubService},
     state::NodeState,
     Abortables,
 };
