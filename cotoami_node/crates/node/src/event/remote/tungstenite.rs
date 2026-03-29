@@ -17,7 +17,7 @@ use tracing::debug;
 
 use crate::{
     event::remote::{CommunicationError, NodeSentEvent},
-    service::PubsubService,
+    service::{wire::to_msgpack_vec_named, PubsubService},
     state::NodeState,
     Abortables,
 };
@@ -248,7 +248,7 @@ fn as_event_sink(
 
 impl From<NodeSentEvent> for Message {
     fn from(event: NodeSentEvent) -> Self {
-        let bytes = rmp_serde::to_vec(&event)
+        let bytes = to_msgpack_vec_named(&event)
             .map(Bytes::from)
             .expect("A NodeSentEvent should be serializable into MessagePack");
         Message::Binary(bytes)
