@@ -2,7 +2,24 @@ use cotoami_db::prelude::*;
 
 use crate::service::models::*;
 
-#[derive(derive_more::Debug, Clone)]
+/// In-process service command enum.
+///
+/// `Command` is the business/domain representation used inside the node
+/// service and by local integrations such as the desktop application's
+/// Rust-frontend IPC boundary.
+///
+/// It intentionally remains distinct from the inter-node transport contract.
+/// Even though this type derives Serde, that serialization is only for local
+/// communication convenience when `Command` is serialized directly, and should
+/// not be treated as the stable network protocol between nodes.
+///
+/// For node-to-node communication, `Command` only participates indirectly as
+/// the `command` field of `Request`. When a `Request` is serialized through
+/// `crate::service::wire`, that field is first mapped to `CommandSchema`
+/// before being encoded as JSON or MessagePack. That extra layer exists so
+/// internal refactors to this enum do not accidentally define or break the
+/// external wire format.
+#[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum Command {
     /// Request the local node as a [Node].
     LocalNode,
