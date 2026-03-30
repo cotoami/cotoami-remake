@@ -7,9 +7,6 @@
   --max-article-width: calc(var(--max-text-content-width) + var(--block-spacing-horizontal));
   --highlight-color: var(--muted-color);
   --selection-color: orange;
-
-  // override pico's custom properties
-  --form-element-spacing-vertical: 0.5rem;
 }
 
 div.app {
