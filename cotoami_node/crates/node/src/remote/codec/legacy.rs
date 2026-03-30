@@ -1,6 +1,6 @@
 //! Legacy node-to-node wire compatibility.
 //!
-//! This module preserves the pre-`service::wire` MessagePack layout for the
+//! This module preserves the pre-`remote::codec` MessagePack layout for the
 //! WebSocket protocol so new nodes can continue talking to older deployed
 //! nodes during a rolling upgrade.
 //!
@@ -104,7 +104,7 @@ mod tests {
     use anyhow::Result;
 
     use super::*;
-    use crate::service::{wire::to_msgpack_vec_named, Command};
+    use crate::{remote::codec::to_msgpack_vec_named, service::Command};
 
     #[test]
     fn new_request_bytes_can_roundtrip_through_current_protocol() -> Result<()> {

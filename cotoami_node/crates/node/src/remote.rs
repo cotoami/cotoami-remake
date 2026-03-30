@@ -9,6 +9,7 @@ use crate::{
     state::{LocalNodeEvent, NodeState},
 };
 
+pub(crate) mod codec;
 pub(crate) mod tungstenite;
 
 /// An event to be sent between cotoami nodes.
