@@ -16,8 +16,8 @@ use tokio_tungstenite::tungstenite::protocol::Message;
 use tracing::debug;
 
 use crate::{
-    event::remote::{CommunicationError, NodeSentEvent},
-    service::{wire::legacy, PubsubService},
+    remote::{codec::legacy, CommunicationError, NodeSentEvent},
+    service::PubsubService,
     state::NodeState,
     Abortables,
 };

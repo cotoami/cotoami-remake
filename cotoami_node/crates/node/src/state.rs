@@ -17,7 +17,6 @@ use validator::Validate;
 
 use crate::{
     config::{NodeConfig, ServerConfig},
-    event::local::LocalNodeEvent,
     service::{
         error::{IntoServiceResult, RequestError, ServiceError},
         models::ActiveClient,
@@ -28,6 +27,7 @@ use crate::{
 
 mod client_conn;
 mod error;
+mod event;
 mod internal;
 pub mod plugins;
 mod pubsub;
@@ -35,7 +35,7 @@ mod server_conn;
 mod service;
 
 use self::plugins::*;
-pub use self::{client_conn::*, error::*, pubsub::*, server_conn::*};
+pub use self::{client_conn::*, error::*, event::*, pubsub::*, server_conn::*};
 
 #[derive(Clone)]
 pub struct NodeState {

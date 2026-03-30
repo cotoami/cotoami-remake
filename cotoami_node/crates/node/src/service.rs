@@ -29,8 +29,6 @@ pub mod error;
 pub mod models;
 pub mod pubsub;
 pub mod service_ext;
-pub mod wire;
-
 pub(crate) use self::{
     command::*,
     error::*,
@@ -93,19 +91,19 @@ pub type NodeServiceFuture = BoxFuture<'static, Result<Response, anyhow::Error>>
 
 #[derive(Debug, Clone)]
 pub struct Request {
-    id: Uuid,
+    pub(crate) id: Uuid,
 
     /// The operator that has sent this request.
     ///
     /// This field isn't meant to be sent from a client via network, instead should be
     /// set by a service provider that keeps track of who is the client.
-    from: Option<Arc<Operator>>,
+    pub(crate) from: Option<Arc<Operator>>,
 
-    accept: SerializeFormat,
+    pub(crate) accept: SerializeFormat,
 
-    as_owner: bool,
+    pub(crate) as_owner: bool,
 
-    command: Command,
+    pub(crate) command: Command,
 }
 
 impl Request {

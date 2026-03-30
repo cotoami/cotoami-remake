@@ -1,6 +1,6 @@
 use cotoami_db::prelude::*;
 
-use crate::{event::local::LocalNodeEvent, pubsub::Publisher, service::pubsub::ResponsePubsub};
+use crate::{pubsub::Publisher, service::pubsub::ResponsePubsub, state::LocalNodeEvent};
 
 /////////////////////////////////////////////////////////////////////////////
 // Pubsub aggregation

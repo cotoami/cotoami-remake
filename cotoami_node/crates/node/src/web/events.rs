@@ -15,7 +15,7 @@ use tracing::debug;
 use uuid::Uuid;
 
 use crate::{
-    event::remote::NodeSentEvent,
+    remote::NodeSentEvent,
     service::{PubsubService, ServiceError},
     state::{ClientConnection, NodeState},
 };

@@ -15,7 +15,7 @@ use crate::service::models::*;
 ///
 /// For node-to-node communication, `Command` only participates indirectly as
 /// the `command` field of `Request`. When a `Request` is serialized through
-/// `crate::service::wire`, that field is first mapped to `CommandSchema`
+/// `crate::remote::codec`, that field is first mapped to `CommandSchema`
 /// before being encoded as JSON or MessagePack. That extra layer exists so
 /// internal refactors to this enum do not accidentally define or break the
 /// external wire format.
