@@ -20,7 +20,7 @@ use url::Url;
 
 use crate::{
     client::{retry::RetryState, ClientState, ConnectionState, HttpClient},
-    event::remote::{
+    remote::{
         tungstenite::{communicate_with_operator, communicate_with_parent},
         CommunicationError,
     },

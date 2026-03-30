@@ -7,7 +7,7 @@ use cotoami_db::{ChildNode, Id, Node, Operator};
 use parking_lot::RwLock;
 
 use crate::{
-    event::remote::CommunicationError, service::models::NotConnected, state::NodeState, Abortables,
+    remote::CommunicationError, service::models::NotConnected, state::NodeState, Abortables,
 };
 
 mod http;

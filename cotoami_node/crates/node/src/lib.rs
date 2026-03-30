@@ -9,6 +9,7 @@ mod client;
 mod config;
 mod event;
 mod pubsub;
+mod remote;
 mod service;
 mod state;
 mod web;
