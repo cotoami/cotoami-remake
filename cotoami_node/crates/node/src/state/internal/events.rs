@@ -4,7 +4,10 @@ use cotoami_db::prelude::*;
 use futures::StreamExt;
 use tracing::debug;
 
-use crate::{event::local::LocalNodeEvent, service::models::NotConnected, state::NodeState};
+use crate::{
+    service::models::NotConnected,
+    state::{LocalNodeEvent, NodeState},
+};
 
 impl NodeState {
     pub(crate) fn start_handling_local_events(&self) {

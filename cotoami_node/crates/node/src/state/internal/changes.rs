@@ -6,13 +6,12 @@ use tokio::task::spawn_blocking;
 use tracing::{debug, error, info};
 
 use crate::{
-    event::local::LocalNodeEvent,
     service::{
         models::{Changes, ChunkOfChanges},
         service_ext::NodeServiceExt,
         NodeService,
     },
-    state::NodeState,
+    state::{LocalNodeEvent, NodeState},
 };
 
 impl NodeState {

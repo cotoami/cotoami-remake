@@ -18,9 +18,9 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
-    event::local::LocalNodeEvent,
     remote::NodeSentEvent,
     service::{Command, Request, Response, SerializeFormat},
+    state::LocalNodeEvent,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

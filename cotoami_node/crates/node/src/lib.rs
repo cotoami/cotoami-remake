@@ -7,7 +7,6 @@ use tokio::task::{AbortHandle, JoinHandle};
 
 mod client;
 mod config;
-mod event;
 mod pubsub;
 mod remote;
 mod service;
@@ -19,7 +18,6 @@ pub use crate::web::launch_server;
 pub mod prelude {
     pub use crate::{
         config::*,
-        event::local::LocalNodeEvent,
         service::{command::*, error::*, models::*, service_ext::*, *},
         state::*,
     };

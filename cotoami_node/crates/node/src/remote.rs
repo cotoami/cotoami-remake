@@ -5,9 +5,8 @@ use futures::{Sink, SinkExt};
 use tracing::{debug, error, info};
 
 use crate::{
-    event::local::LocalNodeEvent,
     service::{error::ServiceError, Request, Response, Service},
-    state::NodeState,
+    state::{LocalNodeEvent, NodeState},
 };
 
 pub(crate) mod tungstenite;
