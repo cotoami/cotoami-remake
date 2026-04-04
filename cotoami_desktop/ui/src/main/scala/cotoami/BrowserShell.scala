@@ -89,32 +89,22 @@ object BrowserShell {
     }
   }
 
-  private def hostOf(url: String): String =
-    try {
-      new dom.URL(url).host
-    } catch {
-      case _: Throwable => url
-    }
-
   private def applyState(
       state: BrowserViewStateJson,
       setActualUrl: String => Unit,
       setDraftUrl: String => Unit,
-      setPageTitle: Option[String] => Unit,
       setLoading: Boolean => Unit,
       editingRef: ReactRef[Boolean]
   ): Unit = {
     setActualUrl(state.url)
     if (!editingRef.current)
       setDraftUrl(state.url)
-    setPageTitle(state.title.toOption.filter(_.nonEmpty))
     setLoading(state.is_loading)
   }
 
   private def component = FunctionalComponent[Props] { props =>
     val (actualUrl, setActualUrlRaw) = useState(props.initialUrl)
     val (draftUrl, setDraftUrlRaw) = useState(props.initialUrl)
-    val (pageTitle, setPageTitleRaw) = useState(Option.empty[String])
     val (loading, setLoadingRaw) = useState(true)
     val (error, setErrorRaw) = useState(Option.empty[String])
     val browserAttachedRef = useRef(false)
@@ -128,9 +118,6 @@ object BrowserShell {
 
     def setDraftUrl(url: String): Unit =
       setDraftUrlRaw(_ => url)
-
-    def setPageTitle(title: Option[String]): Unit =
-      setPageTitleRaw(_ => title)
 
     def setLoading(value: Boolean): Unit =
       setLoadingRaw(_ => value)
@@ -196,7 +183,6 @@ object BrowserShell {
                 state,
                 setActualUrl,
                 setDraftUrl,
-                setPageTitle,
                 setLoading,
                 editingRef
               )
@@ -223,7 +209,6 @@ object BrowserShell {
               state,
               setActualUrl,
               setDraftUrl,
-              setPageTitle,
               setLoading,
               editingRef
             )
@@ -245,7 +230,6 @@ object BrowserShell {
               state,
               setActualUrl,
               setDraftUrl,
-              setPageTitle,
               setLoading,
               editingRef
             )
@@ -304,7 +288,6 @@ object BrowserShell {
                     payload,
                     setActualUrl,
                     setDraftUrl,
-                    setPageTitle,
                     setLoading,
                     editingRef
                   )
@@ -419,13 +402,7 @@ object BrowserShell {
             )(materialSymbol("arrow_outward"))
           )
         ),
-        div(className := "browser-toolbar-meta")(
-          div(className := "page-title")(
-            pageTitle.filter(_.nonEmpty).getOrElse(hostOf(actualUrl))
-          ),
-          div(className := "page-host")(hostOf(actualUrl)),
-          error.map(message => div(className := "browser-error")(message))
-        )
+        error.map(message => div(className := "browser-error")(message))
       ),
       main(className := "browser-surface")(
         div(className := "browser-webview-placeholder")(

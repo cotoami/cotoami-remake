@@ -208,35 +208,11 @@ div.browser-shell {
       }
     }
 
-    .browser-toolbar-meta {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      min-width: 0;
-      font-size: 0.78rem;
-      line-height: 1.2;
-    }
-
-    .page-title {
-      min-width: 0;
-      overflow: hidden;
-      color: var(--color);
-      font-weight: 600;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-
-    .page-host {
-      flex-shrink: 0;
-      padding: 0.12rem 0.45rem;
-      border-radius: 999px;
-      background: color-mix(in srgb, var(--primary) 10%, transparent);
-      color: var(--muted-color);
-    }
-
     .browser-error {
       min-width: 0;
       overflow: hidden;
+      font-size: 0.78rem;
+      line-height: 1.2;
       color: var(--del-color);
       white-space: nowrap;
       text-overflow: ellipsis;
