@@ -15,13 +15,12 @@ import slinky.web.ReactDOMClient
 import slinky.web.html._
 
 import marubinotto.components.materialSymbol
-import marubinotto.fui.Browser
 import marubinotto.libs.tauri
 
 object BrowserShell {
 
   private val ToolbarHeight = 54.0
-  private val ResizeDebounceMs = 50.0
+  private val ResizeSettleMs = 50.0
 
   @js.native
   trait BrowserViewStateJson extends js.Object {
@@ -107,6 +106,8 @@ object BrowserShell {
     val (loading, setLoadingRaw) = useState(true)
     val (error, setErrorRaw) = useState(Option.empty[String])
     val browserAttachedRef = useRef(false)
+    val resizeInFlightRef = useRef(false)
+    val pendingResizeRef = useRef(false)
     val editingRef = useRef(false)
     val toolbarRef = useRef[html.Element](null)
     val windowViewportInsetTopRef = useRef(0.0)
@@ -171,13 +172,15 @@ object BrowserShell {
       setError(Some(s"${context}: ${throwable.getMessage()}"))
     }
 
-    def resizeBrowserView(): Unit =
-      if (browserAttachedRef.current) {
+    def flushBrowserResize(): Unit =
+      if (browserAttachedRef.current && !resizeInFlightRef.current) {
+        resizeInFlightRef.current = true
         tauri.core
           .invoke[BrowserViewStateJson]("browser_resize", browserBoundsArgs)
           .toFuture
           .onComplete {
             case Success(state) =>
+              resizeInFlightRef.current = false
               applyState(
                 state,
                 setActualUrl,
@@ -185,9 +188,21 @@ object BrowserShell {
                 setLoading,
                 editingRef
               )
+              if (pendingResizeRef.current) {
+                pendingResizeRef.current = false
+                flushBrowserResize()
+              }
             case Failure(throwable) =>
+              resizeInFlightRef.current = false
+              pendingResizeRef.current = false
               handleFailure("Couldn't resize the browser view")(throwable)
           }
+      }
+
+    def resizeBrowserView(): Unit =
+      if (browserAttachedRef.current) {
+        pendingResizeRef.current = true
+        flushBrowserResize()
       }
 
     def attachBrowserView(): Unit =
@@ -211,6 +226,7 @@ object BrowserShell {
               setLoading,
               editingRef
             )
+            resizeBrowserView()
           case Failure(throwable) =>
             handleFailure("Couldn't open the browser view")(throwable)
         }
@@ -275,6 +291,33 @@ object BrowserShell {
       () => {
         var unlisten: Option[js.Function0[Unit]] = None
         var disposed = false
+        var resizeAnimationFrameId: Option[Int] = None
+        var resizeSettleTimeoutId: Option[Int] = None
+
+        val scheduleBrowserResize = () =>
+          if (resizeAnimationFrameId.isEmpty) {
+            resizeAnimationFrameId = Some(
+              dom.window.requestAnimationFrame(_ => {
+                resizeAnimationFrameId = None
+                resizeBrowserView()
+              })
+            )
+          }
+
+        val scheduleViewportInsetRefresh = () => {
+          resizeSettleTimeoutId.foreach(dom.window.clearTimeout)
+          resizeSettleTimeoutId = Some(
+            dom.window.setTimeout(
+              () => {
+                resizeSettleTimeoutId = None
+                refreshWindowViewportInset {
+                  resizeBrowserView()
+                }
+              },
+              ResizeSettleMs
+            )
+          )
+        }
 
         tauri.event
           .listen[BrowserStateEventJson](
@@ -309,19 +352,20 @@ object BrowserShell {
           }
 
         val onResize: js.Function1[dom.Event, Unit] =
-          Browser.debounce(
-            (_: dom.Event) =>
-              refreshWindowViewportInset {
-                resizeBrowserView()
-              },
-            ResizeDebounceMs
-          )
+          (_: dom.Event) => {
+            scheduleBrowserResize()
+            scheduleViewportInsetRefresh()
+          }
 
         dom.window.addEventListener("resize", onResize)
 
         () => {
           disposed = true
           browserAttachedRef.current = false
+          resizeInFlightRef.current = false
+          pendingResizeRef.current = false
+          resizeAnimationFrameId.foreach(dom.window.cancelAnimationFrame)
+          resizeSettleTimeoutId.foreach(dom.window.clearTimeout)
           dom.window.removeEventListener("resize", onResize)
           unlisten.foreach(_())
         }
