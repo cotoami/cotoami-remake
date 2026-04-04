@@ -55,6 +55,10 @@ object window extends js.Object {
       */
     def setSize(size: PhysicalSize | LogicalSize): js.Promise[Unit] = js.native
 
+    /** Sets the window title.
+      */
+    def setTitle(title: String): js.Promise[Unit] = js.native
+
     /** Sets the badge label macOS only.
       *
       * @param label

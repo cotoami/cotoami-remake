@@ -87,17 +87,37 @@ object BrowserShell {
     }
   }
 
+  private def windowTitle(url: String, pageTitle: Option[String]): String =
+    pageTitle
+      .map(_.trim)
+      .filter(_.nonEmpty)
+      .orElse {
+        try {
+          Option(new dom.URL(url).host).filter(_.nonEmpty)
+        } catch {
+          case _: Throwable => None
+        }
+      }
+      .getOrElse(url)
+
   private def applyState(
       state: BrowserViewStateJson,
       setActualUrl: String => Unit,
       setDraftUrl: String => Unit,
       setLoading: Boolean => Unit,
-      editingRef: ReactRef[Boolean]
+      editingRef: ReactRef[Boolean],
+      currentWindowTitleRef: ReactRef[String]
   ): Unit = {
     setActualUrl(state.url)
     if (!editingRef.current)
       setDraftUrl(state.url)
     setLoading(state.is_loading)
+    val nextWindowTitle = windowTitle(state.url, state.title.toOption)
+    if (currentWindowTitleRef.current != nextWindowTitle) {
+      currentWindowTitleRef.current = nextWindowTitle
+      tauri.window.getCurrentWindow().setTitle(nextWindowTitle)
+      ()
+    }
   }
 
   private def component = FunctionalComponent[Props] { props =>
@@ -109,6 +129,7 @@ object BrowserShell {
     val resizeInFlightRef = useRef(false)
     val pendingResizeRef = useRef(false)
     val editingRef = useRef(false)
+    val windowTitleRef = useRef(windowTitle(props.initialUrl, None))
     val toolbarRef = useRef[html.Element](null)
     val windowViewportInsetTopRef = useRef(0.0)
     val (toolbarHeight, setToolbarHeightRaw) = useState(ToolbarHeight)
@@ -186,7 +207,8 @@ object BrowserShell {
                 setActualUrl,
                 setDraftUrl,
                 setLoading,
-                editingRef
+                editingRef,
+                windowTitleRef
               )
               if (pendingResizeRef.current) {
                 pendingResizeRef.current = false
@@ -224,7 +246,8 @@ object BrowserShell {
               setActualUrl,
               setDraftUrl,
               setLoading,
-              editingRef
+              editingRef,
+              windowTitleRef
             )
             resizeBrowserView()
           case Failure(throwable) =>
@@ -246,7 +269,8 @@ object BrowserShell {
               setActualUrl,
               setDraftUrl,
               setLoading,
-              editingRef
+              editingRef,
+              windowTitleRef
             )
           case Failure(throwable) =>
             handleFailure("Browser command failed")(throwable)
@@ -332,7 +356,8 @@ object BrowserShell {
                     setActualUrl,
                     setDraftUrl,
                     setLoading,
-                    editingRef
+                    editingRef,
+                    windowTitleRef
                   )
                 })
           )
