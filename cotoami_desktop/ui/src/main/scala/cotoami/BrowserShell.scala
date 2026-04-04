@@ -117,8 +117,10 @@ object BrowserShell {
     val (pageTitle, setPageTitleRaw) = useState(Option.empty[String])
     val (loading, setLoadingRaw) = useState(true)
     val (error, setErrorRaw) = useState(Option.empty[String])
+    val browserAttachedRef = useRef(false)
     val editingRef = useRef(false)
     val toolbarRef = useRef[html.Element](null)
+    val windowViewportInsetTopRef = useRef(0.0)
     val (toolbarHeight, setToolbarHeightRaw) = useState(ToolbarHeight)
 
     def setActualUrl(url: String): Unit =
@@ -147,12 +149,31 @@ object BrowserShell {
         .filter(_ > 0)
         .getOrElse(toolbarHeight)
 
+    def currentWindowViewportInsetTop: Double =
+      windowViewportInsetTopRef.current
+
+    def refreshWindowViewportInset(onComplete: => Unit = ()): Unit = {
+      val currentWindow = tauri.webviewWindow.getCurrentWebviewWindow()
+      currentWindow.scaleFactor().toFuture.flatMap(scaleFactor =>
+        currentWindow.innerSize().toFuture.map(inner => {
+          val innerLogical = inner.toLogical(scaleFactor)
+          (innerLogical.height - dom.window.innerHeight.toDouble).max(0.0)
+        })
+      ).onComplete {
+        case Success(viewportInsetTop) =>
+          windowViewportInsetTopRef.current = viewportInsetTop
+          onComplete
+        case Failure(_) =>
+          onComplete
+      }
+    }
+
     def browserBoundsArgs: js.Object = {
       val measuredToolbarHeight = currentToolbarHeight
       jso(
         contentLabel = props.contentLabel,
         x = 0,
-        y = measuredToolbarHeight,
+        y = measuredToolbarHeight + currentWindowViewportInsetTop,
         width = dom.window.innerWidth.toDouble,
         height =
           (dom.window.innerHeight.toDouble - measuredToolbarHeight).max(1.0)
@@ -165,22 +186,24 @@ object BrowserShell {
     }
 
     def resizeBrowserView(): Unit =
-      tauri.core
-        .invoke[BrowserViewStateJson]("browser_resize", browserBoundsArgs)
-        .toFuture
-        .onComplete {
-          case Success(state) =>
-            applyState(
-              state,
-              setActualUrl,
-              setDraftUrl,
-              setPageTitle,
-              setLoading,
-              editingRef
-            )
-          case Failure(throwable) =>
-            handleFailure("Couldn't resize the browser view")(throwable)
-        }
+      if (browserAttachedRef.current) {
+        tauri.core
+          .invoke[BrowserViewStateJson]("browser_resize", browserBoundsArgs)
+          .toFuture
+          .onComplete {
+            case Success(state) =>
+              applyState(
+                state,
+                setActualUrl,
+                setDraftUrl,
+                setPageTitle,
+                setLoading,
+                editingRef
+              )
+            case Failure(throwable) =>
+              handleFailure("Couldn't resize the browser view")(throwable)
+          }
+      }
 
     def attachBrowserView(): Unit =
       tauri.core
@@ -194,6 +217,7 @@ object BrowserShell {
         .toFuture
         .onComplete {
           case Success(state) =>
+            browserAttachedRef.current = true
             setError(None)
             applyState(
               state,
@@ -289,17 +313,26 @@ object BrowserShell {
           .toFuture
           .onComplete {
             case Success(unlistenFn) => unlisten = Some(unlistenFn)
-            case Failure(throwable) =>
+            case Failure(throwable)  =>
               handleFailure("Couldn't subscribe to browser events")(throwable)
           }
 
         val onResize: js.Function1[dom.Event, Unit] =
-          Browser.debounce((_: dom.Event) => resizeBrowserView(), ResizeDebounceMs)
+          Browser.debounce(
+            (_: dom.Event) =>
+              refreshWindowViewportInset {
+                resizeBrowserView()
+              },
+            ResizeDebounceMs
+          )
 
         dom.window.addEventListener("resize", onResize)
-        attachBrowserView()
+        refreshWindowViewportInset {
+          attachBrowserView()
+        }
 
         () => {
+          browserAttachedRef.current = false
           dom.window.removeEventListener("resize", onResize)
           unlisten.foreach(_())
         }
@@ -362,7 +395,9 @@ object BrowserShell {
               submitAddressBar()
             })
           )(
-            span(className := s"address-status ${if (secure) "secure" else "insecure"}")(
+            span(className := s"address-status ${
+                if (secure) "secure" else "insecure"
+              }")(
               materialSymbol(addressIcon)
             ),
             input(
