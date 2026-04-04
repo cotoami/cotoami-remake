@@ -40,6 +40,7 @@
     "core:window:allow-set-ignore-cursor-events",
     "core:window:allow-start-dragging",
     "core:window:allow-set-badge-label",
+    "core:webview:allow-create-webview-window",
     "core:webview:allow-print",
     "shell:allow-open",
     "dialog:allow-open",

@@ -39,7 +39,7 @@ fn main() {
             // On macOS, do not quit the app when the window is closed;
             // keep it running in the background
             #[cfg(target_os = "macos")]
-            tauri::WindowEvent::CloseRequested { api, .. } => {
+            tauri::WindowEvent::CloseRequested { api, .. } if window.label() == "main" => {
                 window.hide().unwrap();
                 api.prevent_close();
             }
