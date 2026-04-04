@@ -20,7 +20,7 @@ import marubinotto.libs.tauri
 
 object BrowserShell {
 
-  private val ToolbarHeight = 58.0
+  private val ToolbarHeight = 54.0
   private val ResizeDebounceMs = 50.0
 
   @js.native
