@@ -9,6 +9,7 @@ use std::{
 use parking_lot::Mutex;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, Window};
+use tracing::error;
 
 use super::error::Error;
 
@@ -184,14 +185,19 @@ fn emit_browser_state(
 
     if let Some(window) = app_handle.get_webview_window(shell_label) {
         let _ = window.set_title(&browser_window_title_from_state(&state));
-        let _ = window.emit(
-            BROWSER_STATE_EVENT,
-            BrowserStatePayload {
-                content_label: content_label.to_string(),
-                url: state.url.clone(),
-                title: state.title.clone(),
-                is_loading: state.is_loading,
-            },
+    }
+
+    if let Err(e) = app_handle.emit(
+        BROWSER_STATE_EVENT,
+        BrowserStatePayload {
+            content_label: content_label.to_string(),
+            url: state.url.clone(),
+            title: state.title.clone(),
+            is_loading: state.is_loading,
+        },
+    ) {
+        error!(
+            "failed to emit browser state: shell_label={shell_label}, content_label={content_label}, reason={e}"
         );
     }
 
@@ -219,6 +225,13 @@ pub fn browser_attach(
     let initial_url = parse_browser_url(&initial_url)?;
 
     if app_handle.get_webview(&content_label).is_none() {
+        registry.upsert(
+            &content_label,
+            Some(initial_url.to_string()),
+            None,
+            Some(true),
+        );
+
         let shell_label = window.label().to_string();
         let browser_registry = registry.inner().clone();
         let browser_registry_for_page_load = browser_registry.clone();
@@ -280,12 +293,6 @@ pub fn browser_attach(
         resize_browser_view(&app_handle, &content_label, x, y, width, height)?;
     }
 
-    registry.upsert(
-        &content_label,
-        Some(initial_url.to_string()),
-        None,
-        Some(true),
-    );
     emit_browser_state(
         &app_handle,
         registry.inner(),
@@ -340,7 +347,6 @@ pub fn browser_reload(
     let webview = browser_webview(&app_handle, &content_label)?;
     let shell_label = webview.window().label().to_string();
 
-    registry.upsert(&content_label, None, None, Some(true));
     webview.reload()?;
 
     emit_browser_state(&app_handle, registry.inner(), &shell_label, &content_label)
@@ -355,7 +361,6 @@ pub fn browser_go_back(
     let webview = browser_webview(&app_handle, &content_label)?;
     let shell_label = webview.window().label().to_string();
 
-    registry.upsert(&content_label, None, None, Some(true));
     webview.eval("window.history.back();")?;
 
     emit_browser_state(&app_handle, registry.inner(), &shell_label, &content_label)
@@ -370,7 +375,6 @@ pub fn browser_go_forward(
     let webview = browser_webview(&app_handle, &content_label)?;
     let shell_label = webview.window().label().to_string();
 
-    registry.upsert(&content_label, None, None, Some(true));
     webview.eval("window.history.forward();")?;
 
     emit_browser_state(&app_handle, registry.inner(), &shell_label, &content_label)

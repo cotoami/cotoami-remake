@@ -274,6 +274,7 @@ object BrowserShell {
     useEffect(
       () => {
         var unlisten: Option[js.Function0[Unit]] = None
+        var disposed = false
 
         tauri.event
           .listen[BrowserStateEventJson](
@@ -294,8 +295,16 @@ object BrowserShell {
           )
           .toFuture
           .onComplete {
-            case Success(unlistenFn) => unlisten = Some(unlistenFn)
-            case Failure(throwable)  =>
+            case Success(unlistenFn) =>
+              if (disposed)
+                unlistenFn()
+              else {
+                unlisten = Some(unlistenFn)
+                refreshWindowViewportInset {
+                  attachBrowserView()
+                }
+              }
+            case Failure(throwable) =>
               handleFailure("Couldn't subscribe to browser events")(throwable)
           }
 
@@ -309,11 +318,9 @@ object BrowserShell {
           )
 
         dom.window.addEventListener("resize", onResize)
-        refreshWindowViewportInset {
-          attachBrowserView()
-        }
 
         () => {
+          disposed = true
           browserAttachedRef.current = false
           dom.window.removeEventListener("resize", onResize)
           unlisten.foreach(_())
@@ -342,7 +349,6 @@ object BrowserShell {
               `type` := "button",
               title := "Back",
               onClick := (_ => {
-                setLoading(true)
                 invokeBrowserCommand("browser_go_back")
               })
             )(materialSymbol("arrow_back")),
@@ -351,7 +357,6 @@ object BrowserShell {
               `type` := "button",
               title := "Forward",
               onClick := (_ => {
-                setLoading(true)
                 invokeBrowserCommand("browser_go_forward")
               })
             )(materialSymbol("arrow_forward")),
@@ -360,7 +365,6 @@ object BrowserShell {
               `type` := "button",
               title := "Reload",
               onClick := (_ => {
-                setLoading(true)
                 invokeBrowserCommand("browser_reload")
               })
             )(
