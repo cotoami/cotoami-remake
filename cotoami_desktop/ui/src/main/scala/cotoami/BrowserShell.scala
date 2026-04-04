@@ -2,7 +2,6 @@ package cotoami
 
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => jso}
-import scala.scalajs.js.Thenable.Implicits._
 import scala.util.{Failure, Success}
 
 import org.scalajs.dom
@@ -11,7 +10,7 @@ import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 import slinky.core._
 import slinky.core.facade.Hooks._
-import slinky.core.facade.{ReactElement, ReactRef}
+import slinky.core.facade.ReactRef
 import slinky.web.ReactDOMClient
 import slinky.web.html._
 
@@ -139,7 +138,7 @@ object BrowserShell {
     def currentWindowViewportInsetTop: Double =
       windowViewportInsetTopRef.current
 
-    def refreshWindowViewportInset(onComplete: => Unit = ()): Unit = {
+    def refreshWindowViewportInset(onComplete: => Unit): Unit = {
       val currentWindow = tauri.webviewWindow.getCurrentWebviewWindow()
       currentWindow.scaleFactor().toFuture.flatMap(scaleFactor =>
         currentWindow.innerSize().toFuture.map(inner => {
