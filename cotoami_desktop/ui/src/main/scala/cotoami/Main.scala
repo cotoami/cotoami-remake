@@ -46,18 +46,25 @@ object Main {
         if (LinkingInfo.developmentMode) {
           hot.initialize()
         }
-      } *> Browser.runProgram(
-        dom.document.getElementById("app"),
-        Program(
-          init,
-          (model: Model, dispatch: Msg => Unit) =>
-            view(model, msg => dispatch(msg.into)),
-          update,
-          subscriptions,
-          Some(Msg.UrlChanged.apply)
-        ),
-        dispatcher
-      ) *> IO.never
+      } *> {
+        val container = dom.document.getElementById("app")
+        if (BrowserShell.isCurrentWindow) {
+          IO(BrowserShell.mount(container))
+        } else {
+          Browser.runProgram(
+            container,
+            Program(
+              init,
+              (model: Model, dispatch: Msg => Unit) =>
+                view(model, msg => dispatch(msg.into)),
+              update,
+              subscriptions,
+              Some(Msg.UrlChanged.apply)
+            ),
+            dispatcher
+          )
+        }
+      } *> IO.never
     }
 
   object DatabaseFolder {

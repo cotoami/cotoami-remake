@@ -134,21 +134,10 @@ package object tauri {
 
   def openUrlInNewWindow(url: String): Unit =
     browserUrl(url).foreach { parsed =>
-      val label =
-        s"browser-${js.Date.now().toLong}-${(js.Math.random() * 1000000).toInt}"
-      val title = Option(parsed.hostname).filter(_.nonEmpty).getOrElse(parsed.href)
-      val options = js.Dynamic
-        .literal(
-          url = parsed.href,
-          title = title,
-          width = 1200,
-          height = 900,
-          center = true,
-          focus = true,
-          resizable = true
-        )
-        .asInstanceOf[WindowOptions]
-      new webviewWindow.WebviewWindow(label, options)
+      core.invoke[Unit](
+        "open_browser_window",
+        js.Dynamic.literal(url = parsed.href)
+      )
       ()
     }
 }
