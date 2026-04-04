@@ -37,6 +37,6 @@
   "devDependencies": {
     "@scala-js/vite-plugin-scalajs": "^1.0.0",
     "sass": "^1.70.0",
-    "vite": "^6.0.11"
+    "vite": "^7.3.1"
   }
 }
