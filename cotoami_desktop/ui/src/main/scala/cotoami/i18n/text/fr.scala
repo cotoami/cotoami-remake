@@ -45,7 +45,6 @@ object fr extends Text {
   val DarkMode = "Mode Sombre"
   val MarkAllAsRead = "Marquer Tout comme Lu"
   val PostTo = "Publier dans"
-
   def Edit(what: String): String = s"Modifier ${what}"
   def Coto_inRemoteNode(nodeName: String) = s"Dans ${nodeName} (distant)"
 
@@ -282,4 +281,12 @@ object fr extends Text {
   val ModelessNodeProfile_selfNode = "Vous"
   val ModelessNodeProfile_switched = "basculé"
   val ModelessNodeProfile_description = "Description"
+
+  val BrowserShell_forward = "Suivant"
+  val BrowserShell_reload = "Recharger"
+  val BrowserShell_go = "Aller"
+  val BrowserShell_loadingPage = "Chargement de la page..."
+  val BrowserShell_pageReady = "Page prête."
+  val BrowserShell_invalidUrl =
+    "Saisissez une URL valide en http:// ou https://."
 }

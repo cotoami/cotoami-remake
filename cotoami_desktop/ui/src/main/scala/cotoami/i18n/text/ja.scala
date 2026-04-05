@@ -45,7 +45,6 @@ object ja extends Text {
   val DarkMode = "ダークモード"
   val MarkAllAsRead = "すべて既読"
   val PostTo = "投稿先"
-
   def Edit(what: String): String = s"${what}の編集"
   def Coto_inRemoteNode(nodeName: String) = s"In ${nodeName} (リモート)"
 
@@ -278,4 +277,12 @@ object ja extends Text {
   val ModelessNodeProfile_selfNode = "あなた"
   val ModelessNodeProfile_switched = "切替中"
   val ModelessNodeProfile_description = "説明"
+
+  val BrowserShell_forward = "進む"
+  val BrowserShell_reload = "再読み込み"
+  val BrowserShell_go = "移動"
+  val BrowserShell_loadingPage = "ページを読み込み中..."
+  val BrowserShell_pageReady = "ページを表示しました。"
+  val BrowserShell_invalidUrl =
+    "有効な http:// または https:// の URL を入力してください。"
 }

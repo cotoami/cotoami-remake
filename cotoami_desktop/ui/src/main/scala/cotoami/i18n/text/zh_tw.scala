@@ -45,7 +45,6 @@ object zh_tw extends Text {
   val DarkMode = "深色模式"
   val MarkAllAsRead = "全部標記為已讀"
   val PostTo = "發布到"
-
   def Edit(what: String): String = s"編輯${what}"
   def Coto_inRemoteNode(nodeName: String) = s"在 ${nodeName} (遠端)"
 
@@ -280,4 +279,11 @@ object zh_tw extends Text {
   val ModelessNodeProfile_selfNode = "您"
   val ModelessNodeProfile_switched = "已切換"
   val ModelessNodeProfile_description = "描述"
+
+  val BrowserShell_forward = "前進"
+  val BrowserShell_reload = "重新載入"
+  val BrowserShell_go = "前往"
+  val BrowserShell_loadingPage = "正在載入頁面..."
+  val BrowserShell_pageReady = "頁面已就緒。"
+  val BrowserShell_invalidUrl = "請輸入有效的 http:// 或 https:// URL。"
 }

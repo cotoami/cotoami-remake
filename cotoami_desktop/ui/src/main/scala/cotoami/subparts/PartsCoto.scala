@@ -185,7 +185,7 @@ object PartsCoto {
   private def sectionCotoContent(
       cotoContent: CotoContent,
       collapsibleContentOpened: Boolean
-  ): ReactElement =
+  )(using context: Context): ReactElement =
     section(className := "coto-content")(
       cotoContent.mediaUrl.map(sectionMediaContent),
       cotoContent.summary.map(summary => {
@@ -197,7 +197,9 @@ object PartsCoto {
       }).getOrElse(sectionTextContent(cotoContent.content))
     )
 
-  def sectionCotonomaContent(cotoContent: CotoContent): Option[ReactElement] =
+  def sectionCotonomaContent(cotoContent: CotoContent)(using
+      context: Context
+  ): Option[ReactElement] =
     Option.when(
       cotoContent.content.map(!_.isBlank()).getOrElse(false) ||
         cotoContent.mediaUrl.isDefined
@@ -254,7 +256,9 @@ object PartsCoto {
     }
   }
 
-  def sectionTextContent(content: Option[String]): ReactElement =
+  def sectionTextContent(content: Option[String])(using
+      context: Context
+  ): ReactElement =
     section(className := "text-content")(
       Markdown(
         remarkPlugins = Seq(
@@ -281,7 +285,7 @@ object PartsCoto {
     val title: js.UndefOr[String] = js.native
   }
 
-  private val markdownComponents = js.Dynamic
+  private def markdownComponents(using context: Context) = js.Dynamic
     .literal(
       a = ((props: MarkdownAnchorProps) => {
         val href = props.href.getOrElse("")
@@ -301,7 +305,10 @@ object PartsCoto {
             if (isPlainLeftClick && tauri.isSupportedBrowserUrl(href)) {
               e.preventDefault()
               e.stopPropagation()
-              tauri.openUrlInNewWindow(href)
+              tauri.openUrlInNewWindow(
+                href,
+                Some(context.i18n.locale.toLanguageTag())
+              )
             }
           }): js.Function1[js.Dynamic, Unit]
         )

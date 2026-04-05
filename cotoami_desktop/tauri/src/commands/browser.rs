@@ -117,23 +117,31 @@ fn next_browser_labels() -> (String, String) {
     )
 }
 
-fn browser_shell_path(content_label: &str, initial_url: &str) -> String {
+fn browser_shell_path(content_label: &str, initial_url: &str, locale: Option<&str>) -> String {
     let mut params = tauri::Url::parse("https://browser-shell.local/")
         .expect("static browser shell URL must be valid");
-    params
-        .query_pairs_mut()
+    let mut query_pairs = params.query_pairs_mut();
+    query_pairs
         .append_pair(BROWSER_SHELL_QUERY_KEY, BROWSER_SHELL_QUERY_VALUE)
         .append_pair("contentLabel", content_label)
         .append_pair("initialUrl", initial_url);
+    if let Some(locale) = locale.filter(|locale| !locale.is_empty()) {
+        query_pairs.append_pair("locale", locale);
+    }
+    drop(query_pairs);
     format!("index.html?{}", params.query().unwrap_or_default())
 }
 
-fn open_browser_window_internal(app_handle: &AppHandle, url: &tauri::Url) -> Result<(), Error> {
+fn open_browser_window_internal(
+    app_handle: &AppHandle,
+    url: &tauri::Url,
+    locale: Option<&str>,
+) -> Result<(), Error> {
     let (shell_label, content_label) = next_browser_labels();
     tauri::WebviewWindowBuilder::new(
         app_handle,
         &shell_label,
-        WebviewUrl::App(browser_shell_path(&content_label, url.as_str()).into()),
+        WebviewUrl::App(browser_shell_path(&content_label, url.as_str(), locale).into()),
     )
     .title(browser_window_title(url))
     .inner_size(1200.0, 900.0)
@@ -205,9 +213,13 @@ fn emit_browser_state(
 }
 
 #[tauri::command]
-pub fn open_browser_window(app_handle: AppHandle, url: String) -> Result<(), Error> {
+pub fn open_browser_window(
+    app_handle: AppHandle,
+    url: String,
+    locale: Option<String>,
+) -> Result<(), Error> {
     let url = parse_browser_url(&url)?;
-    open_browser_window_internal(&app_handle, &url)
+    open_browser_window_internal(&app_handle, &url, locale.as_deref())
 }
 
 #[tauri::command]
@@ -282,7 +294,7 @@ pub fn browser_attach(
             })
             .on_new_window(move |url, _features| {
                 if matches!(url.scheme(), "http" | "https") {
-                    let _ = open_browser_window_internal(&app_for_new_window, &url);
+                    let _ = open_browser_window_internal(&app_for_new_window, &url, None);
                 }
                 tauri::webview::NewWindowResponse::Deny
             }),

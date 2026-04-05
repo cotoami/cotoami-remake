@@ -16,6 +16,8 @@ import slinky.web.html._
 import marubinotto.components.materialSymbol
 import marubinotto.libs.tauri
 
+import cotoami.i18n.Text
+
 object BrowserShell {
 
   private val ToolbarHeight = 54.0
@@ -37,6 +39,7 @@ object BrowserShell {
       contentLabel: String,
       initialUrl: String,
       model: App.Model,
+      text: Text,
       onStateChange: (String, Option[String]) => Unit
   )
 
@@ -165,7 +168,14 @@ object BrowserShell {
 
     def handleFailure(context: String)(throwable: Throwable): Unit = {
       setLoading(false)
-      setError(Some(s"${context}: ${throwable.getMessage()}"))
+      setError(
+        Some(
+          Option(throwable.getMessage())
+            .filter(_.trim.nonEmpty)
+            .map(message => s"${context}: ${message}")
+            .getOrElse(context)
+        )
+      )
     }
 
     def flushBrowserResize(): Unit =
@@ -263,7 +273,7 @@ object BrowserShell {
           setError(None)
           invokeBrowserCommand("browser_navigate", jso(url = url))
         case None =>
-          setError(Some("Enter a valid http:// or https:// URL."))
+          setError(Some(props.text.BrowserShell_invalidUrl))
       }
 
     useEffect(
@@ -403,7 +413,7 @@ object BrowserShell {
             button(
               className := "browser-action",
               `type` := "button",
-              title := "Back",
+              title := props.text.Back,
               onClick := (_ => {
                 invokeBrowserCommand("browser_go_back")
               })
@@ -411,7 +421,7 @@ object BrowserShell {
             button(
               className := "browser-action",
               `type` := "button",
-              title := "Forward",
+              title := props.text.BrowserShell_forward,
               onClick := (_ => {
                 invokeBrowserCommand("browser_go_forward")
               })
@@ -419,7 +429,7 @@ object BrowserShell {
             button(
               className := "browser-action",
               `type` := "button",
-              title := "Reload",
+              title := props.text.BrowserShell_reload,
               onClick := (_ => {
                 invokeBrowserCommand("browser_reload")
               })
@@ -457,7 +467,7 @@ object BrowserShell {
             button(
               className := "browser-action go",
               `type` := "submit",
-              title := "Go"
+              title := props.text.BrowserShell_go
             )(materialSymbol("arrow_outward"))
           )
         ),
@@ -465,7 +475,8 @@ object BrowserShell {
       ),
       main(className := "browser-surface")(
         div(className := "browser-webview-placeholder")(
-          if (loading) "Loading page..." else "Page ready."
+          if (loading) props.text.BrowserShell_loadingPage
+          else props.text.BrowserShell_pageReady
         )
       )
     )
