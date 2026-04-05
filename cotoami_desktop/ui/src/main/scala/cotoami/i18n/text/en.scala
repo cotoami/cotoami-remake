@@ -40,6 +40,7 @@ object en extends Text {
   val WriteSubcoto = "Write Sub-coto"
   val OpenMap = "Open Map"
   val CloseMap = "Close Map"
+  val OpenBrowser = "Open Browser"
   val SwapPane = "Swap Pane"
   val LightMode = "Light Mode"
   val DarkMode = "Dark Mode"

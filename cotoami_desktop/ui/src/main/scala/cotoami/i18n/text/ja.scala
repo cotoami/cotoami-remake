@@ -40,6 +40,7 @@ object ja extends Text {
   val WriteSubcoto = "子コト"
   val OpenMap = "地図を開く"
   val CloseMap = "地図を閉じる"
+  val OpenBrowser = "ブラウザを開く"
   val SwapPane = "左右入れ替え"
   val LightMode = "ライトモード"
   val DarkMode = "ダークモード"

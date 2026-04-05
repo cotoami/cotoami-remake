@@ -40,6 +40,7 @@ object ko extends Text {
   val WriteSubcoto = "하위 Coto 작성"
   val OpenMap = "지도 열기"
   val CloseMap = "지도 닫기"
+  val OpenBrowser = "브라우저 열기"
   val SwapPane = "패널 교체"
   val LightMode = "라이트 모드"
   val DarkMode = "다크 모드"

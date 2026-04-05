@@ -40,6 +40,7 @@ object fr extends Text {
   val WriteSubcoto = "Écrire un Sous-coto"
   val OpenMap = "Ouvrir la Carte"
   val CloseMap = "Fermer la Carte"
+  val OpenBrowser = "Ouvrir le Navigateur"
   val SwapPane = "Échanger les Panneaux"
   val LightMode = "Mode Clair"
   val DarkMode = "Mode Sombre"

@@ -37,6 +37,7 @@ trait Text {
   val WriteSubcoto: String
   val OpenMap: String
   val CloseMap: String
+  val OpenBrowser: String
   val SwapPane: String
   val LightMode: String
   val DarkMode: String

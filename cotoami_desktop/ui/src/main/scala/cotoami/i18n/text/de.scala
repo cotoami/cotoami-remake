@@ -40,6 +40,7 @@ object de extends Text {
   val WriteSubcoto = "Sub-Coto schreiben"
   val OpenMap = "Karte öffnen"
   val CloseMap = "Karte schließen"
+  val OpenBrowser = "Browser öffnen"
   val SwapPane = "Bereiche tauschen"
   val LightMode = "Heller Modus"
   val DarkMode = "Dunkler Modus"

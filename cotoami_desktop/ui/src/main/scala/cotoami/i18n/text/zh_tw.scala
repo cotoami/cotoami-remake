@@ -40,6 +40,7 @@ object zh_tw extends Text {
   val WriteSubcoto = "寫子 Coto"
   val OpenMap = "開啟地圖"
   val CloseMap = "關閉地圖"
+  val OpenBrowser = "開啟瀏覽器"
   val SwapPane = "交換面板"
   val LightMode = "淺色模式"
   val DarkMode = "深色模式"
