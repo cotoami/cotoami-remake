@@ -2,6 +2,7 @@ package cotoami.browser
 
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => jso}
+import scala.scalajs.js.URIUtils
 import scala.util.{Failure, Success}
 
 import org.scalajs.dom
@@ -22,6 +23,8 @@ object BrowserShell {
 
   private val ToolbarHeight = 54.0
   private val ResizeSettleMs = 50.0
+  private val ExplicitSchemePattern = "^[A-Za-z][A-Za-z0-9+.-]*:.*$".r
+  private val Ipv4AddressPattern = raw"^\d{1,3}(?:\.\d{1,3}){3}$$".r
 
   @js.native
   trait BrowserViewStateJson extends js.Object {
@@ -48,7 +51,7 @@ object BrowserShell {
     if (trimmed.isEmpty()) None
     else {
       val candidate =
-        if (trimmed.matches("^[A-Za-z][A-Za-z0-9+.-]*:.*$")) trimmed
+        if (ExplicitSchemePattern.matches(trimmed)) trimmed
         else s"https://${trimmed}"
       try {
         val normalized = new dom.URL(candidate).href
@@ -57,6 +60,36 @@ object BrowserShell {
         case _: Throwable => None
       }
     }
+  }
+
+  private def duckDuckGoSearchUrl(query: String): String =
+    s"https://duckduckgo.com/?q=${URIUtils.encodeURIComponent(query)}"
+
+  private def looksLikeUrlHost(hostname: String): Boolean = {
+    val trimmed = hostname.trim
+    trimmed.equalsIgnoreCase("localhost") ||
+    trimmed.contains(".") ||
+    trimmed.contains(":") ||
+    Ipv4AddressPattern.matches(trimmed)
+  }
+
+  private def resolveAddressBarInput(input: String): Option[String] = {
+    val trimmed = input.trim
+    if (trimmed.isEmpty()) None
+    else if (ExplicitSchemePattern.matches(trimmed))
+      normalizeUrl(trimmed)
+    else if (trimmed.exists(_.isWhitespace))
+      Some(duckDuckGoSearchUrl(trimmed))
+    else
+      normalizeUrl(trimmed)
+        .filter(url =>
+          try {
+            looksLikeUrlHost(new dom.URL(url).hostname)
+          } catch {
+            case _: Throwable => false
+          }
+        )
+        .orElse(Some(duckDuckGoSearchUrl(trimmed)))
   }
 
   private def windowTitle(url: String, pageTitle: Option[String]): String =
@@ -265,7 +298,7 @@ object BrowserShell {
         }
 
     def submitAddressBar(): Unit =
-      normalizeUrl(draftUrl) match {
+      resolveAddressBarInput(draftUrl) match {
         case Some(url) =>
           setActualUrl(url)
           setDraftUrl(url)
