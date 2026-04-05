@@ -500,7 +500,8 @@ object BrowserShell {
             button(
               className := "browser-action go",
               `type` := "submit",
-              title := props.text.BrowserShell_go
+              title := props.text.BrowserShell_go,
+              onMouseDown := (e => e.preventDefault())
             )(materialSymbol("arrow_outward"))
           )
         ),
