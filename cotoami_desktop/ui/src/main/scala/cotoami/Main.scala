@@ -19,6 +19,7 @@ import marubinotto.fui._
 import marubinotto.libs.tauri
 
 import cotoami.backend._
+import cotoami.browser.App as BrowserApp
 import cotoami.repository._
 import cotoami.models._
 import cotoami.updates._
@@ -48,8 +49,9 @@ object Main {
         }
       } *> {
         val container = dom.document.getElementById("app")
-        if (BrowserShell.isCurrentWindow) {
-          IO(BrowserShell.mount(container))
+        val currentUrl = new URL(dom.window.location.href)
+        if (BrowserApp.isCurrentWindow(currentUrl)) {
+          IO(BrowserApp.mount(container))
         } else {
           Browser.runProgram(
             container,

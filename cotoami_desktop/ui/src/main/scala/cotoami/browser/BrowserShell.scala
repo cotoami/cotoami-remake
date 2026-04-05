@@ -1,4 +1,4 @@
-package cotoami
+package cotoami.browser
 
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => jso}
@@ -11,7 +11,6 @@ import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import slinky.core._
 import slinky.core.facade.Hooks._
 import slinky.core.facade.ReactRef
-import slinky.web.ReactDOMClient
 import slinky.web.html._
 
 import marubinotto.components.materialSymbol
@@ -34,42 +33,12 @@ object BrowserShell {
     val content_label: String = js.native
   }
 
-  private case class Props(contentLabel: String, initialUrl: String)
-
-  def isCurrentWindow: Boolean =
-    queryParams
-      .get("browserShell")
-      .contains("1") && queryParams.contains("contentLabel") &&
-      queryParams.contains("initialUrl")
-
-  def mount(container: dom.Element): Unit =
-    propsFromLocation.foreach(props =>
-      ReactDOMClient.createRoot(container).render(component(props))
-    )
-
-  private def propsFromLocation: Option[Props] =
-    for {
-      contentLabel <- queryParams.get("contentLabel")
-      initialUrl <- queryParams.get("initialUrl")
-    } yield Props(contentLabel, initialUrl)
-
-  private def queryParams: Map[String, String] =
-    Option(dom.window.location.search).toSeq
-      .flatMap(_.stripPrefix("?").split("&"))
-      .filter(_.nonEmpty)
-      .flatMap(part =>
-        part.split("=", 2).toList match {
-          case key :: value :: Nil =>
-            Some(decodeQueryPart(key) -> decodeQueryPart(value))
-          case key :: Nil =>
-            Some(decodeQueryPart(key) -> "")
-          case _ => None
-        }
-      )
-      .toMap
-
-  private def decodeQueryPart(value: String): String =
-    js.URIUtils.decodeURIComponent(value.replace("+", " "))
+  case class Props(
+      contentLabel: String,
+      initialUrl: String,
+      model: App.Model,
+      onStateChange: (String, Option[String]) => Unit
+  )
 
   private def normalizeUrl(input: String): Option[String] = {
     val trimmed = input.trim
@@ -104,6 +73,7 @@ object BrowserShell {
       state: BrowserViewStateJson,
       setActualUrl: String => Unit,
       setDraftUrl: String => Unit,
+      setTitle: Option[String] => Unit,
       setLoading: Boolean => Unit,
       editingRef: ReactRef[Boolean],
       currentWindowTitleRef: ReactRef[String]
@@ -111,6 +81,7 @@ object BrowserShell {
     setActualUrl(state.url)
     if (!editingRef.current)
       setDraftUrl(state.url)
+    setTitle(state.title.toOption)
     setLoading(state.is_loading)
     val nextWindowTitle = windowTitle(state.url, state.title.toOption)
     if (currentWindowTitleRef.current != nextWindowTitle) {
@@ -120,16 +91,17 @@ object BrowserShell {
     }
   }
 
-  private def component = FunctionalComponent[Props] { props =>
+  val component = FunctionalComponent[Props] { props =>
     val (actualUrl, setActualUrlRaw) = useState(props.initialUrl)
     val (draftUrl, setDraftUrlRaw) = useState(props.initialUrl)
+    val (pageTitle, setTitleRaw) = useState(props.model.title)
     val (loading, setLoadingRaw) = useState(true)
     val (error, setErrorRaw) = useState(Option.empty[String])
     val browserAttachedRef = useRef(false)
     val resizeInFlightRef = useRef(false)
     val pendingResizeRef = useRef(false)
     val editingRef = useRef(false)
-    val windowTitleRef = useRef(windowTitle(props.initialUrl, None))
+    val windowTitleRef = useRef(windowTitle(props.initialUrl, props.model.title))
     val toolbarRef = useRef[html.Element](null)
     val windowViewportInsetTopRef = useRef(0.0)
     val (toolbarHeight, setToolbarHeightRaw) = useState(ToolbarHeight)
@@ -139,6 +111,9 @@ object BrowserShell {
 
     def setDraftUrl(url: String): Unit =
       setDraftUrlRaw(_ => url)
+
+    def setTitle(title: Option[String]): Unit =
+      setTitleRaw(_ => title)
 
     def setLoading(value: Boolean): Unit =
       setLoadingRaw(_ => value)
@@ -206,6 +181,7 @@ object BrowserShell {
                 state,
                 setActualUrl,
                 setDraftUrl,
+                setTitle,
                 setLoading,
                 editingRef,
                 windowTitleRef
@@ -245,6 +221,7 @@ object BrowserShell {
               state,
               setActualUrl,
               setDraftUrl,
+              setTitle,
               setLoading,
               editingRef,
               windowTitleRef
@@ -268,6 +245,7 @@ object BrowserShell {
               state,
               setActualUrl,
               setDraftUrl,
+              setTitle,
               setLoading,
               editingRef,
               windowTitleRef
@@ -287,6 +265,14 @@ object BrowserShell {
         case None =>
           setError(Some("Enter a valid http:// or https:// URL."))
       }
+
+    useEffect(
+      () => {
+        props.onStateChange(actualUrl, pageTitle)
+        () => ()
+      },
+      Seq(actualUrl, pageTitle.orNull)
+    )
 
     useEffect(
       () => {
@@ -355,6 +341,7 @@ object BrowserShell {
                     payload,
                     setActualUrl,
                     setDraftUrl,
+                    setTitle,
                     setLoading,
                     editingRef,
                     windowTitleRef
