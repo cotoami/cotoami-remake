@@ -40,12 +40,12 @@ object ko extends Text {
   val WriteSubcoto = "하위 Coto 작성"
   val OpenMap = "지도 열기"
   val CloseMap = "지도 닫기"
+  val OpenBrowser = "브라우저 열기"
   val SwapPane = "패널 교체"
   val LightMode = "라이트 모드"
   val DarkMode = "다크 모드"
   val MarkAllAsRead = "모두 읽음으로 표시"
   val PostTo = "게시 위치"
-
   def Edit(what: String): String = s"${what} 편집"
   def Coto_inRemoteNode(nodeName: String) = s"${nodeName}에서 (원격)"
 
@@ -280,4 +280,12 @@ object ko extends Text {
   val ModelessNodeProfile_selfNode = "당신"
   val ModelessNodeProfile_switched = "전환됨"
   val ModelessNodeProfile_description = "설명"
+
+  val BrowserShell_forward = "앞으로"
+  val BrowserShell_reload = "새로고침"
+  val BrowserShell_go = "이동"
+  val BrowserShell_loadingPage = "페이지를 불러오는 중..."
+  val BrowserShell_pageReady = "페이지가 준비되었습니다."
+  val BrowserShell_invalidUrl =
+    "유효한 http:// 또는 https:// URL을 입력해 주세요."
 }

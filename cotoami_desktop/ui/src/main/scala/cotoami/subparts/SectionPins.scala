@@ -254,7 +254,7 @@ object SectionPins {
 
   private def sectionCotonomaContent(
       cotonomaCoto: Coto
-  )(using dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     PartsCoto.sectionCotonomaContent(cotonomaCoto).map(
       div(
         className := "cotonoma-content",

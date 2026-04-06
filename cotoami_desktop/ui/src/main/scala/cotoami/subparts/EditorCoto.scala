@@ -346,7 +346,7 @@ object EditorCoto {
         }
       )
 
-    def sectionPreview(form: Model): ReactElement =
+    def sectionPreview(form: Model)(using context: Context): ReactElement =
       section(className := "coto-preview fill")(
         ScrollArea()(
           Option.when(!form.isCotonoma) {

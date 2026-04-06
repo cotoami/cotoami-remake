@@ -13,6 +13,7 @@ use tauri_plugin_window_state::StateFlags;
 fn main() {
     #[allow(unused_variables)]
     tauri::Builder::default()
+        .manage(commands::browser::BrowserRegistry::default())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_os::init())
@@ -39,7 +40,7 @@ fn main() {
             // On macOS, do not quit the app when the window is closed;
             // keep it running in the background
             #[cfg(target_os = "macos")]
-            tauri::WindowEvent::CloseRequested { api, .. } => {
+            tauri::WindowEvent::CloseRequested { api, .. } if window.label() == "main" => {
                 window.hide().unwrap();
                 api.prevent_close();
             }
@@ -47,6 +48,13 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::show_window,
+            commands::browser::open_browser_window,
+            commands::browser::browser_attach,
+            commands::browser::browser_resize,
+            commands::browser::browser_navigate,
+            commands::browser::browser_reload,
+            commands::browser::browser_go_back,
+            commands::browser::browser_go_forward,
             commands::node_command,
             commands::operate_as,
             commands::system::system_info,

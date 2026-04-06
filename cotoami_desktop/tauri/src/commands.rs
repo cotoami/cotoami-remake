@@ -11,6 +11,7 @@ use self::error::Error;
 use crate::event;
 
 pub mod conn;
+pub mod browser;
 pub mod db;
 pub mod error;
 pub mod system;

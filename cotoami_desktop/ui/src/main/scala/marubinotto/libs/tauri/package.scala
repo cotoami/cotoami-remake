@@ -7,6 +7,7 @@ import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.Thenable.Implicits._
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
+import org.scalajs.dom.URL
 
 import cats.effect.IO
 
@@ -117,4 +118,29 @@ package object tauri {
       })
     )
   }
+
+  private def browserUrl(url: String): Option[URL] =
+    try {
+      val parsed = new URL(url)
+      Option.when(
+        parsed.protocol == "http:" || parsed.protocol == "https:"
+      )(parsed)
+    } catch {
+      case _: Throwable => None
+    }
+
+  def isSupportedBrowserUrl(url: String): Boolean =
+    browserUrl(url).isDefined
+
+  def openUrlInNewWindow(url: String, locale: Option[String] = None): Unit =
+    browserUrl(url).foreach { parsed =>
+      core.invoke[Unit](
+        "open_browser_window",
+        js.Dynamic.literal(
+          url = parsed.href,
+          locale = locale.orUndefined
+        )
+      )
+      ()
+    }
 }

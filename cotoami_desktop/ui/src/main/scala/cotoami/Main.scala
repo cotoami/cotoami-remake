@@ -19,6 +19,7 @@ import marubinotto.fui._
 import marubinotto.libs.tauri
 
 import cotoami.backend._
+import cotoami.browser.App as BrowserApp
 import cotoami.repository._
 import cotoami.models._
 import cotoami.updates._
@@ -46,18 +47,26 @@ object Main {
         if (LinkingInfo.developmentMode) {
           hot.initialize()
         }
-      } *> Browser.runProgram(
-        dom.document.getElementById("app"),
-        Program(
-          init,
-          (model: Model, dispatch: Msg => Unit) =>
-            view(model, msg => dispatch(msg.into)),
-          update,
-          subscriptions,
-          Some(Msg.UrlChanged.apply)
-        ),
-        dispatcher
-      ) *> IO.never
+      } *> {
+        val container = dom.document.getElementById("app")
+        val currentUrl = new URL(dom.window.location.href)
+        if (BrowserApp.isCurrentWindow(currentUrl)) {
+          IO(BrowserApp.mount(container))
+        } else {
+          Browser.runProgram(
+            container,
+            Program(
+              init,
+              (model: Model, dispatch: Msg => Unit) =>
+                view(model, msg => dispatch(msg.into)),
+              update,
+              subscriptions,
+              Some(Msg.UrlChanged.apply)
+            ),
+            dispatcher
+          )
+        }
+      } *> IO.never
     }
 
   object DatabaseFolder {

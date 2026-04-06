@@ -37,6 +37,7 @@ trait Text {
   val WriteSubcoto: String
   val OpenMap: String
   val CloseMap: String
+  val OpenBrowser: String
   val SwapPane: String
   val LightMode: String
   val DarkMode: String
@@ -218,6 +219,13 @@ trait Text {
   val ModelessNodeProfile_selfNode: String
   val ModelessNodeProfile_switched: String
   val ModelessNodeProfile_description: String
+
+  val BrowserShell_forward: String
+  val BrowserShell_reload: String
+  val BrowserShell_go: String
+  val BrowserShell_loadingPage: String
+  val BrowserShell_pageReady: String
+  val BrowserShell_invalidUrl: String
 }
 
 object Text {

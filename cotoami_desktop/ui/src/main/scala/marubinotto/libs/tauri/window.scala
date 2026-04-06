@@ -55,6 +55,10 @@ object window extends js.Object {
       */
     def setSize(size: PhysicalSize | LogicalSize): js.Promise[Unit] = js.native
 
+    /** Sets the window title.
+      */
+    def setTitle(title: String): js.Promise[Unit] = js.native
+
     /** Sets the badge label macOS only.
       *
       * @param label
@@ -67,6 +71,34 @@ object window extends js.Object {
 }
 
 trait WindowOptions extends js.Object {
+
+  /** Whether the window should be centered when created.
+    */
+  val center: js.UndefOr[Boolean] = js.undefined
+
+  /** Whether the window should be focused when created.
+    */
+  val focus: js.UndefOr[Boolean] = js.undefined
+
+  /** The initial height of the window.
+    */
+  val height: js.UndefOr[Double] = js.undefined
+
+  /** Whether the window is resizable.
+    */
+  val resizable: js.UndefOr[Boolean] = js.undefined
+
+  /** The window title.
+    */
+  val title: js.UndefOr[String] = js.undefined
+
+  /** The URL to load in the window.
+    */
+  val url: js.UndefOr[String] = js.undefined
+
+  /** The initial width of the window.
+    */
+  val width: js.UndefOr[Double] = js.undefined
 
   /** Whether clicking an inactive window also clicks through to the webview on
     * macOS.

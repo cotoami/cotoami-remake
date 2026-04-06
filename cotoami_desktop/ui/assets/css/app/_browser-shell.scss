@@ -1,0 +1,158 @@
+div.browser-shell {
+  --browser-toolbar-height: 54px;
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--card-background-color) 88%, white 12%), var(--background-color));
+
+  > header.browser-toolbar {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-height: var(--browser-toolbar-height);
+    padding: 0.5rem 0.75rem 0.6rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--primary) 12%, var(--pane-border-color));
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--card-background-color) 94%, white 6%), color-mix(in srgb, var(--card-background-color) 98%, black 2%));
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--contrast) 6%, transparent);
+
+    .browser-toolbar-main {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-width: 0;
+    }
+
+    .browser-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+      flex-shrink: 0;
+    }
+
+    button.browser-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.05rem;
+      height: 2.05rem;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--color);
+      box-shadow: none;
+      transition:
+        background-color 120ms ease,
+        color 120ms ease;
+      font-size: 1.1rem;
+
+      &:hover {
+        background: color-mix(in srgb, var(--primary) 12%, transparent);
+        color: var(--primary);
+      }
+
+      &.go {
+        color: var(--primary);
+        background: color-mix(in srgb, var(--primary) 8%, var(--card-background-color));
+
+        &:hover {
+          background: color-mix(in srgb, var(--primary) 16%, var(--card-background-color));
+        }
+      }
+
+      .material-symbols.loading {
+        animation: browser-shell-spin 1.1s linear infinite;
+      }
+    }
+
+    form.browser-address-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex: 1;
+      min-width: 0;
+      padding: 0.1rem 0.24rem 0.1rem 0.5rem;
+      border: 1px solid color-mix(in srgb, var(--primary) 16%, var(--pane-border-color));
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--background-color) 88%, white 12%);
+    }
+
+    .address-status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted-color);
+
+      &.secure {
+        color: var(--ins-color);
+      }
+    }
+
+    input.browser-address-input {
+      flex: 1;
+      min-width: 0;
+      height: 1.5rem;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      font-size: 0.92rem;
+      line-height: 1.1;
+
+      &:focus {
+        box-shadow: none;
+      }
+    }
+
+    form.browser-address-bar > button.browser-action.go {
+      width: 1.8rem;
+      height: 1.8rem;
+    }
+
+    .browser-error {
+      min-width: 0;
+      overflow: hidden;
+      font-size: 0.78rem;
+      line-height: 1.2;
+      color: var(--del-color);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+
+  > main.browser-surface {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    background:
+      radial-gradient(circle at top left, color-mix(in srgb, var(--primary) 7%, transparent), transparent 35%),
+      linear-gradient(180deg, color-mix(in srgb, var(--background-color) 96%, black 4%), var(--background-color));
+
+    .browser-webview-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted-color);
+      font-size: 0.92rem;
+      letter-spacing: 0.01em;
+    }
+  }
+}
+
+@keyframes browser-shell-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}

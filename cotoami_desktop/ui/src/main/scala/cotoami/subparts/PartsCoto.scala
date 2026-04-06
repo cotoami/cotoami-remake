@@ -4,12 +4,13 @@ import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => jso}
 
 import slinky.core._
-import slinky.core.facade.{Fragment, ReactElement}
+import slinky.core.facade.{Fragment, React, ReactElement}
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import marubinotto.optionalClasses
 import marubinotto.libs.lowlight
+import marubinotto.libs.tauri
 import marubinotto.libs.unified.{rehypePlugins, remarkPlugins}
 import marubinotto.components.{materialSymbol, toolButton, Markdown}
 
@@ -184,7 +185,7 @@ object PartsCoto {
   private def sectionCotoContent(
       cotoContent: CotoContent,
       collapsibleContentOpened: Boolean
-  ): ReactElement =
+  )(using context: Context): ReactElement =
     section(className := "coto-content")(
       cotoContent.mediaUrl.map(sectionMediaContent),
       cotoContent.summary.map(summary => {
@@ -196,7 +197,9 @@ object PartsCoto {
       }).getOrElse(sectionTextContent(cotoContent.content))
     )
 
-  def sectionCotonomaContent(cotoContent: CotoContent): Option[ReactElement] =
+  def sectionCotonomaContent(cotoContent: CotoContent)(using
+      context: Context
+  ): Option[ReactElement] =
     Option.when(
       cotoContent.content.map(!_.isBlank()).getOrElse(false) ||
         cotoContent.mediaUrl.isDefined
@@ -253,7 +256,9 @@ object PartsCoto {
     }
   }
 
-  def sectionTextContent(content: Option[String]): ReactElement =
+  def sectionTextContent(content: Option[String])(using
+      context: Context
+  ): ReactElement =
     section(className := "text-content")(
       Markdown(
         remarkPlugins = Seq(
@@ -266,9 +271,55 @@ object PartsCoto {
             rehypePlugins.Highlight,
             jso(languages = lowlight.all, detect = false)
           )
-        )
+        ),
+        components = markdownComponents
       )(content)
     )
+
+  @js.native
+  private trait MarkdownAnchorProps extends js.Object {
+    val children: js.Any = js.native
+    val href: js.UndefOr[String] = js.native
+    val rel: js.UndefOr[String] = js.native
+    val target: js.UndefOr[String] = js.native
+    val title: js.UndefOr[String] = js.native
+  }
+
+  private def markdownComponents(using context: Context) = js.Dynamic
+    .literal(
+      a = ((props: MarkdownAnchorProps) => {
+        val href = props.href.getOrElse("")
+        val anchorProps = js.Dynamic.literal(
+          href = props.href,
+          rel = props.rel,
+          target = props.target,
+          title = props.title,
+          onClick = ((e: js.Dynamic) => {
+            val isPlainLeftClick =
+              !e.defaultPrevented.asInstanceOf[Boolean] &&
+                e.button.asInstanceOf[Int] == 0 &&
+                !e.metaKey.asInstanceOf[Boolean] &&
+                !e.ctrlKey.asInstanceOf[Boolean] &&
+                !e.shiftKey.asInstanceOf[Boolean] &&
+                !e.altKey.asInstanceOf[Boolean]
+            if (isPlainLeftClick && tauri.isSupportedBrowserUrl(href)) {
+              e.preventDefault()
+              e.stopPropagation()
+              tauri.openUrlInNewWindow(
+                href,
+                Some(context.i18n.locale.toLanguageTag())
+              )
+            }
+          }): js.Function1[js.Dynamic, Unit]
+        )
+        React.createElement(
+          "a",
+          anchorProps.asInstanceOf[js.Dictionary[js.Any]],
+          props.children.asInstanceOf[ReactElement]
+        )
+      }): js.Function1[MarkdownAnchorProps, ReactElement]
+    )
+    .asInstanceOf[js.Object]
 
   def sectionMediaContent(urlAndType: (String, String)): ReactElement = {
     val (url, mediaType) = urlAndType

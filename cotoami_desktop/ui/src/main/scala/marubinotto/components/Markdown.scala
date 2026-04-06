@@ -9,14 +9,16 @@ import slinky.core.facade.ReactElement
 object Markdown extends ExternalComponent {
   case class Props(
       remarkPlugins: Seq[js.Object | js.Tuple2[js.Object, js.Object]],
-      rehypePlugins: Seq[js.Object | js.Tuple2[js.Object, js.Object]]
+      rehypePlugins: Seq[js.Object | js.Tuple2[js.Object, js.Object]],
+      components: js.UndefOr[js.Object] = js.undefined
   )
 
   def apply(
       remarkPlugins: Seq[js.Object | js.Tuple2[js.Object, js.Object]],
-      rehypePlugins: Seq[js.Object | js.Tuple2[js.Object, js.Object]]
+      rehypePlugins: Seq[js.Object | js.Tuple2[js.Object, js.Object]],
+      components: js.UndefOr[js.Object] = js.undefined
   )(children: ReactElement*) =
-    super.apply(Props(remarkPlugins, rehypePlugins))(children*)
+    super.apply(Props(remarkPlugins, rehypePlugins, components))(children*)
 
   override val component = ReactMarkdown
 }
