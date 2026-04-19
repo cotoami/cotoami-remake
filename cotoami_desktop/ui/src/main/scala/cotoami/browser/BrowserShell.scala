@@ -463,6 +463,37 @@ object BrowserShell {
       )
     )
 
+    useEffect(
+      () => {
+        val slot = webviewSlotRef.current
+        if (slot == null) () => ()
+        else {
+          var resizeAnimationFrameId: Option[Int] = None
+
+          val scheduleBrowserResize = () =>
+            if (resizeAnimationFrameId.isEmpty) {
+              resizeAnimationFrameId = Some(
+                dom.window.requestAnimationFrame(_ => {
+                  resizeAnimationFrameId = None
+                  resizeBrowserView()
+                })
+              )
+            }
+
+          val observer =
+            new dom.ResizeObserver((_, _) => scheduleBrowserResize())
+          observer.observe(slot)
+          scheduleBrowserResize()
+
+          () => {
+            resizeAnimationFrameId.foreach(dom.window.cancelAnimationFrame)
+            observer.disconnect()
+          }
+        }
+      },
+      Seq(props.contentLabel, props.timelineOpened, props.timelineWidth)
+    )
+
     val secure = actualUrl.startsWith("https://")
     val addressIcon = if (secure) "lock" else "language"
 
