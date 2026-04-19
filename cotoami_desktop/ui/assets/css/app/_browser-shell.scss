@@ -117,6 +117,21 @@ div.browser-shell {
       height: 1.8rem;
     }
 
+    button.browser-action.cotoami-timeline-toggle {
+      flex-shrink: 0;
+      background: color-mix(in srgb, var(--primary) 8%, var(--card-background-color));
+
+      img {
+        width: 1.1rem;
+        height: 1.1rem;
+        display: block;
+      }
+
+      &:hover {
+        background: color-mix(in srgb, var(--primary) 16%, var(--card-background-color));
+      }
+    }
+
     .browser-error {
       min-width: 0;
       overflow: hidden;

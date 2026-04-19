@@ -608,7 +608,20 @@ object BrowserShell {
               title := props.text.BrowserShell_go,
               onMouseDown := (e => e.preventDefault())
             )(materialSymbol("arrow_outward"))
-          )
+          ),
+          Option.when(props.timeline.nonEmpty && !props.timelineOpened) {
+            button(
+              className := "browser-action cotoami-timeline-toggle",
+              `type` := "button",
+              title := "Cotoami timeline",
+              onClick := (_ => props.onTimelineOpenChange(true))
+            )(
+              img(
+                alt := "",
+                src := "/images/logo/logomark.svg"
+              )
+            )
+          }
         ),
         error.map(message => div(className := "browser-error")(message))
       ),
