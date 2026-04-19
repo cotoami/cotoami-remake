@@ -307,7 +307,10 @@ object PartsCoto {
               e.stopPropagation()
               tauri.openUrlInNewWindow(
                 href,
-                Some(context.i18n.locale.toLanguageTag())
+                Some(context.i18n.locale.toLanguageTag()),
+                context.databaseFolder,
+                context.repo.nodes.focusedId.map(_.uuid),
+                context.repo.cotonomas.focusedId.map(_.uuid)
               )
             }
           }): js.Function1[js.Dynamic, Unit]

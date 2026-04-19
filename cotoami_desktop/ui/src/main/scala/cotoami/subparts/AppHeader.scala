@@ -152,7 +152,10 @@ object AppHeader {
         onClick = _ =>
           tauri.openUrlInNewWindow(
             "https://cotoami.app/",
-            Some(context.i18n.locale.toLanguageTag())
+            Some(context.i18n.locale.toLanguageTag()),
+            context.databaseFolder,
+            context.repo.nodes.focusedId.map(_.uuid),
+            context.repo.cotonomas.focusedId.map(_.uuid)
           )
       ),
       buttonGeomap(uiState),

@@ -130,9 +130,28 @@ div.browser-shell {
     position: relative;
     flex: 1;
     min-height: 0;
+    display: flex;
     background:
       radial-gradient(circle at top left, color-mix(in srgb, var(--primary) 7%, transparent), transparent 35%),
       linear-gradient(180deg, color-mix(in srgb, var(--background-color) 96%, black 4%), var(--background-color));
+
+    > .split-pane.browser-main {
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+    }
+
+    .browser-content,
+    .browser-webview-slot {
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .browser-webview-slot {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
 
     .browser-webview-placeholder {
       position: absolute;
@@ -143,6 +162,25 @@ div.browser-shell {
       color: var(--muted-color);
       font-size: 0.92rem;
       letter-spacing: 0.01em;
+    }
+
+    .browser-timeline.pane {
+      min-width: 0;
+      background: var(--background-color);
+      border-left: 1px solid var(--pane-border-color);
+
+      > .pane-toggle {
+        right: 2px;
+      }
+
+      section.timeline {
+        height: 100%;
+        margin-top: 0;
+      }
+
+      .coto-toolbar {
+        display: none;
+      }
     }
   }
 }

@@ -23,6 +23,7 @@ trait Context {
   def time: Time
   def i18n: I18n
   def resourceDir: Option[String]
+  def databaseFolder: Option[String]
   def uiState: Option[UiState]
   def repo: Root
   def geomap: SectionGeomap.Model

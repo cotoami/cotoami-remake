@@ -1,105 +1,332 @@
 package cotoami.browser
 
 import scala.scalajs.js
-import scala.util.{Failure, Success}
+import scala.scalajs.js.JSConverters._
+import scala.util.chaining._
+
+import cats.effect.IO
+import cats.effect.std.Dispatcher
 
 import org.scalajs.dom
 import org.scalajs.dom.URL
-import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
-import slinky.core.FunctionalComponent
-import slinky.core.facade.Hooks._
 import slinky.core.facade.ReactElement
 import slinky.web.ReactDOMClient
+import slinky.web.html._
 
-import marubinotto.facade.Nullable
+import marubinotto.fui.{Browser, Cmd, Program, Sub}
 import marubinotto.libs.tauri
 
-import cotoami.backend.SystemInfoJson
-import cotoami.models.I18n
+import cotoami.{
+  Context,
+  Into,
+  Model => CotoamiModel,
+  Msg => AppMsg
+}
+import cotoami.backend.{
+  ChangelogEntryJson,
+  DatabaseInfo,
+  ErrorJson,
+  SystemInfoJson
+}
+import cotoami.models.{Cotonoma, Id, I18n, Node, UiState}
+import cotoami.repository.Root
+import cotoami.subparts.{SectionFlowInput, SectionGeomap, SectionTimeline}
+import cotoami.updates.Changelog
 
 object App {
+
+  private val DatabaseFocusEvent = "browser-database-focus"
+
+  case class BrowserDatabaseFocus(
+      databaseFolder: String,
+      focusedNodeId: Option[Id[Node]],
+      focusedCotonomaId: Option[Id[Cotonoma]]
+  )
+
+  @js.native
+  trait BrowserDatabaseFocusJson extends js.Object {
+    val databaseFolder: String = js.native
+    val focusedNodeId: js.UndefOr[String] = js.native
+    val focusedCotonomaId: js.UndefOr[String] = js.native
+  }
 
   case class Model(
       url: String,
       title: Option[String],
-      i18n: I18n = I18n()
+      databaseFolder: Option[String],
+      app: CotoamiModel,
+      pendingFocus: Option[BrowserDatabaseFocus],
+      currentFocus: Option[BrowserDatabaseFocus]
   )
 
   sealed trait Msg
 
   object Msg {
-    case class BrowserStateChanged(url: String, title: Option[String]) extends Msg
-    case class LocaleLoaded(locale: Option[String]) extends Msg
+    case class BrowserStateChanged(url: String, title: Option[String])
+        extends Msg
+    case class SystemInfoFetched(result: Either[Unit, SystemInfoJson])
+        extends Msg
+    case class UiStateRestored(uiState: Option[UiState]) extends Msg
+    case class DatabaseOpened(result: Either[ErrorJson, DatabaseInfo])
+        extends Msg
+    case class DatabaseFocusChanged(focus: BrowserDatabaseFocus) extends Msg
+    case class BackendChange(log: ChangelogEntryJson) extends Msg
+    case class AppMsg(msg: cotoami.Msg) extends Msg
   }
 
   private case class Props(
       contentLabel: String,
       initialUrl: String,
-      locale: Option[String]
-  )
+      locale: Option[String],
+      databaseFolder: Option[String],
+      focusedNodeId: Option[String],
+      focusedCotonomaId: Option[String]
+  ) {
+    def initialFocus: Option[BrowserDatabaseFocus] =
+      databaseFolder.map(folder =>
+        BrowserDatabaseFocus(
+          folder,
+          focusedNodeId.map(Id[Node](_)),
+          focusedCotonomaId.map(Id[Cotonoma](_))
+        )
+      )
+  }
 
   def isCurrentWindow(url: URL): Boolean =
     propsFromUrl(url).nonEmpty
 
-  def mount(container: dom.Element): Unit =
-    propsFromUrl(new URL(dom.window.location.href)).foreach(props =>
-      ReactDOMClient.createRoot(container).render(component(props))
-    )
+  def run(container: dom.Element, dispatcher: Dispatcher[IO]): IO[Unit] =
+    propsFromUrl(new URL(dom.window.location.href))
+      .map(props =>
+        Browser.runProgram(
+          container,
+          Program(
+            init(props),
+            (model: Model, dispatch: Msg => Unit) =>
+              view(props, model, dispatch),
+            update,
+            subscriptions
+          ),
+          dispatcher
+        )
+      )
+      .getOrElse(IO(ReactDOMClient.createRoot(container).render(div())))
 
-  private def init(props: Props): Model =
-    Model(
-      url = props.initialUrl,
-      title = None,
-      i18n = props.locale.map(I18n.fromBcp47).getOrElse(I18n())
-    )
+  def emitDatabaseFocus(model: CotoamiModel): Cmd.One[AppMsg] =
+    Cmd(IO {
+      model.databaseFolder.foreach(folder =>
+        tauri.event.emit(
+          DatabaseFocusEvent,
+          js.Dynamic.literal(
+            databaseFolder = folder,
+            focusedNodeId = model.repo.nodes.focusedId.map(_.uuid).orUndefined,
+            focusedCotonomaId =
+              model.repo.cotonomas.focusedId.map(_.uuid).orUndefined
+          )
+        )
+      )
+      None
+    })
 
-  private def update(msg: Msg, model: Model): Model =
+  private def init(props: Props)(url: URL): (Model, Cmd[Msg]) = {
+    val i18n = props.locale.map(I18n.fromBcp47).getOrElse(I18n())
+    val app = CotoamiModel(
+      url = url,
+      i18n = i18n,
+      databaseFolder = props.databaseFolder,
+      uiState = Some(UiState()),
+      flowInput = SectionFlowInput.Model(),
+      geomap = SectionGeomap.Model(SectionGeomap.DefaultRemotePmtilesUrl)
+    )
+    (
+      Model(
+        url = props.initialUrl,
+        title = None,
+        databaseFolder = props.databaseFolder,
+        app = app,
+        pendingFocus = props.initialFocus,
+        currentFocus = None
+      ),
+      Cmd.Batch(
+        UiState.restore.map(Msg.UiStateRestored.apply),
+        SystemInfoJson.fetch().map(Msg.SystemInfoFetched.apply),
+        props.databaseFolder
+          .map(DatabaseInfo.openDatabase(_).map(Msg.DatabaseOpened.apply))
+          .getOrElse(Cmd.none)
+      )
+    )
+  }
+
+  private def update(msg: Msg, model: Model): (Model, Cmd[Msg]) =
     msg match {
       case Msg.BrowserStateChanged(url, title) =>
-        model.copy(url = url, title = title)
-      case Msg.LocaleLoaded(locale) =>
-        model.copy(i18n = locale.map(I18n.fromBcp47).getOrElse(model.i18n))
+        (model.copy(url = url, title = title), Cmd.none)
+
+      case Msg.SystemInfoFetched(Right(info)) =>
+        (model.copy(app = model.app.setSystemInfo(info)), Cmd.none)
+
+      case Msg.SystemInfoFetched(Left(_)) =>
+        (model, Cmd.none)
+
+      case Msg.UiStateRestored(uiState) => {
+        val restored = uiState.getOrElse(UiState())
+        (
+          model.copy(app = model.app.copy(uiState = Some(restored))),
+          Browser.setHtmlTheme(restored.theme)
+        )
+      }
+
+      case Msg.DatabaseOpened(Right(info)) => {
+        val app = model.app.copy(
+          databaseFolder = Some(info.folder),
+          repo = Root(info.initialDataset, info.localNodeId)
+        )
+        applyPendingFocus(model.copy(app = app))
+      }
+
+      case Msg.DatabaseOpened(Left(_)) =>
+        (model, Cmd.none)
+
+      case Msg.DatabaseFocusChanged(focus)
+          if model.databaseFolder.contains(focus.databaseFolder) =>
+        applyFocus(model.copy(pendingFocus = Some(focus)), focus)
+
+      case Msg.DatabaseFocusChanged(_) =>
+        (model, Cmd.none)
+
+      case Msg.BackendChange(log) =>
+        Changelog.apply(log, model.app).pipe { case (app, cmd) =>
+          (model.copy(app = app), cmd.map(Msg.AppMsg.apply))
+        }
+
+      case Msg.AppMsg(appMsg) =>
+        updateApp(appMsg, model)
     }
+
+  private def applyPendingFocus(model: Model): (Model, Cmd[Msg]) =
+    model.pendingFocus
+      .map(applyFocus(model, _))
+      .getOrElse((model, Cmd.none))
+
+  private def applyFocus(
+      model: Model,
+      focus: BrowserDatabaseFocus
+  ): (Model, Cmd[Msg]) = {
+    val focusedRepo = focus.focusedCotonomaId match {
+      case Some(cotonomaId) =>
+        model.app.repo.focusCotonoma(focus.focusedNodeId, cotonomaId)
+      case None =>
+        model.app.repo.focusNode(focus.focusedNodeId)
+    }
+    val focusedApp = model.app.copy(repo = focusedRepo)
+    given Context = focusedApp
+    val (timeline, cmd) = focusedApp.timeline.onFocusChange
+    (
+      model.copy(
+        app = focusedApp.copy(timeline = timeline),
+        pendingFocus = None,
+        currentFocus = Some(focus)
+      ),
+      cmd.map(Msg.AppMsg.apply)
+    )
+  }
+
+  private def updateApp(appMsg: AppMsg, model: Model): (Model, Cmd[Msg]) =
+    appMsg match {
+      case AppMsg.SectionTimelineMsg(submsg) => {
+        given Context = model.app
+        val (timeline, repo, cmd) =
+          SectionTimeline.update(submsg, model.app.timeline)
+        (
+          model.copy(app = model.app.copy(timeline = timeline, repo = repo)),
+          cmd.map(Msg.AppMsg.apply)
+        )
+      }
+
+      case AppMsg.SetPaneOpen(name, open) =>
+        updateUiState(model, _.setPaneOpen(name, open))
+
+      case AppMsg.ResizePane(name, newSize) =>
+        updateUiState(model, _.resizePane(name, newSize))
+
+      case AppMsg.AddMessage(_, _, _) =>
+        (model, Cmd.none)
+
+      case _ =>
+        (model, Cmd.none)
+    }
+
+  private def updateUiState(
+      model: Model,
+      update: UiState => UiState
+  ): (Model, Cmd[Msg]) = {
+    val uiState = update(model.app.uiState.getOrElse(UiState()))
+    (
+      model.copy(app = model.app.copy(uiState = Some(uiState))),
+      uiState.save.map(Msg.AppMsg.apply)
+    )
+  }
 
   private def view(
       props: Props,
       model: Model,
       dispatch: Msg => Unit
-  ): ReactElement =
+  ): ReactElement = {
+    val uiState = model.app.uiState.getOrElse(UiState())
+    val timelineOpened = uiState.paneOpened(BrowserShell.TimelinePaneName)
+    val timelineWidth = uiState.paneSizes.getOrElse(
+      BrowserShell.TimelinePaneName,
+      BrowserShell.DefaultTimelineWidth
+    )
+    val appDispatch: Into[AppMsg] => Unit =
+      msg => dispatch(Msg.AppMsg(msg.into))
+    given Context = model.app
+    given (Into[AppMsg] => Unit) = appDispatch
+
     BrowserShell.component(
       BrowserShell.Props(
         contentLabel = props.contentLabel,
         initialUrl = props.initialUrl,
         model = model,
-        text = model.i18n.text,
+        text = model.app.i18n.text,
+        timeline = props.databaseFolder.map(_ =>
+          SectionTimeline(model.app.timeline)
+            .getOrElse(div(className := "browser-timeline-empty")())
+        ),
+        timelineOpened = timelineOpened,
+        timelineWidth = timelineWidth,
+        onTimelineOpenChange = open =>
+          dispatch(Msg.AppMsg(AppMsg.SetPaneOpen(BrowserShell.TimelinePaneName, open))),
+        onTimelineWidthChange = width =>
+          dispatch(Msg.AppMsg(AppMsg.ResizePane(BrowserShell.TimelinePaneName, width))),
         onStateChange = (url, title) =>
           dispatch(Msg.BrowserStateChanged(url, title))
       )
     )
+  }
 
-  private val component = FunctionalComponent[Props] { props =>
-    val (model, setModel) = useState(init(props))
-
-    def dispatch(msg: Msg): Unit =
-      setModel(current => update(msg, current))
-
-    useEffect(
-      () => {
-        if (props.locale.isEmpty) {
-          tauri.core.invoke[SystemInfoJson]("system_info").toFuture.onComplete {
-            case Success(info) =>
-              dispatch(Msg.LocaleLoaded(Nullable.toOption(info.locale)))
-            case Failure(_) => ()
-          }
-        }
-        () => ()
-      },
-      Seq.empty
+  private def subscriptions(model: Model): Sub[Msg] =
+    databaseFocusSubscription(model).combine(
+      tauri.listen[ChangelogEntryJson]("backend-change")
+        .map(Msg.BackendChange.apply)
     )
 
-    view(props, model, dispatch)
-  }
+  private def databaseFocusSubscription(model: Model): Sub[Msg] =
+    model.databaseFolder
+      .map(_ =>
+        tauri.listen[BrowserDatabaseFocusJson](DatabaseFocusEvent)
+          .map(payload =>
+            Msg.DatabaseFocusChanged(
+              BrowserDatabaseFocus(
+                payload.databaseFolder,
+                payload.focusedNodeId.toOption.map(Id[Node](_)),
+                payload.focusedCotonomaId.toOption.map(Id[Cotonoma](_))
+              )
+            )
+          )
+      )
+      .getOrElse(Sub.Empty)
 
   private def propsFromUrl(url: URL): Option[Props] = {
     val params = queryParams(url)
@@ -108,7 +335,14 @@ object App {
       if browserShell == "1"
       contentLabel <- params.get("contentLabel")
       initialUrl <- params.get("initialUrl")
-    } yield Props(contentLabel, initialUrl, params.get("locale"))
+    } yield Props(
+      contentLabel,
+      initialUrl,
+      params.get("locale"),
+      params.get("databaseFolder"),
+      params.get("focusedNodeId"),
+      params.get("focusedCotonomaId")
+    )
   }
 
   private def queryParams(url: URL): Map[String, String] =
