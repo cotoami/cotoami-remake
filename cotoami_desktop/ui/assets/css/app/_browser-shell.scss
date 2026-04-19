@@ -170,7 +170,13 @@ div.browser-shell {
       border-left: 1px solid var(--pane-border-color);
 
       > .pane-toggle {
-        right: 2px;
+        left: 0;
+        right: auto;
+
+        button {
+          left: -1px;
+          right: auto;
+        }
       }
 
       section.timeline {
