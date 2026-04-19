@@ -190,6 +190,16 @@ div.browser-shell {
         }
       }
 
+      &.folded > .pane-toggle {
+        left: 0;
+
+        button.unfold {
+          span.material-symbols {
+            margin-left: -4px;
+          }
+        }
+      }
+
       section.timeline {
         height: 100%;
         margin-top: 0;
