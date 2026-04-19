@@ -1,5 +1,7 @@
 div.browser-shell {
   --browser-toolbar-height: 54px;
+  --browser-tool-color: color-mix(in srgb, var(--contrast) 88%, var(--primary) 12%);
+  --browser-tool-hover-background: color-mix(in srgb, var(--primary) 12%, transparent);
 
   display: flex;
   flex-direction: column;
@@ -44,7 +46,7 @@ div.browser-shell {
       border: 0;
       border-radius: 999px;
       background: transparent;
-      color: var(--color);
+      color: var(--browser-tool-color);
       box-shadow: none;
       transition:
         background-color 120ms ease,
@@ -52,7 +54,7 @@ div.browser-shell {
       font-size: 1.1rem;
 
       &:hover {
-        background: color-mix(in srgb, var(--primary) 12%, transparent);
+        background: var(--browser-tool-hover-background);
         color: var(--primary);
       }
 
@@ -176,12 +178,29 @@ div.browser-shell {
         button {
           left: -1px;
           right: auto;
+          color: var(--browser-tool-color);
+          background: color-mix(in srgb, var(--card-background-color) 92%, var(--primary) 8%);
+          opacity: 0.82;
+
+          &:hover {
+            color: var(--primary);
+            background: color-mix(in srgb, var(--card-background-color) 84%, var(--primary) 16%);
+            opacity: 1;
+          }
         }
       }
 
       section.timeline {
         height: 100%;
         margin-top: 0;
+      }
+
+      section.timeline > header.tools button.default {
+        color: var(--browser-tool-color);
+
+        &:hover {
+          color: var(--primary);
+        }
       }
 
       .coto-toolbar {
