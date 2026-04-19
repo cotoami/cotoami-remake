@@ -179,12 +179,12 @@ div.browser-shell {
           left: -1px;
           right: auto;
           color: var(--browser-tool-color);
-          background: color-mix(in srgb, var(--card-background-color) 92%, var(--primary) 8%);
+          background: transparent;
           opacity: 0.82;
 
           &:hover {
             color: var(--primary);
-            background: color-mix(in srgb, var(--card-background-color) 84%, var(--primary) 16%);
+            background: transparent;
             opacity: 1;
           }
         }
