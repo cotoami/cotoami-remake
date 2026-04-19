@@ -124,6 +124,7 @@ fn browser_shell_path(
     database_folder: Option<&str>,
     focused_node_id: Option<&str>,
     focused_cotonoma_id: Option<&str>,
+    theme: Option<&str>,
 ) -> String {
     let mut params = tauri::Url::parse("https://browser-shell.local/")
         .expect("static browser shell URL must be valid");
@@ -144,6 +145,9 @@ fn browser_shell_path(
     if let Some(focused_cotonoma_id) = focused_cotonoma_id.filter(|id| !id.is_empty()) {
         query_pairs.append_pair("focusedCotonomaId", focused_cotonoma_id);
     }
+    if let Some(theme) = theme.filter(|theme| !theme.is_empty()) {
+        query_pairs.append_pair("theme", theme);
+    }
     drop(query_pairs);
     format!("index.html?{}", params.query().unwrap_or_default())
 }
@@ -155,6 +159,7 @@ fn open_browser_window_internal(
     database_folder: Option<&str>,
     focused_node_id: Option<&str>,
     focused_cotonoma_id: Option<&str>,
+    theme: Option<&str>,
 ) -> Result<(), Error> {
     let (shell_label, content_label) = next_browser_labels();
     tauri::WebviewWindowBuilder::new(
@@ -168,6 +173,7 @@ fn open_browser_window_internal(
                 database_folder,
                 focused_node_id,
                 focused_cotonoma_id,
+                theme,
             )
             .into(),
         ),
@@ -249,6 +255,7 @@ pub fn open_browser_window(
     database_folder: Option<String>,
     focused_node_id: Option<String>,
     focused_cotonoma_id: Option<String>,
+    theme: Option<String>,
 ) -> Result<(), Error> {
     let url = parse_browser_url(&url)?;
     open_browser_window_internal(
@@ -258,6 +265,7 @@ pub fn open_browser_window(
         database_folder.as_deref(),
         focused_node_id.as_deref(),
         focused_cotonoma_id.as_deref(),
+        theme.as_deref(),
     )
 }
 
@@ -336,6 +344,7 @@ pub fn browser_attach(
                     let _ = open_browser_window_internal(
                         &app_for_new_window,
                         &url,
+                        None,
                         None,
                         None,
                         None,

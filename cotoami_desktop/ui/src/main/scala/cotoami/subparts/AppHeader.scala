@@ -155,7 +155,8 @@ object AppHeader {
             Some(context.i18n.locale.toLanguageTag()),
             context.databaseFolder,
             context.repo.nodes.focusedId.map(_.uuid),
-            context.repo.cotonomas.focusedId.map(_.uuid)
+            context.repo.cotonomas.focusedId.map(_.uuid),
+            context.uiState.map(_.theme)
           )
       ),
       buttonGeomap(uiState),

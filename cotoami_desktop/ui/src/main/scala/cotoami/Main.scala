@@ -205,7 +205,14 @@ object Main {
         model
           .pipe(updates.uiState(_.copy(theme = theme)))
           .pipe { case (model, cmd) =>
-            (model, Cmd.Batch(cmd, Browser.setHtmlTheme(theme)))
+            (
+              model,
+              Cmd.Batch(
+                cmd,
+                Browser.setHtmlTheme(theme),
+                BrowserApp.emitTheme(theme)
+              )
+            )
           }
 
       case Msg.SetPaneOpen(name, open) =>

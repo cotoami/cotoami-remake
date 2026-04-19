@@ -37,6 +37,7 @@ import cotoami.updates.Changelog
 object App {
 
   private val DatabaseFocusEvent = "browser-database-focus"
+  private val ThemeEvent = "browser-theme"
 
   case class BrowserDatabaseFocus(
       databaseFolder: String,
@@ -51,10 +52,16 @@ object App {
     val focusedCotonomaId: js.UndefOr[String] = js.native
   }
 
+  @js.native
+  trait BrowserThemeJson extends js.Object {
+    val theme: String = js.native
+  }
+
   case class Model(
       url: String,
       title: Option[String],
       databaseFolder: Option[String],
+      initialTheme: Option[String],
       app: CotoamiModel,
       pendingFocus: Option[BrowserDatabaseFocus],
       currentFocus: Option[BrowserDatabaseFocus]
@@ -71,6 +78,7 @@ object App {
     case class DatabaseOpened(result: Either[ErrorJson, DatabaseInfo])
         extends Msg
     case class DatabaseFocusChanged(focus: BrowserDatabaseFocus) extends Msg
+    case class ThemeChanged(theme: String) extends Msg
     case class BackendChange(log: ChangelogEntryJson) extends Msg
     case class AppMsg(msg: cotoami.Msg) extends Msg
   }
@@ -81,7 +89,8 @@ object App {
       locale: Option[String],
       databaseFolder: Option[String],
       focusedNodeId: Option[String],
-      focusedCotonomaId: Option[String]
+      focusedCotonomaId: Option[String],
+      theme: Option[String]
   ) {
     def initialFocus: Option[BrowserDatabaseFocus] =
       databaseFolder.map(folder =>
@@ -129,13 +138,23 @@ object App {
       None
     })
 
+  def emitTheme(theme: String): Cmd.One[AppMsg] =
+    Cmd(IO {
+      tauri.event.emit(
+        ThemeEvent,
+        js.Dynamic.literal(theme = theme)
+      )
+      None
+    })
+
   private def init(props: Props)(url: URL): (Model, Cmd[Msg]) = {
     val i18n = props.locale.map(I18n.fromBcp47).getOrElse(I18n())
+    val initialTheme = props.theme.getOrElse(UiState.DefaultTheme)
     val app = CotoamiModel(
       url = url,
       i18n = i18n,
       databaseFolder = props.databaseFolder,
-      uiState = Some(UiState()),
+      uiState = Some(UiState(theme = initialTheme)),
       flowInput = SectionFlowInput.Model(),
       geomap = SectionGeomap.Model(SectionGeomap.DefaultRemotePmtilesUrl)
     )
@@ -144,6 +163,7 @@ object App {
         url = props.initialUrl,
         title = None,
         databaseFolder = props.databaseFolder,
+        initialTheme = props.theme,
         app = app,
         pendingFocus = props.initialFocus,
         currentFocus = None
@@ -170,7 +190,9 @@ object App {
         (model, Cmd.none)
 
       case Msg.UiStateRestored(uiState) => {
-        val restored = uiState.getOrElse(UiState())
+        val restored = model.initialTheme
+          .map(theme => uiState.getOrElse(UiState()).copy(theme = theme))
+          .getOrElse(uiState.getOrElse(UiState()))
         (
           model.copy(app = model.app.copy(uiState = Some(restored))),
           Browser.setHtmlTheme(restored.theme)
@@ -194,6 +216,11 @@ object App {
 
       case Msg.DatabaseFocusChanged(_) =>
         (model, Cmd.none)
+
+      case Msg.ThemeChanged(theme) =>
+        updateUiState(model, _.copy(theme = theme)).pipe { case (model, cmd) =>
+          (model, Browser.setHtmlTheme[Msg](theme) ++ cmd)
+        }
 
       case Msg.BackendChange(log) =>
         Changelog.apply(log, model.app).pipe { case (app, cmd) =>
@@ -310,6 +337,9 @@ object App {
     databaseFocusSubscription(model).combine(
       tauri.listen[ChangelogEntryJson]("backend-change")
         .map(Msg.BackendChange.apply)
+    ).combine(
+      tauri.listen[BrowserThemeJson](ThemeEvent)
+        .map(payload => Msg.ThemeChanged(payload.theme))
     )
 
   private def databaseFocusSubscription(model: Model): Sub[Msg] =
@@ -341,7 +371,8 @@ object App {
       params.get("locale"),
       params.get("databaseFolder"),
       params.get("focusedNodeId"),
-      params.get("focusedCotonomaId")
+      params.get("focusedCotonomaId"),
+      params.get("theme")
     )
   }
 

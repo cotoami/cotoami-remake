@@ -310,7 +310,8 @@ object PartsCoto {
                 Some(context.i18n.locale.toLanguageTag()),
                 context.databaseFolder,
                 context.repo.nodes.focusedId.map(_.uuid),
-                context.repo.cotonomas.focusedId.map(_.uuid)
+                context.repo.cotonomas.focusedId.map(_.uuid),
+                context.uiState.map(_.theme)
               )
             }
           }): js.Function1[js.Dynamic, Unit]

@@ -137,7 +137,8 @@ package object tauri {
       locale: Option[String] = None,
       databaseFolder: Option[String] = None,
       focusedNodeId: Option[String] = None,
-      focusedCotonomaId: Option[String] = None
+      focusedCotonomaId: Option[String] = None,
+      theme: Option[String] = None
   ): Unit =
     browserUrl(url).foreach { parsed =>
       core.invoke[Unit](
@@ -147,7 +148,8 @@ package object tauri {
           locale = locale.orUndefined,
           databaseFolder = databaseFolder.orUndefined,
           focusedNodeId = focusedNodeId.orUndefined,
-          focusedCotonomaId = focusedCotonomaId.orUndefined
+          focusedCotonomaId = focusedCotonomaId.orUndefined,
+          theme = theme.orUndefined
         )
       )
       ()
