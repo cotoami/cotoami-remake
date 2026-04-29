@@ -220,8 +220,6 @@ div.browser-shell {
       .browser-timeline-focus {
         flex-shrink: 0;
         padding: 0.7rem 0.8rem 0.55rem 2.25rem;
-        border-bottom: 1px solid
-          color-mix(in srgb, var(--primary) 10%, var(--pane-border-color));
         background:
           color-mix(in srgb, var(--card-background-color) 84%, var(--background-color));
       }
