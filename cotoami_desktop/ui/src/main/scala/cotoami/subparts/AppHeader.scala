@@ -5,7 +5,6 @@ import slinky.web.html._
 
 import marubinotto.optionalClasses
 import marubinotto.components.{materialSymbol, shiftToolButton, toolButton}
-import marubinotto.libs.tauri
 
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Cotonoma, Node, UiState}
