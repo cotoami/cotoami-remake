@@ -107,6 +107,9 @@ object BrowserShell {
         .orElse(Some(duckDuckGoSearchUrl(trimmed)))
   }
 
+  private def optionString(value: js.UndefOr[String]): Option[String] =
+    value.toOption.flatMap(Option(_))
+
   private def windowTitle(url: String, pageTitle: Option[String]): String =
     pageTitle
       .map(_.trim)
@@ -129,12 +132,13 @@ object BrowserShell {
       editingRef: ReactRef[Boolean],
       currentWindowTitleRef: ReactRef[String]
   ): Unit = {
+    val title = optionString(state.title)
     setActualUrl(state.url)
     if (!editingRef.current)
       setDraftUrl(state.url)
-    setTitle(state.title.toOption)
+    setTitle(title)
     setLoading(state.is_loading)
-    val nextWindowTitle = windowTitle(state.url, state.title.toOption)
+    val nextWindowTitle = windowTitle(state.url, title)
     if (currentWindowTitleRef.current != nextWindowTitle) {
       currentWindowTitleRef.current = nextWindowTitle
       tauri.window.getCurrentWindow().setTitle(nextWindowTitle)
