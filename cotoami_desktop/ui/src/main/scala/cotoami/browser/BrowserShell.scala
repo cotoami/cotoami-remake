@@ -53,6 +53,7 @@ object BrowserShell {
       model: App.Model,
       text: Text,
       timeline: Option[ReactElement],
+      cotonomaSelect: Option[ReactElement],
       timelineOpened: Boolean,
       timelineWidth: Int,
       onTimelineOpenChange: Boolean => Unit,
@@ -533,6 +534,9 @@ object BrowserShell {
               onFoldClick = () => props.onTimelineOpenChange(false),
               onUnfoldClick = () => props.onTimelineOpenChange(true),
               direction = CollapseDirection.ToRight
+            ),
+            props.cotonomaSelect.map(select =>
+              div(className := "browser-timeline-focus")(select)
             ),
             timeline
           ),

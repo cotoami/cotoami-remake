@@ -182,6 +182,8 @@ div.browser-shell {
     }
 
     .browser-timeline.pane {
+      display: flex;
+      flex-direction: column;
       min-width: 0;
       background: var(--background-color);
       border-left: 1px solid var(--pane-border-color);
@@ -215,8 +217,41 @@ div.browser-shell {
         }
       }
 
+      .browser-timeline-focus {
+        flex-shrink: 0;
+        padding: 0.7rem 0.8rem 0.55rem 2.25rem;
+        border-bottom: 1px solid
+          color-mix(in srgb, var(--primary) 10%, var(--pane-border-color));
+        background:
+          color-mix(in srgb, var(--card-background-color) 84%, var(--background-color));
+      }
+
+      .browser-cotonoma-select {
+        width: 100%;
+        font-size: 0.9rem;
+
+        .browser-cotonoma-option {
+          display: flex;
+          align-items: center;
+          gap: 0.45rem;
+          min-width: 0;
+
+          img.node-icon {
+            flex-shrink: 0;
+          }
+
+          span {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+      }
+
       section.timeline {
-        height: 100%;
+        flex: 1;
+        min-height: 0;
         margin-top: 0;
       }
 

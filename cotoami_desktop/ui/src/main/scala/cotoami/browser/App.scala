@@ -14,7 +14,9 @@ import slinky.core.facade.ReactElement
 import slinky.web.ReactDOMClient
 import slinky.web.html._
 
+import marubinotto.facade.Nullable
 import marubinotto.fui.{Browser, Cmd, Program, Sub}
+import marubinotto.components.Select
 import marubinotto.libs.tauri
 
 import cotoami.{
@@ -29,10 +31,16 @@ import cotoami.backend.{
   ErrorJson,
   SystemInfoJson
 }
+import cotoami.backend.CotonomaBackend
 import cotoami.models.{Cotonoma, Id, I18n, Node, UiState}
 import cotoami.repository.Root
-import cotoami.subparts.{SectionFlowInput, SectionGeomap, SectionTimeline}
-import cotoami.updates.Changelog
+import cotoami.subparts.{
+  PartsNode,
+  SectionFlowInput,
+  SectionGeomap,
+  SectionTimeline
+}
+import cotoami.updates.{Changelog, DatabaseFocus}
 
 object App {
 
@@ -63,6 +71,7 @@ object App {
       databaseFolder: Option[String],
       initialTheme: Option[String],
       app: CotoamiModel,
+      cotonomaSelect: CotonomaSelect.Model,
       pendingFocus: Option[BrowserDatabaseFocus],
       currentFocus: Option[BrowserDatabaseFocus]
   )
@@ -81,6 +90,31 @@ object App {
     case class ThemeChanged(theme: String) extends Msg
     case class BackendChange(log: ChangelogEntryJson) extends Msg
     case class AppMsg(msg: cotoami.Msg) extends Msg
+    case class CotonomaSelectMsg(msg: CotonomaSelect.Msg) extends Msg
+  }
+
+  object CotonomaSelect {
+    case class Model(
+        query: String = "",
+        options: Seq[CotonomaOption] = Seq.empty,
+        loading: Boolean = false
+    )
+
+    sealed trait Msg
+    object Msg {
+      case class QueryInput(query: String) extends Msg
+      case class CotonomasFetched(
+          query: String,
+          result: Either[ErrorJson, js.Array[Cotonoma]]
+      ) extends Msg
+      case class Selected(cotonoma: scala.Option[Cotonoma]) extends Msg
+    }
+
+    class CotonomaOption(val cotonoma: Cotonoma) extends Select.SelectOption {
+      val value: String = cotonoma.id.uuid
+      val label: String = cotonoma.name
+      val isDisabled: Boolean = false
+    }
   }
 
   private case class Props(
@@ -165,6 +199,7 @@ object App {
         databaseFolder = props.databaseFolder,
         initialTheme = props.theme,
         app = app,
+        cotonomaSelect = CotonomaSelect.Model(),
         pendingFocus = props.initialFocus,
         currentFocus = None
       ),
@@ -229,6 +264,9 @@ object App {
 
       case Msg.AppMsg(appMsg) =>
         updateApp(appMsg, model)
+
+      case Msg.CotonomaSelectMsg(submsg) =>
+        updateCotonomaSelect(submsg, model)
     }
 
   private def applyPendingFocus(model: Model): (Model, Cmd[Msg]) =
@@ -284,6 +322,91 @@ object App {
         (model, Cmd.none)
     }
 
+  private def updateCotonomaSelect(
+      msg: CotonomaSelect.Msg,
+      model: Model
+  ): (Model, Cmd[Msg]) = {
+    val select = model.cotonomaSelect
+    msg match {
+      case CotonomaSelect.Msg.QueryInput(query) =>
+        if (query.isBlank())
+          (
+            model.copy(cotonomaSelect =
+              select.copy(query = query, options = Seq.empty, loading = false)
+            ),
+            Cmd.none
+          )
+        else
+          (
+            model.copy(cotonomaSelect =
+              select.copy(query = query, loading = true)
+            ),
+            CotonomaBackend.fetchByPartial(query, None)
+              .map(CotonomaSelect.Msg.CotonomasFetched(query, _))
+              .map(Msg.CotonomaSelectMsg.apply)
+          )
+
+      case CotonomaSelect.Msg.CotonomasFetched(query, Right(cotonomas))
+          if query == select.query =>
+        (
+          model.copy(cotonomaSelect =
+            select.copy(
+              options =
+                cotonomas.map(new CotonomaSelect.CotonomaOption(_)).toSeq,
+              loading = false
+            )
+          ),
+          Cmd.none
+        )
+
+      case CotonomaSelect.Msg.CotonomasFetched(query, Left(_))
+          if query == select.query =>
+        (
+          model.copy(cotonomaSelect =
+            select.copy(options = Seq.empty, loading = false)
+          ),
+          Cmd.none
+        )
+
+      case CotonomaSelect.Msg.CotonomasFetched(_, _) =>
+        (model, Cmd.none)
+
+      case CotonomaSelect.Msg.Selected(Some(cotonoma)) => {
+        val appWithCotonoma = model.app.copy(
+          repo = model.app.repo.copy(
+            cotonomas = model.app.repo.cotonomas.put(cotonoma)
+          )
+        )
+        appWithCotonoma
+          .pipe(DatabaseFocus.cotonoma(Some(cotonoma.nodeId), cotonoma.id))
+          .pipe { case (app, cmd) =>
+            (
+              model.copy(
+                app = app,
+                cotonomaSelect =
+                  select.copy(query = "", options = Seq.empty, loading = false)
+              ),
+              (cmd ++ emitDatabaseFocus(app)).map(Msg.AppMsg.apply)
+            )
+          }
+      }
+
+      case CotonomaSelect.Msg.Selected(None) =>
+        model.app
+          .pipe(DatabaseFocus.node(None))
+          .pipe { case (app, cmd) =>
+            (
+              model.copy(
+                app = app,
+                cotonomaSelect =
+                  select.copy(query = "", options = Seq.empty, loading = false)
+              ),
+              (cmd ++ emitDatabaseFocus(app)).map(Msg.AppMsg.apply)
+            )
+          }
+    }
+  }
+
   private def updateUiState(
       model: Model,
       update: UiState => UiState
@@ -324,15 +447,69 @@ object App {
           )
             .getOrElse(div(className := "browser-timeline-empty")())
         ),
+        cotonomaSelect = props.databaseFolder.map(_ =>
+          cotonomaSelect(model.cotonomaSelect, model.app, dispatch)
+        ),
         timelineOpened = timelineOpened,
         timelineWidth = timelineWidth,
         onTimelineOpenChange = open =>
-          dispatch(Msg.AppMsg(AppMsg.SetPaneOpen(BrowserShell.TimelinePaneName, open))),
+          dispatch(
+            Msg.AppMsg(AppMsg.SetPaneOpen(BrowserShell.TimelinePaneName, open))
+          ),
         onTimelineWidthChange = width =>
-          dispatch(Msg.AppMsg(AppMsg.ResizePane(BrowserShell.TimelinePaneName, width))),
+          dispatch(
+            Msg.AppMsg(AppMsg.ResizePane(BrowserShell.TimelinePaneName, width))
+          ),
         onStateChange = (url, title) =>
           dispatch(Msg.BrowserStateChanged(url, title))
       )
+    )
+  }
+
+  private def cotonomaSelect(
+      model: CotonomaSelect.Model,
+      app: CotoamiModel,
+      dispatch: Msg => Unit
+  ): ReactElement = {
+    val focused =
+      app.repo.cotonomas.focused.map(new CotonomaSelect.CotonomaOption(_))
+    Select(
+      className = "cotonoma-select browser-cotonoma-select",
+      options = model.options,
+      placeholder = Some(app.i18n.text.Cotonoma),
+      value = focused,
+      onInputChange = Some((input, actionMeta) => {
+        if (actionMeta.action == "input-change")
+          dispatch(Msg.CotonomaSelectMsg(CotonomaSelect.Msg.QueryInput(input)))
+        else if (input != model.query)
+          dispatch(Msg.CotonomaSelectMsg(CotonomaSelect.Msg.QueryInput(input)))
+        input
+      }),
+      noOptionsMessage =
+        Some(_ => div()(app.i18n.text.ModalRepost_typeCotonomaName)),
+      formatOptionLabel = Some(option =>
+        div(className := "browser-cotonoma-option")(
+          option match {
+            case option: CotonomaSelect.CotonomaOption =>
+              app.repo.nodes.get(option.cotonoma.nodeId)
+                .map(PartsNode.imgNode(_))
+            case _ => None
+          },
+          span()(option.label)
+        )
+      ),
+      isLoading = model.loading,
+      isClearable = true,
+      onChange = Some((option, _) => {
+        dispatch(
+          Msg.CotonomaSelectMsg(
+            CotonomaSelect.Msg.Selected(
+              Nullable.toOption(option)
+                .map(_.asInstanceOf[CotonomaSelect.CotonomaOption].cotonoma)
+            )
+          )
+        )
+      })
     )
   }
 
