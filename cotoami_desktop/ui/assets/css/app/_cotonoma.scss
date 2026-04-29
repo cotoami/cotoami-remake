@@ -6,17 +6,36 @@
   // to behave like a normal full-width form field causes the typed text to be
   // clipped or shifted while editing.
   input {
+    box-sizing: content-box;
     height: auto;
-    width: auto;
+    width: auto !important;
     min-width: 2px;
-    padding: 0;
+    margin: 0;
+    padding: 0 !important;
     border: 0;
     border-radius: 0;
     appearance: auto;
     background: transparent;
+    color: inherit;
+    direction: ltr;
+    font: inherit;
+    text-align: left;
 
     &:is(:active, :focus) {
       box-shadow: none;
+    }
+  }
+
+  div[data-value] {
+    direction: ltr;
+    text-align: left;
+    transform: none !important;
+
+    &::after {
+      box-sizing: content-box;
+      direction: ltr;
+      font: inherit;
+      text-align: left;
     }
   }
 
