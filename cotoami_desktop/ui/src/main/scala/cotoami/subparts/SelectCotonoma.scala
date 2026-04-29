@@ -51,6 +51,7 @@ object SelectCotonoma {
       isLoading: Boolean = false,
       noOptionsMessage: Option[Select.NoOptionsMessageArg => ReactElement] =
         None,
+      isSearchable: Boolean = true,
       isClearable: Boolean = false,
       autoFocus: Boolean = false,
       menuPlacement: String = "auto",
@@ -79,6 +80,7 @@ object SelectCotonoma {
       ),
       isLoading = isLoading,
       noOptionsMessage = noOptionsMessage,
+      isSearchable = isSearchable,
       isClearable = isClearable,
       autoFocus = autoFocus,
       menuPlacement = menuPlacement,

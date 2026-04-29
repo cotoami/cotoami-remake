@@ -248,6 +248,7 @@ object ModelessSubcoto {
           options = model.targetCotonomas,
           currentCotonomaId = context.repo.currentCotonomaId,
           currentMarkLabel = Some("current"),
+          isSearchable = false,
           value = model.postTo,
           onChange = Some((option, _) => {
             dispatch(

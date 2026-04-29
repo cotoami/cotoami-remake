@@ -20,6 +20,7 @@ object Select extends ExternalComponent {
       formatOptionLabel: Option[SelectOption => ReactElement] = None,
       isLoading: Boolean = false,
       noOptionsMessage: Option[NoOptionsMessageArg => ReactElement] = None,
+      isSearchable: Boolean = true,
       isClearable: Boolean = false,
       autoFocus: Boolean = false,
       menuPlacement: String = "auto", // "auto" / "bottom" / "top"
@@ -37,6 +38,7 @@ object Select extends ExternalComponent {
       formatOptionLabel: Option[SelectOption => ReactElement] = None,
       isLoading: Boolean = false,
       noOptionsMessage: Option[NoOptionsMessageArg => ReactElement] = None,
+      isSearchable: Boolean = true,
       isClearable: Boolean = false,
       autoFocus: Boolean = false,
       menuPlacement: String = "auto",
@@ -54,6 +56,7 @@ object Select extends ExternalComponent {
         formatOptionLabel,
         isLoading,
         noOptionsMessage,
+        isSearchable,
         isClearable,
         autoFocus,
         menuPlacement,
