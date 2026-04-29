@@ -5,7 +5,6 @@ import scala.util.chaining._
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import marubinotto.facade.Nullable
 import marubinotto.fui.{Browser, Cmd}
 import marubinotto.components.{materialSymbol, ScrollArea, Select}
 
@@ -13,7 +12,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Ito}
 import cotoami.repository.Root
 import cotoami.backend.{CotoBackend, ErrorJson}
-import cotoami.subparts.{PartsCoto, PartsNode}
+import cotoami.subparts.{PartsCoto, PartsNode, SelectCotonoma}
 import cotoami.subparts.EditorCoto._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
@@ -252,8 +251,7 @@ object ModelessSubcoto {
     section(className := "post")(
       div(className := "post-to")(
         div(className := "label")(s"${context.i18n.text.PostTo}:"),
-        Select(
-          className = "cotonoma-select",
+        SelectCotonoma(
           placeholder = Some(s"${context.i18n.text.PostTo}..."),
           menuPlacement = "top",
           options = model.targetCotonomas,
@@ -262,7 +260,7 @@ object ModelessSubcoto {
           onChange = Some((option, _) => {
             dispatch(
               Msg.TargetCotonomaSelected(
-                Nullable.toOption(option).map(_.asInstanceOf[TargetCotonoma])
+                option.map(_.asInstanceOf[TargetCotonoma])
               )
             )
           })

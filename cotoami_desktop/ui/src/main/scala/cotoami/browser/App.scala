@@ -14,7 +14,6 @@ import slinky.core.facade.ReactElement
 import slinky.web.ReactDOMClient
 import slinky.web.html._
 
-import marubinotto.facade.Nullable
 import marubinotto.fui.{Browser, Cmd, Program, Sub}
 import marubinotto.components.Select
 import marubinotto.libs.tauri
@@ -36,6 +35,7 @@ import cotoami.models.{Cotonoma, Id, I18n, Node, UiState}
 import cotoami.repository.Root
 import cotoami.subparts.{
   PartsNode,
+  SelectCotonoma,
   SectionFlowInput,
   SectionGeomap,
   SectionTimeline
@@ -473,8 +473,8 @@ object App {
   ): ReactElement = {
     val focused =
       app.repo.cotonomas.focused.map(new CotonomaSelect.CotonomaOption(_))
-    Select(
-      className = "cotonoma-select browser-cotonoma-select",
+    SelectCotonoma(
+      className = "browser-cotonoma-select",
       options = model.options,
       placeholder = Some(app.i18n.text.Cotonoma),
       value = focused,
@@ -504,8 +504,9 @@ object App {
         dispatch(
           Msg.CotonomaSelectMsg(
             CotonomaSelect.Msg.Selected(
-              Nullable.toOption(option)
-                .map(_.asInstanceOf[CotonomaSelect.CotonomaOption].cotonoma)
+              option.map(
+                _.asInstanceOf[CotonomaSelect.CotonomaOption].cotonoma
+              )
             )
           )
         )
