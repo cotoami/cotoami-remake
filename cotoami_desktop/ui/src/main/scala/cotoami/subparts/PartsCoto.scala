@@ -305,7 +305,7 @@ object PartsCoto {
             if (isPlainLeftClick && tauri.isSupportedBrowserUrl(href)) {
               e.preventDefault()
               e.stopPropagation()
-              tauri.openUrlInNewWindow(
+              cotoami.browser.openUrlInBrowser(
                 href,
                 Some(context.i18n.locale.toLanguageTag()),
                 context.databaseFolder,

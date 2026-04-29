@@ -150,7 +150,7 @@ object AppHeader {
         symbol = "language",
         tip = Some(context.i18n.text.OpenBrowser),
         onClick = _ =>
-          tauri.openUrlInNewWindow(
+          cotoami.browser.openUrlInNewWindow(
             "https://cotoami.app/",
             Some(context.i18n.locale.toLanguageTag()),
             context.databaseFolder,
