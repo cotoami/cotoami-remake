@@ -318,7 +318,10 @@ object App {
         model = model,
         text = model.app.i18n.text,
         timeline = props.databaseFolder.map(_ =>
-          SectionTimeline(model.app.timeline)
+          SectionTimeline(
+            model.app.timeline,
+            SectionTimeline.Options(showItoTraversalParts = false)
+          )
             .getOrElse(div(className := "browser-timeline-empty")())
         ),
         timelineOpened = timelineOpened,

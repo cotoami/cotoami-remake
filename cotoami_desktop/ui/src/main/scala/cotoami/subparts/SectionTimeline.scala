@@ -353,8 +353,13 @@ object SectionTimeline {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
+  case class Options(
+      showItoTraversalParts: Boolean = true
+  )
+
   def apply(
-      model: Model
+      model: Model,
+      options: Options = Options()
   )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
@@ -364,7 +369,7 @@ object SectionTimeline {
       Option.when(
         !model.queryInput.isBlank || !cotos.isEmpty || !model.waitingPosts.isEmpty
       )(
-        sectionTimeline(model, cotos, cotonomaId)
+        sectionTimeline(model, cotos, cotonomaId, options)
       )
     )
   }
@@ -372,7 +377,8 @@ object SectionTimeline {
   private def sectionTimeline(
       model: Model,
       cotos: Seq[Coto],
-      currentCotonomaId: Id[Cotonoma]
+      currentCotonomaId: Id[Cotonoma],
+      options: Options
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "timeline header-and-body")(
       headerTools(model),
@@ -399,7 +405,7 @@ object SectionTimeline {
             (model.waitingPosts.posts.map(sectionWaitingPost) ++
               cotos.map { coto =>
                 Flipped(key = coto.id.uuid, flipId = coto.id.uuid)(
-                  sectionPost(coto)
+                  sectionPost(coto, options)
                 ): ReactElement
               } :+
               div(
@@ -474,15 +480,16 @@ object SectionTimeline {
     )
 
   private def sectionPost(
-      post: Coto
+      post: Coto,
+      options: Options
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     section(className := "post flow-entry")(
       context.repo.cotos.getOriginal(post)
-        .map(articleCoto(_, post))
+        .map(articleCoto(_, post, options))
     )
   }
 
-  private def articleCoto(coto: Coto, post: Coto)(using
+  private def articleCoto(coto: Coto, post: Coto, options: Options)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
@@ -493,11 +500,13 @@ object SectionTimeline {
       ),
       ToolbarCoto(coto),
       sectionRepostHeader(post),
-      PartsCoto.ulParents(
-        repo.parentsOf(coto.id),
-        coto => AppMsg.FocusCoto(coto.id),
-        true
-      ),
+      Option.when(options.showItoTraversalParts) {
+        PartsCoto.ulParents(
+          repo.parentsOf(coto.id),
+          coto => AppMsg.FocusCoto(coto.id),
+          true
+        )
+      }.flatten,
       header()(
         PartsCoto.divAttributes(coto),
         PartsCoto.addressRemoteAuthor(coto)
@@ -507,7 +516,12 @@ object SectionTimeline {
       ),
       PartsCoto.articleFooter(coto),
       div(className := "padding-bottom")(
-        PartsCoto.divOpenDetailsButton(coto, coto => AppMsg.FocusCoto(coto.id))
+        Option.when(options.showItoTraversalParts) {
+          PartsCoto.divOpenDetailsButton(
+            coto,
+            coto => AppMsg.FocusCoto(coto.id)
+          )
+        }.flatten
       )
     )
   }
