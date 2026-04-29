@@ -238,7 +238,7 @@ object ja extends Text {
   val ModalRepost_title = "リポスト"
   val ModalRepost_repostTo = "リポスト先"
   val ModalRepost_typeCotonomaName = "コトノマ名を入力"
-  val ModalRepost_newCotonoma = "新規コトノマ"
+  val SelectCotonoma_newCotonoma = "新規コトノマ"
   val ModalRepost_root = "ノードルート"
   val ModalRepost_alreadyPostedIn = "投稿済みのコトノマ"
 

@@ -229,24 +229,6 @@ div.browser-shell {
       .browser-cotonoma-select {
         width: 100%;
         font-size: 0.9rem;
-
-        .browser-cotonoma-option {
-          display: flex;
-          align-items: center;
-          gap: 0.45rem;
-          min-width: 0;
-
-          img.node-icon {
-            flex-shrink: 0;
-          }
-
-          span {
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
-        }
       }
 
       section.timeline {

@@ -15,7 +15,6 @@ import slinky.web.ReactDOMClient
 import slinky.web.html._
 
 import marubinotto.fui.{Browser, Cmd, Program, Sub}
-import marubinotto.components.Select
 import marubinotto.libs.tauri
 
 import cotoami.{
@@ -34,12 +33,12 @@ import cotoami.backend.CotonomaBackend
 import cotoami.models.{Cotonoma, Id, I18n, Node, UiState}
 import cotoami.repository.Root
 import cotoami.subparts.{
-  PartsNode,
   SelectCotonoma,
   SectionFlowInput,
   SectionGeomap,
   SectionTimeline
 }
+import cotoami.subparts.SelectCotonoma.ExistingCotonoma
 import cotoami.updates.{Changelog, DatabaseFocus}
 
 object App {
@@ -96,7 +95,7 @@ object App {
   object CotonomaSelect {
     case class Model(
         query: String = "",
-        options: Seq[CotonomaOption] = Seq.empty,
+        options: Seq[ExistingCotonoma] = Seq.empty,
         loading: Boolean = false
     )
 
@@ -108,12 +107,6 @@ object App {
           result: Either[ErrorJson, js.Array[Cotonoma]]
       ) extends Msg
       case class Selected(cotonoma: scala.Option[Cotonoma]) extends Msg
-    }
-
-    class CotonomaOption(val cotonoma: Cotonoma) extends Select.SelectOption {
-      val value: String = cotonoma.id.uuid
-      val label: String = cotonoma.name
-      val isDisabled: Boolean = false
     }
   }
 
@@ -352,7 +345,7 @@ object App {
           model.copy(cotonomaSelect =
             select.copy(
               options =
-                cotonomas.map(new CotonomaSelect.CotonomaOption(_)).toSeq,
+                cotonomas.map(new ExistingCotonoma(_)).toSeq,
               loading = false
             )
           ),
@@ -471,8 +464,9 @@ object App {
       app: CotoamiModel,
       dispatch: Msg => Unit
   ): ReactElement = {
+    given Context = app
     val focused =
-      app.repo.cotonomas.focused.map(new CotonomaSelect.CotonomaOption(_))
+      app.repo.cotonomas.focused.map(new ExistingCotonoma(_))
     SelectCotonoma(
       className = "browser-cotonoma-select",
       options = model.options,
@@ -487,26 +481,15 @@ object App {
       }),
       noOptionsMessage =
         Some(_ => div()(app.i18n.text.ModalRepost_typeCotonomaName)),
-      formatOptionLabel = Some(option =>
-        div(className := "browser-cotonoma-option")(
-          option match {
-            case option: CotonomaSelect.CotonomaOption =>
-              app.repo.nodes.get(option.cotonoma.nodeId)
-                .map(PartsNode.imgNode(_))
-            case _ => None
-          },
-          span()(option.label)
-        )
-      ),
       isLoading = model.loading,
       isClearable = true,
       onChange = Some((option, _) => {
         dispatch(
           Msg.CotonomaSelectMsg(
             CotonomaSelect.Msg.Selected(
-              option.map(
-                _.asInstanceOf[CotonomaSelect.CotonomaOption].cotonoma
-              )
+              option.collect { case option: ExistingCotonoma =>
+                option.cotonoma
+              }
             )
           )
         )

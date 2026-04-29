@@ -240,7 +240,7 @@ object zh_tw extends Text {
   val ModalRepost_title = "轉發"
   val ModalRepost_repostTo = "轉發到"
   val ModalRepost_typeCotonomaName = "輸入 Cotonoma 名稱"
-  val ModalRepost_newCotonoma = "新 Cotonoma"
+  val SelectCotonoma_newCotonoma = "新 Cotonoma"
   val ModalRepost_root = "根"
   val ModalRepost_alreadyPostedIn = "已發布在"
 
