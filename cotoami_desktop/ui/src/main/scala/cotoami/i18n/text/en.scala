@@ -240,7 +240,7 @@ object en extends Text {
   val ModalRepost_title = "Repost"
   val ModalRepost_repostTo = "Repost to"
   val ModalRepost_typeCotonomaName = "Type cotonoma name"
-  val ModalRepost_newCotonoma = "New cotonoma"
+  val SelectCotonoma_newCotonoma = "New cotonoma"
   val ModalRepost_root = "root"
   val ModalRepost_alreadyPostedIn = "Already posted in"
 

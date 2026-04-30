@@ -5,16 +5,15 @@ import scala.util.chaining._
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import marubinotto.facade.Nullable
 import marubinotto.fui.{Browser, Cmd}
-import marubinotto.components.{materialSymbol, ScrollArea, Select}
+import marubinotto.components.{materialSymbol, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Ito}
-import cotoami.repository.Root
 import cotoami.backend.{CotoBackend, ErrorJson}
-import cotoami.subparts.{PartsCoto, PartsNode}
+import cotoami.subparts.{PartsCoto, SelectCotonoma}
 import cotoami.subparts.EditorCoto._
+import cotoami.subparts.SelectCotonoma.ExistingCotonoma
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object ModelessSubcoto {
@@ -23,8 +22,8 @@ object ModelessSubcoto {
 
   case class Model(
       sourceCotoId: Id[Coto],
-      targetCotonomas: Seq[TargetCotonoma],
-      postTo: Option[TargetCotonoma],
+      targetCotonomas: Seq[ExistingCotonoma],
+      postTo: Option[ExistingCotonoma],
       order: Option[Int] = None,
       cotoForm: CotoForm.Model = CotoForm.Model(),
       posting: Boolean = false,
@@ -48,15 +47,6 @@ object ModelessSubcoto {
           .getOrElse(Cmd.none)
           .map(Msg.Posted(_).into)
       )
-  }
-
-  class TargetCotonoma(
-      val cotonoma: Cotonoma,
-      val disabled: Boolean = false
-  ) extends Select.SelectOption {
-    val value: String = cotonoma.id.uuid
-    val label: String = cotonoma.name
-    val isDisabled: Boolean = disabled
   }
 
   object Model {
@@ -86,7 +76,7 @@ object ModelessSubcoto {
 
       val targetCotonomas =
         targetCotonomaIds.map(repo.cotonomas.get).flatten.map(cotonoma =>
-          new TargetCotonoma(
+          new ExistingCotonoma(
             cotonoma,
             !repo.canPostCotoTo(cotonoma) ||
               !repo.nodes.canEditItosIn(cotonoma.nodeId)
@@ -115,7 +105,7 @@ object ModelessSubcoto {
     case object Focus extends Msg
     case object Close extends Msg
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
-    case class TargetCotonomaSelected(dest: Option[TargetCotonoma]) extends Msg
+    case class TargetCotonomaSelected(dest: Option[ExistingCotonoma]) extends Msg
     case object Post extends Msg
     case class Posted(result: Either[ErrorJson, (Coto, Ito)]) extends Msg
   }
@@ -252,17 +242,20 @@ object ModelessSubcoto {
     section(className := "post")(
       div(className := "post-to")(
         div(className := "label")(s"${context.i18n.text.PostTo}:"),
-        Select(
-          className = "cotonoma-select",
+        SelectCotonoma(
           placeholder = Some(s"${context.i18n.text.PostTo}..."),
           menuPlacement = "top",
           options = model.targetCotonomas,
-          formatOptionLabel = Some(divSelectOption(_, context.repo)),
+          currentCotonomaId = context.repo.currentCotonomaId,
+          currentMarkLabel = Some("current"),
+          isSearchable = false,
           value = model.postTo,
           onChange = Some((option, _) => {
             dispatch(
               Msg.TargetCotonomaSelected(
-                Nullable.toOption(option).map(_.asInstanceOf[TargetCotonoma])
+                option.collect { case option: ExistingCotonoma =>
+                  option
+                }
               )
             )
           })
@@ -285,17 +278,4 @@ object ModelessSubcoto {
       )
     )
 
-  private def divSelectOption(
-      option: Select.SelectOption,
-      repo: Root
-  ): ReactElement = {
-    val target = option.asInstanceOf[TargetCotonoma]
-    div(className := "target-cotonoma")(
-      repo.nodes.get(target.cotonoma.nodeId).map(PartsNode.imgNode(_)),
-      span(className := "cotonoma-name")(target.cotonoma.name),
-      Option.when(Some(target.cotonoma.id) == repo.currentCotonomaId) {
-        span(className := "current-mark")("(current)")
-      }
-    )
-  }
 }

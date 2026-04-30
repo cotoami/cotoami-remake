@@ -242,7 +242,7 @@ object es extends Text {
   val ModalRepost_title = "Republicar"
   val ModalRepost_repostTo = "Republicar en"
   val ModalRepost_typeCotonomaName = "Escriba el nombre del cotonoma"
-  val ModalRepost_newCotonoma = "Nuevo cotonoma"
+  val SelectCotonoma_newCotonoma = "Nuevo cotonoma"
   val ModalRepost_root = "raíz"
   val ModalRepost_alreadyPostedIn = "Ya publicado en"
 

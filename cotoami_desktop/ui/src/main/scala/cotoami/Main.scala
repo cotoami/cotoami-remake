@@ -51,7 +51,7 @@ object Main {
         val container = dom.document.getElementById("app")
         val currentUrl = new URL(dom.window.location.href)
         if (BrowserApp.isCurrentWindow(currentUrl)) {
-          IO(BrowserApp.mount(container))
+          BrowserApp.run(container, dispatcher)
         } else {
           Browser.runProgram(
             container,
@@ -205,7 +205,14 @@ object Main {
         model
           .pipe(updates.uiState(_.copy(theme = theme)))
           .pipe { case (model, cmd) =>
-            (model, Cmd.Batch(cmd, Browser.setHtmlTheme(theme)))
+            (
+              model,
+              Cmd.Batch(
+                cmd,
+                Browser.setHtmlTheme(theme),
+                BrowserApp.emitTheme(theme)
+              )
+            )
           }
 
       case Msg.SetPaneOpen(name, open) =>
@@ -592,12 +599,14 @@ object Main {
       case Route.index(_) =>
         model
           .pipe(DatabaseFocus.node(None))
+          .pipe(addCmd(BrowserApp.emitDatabaseFocus))
           .pipe(addCmd(_ => focusCoto))
 
       case Route.node(id) =>
         if (model.repo.nodes.contains(id))
           model
             .pipe(DatabaseFocus.node(Some(id)))
+            .pipe(addCmd(BrowserApp.emitDatabaseFocus))
             .pipe(addCmd(_ => focusCoto))
         else
           (model, Browser.pushUrl(Route.index.url(())))
@@ -605,11 +614,13 @@ object Main {
       case Route.cotonoma(id) =>
         model
           .pipe(DatabaseFocus.cotonoma(None, id))
+          .pipe(addCmd(BrowserApp.emitDatabaseFocus))
           .pipe(addCmd(_ => focusCoto))
 
       case Route.cotonomaInNode((nodeId, cotonomaId)) =>
         model
           .pipe(DatabaseFocus.cotonoma(Some(nodeId), cotonomaId))
+          .pipe(addCmd(BrowserApp.emitDatabaseFocus))
           .pipe(addCmd(_ => focusCoto))
 
       case _ =>

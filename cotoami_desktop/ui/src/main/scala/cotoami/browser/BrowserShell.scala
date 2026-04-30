@@ -11,15 +11,24 @@ import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 import slinky.core._
 import slinky.core.facade.Hooks._
-import slinky.core.facade.ReactRef
+import slinky.core.facade.{ReactElement, ReactRef}
 import slinky.web.html._
 
-import marubinotto.components.materialSymbol
+import marubinotto.optionalClasses
+import marubinotto.components.{
+  CollapseDirection,
+  SplitPane,
+  materialSymbol,
+  paneToggle
+}
 import marubinotto.libs.tauri
 
 import cotoami.i18n.Text
 
 object BrowserShell {
+
+  final val TimelinePaneName = "BrowserTimeline"
+  final val DefaultTimelineWidth = 380
 
   private val ToolbarHeight = 54.0
   private val ResizeSettleMs = 50.0
@@ -43,6 +52,12 @@ object BrowserShell {
       initialUrl: String,
       model: App.Model,
       text: Text,
+      timeline: Option[ReactElement],
+      cotonomaSelect: Option[ReactElement],
+      timelineOpened: Boolean,
+      timelineWidth: Int,
+      onTimelineOpenChange: Boolean => Unit,
+      onTimelineWidthChange: Int => Unit,
       onStateChange: (String, Option[String]) => Unit
   )
 
@@ -92,6 +107,9 @@ object BrowserShell {
         .orElse(Some(duckDuckGoSearchUrl(trimmed)))
   }
 
+  private def optionString(value: js.UndefOr[String]): Option[String] =
+    value.toOption.flatMap(Option(_))
+
   private def windowTitle(url: String, pageTitle: Option[String]): String =
     pageTitle
       .map(_.trim)
@@ -114,12 +132,13 @@ object BrowserShell {
       editingRef: ReactRef[Boolean],
       currentWindowTitleRef: ReactRef[String]
   ): Unit = {
+    val title = optionString(state.title)
     setActualUrl(state.url)
     if (!editingRef.current)
       setDraftUrl(state.url)
-    setTitle(state.title.toOption)
+    setTitle(title)
     setLoading(state.is_loading)
-    val nextWindowTitle = windowTitle(state.url, state.title.toOption)
+    val nextWindowTitle = windowTitle(state.url, title)
     if (currentWindowTitleRef.current != nextWindowTitle) {
       currentWindowTitleRef.current = nextWindowTitle
       tauri.window.getCurrentWindow().setTitle(nextWindowTitle)
@@ -139,6 +158,7 @@ object BrowserShell {
     val editingRef = useRef(false)
     val windowTitleRef = useRef(windowTitle(props.initialUrl, props.model.title))
     val toolbarRef = useRef[html.Element](null)
+    val webviewSlotRef = useRef[html.Element](null)
     val windowViewportInsetTopRef = useRef(0.0)
     val (toolbarHeight, setToolbarHeightRaw) = useState(ToolbarHeight)
 
@@ -189,13 +209,20 @@ object BrowserShell {
 
     def browserBoundsArgs: js.Object = {
       val measuredToolbarHeight = currentToolbarHeight
+      val slotBounds =
+        Option(webviewSlotRef.current).map(_.getBoundingClientRect())
       jso(
         contentLabel = props.contentLabel,
-        x = 0,
-        y = measuredToolbarHeight + currentWindowViewportInsetTop,
-        width = dom.window.innerWidth.toDouble,
-        height =
-          (dom.window.innerHeight.toDouble - measuredToolbarHeight).max(1.0)
+        x = slotBounds.map(_.left).getOrElse(0.0),
+        y = slotBounds
+          .map(_.top + currentWindowViewportInsetTop)
+          .getOrElse(measuredToolbarHeight + currentWindowViewportInsetTop),
+        width = slotBounds.map(_.width).getOrElse(dom.window.innerWidth.toDouble),
+        height = slotBounds
+          .map(_.height)
+          .getOrElse(
+            (dom.window.innerHeight.toDouble - measuredToolbarHeight).max(1.0)
+          )
       )
     }
 
@@ -433,11 +460,97 @@ object BrowserShell {
         resizeBrowserView()
         () => ()
       },
-      Seq(props.contentLabel, toolbarHeight)
+      Seq(
+        props.contentLabel,
+        toolbarHeight,
+        props.timelineOpened,
+        props.timelineWidth
+      )
+    )
+
+    useEffect(
+      () => {
+        val slot = webviewSlotRef.current
+        if (slot == null) () => ()
+        else {
+          var resizeAnimationFrameId: Option[Int] = None
+
+          val scheduleBrowserResize = () =>
+            if (resizeAnimationFrameId.isEmpty) {
+              resizeAnimationFrameId = Some(
+                dom.window.requestAnimationFrame(_ => {
+                  resizeAnimationFrameId = None
+                  resizeBrowserView()
+                })
+              )
+            }
+
+          val observer =
+            new dom.ResizeObserver((_, _) => scheduleBrowserResize())
+          observer.observe(slot)
+          scheduleBrowserResize()
+
+          () => {
+            resizeAnimationFrameId.foreach(dom.window.cancelAnimationFrame)
+            observer.disconnect()
+          }
+        }
+      },
+      Seq(props.contentLabel, props.timelineOpened, props.timelineWidth)
     )
 
     val secure = actualUrl.startsWith("https://")
     val addressIcon = if (secure) "lock" else "language"
+
+    val browserWebviewSlot =
+      div(className := "browser-webview-slot", ref := webviewSlotRef)(
+        div(className := "browser-webview-placeholder")(
+          if (loading) props.text.BrowserShell_loadingPage
+          else props.text.BrowserShell_pageReady
+        )
+      )
+
+    val browserSurfaceContent =
+      props.timeline.map(timeline =>
+        SplitPane(
+          vertical = true,
+          reverse = true,
+          initialPrimarySize = props.timelineWidth,
+          resizable = props.timelineOpened,
+          className = Some("browser-main"),
+          onResizeEnd = Some(() => resizeBrowserView()),
+          onPrimarySizeChanged = Some(props.onTimelineWidthChange),
+          primary = SplitPane.Primary.Props(
+            className = Some(
+              optionalClasses(
+                Seq(
+                  ("browser-timeline", true),
+                  ("pane", true),
+                  ("folded", !props.timelineOpened)
+                )
+              )
+            ),
+            onClick = Option.when(!props.timelineOpened) { () =>
+              props.onTimelineOpenChange(true)
+            }
+          )(
+            paneToggle(
+              onFoldClick = () => props.onTimelineOpenChange(false),
+              onUnfoldClick = () => props.onTimelineOpenChange(true),
+              direction = CollapseDirection.ToRight
+            ),
+            props.cotonomaSelect.map(select =>
+              div(className := "browser-timeline-focus")(select)
+            ),
+            timeline
+          ),
+          secondary = SplitPane.Secondary.Props(
+            className = Some("browser-content")
+          )(
+            browserWebviewSlot
+          )
+        ).withKey(s"${props.timelineOpened}-${props.timelineWidth}")
+      ).getOrElse(browserWebviewSlot)
 
     div(className := "browser-shell")(
       header(className := "browser-toolbar", ref := toolbarRef)(
@@ -503,15 +616,25 @@ object BrowserShell {
               title := props.text.BrowserShell_go,
               onMouseDown := (e => e.preventDefault())
             )(materialSymbol("arrow_outward"))
-          )
+          ),
+          Option.when(props.timeline.nonEmpty && !props.timelineOpened) {
+            button(
+              className := "browser-action cotoami-timeline-toggle",
+              `type` := "button",
+              title := "Cotoami timeline",
+              onClick := (_ => props.onTimelineOpenChange(true))
+            )(
+              img(
+                alt := "",
+                src := "/images/logo/logomark.svg"
+              )
+            )
+          }
         ),
         error.map(message => div(className := "browser-error")(message))
       ),
       main(className := "browser-surface")(
-        div(className := "browser-webview-placeholder")(
-          if (loading) props.text.BrowserShell_loadingPage
-          else props.text.BrowserShell_pageReady
-        )
+        browserSurfaceContent
       )
     )
   }

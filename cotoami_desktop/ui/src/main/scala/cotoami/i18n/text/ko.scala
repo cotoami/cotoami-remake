@@ -240,7 +240,7 @@ object ko extends Text {
   val ModalRepost_title = "재게시"
   val ModalRepost_repostTo = "재게시 위치"
   val ModalRepost_typeCotonomaName = "Cotonoma 이름 입력"
-  val ModalRepost_newCotonoma = "새 Cotonoma"
+  val SelectCotonoma_newCotonoma = "새 Cotonoma"
   val ModalRepost_root = "루트"
   val ModalRepost_alreadyPostedIn = "이미 게시됨"
 

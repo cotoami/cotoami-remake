@@ -305,9 +305,13 @@ object PartsCoto {
             if (isPlainLeftClick && tauri.isSupportedBrowserUrl(href)) {
               e.preventDefault()
               e.stopPropagation()
-              tauri.openUrlInNewWindow(
+              cotoami.browser.openUrlInBrowser(
                 href,
-                Some(context.i18n.locale.toLanguageTag())
+                Some(context.i18n.locale.toLanguageTag()),
+                context.databaseFolder,
+                context.repo.nodes.focusedId.map(_.uuid),
+                context.repo.cotonomas.focusedId.map(_.uuid),
+                context.uiState.map(_.theme)
               )
             }
           }): js.Function1[js.Dynamic, Unit]

@@ -131,16 +131,4 @@ package object tauri {
 
   def isSupportedBrowserUrl(url: String): Boolean =
     browserUrl(url).isDefined
-
-  def openUrlInNewWindow(url: String, locale: Option[String] = None): Unit =
-    browserUrl(url).foreach { parsed =>
-      core.invoke[Unit](
-        "open_browser_window",
-        js.Dynamic.literal(
-          url = parsed.href,
-          locale = locale.orUndefined
-        )
-      )
-      ()
-    }
 }

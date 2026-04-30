@@ -7,14 +7,18 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import marubinotto.fui.Cmd
-import marubinotto.facade.Nullable
-import marubinotto.components.{materialSymbol, ScrollArea, Select}
+import marubinotto.components.{materialSymbol, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Node}
 import cotoami.repository.{Cotonomas, Nodes, Root}
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
-import cotoami.subparts.{Modal, PartsCoto, PartsNode}
+import cotoami.subparts.{Modal, PartsCoto, PartsNode, SelectCotonoma}
+import cotoami.subparts.SelectCotonoma.{
+  CotonomaOption,
+  ExistingCotonoma,
+  NewCotonoma
+}
 
 object ModalRepost {
 
@@ -27,9 +31,9 @@ object ModalRepost {
       originalCoto: Coto,
       alreadyPostedIn: Seq[Cotonoma],
       query: String = "",
-      options: Seq[Destination] = Seq.empty,
+      options: Seq[CotonomaOption] = Seq.empty,
       optionsLoading: Boolean = false,
-      dest: Option[Destination] = None,
+      dest: Option[CotonomaOption] = None,
       reposting: Boolean = false,
       error: Option[String] = None
   ) {
@@ -54,29 +58,6 @@ object ModalRepost {
       }
   }
 
-  sealed trait Destination extends Select.SelectOption
-
-  class ExistingCotonoma(
-      val cotonoma: Cotonoma,
-      val disabled: Boolean = false
-  ) extends Destination {
-    val value: String = s"cotonoma:${cotonoma.id}"
-    val label: String = cotonoma.name
-    val isDisabled: Boolean = disabled
-  }
-
-  class NewCotonoma(
-      val name: String,
-      // While we want to use the `Id[Node]` type here, but the type can't be restored
-      // when passed back from the Select component. (Probably since it's an AnyVal the
-      // type information would be lost).
-      val targetNodeId: String
-  ) extends Destination {
-    val value: String = s"new-cotonoma:${name}:${targetNodeId}"
-    val label: String = name
-    val isDisabled: Boolean = false
-  }
-
   /////////////////////////////////////////////////////////////////////////////
   // Update
   /////////////////////////////////////////////////////////////////////////////
@@ -92,7 +73,7 @@ object ModalRepost {
         query: String,
         result: Either[ErrorJson, js.Array[Cotonoma]]
     ) extends Msg
-    case class DestinationSelected(dest: Option[Destination]) extends Msg
+    case class CotonomaSelected(cotonoma: Option[CotonomaOption]) extends Msg
     case object Repost extends Msg
     case class CotonomaCreated(result: Either[ErrorJson, (Cotonoma, Coto)])
         extends Msg
@@ -156,7 +137,7 @@ object ModalRepost {
           )
         )
 
-      case Msg.DestinationSelected(dest) =>
+      case Msg.CotonomaSelected(dest) =>
         default.copy(_1 =
           model.copy(
             dest = dest,
@@ -249,8 +230,7 @@ object ModalRepost {
       context.i18n.text.ModalRepost_title
     )(
       section(className := "repost-form")(
-        Select(
-          className = "cotonoma-select",
+        SelectCotonoma(
           options = model.options,
           placeholder = Some(s"${context.i18n.text.ModalRepost_repostTo}..."),
           value = model.dest,
@@ -263,16 +243,14 @@ object ModalRepost {
           }),
           noOptionsMessage =
             Some(_ => div()(context.i18n.text.ModalRepost_typeCotonomaName)),
-          formatOptionLabel = Some(divSelectOption(_, context.repo.nodes)),
+          allowNewCotonomas = true,
+          showRootMark = true,
+          rootMarkLabel = Some(context.i18n.text.ModalRepost_root),
           isLoading = model.optionsLoading,
           isClearable = true,
           autoFocus = true,
           onChange = Some((option, _) => {
-            dispatch(
-              Msg.DestinationSelected(
-                Nullable.toOption(option).map(_.asInstanceOf[Destination])
-              )
-            )
+            dispatch(Msg.CotonomaSelected(option))
           })
         ),
         button(
@@ -286,30 +264,6 @@ object ModalRepost {
       articleCoto(model.originalCoto),
       sectionAlreadyPostedIn(model)
     )
-
-  private def divSelectOption(
-      option: Select.SelectOption,
-      nodes: Nodes
-  )(using context: Context): ReactElement = {
-    val dest = option.asInstanceOf[Destination]
-    dest match {
-      case dest: ExistingCotonoma =>
-        div(className := "existing-cotonoma")(
-          nodes.get(dest.cotonoma.nodeId).map(PartsNode.imgNode(_)),
-          span(className := "cotonoma-name")(dest.cotonoma.name),
-          spanRootCotonomaMark(dest.cotonoma, nodes)
-        )
-
-      case dest: NewCotonoma =>
-        div(className := "new-cotonoma")(
-          span(className := "description")(
-            s"${context.i18n.text.ModalRepost_newCotonoma}:"
-          ),
-          nodes.get(Id(dest.targetNodeId)).map(PartsNode.imgNode(_)),
-          span(className := "cotonoma-name")(dest.name)
-        )
-    }
-  }
 
   private def articleCoto(
       coto: Coto

@@ -5,7 +5,6 @@ import slinky.web.html._
 
 import marubinotto.optionalClasses
 import marubinotto.components.{materialSymbol, shiftToolButton, toolButton}
-import marubinotto.libs.tauri
 
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Cotonoma, Node, UiState}
@@ -150,9 +149,13 @@ object AppHeader {
         symbol = "language",
         tip = Some(context.i18n.text.OpenBrowser),
         onClick = _ =>
-          tauri.openUrlInNewWindow(
+          cotoami.browser.openUrlInNewWindow(
             "https://cotoami.app/",
-            Some(context.i18n.locale.toLanguageTag())
+            Some(context.i18n.locale.toLanguageTag()),
+            context.databaseFolder,
+            context.repo.nodes.focusedId.map(_.uuid),
+            context.repo.cotonomas.focusedId.map(_.uuid),
+            context.uiState.map(_.theme)
           )
       ),
       buttonGeomap(uiState),

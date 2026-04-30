@@ -187,9 +187,10 @@ trait Text {
   val ModalRepost_title: String
   val ModalRepost_repostTo: String
   val ModalRepost_typeCotonomaName: String
-  val ModalRepost_newCotonoma: String
   val ModalRepost_root: String
   val ModalRepost_alreadyPostedIn: String
+
+  val SelectCotonoma_newCotonoma: String
 
   val ModalClients_title: String
   val ModalClients_add: String

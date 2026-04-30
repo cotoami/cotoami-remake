@@ -117,7 +117,15 @@ fn next_browser_labels() -> (String, String) {
     )
 }
 
-fn browser_shell_path(content_label: &str, initial_url: &str, locale: Option<&str>) -> String {
+fn browser_shell_path(
+    content_label: &str,
+    initial_url: &str,
+    locale: Option<&str>,
+    database_folder: Option<&str>,
+    focused_node_id: Option<&str>,
+    focused_cotonoma_id: Option<&str>,
+    theme: Option<&str>,
+) -> String {
     let mut params = tauri::Url::parse("https://browser-shell.local/")
         .expect("static browser shell URL must be valid");
     let mut query_pairs = params.query_pairs_mut();
@@ -128,6 +136,18 @@ fn browser_shell_path(content_label: &str, initial_url: &str, locale: Option<&st
     if let Some(locale) = locale.filter(|locale| !locale.is_empty()) {
         query_pairs.append_pair("locale", locale);
     }
+    if let Some(database_folder) = database_folder.filter(|folder| !folder.is_empty()) {
+        query_pairs.append_pair("databaseFolder", database_folder);
+    }
+    if let Some(focused_node_id) = focused_node_id.filter(|id| !id.is_empty()) {
+        query_pairs.append_pair("focusedNodeId", focused_node_id);
+    }
+    if let Some(focused_cotonoma_id) = focused_cotonoma_id.filter(|id| !id.is_empty()) {
+        query_pairs.append_pair("focusedCotonomaId", focused_cotonoma_id);
+    }
+    if let Some(theme) = theme.filter(|theme| !theme.is_empty()) {
+        query_pairs.append_pair("theme", theme);
+    }
     drop(query_pairs);
     format!("index.html?{}", params.query().unwrap_or_default())
 }
@@ -136,12 +156,27 @@ fn open_browser_window_internal(
     app_handle: &AppHandle,
     url: &tauri::Url,
     locale: Option<&str>,
+    database_folder: Option<&str>,
+    focused_node_id: Option<&str>,
+    focused_cotonoma_id: Option<&str>,
+    theme: Option<&str>,
 ) -> Result<(), Error> {
     let (shell_label, content_label) = next_browser_labels();
     tauri::WebviewWindowBuilder::new(
         app_handle,
         &shell_label,
-        WebviewUrl::App(browser_shell_path(&content_label, url.as_str(), locale).into()),
+        WebviewUrl::App(
+            browser_shell_path(
+                &content_label,
+                url.as_str(),
+                locale,
+                database_folder,
+                focused_node_id,
+                focused_cotonoma_id,
+                theme,
+            )
+            .into(),
+        ),
     )
     .title(browser_window_title(url))
     .inner_size(1200.0, 900.0)
@@ -217,9 +252,21 @@ pub fn open_browser_window(
     app_handle: AppHandle,
     url: String,
     locale: Option<String>,
+    database_folder: Option<String>,
+    focused_node_id: Option<String>,
+    focused_cotonoma_id: Option<String>,
+    theme: Option<String>,
 ) -> Result<(), Error> {
     let url = parse_browser_url(&url)?;
-    open_browser_window_internal(&app_handle, &url, locale.as_deref())
+    open_browser_window_internal(
+        &app_handle,
+        &url,
+        locale.as_deref(),
+        database_folder.as_deref(),
+        focused_node_id.as_deref(),
+        focused_cotonoma_id.as_deref(),
+        theme.as_deref(),
+    )
 }
 
 #[tauri::command]
@@ -294,7 +341,15 @@ pub fn browser_attach(
             })
             .on_new_window(move |url, _features| {
                 if matches!(url.scheme(), "http" | "https") {
-                    let _ = open_browser_window_internal(&app_for_new_window, &url, None);
+                    let _ = open_browser_window_internal(
+                        &app_for_new_window,
+                        &url,
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                    );
                 }
                 tauri::webview::NewWindowResponse::Deny
             }),

@@ -1,5 +1,7 @@
 div.browser-shell {
   --browser-toolbar-height: 54px;
+  --browser-tool-color: color-mix(in srgb, var(--contrast) 88%, var(--primary) 12%);
+  --browser-tool-hover-background: color-mix(in srgb, var(--primary) 12%, transparent);
 
   display: flex;
   flex-direction: column;
@@ -44,7 +46,7 @@ div.browser-shell {
       border: 0;
       border-radius: 999px;
       background: transparent;
-      color: var(--color);
+      color: var(--browser-tool-color);
       box-shadow: none;
       transition:
         background-color 120ms ease,
@@ -52,7 +54,7 @@ div.browser-shell {
       font-size: 1.1rem;
 
       &:hover {
-        background: color-mix(in srgb, var(--primary) 12%, transparent);
+        background: var(--browser-tool-hover-background);
         color: var(--primary);
       }
 
@@ -115,6 +117,21 @@ div.browser-shell {
       height: 1.8rem;
     }
 
+    button.browser-action.cotoami-timeline-toggle {
+      flex-shrink: 0;
+      background: color-mix(in srgb, var(--primary) 8%, var(--card-background-color));
+
+      img {
+        width: 1.1rem;
+        height: 1.1rem;
+        display: block;
+      }
+
+      &:hover {
+        background: color-mix(in srgb, var(--primary) 16%, var(--card-background-color));
+      }
+    }
+
     .browser-error {
       min-width: 0;
       overflow: hidden;
@@ -130,9 +147,28 @@ div.browser-shell {
     position: relative;
     flex: 1;
     min-height: 0;
+    display: flex;
     background:
       radial-gradient(circle at top left, color-mix(in srgb, var(--primary) 7%, transparent), transparent 35%),
       linear-gradient(180deg, color-mix(in srgb, var(--background-color) 96%, black 4%), var(--background-color));
+
+    > .split-pane.browser-main {
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+    }
+
+    .browser-content,
+    .browser-webview-slot {
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .browser-webview-slot {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
 
     .browser-webview-placeholder {
       position: absolute;
@@ -143,6 +179,73 @@ div.browser-shell {
       color: var(--muted-color);
       font-size: 0.92rem;
       letter-spacing: 0.01em;
+    }
+
+    .browser-timeline.pane {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--background-color);
+      border-left: 1px solid var(--pane-border-color);
+
+      > .pane-toggle {
+        left: 0;
+        right: auto;
+
+        button {
+          left: -1px;
+          right: auto;
+          color: var(--browser-tool-color);
+          background: transparent;
+          opacity: 0.82;
+
+          &:hover {
+            color: var(--primary);
+            background: transparent;
+            opacity: 1;
+          }
+        }
+      }
+
+      &.folded > .pane-toggle {
+        left: 0;
+
+        button.unfold {
+          span.material-symbols {
+            margin-left: -4px;
+          }
+        }
+      }
+
+      .browser-timeline-focus {
+        flex-shrink: 0;
+        padding: 0.7rem 0.8rem 0.55rem 2.25rem;
+        background:
+          color-mix(in srgb, var(--card-background-color) 84%, var(--background-color));
+      }
+
+      .browser-cotonoma-select {
+        width: 100%;
+        font-size: 0.9rem;
+      }
+
+      section.timeline {
+        flex: 1;
+        min-height: 0;
+        margin-top: 0;
+      }
+
+      section.timeline > header.tools button.default {
+        color: var(--browser-tool-color);
+
+        &:hover {
+          color: var(--primary);
+        }
+      }
+
+      .coto-toolbar {
+        display: none;
+      }
     }
   }
 }

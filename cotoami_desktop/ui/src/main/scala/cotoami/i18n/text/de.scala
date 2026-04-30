@@ -242,7 +242,7 @@ object de extends Text {
   val ModalRepost_title = "Erneut posten"
   val ModalRepost_repostTo = "Erneut posten in"
   val ModalRepost_typeCotonomaName = "Cotonoma-Name eingeben"
-  val ModalRepost_newCotonoma = "Neues Cotonoma"
+  val SelectCotonoma_newCotonoma = "Neues Cotonoma"
   val ModalRepost_root = "Wurzel"
   val ModalRepost_alreadyPostedIn = "Bereits gepostet in"
 
