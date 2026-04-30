@@ -386,7 +386,7 @@ object App {
 
       case CotonomaSelect.Msg.Selected(None) =>
         model.app
-          .pipe(DatabaseFocus.node(None))
+          .pipe(DatabaseFocus.node(model.app.repo.nodes.focusedId))
           .pipe { case (app, cmd) =>
             (
               model.copy(
@@ -466,7 +466,7 @@ object App {
   ): ReactElement = {
     given Context = app
     val focused =
-      app.repo.cotonomas.focused.map(new ExistingCotonoma(_))
+      app.repo.currentCotonoma.map(new ExistingCotonoma(_))
     SelectCotonoma(
       className = "browser-cotonoma-select",
       options = model.options,
