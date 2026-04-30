@@ -302,6 +302,9 @@ object App {
         )
       }
 
+      case AppMsg.FocusCotonoma(cotonoma) =>
+        focusCotonoma(model, cotonoma)
+
       case AppMsg.SetPaneOpen(name, open) =>
         updateUiState(model, _.setPaneOpen(name, open))
 
@@ -365,23 +368,11 @@ object App {
         (model, Cmd.none)
 
       case CotonomaSelect.Msg.Selected(Some(cotonoma)) => {
-        val appWithCotonoma = model.app.copy(
-          repo = model.app.repo.copy(
-            cotonomas = model.app.repo.cotonomas.put(cotonoma)
-          )
+        focusCotonoma(
+          model,
+          cotonoma,
+          Some(select.copy(query = "", options = Seq.empty, loading = false))
         )
-        appWithCotonoma
-          .pipe(DatabaseFocus.cotonoma(Some(cotonoma.nodeId), cotonoma.id))
-          .pipe { case (app, cmd) =>
-            (
-              model.copy(
-                app = app,
-                cotonomaSelect =
-                  select.copy(query = "", options = Seq.empty, loading = false)
-              ),
-              (cmd ++ emitDatabaseFocus(app)).map(Msg.AppMsg.apply)
-            )
-          }
       }
 
       case CotonomaSelect.Msg.Selected(None) =>
@@ -398,6 +389,29 @@ object App {
             )
           }
     }
+  }
+
+  private def focusCotonoma(
+      model: Model,
+      cotonoma: Cotonoma,
+      nextSelect: Option[CotonomaSelect.Model] = None
+  ): (Model, Cmd[Msg]) = {
+    val appWithCotonoma = model.app.copy(
+      repo = model.app.repo.copy(
+        cotonomas = model.app.repo.cotonomas.put(cotonoma)
+      )
+    )
+    appWithCotonoma
+      .pipe(DatabaseFocus.cotonoma(Some(cotonoma.nodeId), cotonoma.id))
+      .pipe { case (app, cmd) =>
+        (
+          model.copy(
+            app = app,
+            cotonomaSelect = nextSelect.getOrElse(model.cotonomaSelect)
+          ),
+          (cmd ++ emitDatabaseFocus(app)).map(Msg.AppMsg.apply)
+        )
+      }
   }
 
   private def updateUiState(
