@@ -52,6 +52,107 @@ object App {
       focusedCotonomaId: Option[Id[Cotonoma]]
   )
 
+  case class BrowserHistoryEntry(
+      url: String,
+      title: Option[String],
+      origin: String,
+      host: String,
+      path: String,
+      faviconUrl: String,
+      firstVisited: Int,
+      lastVisited: Int
+  ) {
+    def label: String =
+      title.map(_.trim).filter(_.nonEmpty).getOrElse(host)
+  }
+
+  case class BrowserHistoryGroup(
+      parent: BrowserHistoryEntry,
+      children: Seq[BrowserHistoryEntry],
+      lastVisited: Int
+  )
+
+  case class BrowserHistory(
+      entries: Seq[BrowserHistoryEntry] = Seq.empty,
+      nextVisit: Int = 1
+  ) {
+    def remember(url: String, title: Option[String]): BrowserHistory =
+      BrowserHistory.parse(url) match {
+        case Some(parsed) =>
+          val nextEntries =
+            entries.indexWhere(_.url == parsed.url) match {
+              case -1 =>
+                entries :+ BrowserHistoryEntry(
+                  url = parsed.url,
+                  title = title,
+                  origin = parsed.origin,
+                  host = parsed.host,
+                  path = parsed.path,
+                  faviconUrl = s"${parsed.origin}/favicon.ico",
+                  firstVisited = nextVisit,
+                  lastVisited = nextVisit
+                )
+              case index =>
+                entries.updated(
+                  index,
+                  entries(index).copy(
+                    title = title.orElse(entries(index).title),
+                    lastVisited = nextVisit
+                  )
+                )
+            }
+          copy(entries = nextEntries, nextVisit = nextVisit + 1)
+        case None => this
+      }
+
+    def groups: Seq[BrowserHistoryGroup] =
+      entries
+        .groupBy(_.origin)
+        .values
+        .map(entriesInOrigin => {
+          val parent = entriesInOrigin.minBy(_.firstVisited)
+          val children = entriesInOrigin
+            .filterNot(_.url == parent.url)
+            .sortBy(entry => -entry.lastVisited)
+            .toSeq
+          BrowserHistoryGroup(
+            parent,
+            children,
+            entriesInOrigin.map(_.lastVisited).max
+          )
+        })
+        .toSeq
+        .sortBy(group => -group.lastVisited)
+  }
+
+  object BrowserHistory {
+    private case class ParsedUrl(
+        url: String,
+        origin: String,
+        host: String,
+        path: String
+    )
+
+    private def parse(url: String): Option[ParsedUrl] =
+      try {
+        val parsed = new URL(url)
+        Option
+          .when(parsed.protocol == "http:" || parsed.protocol == "https:") {
+            val path = Seq(parsed.pathname, parsed.search, parsed.hash)
+              .filter(_.nonEmpty)
+              .mkString
+            ParsedUrl(
+              url = parsed.href,
+              origin = parsed.origin,
+              host = parsed.host,
+              path = if (path.nonEmpty) path else "/"
+            )
+          }
+      } catch {
+        case _: Throwable => None
+      }
+  }
+
   @js.native
   trait BrowserDatabaseFocusJson extends js.Object {
     val databaseFolder: String = js.native
@@ -71,6 +172,7 @@ object App {
       initialTheme: Option[String],
       app: CotoamiModel,
       cotonomaSelect: CotonomaSelect.Model,
+      history: BrowserHistory,
       pendingFocus: Option[BrowserDatabaseFocus],
       currentFocus: Option[BrowserDatabaseFocus]
   )
@@ -205,6 +307,7 @@ object App {
         initialTheme = props.theme,
         app = app,
         cotonomaSelect = CotonomaSelect.Model(),
+        history = BrowserHistory(),
         pendingFocus = props.initialFocus,
         currentFocus = None
       ),
@@ -220,8 +323,18 @@ object App {
 
   private def update(msg: Msg, model: Model): (Model, Cmd[Msg]) =
     msg match {
-      case Msg.BrowserStateChanged(url, title) =>
-        (model.copy(url = url, title = title), Cmd.none)
+      case Msg.BrowserStateChanged(url, title) => {
+        val historyTitle =
+          if (url != model.url && title == model.title) None else title
+        (
+          model.copy(
+            url = url,
+            title = title,
+            history = model.history.remember(url, historyTitle)
+          ),
+          Cmd.none
+        )
+      }
 
       case Msg.SystemInfoFetched(Right(info)) =>
         (model.copy(app = model.app.setSystemInfo(info)), Cmd.none)

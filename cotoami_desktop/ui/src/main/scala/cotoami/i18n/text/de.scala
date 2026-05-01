@@ -285,6 +285,8 @@ object de extends Text {
 
   val BrowserShell_forward = "Vor"
   val BrowserShell_reload = "Neu laden"
+  val BrowserShell_history = "Verlauf"
+  val BrowserShell_historyEmpty = "Noch kein Browserverlauf."
   val BrowserShell_go = "Aufrufen"
   val BrowserShell_loadingPage = "Seite wird geladen..."
   val BrowserShell_pageReady = "Seite bereit."

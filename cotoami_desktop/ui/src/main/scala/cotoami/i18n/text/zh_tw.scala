@@ -283,6 +283,8 @@ object zh_tw extends Text {
 
   val BrowserShell_forward = "前進"
   val BrowserShell_reload = "重新載入"
+  val BrowserShell_history = "歷史記錄"
+  val BrowserShell_historyEmpty = "暫無瀏覽歷史。"
   val BrowserShell_go = "前往"
   val BrowserShell_loadingPage = "正在載入頁面..."
   val BrowserShell_pageReady = "頁面已就緒。"

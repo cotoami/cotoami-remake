@@ -152,6 +152,7 @@ object BrowserShell {
     val (pageTitle, setTitleRaw) = useState(props.model.title)
     val (loading, setLoadingRaw) = useState(true)
     val (error, setErrorRaw) = useState(Option.empty[String])
+    val (historyOpen, setHistoryOpenRaw) = useState(false)
     val browserAttachedRef = useRef(false)
     val resizeInFlightRef = useRef(false)
     val pendingResizeRef = useRef(false)
@@ -176,6 +177,9 @@ object BrowserShell {
 
     def setError(value: Option[String]): Unit =
       setErrorRaw(_ => value)
+
+    def setHistoryOpen(value: Boolean): Unit =
+      setHistoryOpenRaw(_ => value)
 
     def setToolbarHeight(height: Double): Unit =
       setToolbarHeightRaw(current =>
@@ -335,6 +339,79 @@ object BrowserShell {
         case None =>
           setError(Some(props.text.BrowserShell_invalidUrl))
       }
+
+    def navigateToHistory(url: String): Unit = {
+      setHistoryOpen(false)
+      setActualUrl(url)
+      setDraftUrl(url)
+      setLoading(true)
+      setError(None)
+      invokeBrowserCommand("browser_navigate", jso(url = url))
+    }
+
+    def historyEntry(
+        entry: App.BrowserHistoryEntry,
+        level: Int,
+        displayUrl: String,
+        entryKey: Option[String] = None
+    ): ReactElement = {
+      val content =
+        button(
+          `type` := "button",
+          title := entry.url,
+          onMouseDown := (e => e.preventDefault()),
+          onClick := (_ => navigateToHistory(entry.url))
+        )(
+          span(className := "browser-history-favicon")(
+            materialSymbol("language"),
+            img(
+              alt := "",
+              src := entry.faviconUrl,
+              onError := (e =>
+                e.currentTarget
+                  .asInstanceOf[dom.HTMLImageElement]
+                  .style
+                  .display = "none"
+              )
+            )
+          ),
+          span(className := "browser-history-text")(
+            span(className := "browser-history-title")(entry.label),
+            span(className := "browser-history-url")(displayUrl)
+          )
+        )
+      entryKey match {
+        case Some(value) =>
+          li(className := s"browser-history-entry level-${level}", key := value)(
+            content
+          )
+        case None =>
+          li(className := s"browser-history-entry level-${level}")(content)
+      }
+    }
+
+    def historyDropdown: ReactElement = {
+      val groups = props.model.history.groups
+      div(className := "browser-history-menu")(
+        if (groups.isEmpty)
+          div(className := "browser-history-empty")(
+            props.text.BrowserShell_historyEmpty
+          )
+        else
+          ul(className := "browser-history-groups")(
+            groups.map(group =>
+              li(className := "browser-history-group", key := group.parent.origin)(
+                ul(className := "browser-history-list")(
+                  (Seq(historyEntry(group.parent, 1, group.parent.url)) ++
+                    group.children.map(child =>
+                      historyEntry(child, 2, child.path, Some(child.url))
+                    ))*
+                )
+              )
+            )*
+          )
+      )
+    }
 
     useEffect(
       () => {
@@ -584,6 +661,19 @@ object BrowserShell {
                 if (loading) "progress_activity" else "refresh",
                 if (loading) "loading" else ""
               )
+            ),
+            div(
+              className := "browser-history-tool",
+              onMouseEnter := (_ => setHistoryOpen(true)),
+              onMouseLeave := (_ => setHistoryOpen(false))
+            )(
+              button(
+                className := "browser-action",
+                `type` := "button",
+                title := props.text.BrowserShell_history,
+                onFocus := (_ => setHistoryOpen(true))
+              )(materialSymbol("history")),
+              Option.when(historyOpen)(historyDropdown)
             )
           ),
           form(
