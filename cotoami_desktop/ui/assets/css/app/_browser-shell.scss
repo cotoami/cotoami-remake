@@ -275,10 +275,12 @@ div.browser-shell {
       radial-gradient(circle at top left, color-mix(in srgb, var(--primary) 7%, transparent), transparent 35%),
       linear-gradient(180deg, color-mix(in srgb, var(--background-color) 96%, black 4%), var(--background-color));
 
-    > .split-pane.browser-main {
+    > .split-pane.browser-main,
+    .browser-history-secondary > .split-pane.browser-main {
       width: 100%;
       height: 100%;
       min-width: 0;
+      min-height: 0;
     }
 
     > .split-pane.browser-with-history {
@@ -292,6 +294,12 @@ div.browser-shell {
     .browser-webview-slot {
       min-width: 0;
       min-height: 0;
+    }
+
+    .browser-history-secondary {
+      display: flex;
+      width: 100%;
+      height: 100%;
     }
 
     .browser-history-sidebar {

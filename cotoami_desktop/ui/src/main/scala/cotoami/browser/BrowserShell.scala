@@ -278,6 +278,11 @@ object BrowserShell {
         flushBrowserResize()
       }
 
+    def resizeBrowserViewAfterLayout(): Unit =
+      dom.window.requestAnimationFrame(_ =>
+        dom.window.requestAnimationFrame(_ => resizeBrowserView())
+      )
+
     def attachBrowserView(): Unit =
       tauri.core
         .invoke[BrowserViewStateJson](
@@ -535,7 +540,7 @@ object BrowserShell {
 
     useEffect(
       () => {
-        resizeBrowserView()
+        resizeBrowserViewAfterLayout()
         () => ()
       },
       Seq(
@@ -575,7 +580,12 @@ object BrowserShell {
           }
         }
       },
-      Seq(props.contentLabel, props.timelineOpened, props.timelineWidth)
+      Seq(
+        props.contentLabel,
+        historyOpen,
+        props.timelineOpened,
+        props.timelineWidth
+      )
     )
 
     val secure = actualUrl.startsWith("https://")
@@ -597,6 +607,7 @@ object BrowserShell {
           initialPrimarySize = props.timelineWidth,
           resizable = props.timelineOpened,
           className = Some("browser-main"),
+          onResizing = Some(_ => resizeBrowserViewAfterLayout()),
           onResizeEnd = Some(() => resizeBrowserView()),
           onPrimarySizeChanged = Some(props.onTimelineWidthChange),
           primary = SplitPane.Primary.Props(
@@ -652,6 +663,7 @@ object BrowserShell {
           initialPrimarySize = DefaultHistoryWidth,
           resizable = true,
           className = Some("browser-with-history"),
+          onResizing = Some(_ => resizeBrowserViewAfterLayout()),
           onResizeEnd = Some(() => resizeBrowserView()),
           primary = SplitPane.Primary.Props(
             className = Some("browser-history-sidebar")

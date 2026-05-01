@@ -22,6 +22,7 @@ object SplitPane {
       resize: Action[Int] = Action.default,
       className: Option[String] = None,
       onResizeStart: Option[() => Unit] = None,
+      onResizing: Option[Int => Unit] = None,
       onResizeEnd: Option[() => Unit] = None,
       onPrimarySizeChanged: Option[Int => Unit] = None,
       primary: Primary.Props,
@@ -36,6 +37,7 @@ object SplitPane {
       resize: Action[Int] = Action.default,
       className: Option[String] = None,
       onResizeStart: Option[() => Unit] = None,
+      onResizing: Option[Int => Unit] = None,
       onResizeEnd: Option[() => Unit] = None,
       onPrimarySizeChanged: Option[Int => Unit] = None,
       primary: Primary.Props,
@@ -50,6 +52,7 @@ object SplitPane {
         resize,
         className,
         onResizeStart,
+        onResizing,
         onResizeEnd,
         onPrimarySizeChanged,
         primary,
@@ -131,9 +134,10 @@ object SplitPane {
             }
 
             setPrimarySize(newSize)
+            props.onResizing.foreach(_(newSize))
           }
         },
-        Seq(props.vertical, props.reverse)
+        Seq(props.vertical, props.reverse, props.onResizing)
       )
 
     val onMouseUp: js.Function1[dom.MouseEvent, Unit] = useCallback(
