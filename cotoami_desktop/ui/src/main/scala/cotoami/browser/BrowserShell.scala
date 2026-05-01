@@ -153,7 +153,7 @@ object BrowserShell {
   val component = FunctionalComponent[Props] { props =>
     val (actualUrl, setActualUrlRaw) = useState(props.initialUrl)
     val (draftUrl, setDraftUrlRaw) = useState(props.initialUrl)
-    val (pageTitle, setTitleRaw) = useState(props.model.title)
+    val (_, setTitleRaw) = useState(props.model.title)
     val (loading, setLoadingRaw) = useState(true)
     val (error, setErrorRaw) = useState(Option.empty[String])
     val (trailOpen, setTrailOpenRaw) = useState(false)
