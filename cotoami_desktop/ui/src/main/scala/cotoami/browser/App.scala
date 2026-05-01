@@ -106,23 +106,23 @@ object App {
       }
 
     def groups: Seq[BrowserHistoryGroup] =
-      entries
-        .groupBy(_.origin)
-        .values
-        .map(entriesInOrigin => {
+      entries.map(_.origin).distinct.flatMap(origin =>
+        entries.filter(_.origin == origin) match {
+          case Seq() => None
+          case entriesInOrigin =>
           val parent = entriesInOrigin.minBy(_.firstVisited)
           val children = entriesInOrigin
             .filterNot(_.url == parent.url)
-            .sortBy(entry => -entry.lastVisited)
             .toSeq
-          BrowserHistoryGroup(
-            parent,
-            children,
-            entriesInOrigin.map(_.lastVisited).max
+          Some(
+            BrowserHistoryGroup(
+              parent,
+              children,
+              entriesInOrigin.map(_.lastVisited).max
+            )
           )
-        })
-        .toSeq
-        .sortBy(group => -group.lastVisited)
+        }
+      )
   }
 
   object BrowserHistory {
