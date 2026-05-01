@@ -117,7 +117,9 @@ div.browser-shell {
     }
 
     .browser-history-entry {
-      button {
+      position: relative;
+
+      > button.browser-history-open {
         display: grid;
         grid-template-columns: 1.3rem minmax(0, 1fr);
         align-items: center;
@@ -140,11 +142,11 @@ div.browser-shell {
         }
       }
 
-      &.level-2 button {
+      &.level-2 > button.browser-history-open {
         padding-left: 1.75rem;
       }
 
-      &.current button {
+      &.current > button.browser-history-open {
         border-left: 3px solid var(--primary);
         background: color-mix(in srgb, var(--primary) 24%, var(--card-background-color));
         color: var(--primary);
@@ -154,6 +156,12 @@ div.browser-shell {
         .browser-history-url {
           color: var(--primary);
         }
+      }
+
+      &:hover .browser-history-delete,
+      &:focus-within .browser-history-delete {
+        opacity: 1;
+        pointer-events: auto;
       }
     }
 
@@ -186,6 +194,33 @@ div.browser-shell {
       display: grid;
       gap: 0.08rem;
       min-width: 0;
+    }
+
+    button.browser-history-delete {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.55rem;
+      height: 1.55rem;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted-color);
+      box-shadow: none;
+      opacity: 0;
+      pointer-events: none;
+
+      .material-symbols {
+        font-size: 1rem;
+      }
+
+      &:hover,
+      &:focus {
+        background: color-mix(in srgb, var(--del-color) 14%, transparent);
+        color: var(--del-color);
+      }
     }
 
     .browser-history-title,
@@ -399,7 +434,9 @@ div.browser-shell {
     }
 
     .browser-history-entry {
-      button {
+      position: relative;
+
+      > button.browser-history-open {
         display: grid;
         grid-template-columns: 1.3rem minmax(0, 1fr);
         align-items: center;
@@ -422,11 +459,11 @@ div.browser-shell {
         }
       }
 
-      &.level-2 button {
+      &.level-2 > button.browser-history-open {
         padding-left: 1.75rem;
       }
 
-      &.current button {
+      &.current > button.browser-history-open {
         border-left: 3px solid var(--primary);
         background: color-mix(in srgb, var(--primary) 24%, var(--card-background-color));
         color: var(--primary);
@@ -436,6 +473,12 @@ div.browser-shell {
         .browser-history-url {
           color: var(--primary);
         }
+      }
+
+      &:hover .browser-history-delete,
+      &:focus-within .browser-history-delete {
+        opacity: 1;
+        pointer-events: auto;
       }
     }
 
@@ -468,6 +511,37 @@ div.browser-shell {
       display: grid;
       gap: 0.08rem;
       min-width: 0;
+    }
+
+    button.browser-history-delete {
+      position: absolute;
+      top: 50%;
+      right: 0.4rem;
+      transform: translateY(-50%);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.55rem;
+      height: 1.55rem;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--card-background-color) 92%, transparent);
+      color: var(--muted-color);
+      box-shadow: none;
+      opacity: 0;
+      pointer-events: none;
+
+      .material-symbols {
+        font-size: 1rem;
+      }
+
+      &:hover,
+      &:focus {
+        background: color-mix(in srgb, var(--del-color) 14%, transparent);
+        color: var(--del-color);
+      }
     }
 
     .browser-history-title,

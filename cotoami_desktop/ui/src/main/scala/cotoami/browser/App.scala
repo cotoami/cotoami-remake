@@ -123,6 +123,17 @@ object App {
           )
         }
       )
+
+    def deleteEntry(entry: BrowserHistoryEntry, level: Int): BrowserHistory =
+      if (level == 1)
+        copy(entries = entries.filterNot(_.origin == entry.origin))
+      else
+        copy(entries = entries.filterNot(_.url == entry.url))
+
+    def entryForUrl(url: String): Option[BrowserHistoryEntry] =
+      BrowserHistory.parse(url).flatMap(parsed =>
+        entries.find(_.url == parsed.url)
+      )
   }
 
   object BrowserHistory {
@@ -182,6 +193,10 @@ object App {
   object Msg {
     case class BrowserStateChanged(url: String, title: Option[String])
         extends Msg
+    case class BrowserHistoryEntryDeleted(
+        entry: BrowserHistoryEntry,
+        level: Int
+    ) extends Msg
     case class SystemInfoFetched(result: Either[Unit, SystemInfoJson])
         extends Msg
     case class UiStateRestored(uiState: Option[UiState]) extends Msg
@@ -330,6 +345,12 @@ object App {
             title = title,
             history = model.history.remember(url, title)
           ),
+          Cmd.none
+        )
+
+      case Msg.BrowserHistoryEntryDeleted(entry, level) =>
+        (
+          model.copy(history = model.history.deleteEntry(entry, level)),
           Cmd.none
         )
 
@@ -597,7 +618,9 @@ object App {
             Msg.AppMsg(AppMsg.ResizePane(BrowserShell.TimelinePaneName, width))
           ),
         onStateChange = (url, title) =>
-          dispatch(Msg.BrowserStateChanged(url, title))
+          dispatch(Msg.BrowserStateChanged(url, title)),
+        onHistoryEntryDelete = (entry, level) =>
+          dispatch(Msg.BrowserHistoryEntryDeleted(entry, level))
       )
     )
   }

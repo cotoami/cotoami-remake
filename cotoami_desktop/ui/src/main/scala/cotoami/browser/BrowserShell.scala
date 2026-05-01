@@ -59,7 +59,8 @@ object BrowserShell {
       timelineWidth: Int,
       onTimelineOpenChange: Boolean => Unit,
       onTimelineWidthChange: Int => Unit,
-      onStateChange: (String, Option[String]) => Unit
+      onStateChange: (String, Option[String]) => Unit,
+      onHistoryEntryDelete: (App.BrowserHistoryEntry, Int) => Unit
   )
 
   private def normalizeUrl(input: String): Option[String] = {
@@ -365,45 +366,68 @@ object BrowserShell {
         displayUrl: String,
         entryKey: Option[String] = None
     ): ReactElement = {
-      val current = entry.url == actualUrl
+      val currentEntry = props.model.history.entryForUrl(actualUrl)
+      val current = currentEntry.exists(_.url == entry.url)
+      val canDelete =
+        !current && !(level == 1 && currentEntry.exists(_.origin == entry.origin))
       val entryClass = optionalClasses(
         Seq(
           (s"browser-history-entry level-${level}", true),
           ("current", current)
         )
       )
-      val content =
+      val deleteButton = Option.when(canDelete) {
         button(
+          className := "browser-history-delete",
           `type` := "button",
-          title := entry.url,
-          onMouseDown := (e => e.preventDefault()),
-          onClick := (_ => navigateToHistory(entry.url))
+          title := "Delete",
+          onMouseDown := (e => {
+            e.preventDefault()
+            e.stopPropagation()
+          }),
+          onClick := (e => {
+            e.stopPropagation()
+            props.onHistoryEntryDelete(entry, level)
+          })
         )(
-          span(className := "browser-history-favicon")(
-            materialSymbol("language"),
-            img(
-              alt := "",
-              src := entry.faviconUrl,
-              onError := (e =>
-                e.currentTarget
-                  .asInstanceOf[dom.HTMLImageElement]
-                  .style
-                  .display = "none"
-              )
-            )
-          ),
-          span(className := "browser-history-text")(
-            span(className := "browser-history-title")(entry.label),
-            span(className := "browser-history-url")(displayUrl)
-          )
+          materialSymbol("delete")
         )
+      }
+      val content =
+        Seq(
+          button(
+            className := "browser-history-open",
+            `type` := "button",
+            title := entry.url,
+            onMouseDown := (e => e.preventDefault()),
+            onClick := (_ => navigateToHistory(entry.url))
+          )(
+            span(className := "browser-history-favicon")(
+              materialSymbol("language"),
+              img(
+                alt := "",
+                src := entry.faviconUrl,
+                onError := (e =>
+                  e.currentTarget
+                    .asInstanceOf[dom.HTMLImageElement]
+                    .style
+                    .display = "none"
+                )
+              )
+            ),
+            span(className := "browser-history-text")(
+              span(className := "browser-history-title")(entry.label),
+              span(className := "browser-history-url")(displayUrl)
+            )
+          )
+        ) ++ deleteButton.toSeq
       entryKey match {
         case Some(value) =>
           li(className := entryClass, key := value)(
-            content
+            content*
           )
         case None =>
-          li(className := entryClass)(content)
+          li(className := entryClass)(content*)
       }
     }
 
