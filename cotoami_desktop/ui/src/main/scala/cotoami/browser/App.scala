@@ -93,11 +93,23 @@ object App {
   }
 
   object CotonomaSelect {
+    val MaxHistorySize = 10
+
     case class Model(
         query: String = "",
         options: Seq[ExistingCotonoma] = Seq.empty,
+        history: Seq[Cotonoma] = Seq.empty,
         loading: Boolean = false
-    )
+    ) {
+      def historyOptions: Seq[ExistingCotonoma] =
+        history.map(new ExistingCotonoma(_))
+
+      def remember(cotonoma: Cotonoma): Model =
+        copy(history =
+          (cotonoma +: history.filterNot(_.id == cotonoma.id))
+            .take(MaxHistorySize)
+        )
+    }
 
     sealed trait Msg
     object Msg {
@@ -280,9 +292,14 @@ object App {
     val focusedApp = model.app.copy(repo = focusedRepo)
     given Context = focusedApp
     val (timeline, cmd) = focusedApp.timeline.onFocusChange
+    val cotonomaSelect = focus.focusedCotonomaId
+      .flatMap(focusedApp.repo.cotonomas.get)
+      .map(model.cotonomaSelect.remember)
+      .getOrElse(model.cotonomaSelect)
     (
       model.copy(
         app = focusedApp.copy(timeline = timeline),
+        cotonomaSelect = cotonomaSelect,
         pendingFocus = None,
         currentFocus = Some(focus)
       ),
@@ -328,7 +345,7 @@ object App {
         if (query.isBlank())
           (
             model.copy(cotonomaSelect =
-              select.copy(query = query, options = Seq.empty, loading = false)
+              select.copy(query = query, loading = false)
             ),
             Cmd.none
           )
@@ -359,7 +376,7 @@ object App {
           if query == select.query =>
         (
           model.copy(cotonomaSelect =
-            select.copy(options = Seq.empty, loading = false)
+            select.copy(loading = false)
           ),
           Cmd.none
         )
@@ -383,7 +400,7 @@ object App {
               model.copy(
                 app = app,
                 cotonomaSelect =
-                  select.copy(query = "", options = Seq.empty, loading = false)
+                  select.copy(query = "", loading = false)
               ),
               (cmd ++ emitDatabaseFocus(app)).map(Msg.AppMsg.apply)
             )
@@ -404,10 +421,12 @@ object App {
     appWithCotonoma
       .pipe(DatabaseFocus.cotonoma(Some(cotonoma.nodeId), cotonoma.id))
       .pipe { case (app, cmd) =>
+        val cotonomaSelect =
+          nextSelect.getOrElse(model.cotonomaSelect).remember(cotonoma)
         (
           model.copy(
             app = app,
-            cotonomaSelect = nextSelect.getOrElse(model.cotonomaSelect)
+            cotonomaSelect = cotonomaSelect
           ),
           (cmd ++ emitDatabaseFocus(app)).map(Msg.AppMsg.apply)
         )
@@ -483,7 +502,9 @@ object App {
       app.repo.currentCotonoma.map(new ExistingCotonoma(_))
     SelectCotonoma(
       className = "browser-cotonoma-select",
-      options = model.options,
+      options =
+        if (model.query.isBlank()) model.historyOptions
+        else model.options,
       placeholder = Some(app.i18n.text.Cotonoma),
       value = focused,
       onInputChange = Some((input, actionMeta) => {
