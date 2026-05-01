@@ -325,7 +325,7 @@ object App {
     msg match {
       case Msg.BrowserStateChanged(url, title) => {
         val historyTitle =
-          if (url != model.url && title == model.title) None else title
+          if (url != model.url) None else title
         (
           model.copy(
             url = url,

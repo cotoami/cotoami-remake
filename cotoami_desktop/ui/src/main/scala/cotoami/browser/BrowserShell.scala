@@ -131,7 +131,8 @@ object BrowserShell {
       setTitle: Option[String] => Unit,
       setLoading: Boolean => Unit,
       editingRef: ReactRef[Boolean],
-      currentWindowTitleRef: ReactRef[String]
+      currentWindowTitleRef: ReactRef[String],
+      onStateChange: (String, Option[String]) => Unit
   ): Unit = {
     val title = optionString(state.title)
     setActualUrl(state.url)
@@ -145,6 +146,7 @@ object BrowserShell {
       tauri.window.getCurrentWindow().setTitle(nextWindowTitle)
       ()
     }
+    onStateChange(state.url, title)
   }
 
   val component = FunctionalComponent[Props] { props =>
@@ -259,7 +261,8 @@ object BrowserShell {
                 setTitle,
                 setLoading,
                 editingRef,
-                windowTitleRef
+                windowTitleRef,
+                props.onStateChange
               )
               if (pendingResizeRef.current) {
                 pendingResizeRef.current = false
@@ -304,7 +307,8 @@ object BrowserShell {
               setTitle,
               setLoading,
               editingRef,
-              windowTitleRef
+              windowTitleRef,
+              props.onStateChange
             )
             resizeBrowserView()
           case Failure(throwable) =>
@@ -328,7 +332,8 @@ object BrowserShell {
               setTitle,
               setLoading,
               editingRef,
-              windowTitleRef
+              windowTitleRef,
+              props.onStateChange
             )
           case Failure(throwable) =>
             handleFailure("Browser command failed")(throwable)
@@ -347,7 +352,6 @@ object BrowserShell {
       }
 
     def navigateToHistory(url: String): Unit = {
-      setHistoryOpen(false)
       setActualUrl(url)
       setDraftUrl(url)
       setLoading(true)
@@ -421,14 +425,6 @@ object BrowserShell {
 
     useEffect(
       () => {
-        props.onStateChange(actualUrl, pageTitle)
-        () => ()
-      },
-      Seq(actualUrl, pageTitle.orNull)
-    )
-
-    useEffect(
-      () => {
         val toolbar = toolbarRef.current
         if (toolbar == null) () => ()
         else {
@@ -497,7 +493,8 @@ object BrowserShell {
                     setTitle,
                     setLoading,
                     editingRef,
-                    windowTitleRef
+                    windowTitleRef,
+                    props.onStateChange
                   )
                 })
           )

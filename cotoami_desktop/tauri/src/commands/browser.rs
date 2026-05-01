@@ -325,10 +325,10 @@ pub fn browser_attach(
                     &content_label_for_page_load,
                 );
             })
-            .on_document_title_changed(move |_webview, title| {
+            .on_document_title_changed(move |webview, title| {
                 browser_registry_for_title.upsert(
                     &content_label_for_title,
-                    None,
+                    webview.url().ok().map(|url| url.to_string()),
                     Some(title),
                     None,
                 );
