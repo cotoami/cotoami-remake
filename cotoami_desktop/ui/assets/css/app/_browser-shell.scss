@@ -64,6 +64,11 @@ div.browser-shell {
         color: var(--primary);
       }
 
+      &.active {
+        background: color-mix(in srgb, var(--primary) 18%, var(--card-background-color));
+        color: var(--primary);
+      }
+
       &.go {
         color: var(--primary);
         background: color-mix(in srgb, var(--primary) 8%, var(--card-background-color));

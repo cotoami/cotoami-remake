@@ -740,7 +740,12 @@ object BrowserShell {
               className := "browser-trail-tool"
             )(
               button(
-                className := "browser-action",
+                className := optionalClasses(
+                  Seq(
+                    ("browser-action", true),
+                    ("active", trailOpen)
+                  )
+                ),
                 `type` := "button",
                 title := props.text.BrowserShell_trail,
                 onClick := (_ => setTrailOpen(!trailOpen))
