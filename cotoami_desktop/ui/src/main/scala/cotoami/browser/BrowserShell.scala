@@ -29,6 +29,7 @@ object BrowserShell {
 
   final val TimelinePaneName = "BrowserTimeline"
   final val DefaultTimelineWidth = 380
+  private val DefaultHistoryWidth = 340
 
   private val ToolbarHeight = 54.0
   private val ResizeSettleMs = 50.0
@@ -540,6 +541,7 @@ object BrowserShell {
       Seq(
         props.contentLabel,
         toolbarHeight,
+        historyOpen,
         props.timelineOpened,
         props.timelineWidth
       )
@@ -587,7 +589,7 @@ object BrowserShell {
         )
       )
 
-    val browserSurfaceContent =
+    val browserContent =
       props.timeline.map(timeline =>
         SplitPane(
           vertical = true,
@@ -629,6 +631,38 @@ object BrowserShell {
         ).withKey(s"${props.timelineOpened}-${props.timelineWidth}")
       ).getOrElse(browserWebviewSlot)
 
+    val historyPane =
+      div(className := "browser-history-pane")(
+        header(className := "browser-history-header")(
+          h2()(props.text.BrowserShell_history),
+          button(
+            className := "browser-action",
+            `type` := "button",
+            title := "Close",
+            onClick := (_ => setHistoryOpen(false))
+          )(materialSymbol("close"))
+        ),
+        historyDropdown
+      )
+
+    val browserSurfaceContent =
+      if (historyOpen)
+        SplitPane(
+          vertical = true,
+          initialPrimarySize = DefaultHistoryWidth,
+          resizable = true,
+          className = Some("browser-with-history"),
+          onResizeEnd = Some(() => resizeBrowserView()),
+          primary = SplitPane.Primary.Props(
+            className = Some("browser-history-sidebar")
+          )(historyPane),
+          secondary = SplitPane.Secondary.Props(
+            className = Some("browser-history-secondary")
+          )(browserContent)
+        ).withKey("history-open")
+      else
+        browserContent
+
     div(className := "browser-shell")(
       header(className := "browser-toolbar", ref := toolbarRef)(
         div(className := "browser-toolbar-main")(
@@ -663,17 +697,14 @@ object BrowserShell {
               )
             ),
             div(
-              className := "browser-history-tool",
-              onMouseEnter := (_ => setHistoryOpen(true)),
-              onMouseLeave := (_ => setHistoryOpen(false))
+              className := "browser-history-tool"
             )(
               button(
                 className := "browser-action",
                 `type` := "button",
                 title := props.text.BrowserShell_history,
-                onFocus := (_ => setHistoryOpen(true))
-              )(materialSymbol("history")),
-              Option.when(historyOpen)(historyDropdown)
+                onClick := (_ => setHistoryOpen(!historyOpen))
+              )(materialSymbol("history"))
             )
           ),
           form(
