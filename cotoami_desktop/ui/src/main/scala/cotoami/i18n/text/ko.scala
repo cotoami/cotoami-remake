@@ -283,8 +283,8 @@ object ko extends Text {
 
   val BrowserShell_forward = "앞으로"
   val BrowserShell_reload = "새로고침"
-  val BrowserShell_history = "기록"
-  val BrowserShell_historyEmpty = "아직 방문 기록이 없습니다."
+  val BrowserShell_trail = "트레일"
+  val BrowserShell_trailEmpty = "아직 방문 트레일이 없습니다."
   val BrowserShell_go = "이동"
   val BrowserShell_loadingPage = "페이지를 불러오는 중..."
   val BrowserShell_pageReady = "페이지가 준비되었습니다."

@@ -52,7 +52,7 @@ object App {
       focusedCotonomaId: Option[Id[Cotonoma]]
   )
 
-  case class BrowserHistoryEntry(
+  case class BrowserTrailEntry(
       url: String,
       title: Option[String],
       origin: String,
@@ -66,23 +66,23 @@ object App {
       title.map(_.trim).filter(_.nonEmpty).getOrElse(host)
   }
 
-  case class BrowserHistoryGroup(
-      parent: BrowserHistoryEntry,
-      children: Seq[BrowserHistoryEntry],
+  case class BrowserTrailGroup(
+      parent: BrowserTrailEntry,
+      children: Seq[BrowserTrailEntry],
       lastVisited: Int
   )
 
-  case class BrowserHistory(
-      entries: Seq[BrowserHistoryEntry] = Seq.empty,
+  case class BrowserTrail(
+      entries: Seq[BrowserTrailEntry] = Seq.empty,
       nextVisit: Int = 1
   ) {
-    def remember(url: String, title: Option[String]): BrowserHistory =
-      BrowserHistory.parse(url) match {
+    def remember(url: String, title: Option[String]): BrowserTrail =
+      BrowserTrail.parse(url) match {
         case Some(parsed) =>
           val nextEntries =
             entries.indexWhere(_.url == parsed.url) match {
               case -1 =>
-                entries :+ BrowserHistoryEntry(
+                entries :+ BrowserTrailEntry(
                   url = parsed.url,
                   title = title,
                   origin = parsed.origin,
@@ -105,17 +105,18 @@ object App {
         case None => this
       }
 
-    def groups: Seq[BrowserHistoryGroup] =
-      entries.map(_.origin).distinct.flatMap(origin =>
+    def groups: Seq[BrowserTrailGroup] =
+      entries.map(_.origin).distinct.reverse.flatMap(origin =>
         entries.filter(_.origin == origin) match {
           case Seq() => None
           case entriesInOrigin =>
           val parent = entriesInOrigin.minBy(_.firstVisited)
           val children = entriesInOrigin
             .filterNot(_.url == parent.url)
+            .reverse
             .toSeq
           Some(
-            BrowserHistoryGroup(
+            BrowserTrailGroup(
               parent,
               children,
               entriesInOrigin.map(_.lastVisited).max
@@ -124,19 +125,19 @@ object App {
         }
       )
 
-    def deleteEntry(entry: BrowserHistoryEntry, level: Int): BrowserHistory =
+    def deleteEntry(entry: BrowserTrailEntry, level: Int): BrowserTrail =
       if (level == 1)
         copy(entries = entries.filterNot(_.origin == entry.origin))
       else
         copy(entries = entries.filterNot(_.url == entry.url))
 
-    def entryForUrl(url: String): Option[BrowserHistoryEntry] =
-      BrowserHistory.parse(url).flatMap(parsed =>
+    def entryForUrl(url: String): Option[BrowserTrailEntry] =
+      BrowserTrail.parse(url).flatMap(parsed =>
         entries.find(_.url == parsed.url)
       )
   }
 
-  object BrowserHistory {
+  object BrowserTrail {
     private case class ParsedUrl(
         url: String,
         origin: String,
@@ -183,7 +184,7 @@ object App {
       initialTheme: Option[String],
       app: CotoamiModel,
       cotonomaSelect: CotonomaSelect.Model,
-      history: BrowserHistory,
+      trail: BrowserTrail,
       pendingFocus: Option[BrowserDatabaseFocus],
       currentFocus: Option[BrowserDatabaseFocus]
   )
@@ -193,8 +194,8 @@ object App {
   object Msg {
     case class BrowserStateChanged(url: String, title: Option[String])
         extends Msg
-    case class BrowserHistoryEntryDeleted(
-        entry: BrowserHistoryEntry,
+    case class BrowserTrailEntryDeleted(
+        entry: BrowserTrailEntry,
         level: Int
     ) extends Msg
     case class SystemInfoFetched(result: Either[Unit, SystemInfoJson])
@@ -322,7 +323,7 @@ object App {
         initialTheme = props.theme,
         app = app,
         cotonomaSelect = CotonomaSelect.Model(),
-        history = BrowserHistory(),
+        trail = BrowserTrail(),
         pendingFocus = props.initialFocus,
         currentFocus = None
       ),
@@ -343,14 +344,14 @@ object App {
           model.copy(
             url = url,
             title = title,
-            history = model.history.remember(url, title)
+            trail = model.trail.remember(url, title)
           ),
           Cmd.none
         )
 
-      case Msg.BrowserHistoryEntryDeleted(entry, level) =>
+      case Msg.BrowserTrailEntryDeleted(entry, level) =>
         (
-          model.copy(history = model.history.deleteEntry(entry, level)),
+          model.copy(trail = model.trail.deleteEntry(entry, level)),
           Cmd.none
         )
 
@@ -619,8 +620,8 @@ object App {
           ),
         onStateChange = (url, title) =>
           dispatch(Msg.BrowserStateChanged(url, title)),
-        onHistoryEntryDelete = (entry, level) =>
-          dispatch(Msg.BrowserHistoryEntryDeleted(entry, level))
+        onTrailEntryDelete = (entry, level) =>
+          dispatch(Msg.BrowserTrailEntryDeleted(entry, level))
       )
     )
   }

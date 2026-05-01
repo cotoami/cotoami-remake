@@ -36,7 +36,7 @@ div.browser-shell {
       flex-shrink: 0;
     }
 
-    .browser-history-tool {
+    .browser-trail-tool {
       position: relative;
       display: inline-flex;
       align-items: center;
@@ -78,7 +78,7 @@ div.browser-shell {
       }
     }
 
-    .browser-history-menu {
+    .browser-trail-menu {
       width: min(34rem, calc(100vw - 1.5rem));
       max-height: min(28rem, calc(100vh - 6.5rem));
       overflow-y: auto;
@@ -89,13 +89,13 @@ div.browser-shell {
       box-shadow: 0 18px 42px color-mix(in srgb, var(--contrast) 18%, transparent);
     }
 
-    .browser-history-menu-wrap {
+    .browser-trail-menu-wrap {
       display: flex;
       justify-content: flex-start;
       padding-left: 4.5rem;
     }
 
-    .browser-history-empty {
+    .browser-trail-empty {
       padding: 0.8rem 0.9rem;
       color: var(--muted-color);
       font-size: 0.86rem;
@@ -103,23 +103,23 @@ div.browser-shell {
       white-space: nowrap;
     }
 
-    .browser-history-groups,
-    .browser-history-list {
+    .browser-trail-groups,
+    .browser-trail-list {
       margin: 0;
       padding: 0;
       list-style: none;
     }
 
-    .browser-history-group + .browser-history-group {
+    .browser-trail-group + .browser-trail-group {
       margin-top: 0.35rem;
       padding-top: 0.35rem;
       border-top: 1px solid color-mix(in srgb, var(--primary) 9%, var(--pane-border-color));
     }
 
-    .browser-history-entry {
+    .browser-trail-entry {
       position: relative;
 
-      > button.browser-history-open {
+      > button.browser-trail-open {
         display: grid;
         grid-template-columns: 1.3rem minmax(0, 1fr);
         align-items: center;
@@ -142,30 +142,30 @@ div.browser-shell {
         }
       }
 
-      &.level-2 > button.browser-history-open {
+      &.level-2 > button.browser-trail-open {
         padding-left: 1.75rem;
       }
 
-      &.current > button.browser-history-open {
+      &.current > button.browser-trail-open {
         border-left: 3px solid var(--primary);
         background: color-mix(in srgb, var(--primary) 24%, var(--card-background-color));
         color: var(--primary);
         font-weight: 650;
 
-        .browser-history-title,
-        .browser-history-url {
+        .browser-trail-title,
+        .browser-trail-url {
           color: var(--primary);
         }
       }
 
-      &:hover .browser-history-delete,
-      &:focus-within .browser-history-delete {
+      &:hover .browser-trail-delete,
+      &:focus-within .browser-trail-delete {
         opacity: 1;
         pointer-events: auto;
       }
     }
 
-    .browser-history-favicon {
+    .browser-trail-favicon {
       position: relative;
       display: inline-flex;
       align-items: center;
@@ -190,13 +190,13 @@ div.browser-shell {
       }
     }
 
-    .browser-history-text {
+    .browser-trail-text {
       display: grid;
       gap: 0.08rem;
       min-width: 0;
     }
 
-    button.browser-history-delete {
+    button.browser-trail-delete {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -223,20 +223,20 @@ div.browser-shell {
       }
     }
 
-    .browser-history-title,
-    .browser-history-url {
+    .browser-trail-title,
+    .browser-trail-url {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       line-height: 1.2;
     }
 
-    .browser-history-title {
+    .browser-trail-title {
       font-size: 0.86rem;
       font-weight: 600;
     }
 
-    .browser-history-url {
+    .browser-trail-url {
       color: color-mix(in srgb, var(--muted-color) 74%, var(--background-color));
       font-size: 0.76rem;
       font-weight: 400;
@@ -323,47 +323,47 @@ div.browser-shell {
       linear-gradient(180deg, color-mix(in srgb, var(--background-color) 96%, black 4%), var(--background-color));
 
     > .split-pane.browser-main,
-    .browser-history-secondary > .split-pane.browser-main {
+    .browser-trail-secondary > .split-pane.browser-main {
       width: 100%;
       height: 100%;
       min-width: 0;
       min-height: 0;
     }
 
-    > .split-pane.browser-with-history {
+    > .split-pane.browser-with-trail {
       width: 100%;
       height: 100%;
       min-width: 0;
     }
 
     .browser-content,
-    .browser-history-secondary,
+    .browser-trail-secondary,
     .browser-webview-slot {
       min-width: 0;
       min-height: 0;
     }
 
-    .browser-history-secondary {
+    .browser-trail-secondary {
       display: flex;
       width: 100%;
       height: 100%;
     }
 
-    .browser-history-sidebar {
+    .browser-trail-sidebar {
       min-width: 260px;
       max-width: min(520px, 70vw);
       background: var(--background-color);
       border-right: 1px solid var(--pane-border-color);
     }
 
-    .browser-history-pane {
+    .browser-trail-pane {
       display: flex;
       flex-direction: column;
       height: 100%;
       min-height: 0;
     }
 
-    .browser-history-header {
+    .browser-trail-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -406,37 +406,37 @@ div.browser-shell {
       }
     }
 
-    .browser-history-menu {
+    .browser-trail-menu {
       flex: 1;
       min-height: 0;
       overflow-y: auto;
       padding: 0.45rem;
     }
 
-    .browser-history-empty {
+    .browser-trail-empty {
       padding: 0.8rem 0.9rem;
       color: var(--muted-color);
       font-size: 0.86rem;
       text-align: center;
     }
 
-    .browser-history-groups,
-    .browser-history-list {
+    .browser-trail-groups,
+    .browser-trail-list {
       margin: 0;
       padding: 0;
       list-style: none;
     }
 
-    .browser-history-group + .browser-history-group {
+    .browser-trail-group + .browser-trail-group {
       margin-top: 0.35rem;
       padding-top: 0.35rem;
       border-top: 1px solid color-mix(in srgb, var(--primary) 9%, var(--pane-border-color));
     }
 
-    .browser-history-entry {
+    .browser-trail-entry {
       position: relative;
 
-      > button.browser-history-open {
+      > button.browser-trail-open {
         display: grid;
         grid-template-columns: 1.3rem minmax(0, 1fr);
         align-items: center;
@@ -459,30 +459,30 @@ div.browser-shell {
         }
       }
 
-      &.level-2 > button.browser-history-open {
+      &.level-2 > button.browser-trail-open {
         padding-left: 1.75rem;
       }
 
-      &.current > button.browser-history-open {
+      &.current > button.browser-trail-open {
         border-left: 3px solid var(--primary);
         background: color-mix(in srgb, var(--primary) 24%, var(--card-background-color));
         color: var(--primary);
         font-weight: 650;
 
-        .browser-history-title,
-        .browser-history-url {
+        .browser-trail-title,
+        .browser-trail-url {
           color: var(--primary);
         }
       }
 
-      &:hover .browser-history-delete,
-      &:focus-within .browser-history-delete {
+      &:hover .browser-trail-delete,
+      &:focus-within .browser-trail-delete {
         opacity: 1;
         pointer-events: auto;
       }
     }
 
-    .browser-history-favicon {
+    .browser-trail-favicon {
       position: relative;
       display: inline-flex;
       align-items: center;
@@ -507,13 +507,13 @@ div.browser-shell {
       }
     }
 
-    .browser-history-text {
+    .browser-trail-text {
       display: grid;
       gap: 0.08rem;
       min-width: 0;
     }
 
-    button.browser-history-delete {
+    button.browser-trail-delete {
       position: absolute;
       top: 50%;
       right: 0.4rem;
@@ -544,20 +544,20 @@ div.browser-shell {
       }
     }
 
-    .browser-history-title,
-    .browser-history-url {
+    .browser-trail-title,
+    .browser-trail-url {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       line-height: 1.2;
     }
 
-    .browser-history-title {
+    .browser-trail-title {
       font-size: 0.86rem;
       font-weight: 600;
     }
 
-    .browser-history-url {
+    .browser-trail-url {
       color: color-mix(in srgb, var(--muted-color) 74%, var(--background-color));
       font-size: 0.76rem;
       font-weight: 400;

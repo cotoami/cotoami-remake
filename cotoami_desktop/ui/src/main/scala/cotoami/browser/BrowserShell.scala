@@ -29,7 +29,7 @@ object BrowserShell {
 
   final val TimelinePaneName = "BrowserTimeline"
   final val DefaultTimelineWidth = 380
-  private val DefaultHistoryWidth = 340
+  private val DefaultTrailWidth = 340
 
   private val ToolbarHeight = 54.0
   private val ResizeSettleMs = 50.0
@@ -60,7 +60,7 @@ object BrowserShell {
       onTimelineOpenChange: Boolean => Unit,
       onTimelineWidthChange: Int => Unit,
       onStateChange: (String, Option[String]) => Unit,
-      onHistoryEntryDelete: (App.BrowserHistoryEntry, Int) => Unit
+      onTrailEntryDelete: (App.BrowserTrailEntry, Int) => Unit
   )
 
   private def normalizeUrl(input: String): Option[String] = {
@@ -156,7 +156,7 @@ object BrowserShell {
     val (pageTitle, setTitleRaw) = useState(props.model.title)
     val (loading, setLoadingRaw) = useState(true)
     val (error, setErrorRaw) = useState(Option.empty[String])
-    val (historyOpen, setHistoryOpenRaw) = useState(false)
+    val (trailOpen, setTrailOpenRaw) = useState(false)
     val browserAttachedRef = useRef(false)
     val resizeInFlightRef = useRef(false)
     val pendingResizeRef = useRef(false)
@@ -182,8 +182,8 @@ object BrowserShell {
     def setError(value: Option[String]): Unit =
       setErrorRaw(_ => value)
 
-    def setHistoryOpen(value: Boolean): Unit =
-      setHistoryOpenRaw(_ => value)
+    def setTrailOpen(value: Boolean): Unit =
+      setTrailOpenRaw(_ => value)
 
     def setToolbarHeight(height: Double): Unit =
       setToolbarHeightRaw(current =>
@@ -352,7 +352,7 @@ object BrowserShell {
           setError(Some(props.text.BrowserShell_invalidUrl))
       }
 
-    def navigateToHistory(url: String): Unit = {
+    def navigateToTrail(url: String): Unit = {
       setActualUrl(url)
       setDraftUrl(url)
       setLoading(true)
@@ -360,25 +360,25 @@ object BrowserShell {
       invokeBrowserCommand("browser_navigate", jso(url = url))
     }
 
-    def historyEntry(
-        entry: App.BrowserHistoryEntry,
+    def trailEntry(
+        entry: App.BrowserTrailEntry,
         level: Int,
         displayUrl: String,
         entryKey: Option[String] = None
     ): ReactElement = {
-      val currentEntry = props.model.history.entryForUrl(actualUrl)
+      val currentEntry = props.model.trail.entryForUrl(actualUrl)
       val current = currentEntry.exists(_.url == entry.url)
       val canDelete =
         !current && !(level == 1 && currentEntry.exists(_.origin == entry.origin))
       val entryClass = optionalClasses(
         Seq(
-          (s"browser-history-entry level-${level}", true),
+          (s"browser-trail-entry level-${level}", true),
           ("current", current)
         )
       )
       val deleteButton = Option.when(canDelete) {
         button(
-          className := "browser-history-delete",
+          className := "browser-trail-delete",
           `type` := "button",
           title := "Delete",
           onMouseDown := (e => {
@@ -387,7 +387,7 @@ object BrowserShell {
           }),
           onClick := (e => {
             e.stopPropagation()
-            props.onHistoryEntryDelete(entry, level)
+            props.onTrailEntryDelete(entry, level)
           })
         )(
           materialSymbol("delete")
@@ -396,13 +396,13 @@ object BrowserShell {
       val content =
         Seq(
           button(
-            className := "browser-history-open",
+            className := "browser-trail-open",
             `type` := "button",
             title := entry.url,
             onMouseDown := (e => e.preventDefault()),
-            onClick := (_ => navigateToHistory(entry.url))
+            onClick := (_ => navigateToTrail(entry.url))
           )(
-            span(className := "browser-history-favicon")(
+            span(className := "browser-trail-favicon")(
               materialSymbol("language"),
               img(
                 alt := "",
@@ -415,9 +415,9 @@ object BrowserShell {
                 )
               )
             ),
-            span(className := "browser-history-text")(
-              span(className := "browser-history-title")(entry.label),
-              span(className := "browser-history-url")(displayUrl)
+            span(className := "browser-trail-text")(
+              span(className := "browser-trail-title")(entry.label),
+              span(className := "browser-trail-url")(displayUrl)
             )
           )
         ) ++ deleteButton.toSeq
@@ -431,21 +431,21 @@ object BrowserShell {
       }
     }
 
-    def historyDropdown: ReactElement = {
-      val groups = props.model.history.groups
-      div(className := "browser-history-menu")(
+    def trailList: ReactElement = {
+      val groups = props.model.trail.groups
+      div(className := "browser-trail-menu")(
         if (groups.isEmpty)
-          div(className := "browser-history-empty")(
-            props.text.BrowserShell_historyEmpty
+          div(className := "browser-trail-empty")(
+            props.text.BrowserShell_trailEmpty
           )
         else
-          ul(className := "browser-history-groups")(
+          ul(className := "browser-trail-groups")(
             groups.map(group =>
-              li(className := "browser-history-group", key := group.parent.origin)(
-                ul(className := "browser-history-list")(
-                  (Seq(historyEntry(group.parent, 1, group.parent.url)) ++
+              li(className := "browser-trail-group", key := group.parent.origin)(
+                ul(className := "browser-trail-list")(
+                  (Seq(trailEntry(group.parent, 1, group.parent.url)) ++
                     group.children.map(child =>
-                      historyEntry(child, 2, child.path, Some(child.url))
+                      trailEntry(child, 2, child.path, Some(child.url))
                     ))*
                 )
               )
@@ -574,7 +574,7 @@ object BrowserShell {
       Seq(
         props.contentLabel,
         toolbarHeight,
-        historyOpen,
+        trailOpen,
         props.timelineOpened,
         props.timelineWidth
       )
@@ -610,7 +610,7 @@ object BrowserShell {
       },
       Seq(
         props.contentLabel,
-        historyOpen,
+        trailOpen,
         props.timelineOpened,
         props.timelineWidth
       )
@@ -670,36 +670,36 @@ object BrowserShell {
         ).withKey(s"${props.timelineOpened}-${props.timelineWidth}")
       ).getOrElse(browserWebviewSlot)
 
-    val historyPane =
-      div(className := "browser-history-pane")(
-        header(className := "browser-history-header")(
-          h2()(props.text.BrowserShell_history),
+    val trailPane =
+      div(className := "browser-trail-pane")(
+        header(className := "browser-trail-header")(
+          h2()(props.text.BrowserShell_trail),
           button(
             className := "browser-action",
             `type` := "button",
             title := "Close",
-            onClick := (_ => setHistoryOpen(false))
+            onClick := (_ => setTrailOpen(false))
           )(materialSymbol("close"))
         ),
-        historyDropdown
+        trailList
       )
 
     val browserSurfaceContent =
-      if (historyOpen)
+      if (trailOpen)
         SplitPane(
           vertical = true,
-          initialPrimarySize = DefaultHistoryWidth,
+          initialPrimarySize = DefaultTrailWidth,
           resizable = true,
-          className = Some("browser-with-history"),
+          className = Some("browser-with-trail"),
           onResizing = Some(_ => resizeBrowserViewAfterLayout()),
           onResizeEnd = Some(() => resizeBrowserView()),
           primary = SplitPane.Primary.Props(
-            className = Some("browser-history-sidebar")
-          )(historyPane),
+            className = Some("browser-trail-sidebar")
+          )(trailPane),
           secondary = SplitPane.Secondary.Props(
-            className = Some("browser-history-secondary")
+            className = Some("browser-trail-secondary")
           )(browserContent)
-        ).withKey("history-open")
+        ).withKey("trail-open")
       else
         browserContent
 
@@ -737,14 +737,14 @@ object BrowserShell {
               )
             ),
             div(
-              className := "browser-history-tool"
+              className := "browser-trail-tool"
             )(
               button(
                 className := "browser-action",
                 `type` := "button",
-                title := props.text.BrowserShell_history,
-                onClick := (_ => setHistoryOpen(!historyOpen))
-              )(materialSymbol("history"))
+                title := props.text.BrowserShell_trail,
+                onClick := (_ => setTrailOpen(!trailOpen))
+              )(materialSymbol("route"))
             )
           ),
           form(

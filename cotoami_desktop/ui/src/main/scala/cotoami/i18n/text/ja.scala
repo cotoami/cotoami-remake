@@ -281,8 +281,8 @@ object ja extends Text {
 
   val BrowserShell_forward = "進む"
   val BrowserShell_reload = "再読み込み"
-  val BrowserShell_history = "履歴"
-  val BrowserShell_historyEmpty = "閲覧履歴はまだありません。"
+  val BrowserShell_trail = "トレイル"
+  val BrowserShell_trailEmpty = "閲覧トレイルはまだありません。"
   val BrowserShell_go = "移動"
   val BrowserShell_loadingPage = "ページを読み込み中..."
   val BrowserShell_pageReady = "ページを表示しました。"

@@ -285,8 +285,8 @@ object es extends Text {
 
   val BrowserShell_forward = "Adelante"
   val BrowserShell_reload = "Recargar"
-  val BrowserShell_history = "Historial"
-  val BrowserShell_historyEmpty = "Aún no hay historial."
+  val BrowserShell_trail = "Trail"
+  val BrowserShell_trailEmpty = "No browsing trail yet."
   val BrowserShell_go = "Ir"
   val BrowserShell_loadingPage = "Cargando página..."
   val BrowserShell_pageReady = "Página lista."
