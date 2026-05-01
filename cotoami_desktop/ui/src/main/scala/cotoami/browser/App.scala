@@ -323,18 +323,15 @@ object App {
 
   private def update(msg: Msg, model: Model): (Model, Cmd[Msg]) =
     msg match {
-      case Msg.BrowserStateChanged(url, title) => {
-        val historyTitle =
-          if (url != model.url) None else title
+      case Msg.BrowserStateChanged(url, title) =>
         (
           model.copy(
             url = url,
             title = title,
-            history = model.history.remember(url, historyTitle)
+            history = model.history.remember(url, title)
           ),
           Cmd.none
         )
-      }
 
       case Msg.SystemInfoFetched(Right(info)) =>
         (model.copy(app = model.app.setSystemInfo(info)), Cmd.none)

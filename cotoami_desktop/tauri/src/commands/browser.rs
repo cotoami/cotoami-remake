@@ -56,11 +56,17 @@ impl BrowserRegistry {
     ) {
         let mut inner = self.inner.lock();
         let entry = inner.entry(content_label.to_string()).or_default();
+        let url_changed = url
+            .as_deref()
+            .zip(entry.url.as_deref())
+            .is_some_and(|(next, current)| next != current);
         if let Some(url) = url {
             entry.url = Some(url);
         }
         if let Some(title) = title {
             entry.title = Some(title);
+        } else if url_changed {
+            entry.title = None;
         }
         if let Some(is_loading) = is_loading {
             entry.is_loading = is_loading;

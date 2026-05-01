@@ -143,6 +143,18 @@ div.browser-shell {
       &.level-2 button {
         padding-left: 1.75rem;
       }
+
+      &.current button {
+        border-left: 3px solid var(--primary);
+        background: color-mix(in srgb, var(--primary) 24%, var(--card-background-color));
+        color: var(--primary);
+        font-weight: 650;
+
+        .browser-history-title,
+        .browser-history-url {
+          color: var(--primary);
+        }
+      }
     }
 
     .browser-history-favicon {
@@ -412,6 +424,18 @@ div.browser-shell {
 
       &.level-2 button {
         padding-left: 1.75rem;
+      }
+
+      &.current button {
+        border-left: 3px solid var(--primary);
+        background: color-mix(in srgb, var(--primary) 24%, var(--card-background-color));
+        color: var(--primary);
+        font-weight: 650;
+
+        .browser-history-title,
+        .browser-history-url {
+          color: var(--primary);
+        }
       }
     }
 

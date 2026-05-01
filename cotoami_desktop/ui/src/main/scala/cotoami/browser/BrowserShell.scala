@@ -365,6 +365,13 @@ object BrowserShell {
         displayUrl: String,
         entryKey: Option[String] = None
     ): ReactElement = {
+      val current = entry.url == actualUrl
+      val entryClass = optionalClasses(
+        Seq(
+          (s"browser-history-entry level-${level}", true),
+          ("current", current)
+        )
+      )
       val content =
         button(
           `type` := "button",
@@ -392,11 +399,11 @@ object BrowserShell {
         )
       entryKey match {
         case Some(value) =>
-          li(className := s"browser-history-entry level-${level}", key := value)(
+          li(className := entryClass, key := value)(
             content
           )
         case None =>
-          li(className := s"browser-history-entry level-${level}")(content)
+          li(className := entryClass)(content)
       }
     }
 
