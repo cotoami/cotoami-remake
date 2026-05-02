@@ -90,6 +90,13 @@ object BrowserShell {
     Ipv4AddressPattern.matches(trimmed)
   }
 
+  private def isSecureUrl(url: String): Boolean =
+    try {
+      new dom.URL(url).protocol == "https:"
+    } catch {
+      case _: Throwable => false
+    }
+
   private def resolveAddressBarInput(input: String): Option[String] = {
     val trimmed = input.trim
     if (trimmed.isEmpty()) None
@@ -616,7 +623,8 @@ object BrowserShell {
       )
     )
 
-    val secure = actualUrl.startsWith("https://")
+    val displayedUrl = if (editingRef.current) draftUrl else actualUrl
+    val secure = isSecureUrl(displayedUrl)
     val addressIcon = if (secure) "lock" else "language"
 
     val browserWebviewSlot =
