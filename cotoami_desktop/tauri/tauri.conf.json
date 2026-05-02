@@ -56,8 +56,9 @@
     ],
     "macOS": {
       "entitlements": "./Entitlements.plist",
-      "exceptionDomain": "",
+      "exceptionDomain": "localhost",
       "frameworks": [],
+      "infoPlist": "./Info.plist",
       "providerShortName": null,
       "signingIdentity": "-"
     },

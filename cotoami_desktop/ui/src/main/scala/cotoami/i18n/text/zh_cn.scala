@@ -283,6 +283,8 @@ object zh_cn extends Text {
 
   val BrowserShell_forward = "前进"
   val BrowserShell_reload = "重新加载"
+  val BrowserShell_trail = "浏览轨迹"
+  val BrowserShell_trailEmpty = "暂无浏览轨迹。"
   val BrowserShell_go = "前往"
   val BrowserShell_loadingPage = "正在加载页面..."
   val BrowserShell_pageReady = "页面已就绪。"

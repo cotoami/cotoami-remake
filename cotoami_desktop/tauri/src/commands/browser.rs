@@ -56,11 +56,17 @@ impl BrowserRegistry {
     ) {
         let mut inner = self.inner.lock();
         let entry = inner.entry(content_label.to_string()).or_default();
+        let url_changed = url
+            .as_deref()
+            .zip(entry.url.as_deref())
+            .is_some_and(|(next, current)| next != current);
         if let Some(url) = url {
             entry.url = Some(url);
         }
         if let Some(title) = title {
             entry.title = Some(title);
+        } else if url_changed {
+            entry.title = None;
         }
         if let Some(is_loading) = is_loading {
             entry.is_loading = is_loading;
@@ -325,10 +331,10 @@ pub fn browser_attach(
                     &content_label_for_page_load,
                 );
             })
-            .on_document_title_changed(move |_webview, title| {
+            .on_document_title_changed(move |webview, title| {
                 browser_registry_for_title.upsert(
                     &content_label_for_title,
-                    None,
+                    webview.url().ok().map(|url| url.to_string()),
                     Some(title),
                     None,
                 );

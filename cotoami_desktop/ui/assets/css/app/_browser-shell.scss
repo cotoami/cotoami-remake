@@ -36,6 +36,12 @@ div.browser-shell {
       flex-shrink: 0;
     }
 
+    .browser-trail-tool {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
     button.browser-action {
       display: inline-flex;
       align-items: center;
@@ -58,6 +64,11 @@ div.browser-shell {
         color: var(--primary);
       }
 
+      &.active {
+        background: color-mix(in srgb, var(--primary) 18%, var(--card-background-color));
+        color: var(--primary);
+      }
+
       &.go {
         color: var(--primary);
         background: color-mix(in srgb, var(--primary) 8%, var(--card-background-color));
@@ -70,6 +81,170 @@ div.browser-shell {
       .material-symbols.loading {
         animation: browser-shell-spin 1.1s linear infinite;
       }
+    }
+
+    .browser-trail-menu {
+      width: min(34rem, calc(100vw - 1.5rem));
+      max-height: min(28rem, calc(100vh - 6.5rem));
+      overflow-y: auto;
+      padding: 0.45rem;
+      border: 1px solid color-mix(in srgb, var(--primary) 14%, var(--pane-border-color));
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--card-background-color) 98%, var(--background-color));
+      box-shadow: 0 18px 42px color-mix(in srgb, var(--contrast) 18%, transparent);
+    }
+
+    .browser-trail-menu-wrap {
+      display: flex;
+      justify-content: flex-start;
+      padding-left: 4.5rem;
+    }
+
+    .browser-trail-empty {
+      padding: 0.8rem 0.9rem;
+      color: var(--muted-color);
+      font-size: 0.86rem;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .browser-trail-groups,
+    .browser-trail-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .browser-trail-group + .browser-trail-group {
+      margin-top: 0.35rem;
+      padding-top: 0.35rem;
+      border-top: 1px solid color-mix(in srgb, var(--primary) 9%, var(--pane-border-color));
+    }
+
+    .browser-trail-entry {
+      position: relative;
+
+      > button.browser-trail-open {
+        display: grid;
+        grid-template-columns: 1.3rem minmax(0, 1fr);
+        align-items: center;
+        gap: 0.55rem;
+        width: 100%;
+        min-height: 2.55rem;
+        margin: 0;
+        padding: 0.36rem 0.5rem;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--contrast);
+        box-shadow: none;
+        text-align: left;
+
+        &:hover,
+        &:focus {
+          background: var(--browser-tool-hover-background);
+          color: var(--contrast);
+        }
+      }
+
+      &.level-2 > button.browser-trail-open {
+        padding-left: 1.75rem;
+      }
+
+      &.current > button.browser-trail-open {
+        border-left: 3px solid var(--primary);
+        background: color-mix(in srgb, var(--primary) 24%, var(--card-background-color));
+        color: var(--primary);
+        font-weight: 650;
+
+        .browser-trail-title,
+        .browser-trail-url {
+          color: var(--primary);
+        }
+      }
+
+      &:hover .browser-trail-delete,
+      &:focus-within .browser-trail-delete {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    }
+
+    .browser-trail-favicon {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.1rem;
+      height: 1.1rem;
+      color: var(--muted-color);
+
+      .material-symbols {
+        font-size: 1.05rem;
+      }
+
+      img {
+        position: absolute;
+        inset: 0;
+        display: block;
+        width: 1.1rem;
+        height: 1.1rem;
+        border-radius: 3px;
+        background: #fff;
+        object-fit: contain;
+      }
+    }
+
+    .browser-trail-text {
+      display: grid;
+      gap: 0.08rem;
+      min-width: 0;
+    }
+
+    button.browser-trail-delete {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.55rem;
+      height: 1.55rem;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted-color);
+      box-shadow: none;
+      opacity: 0;
+      pointer-events: none;
+
+      .material-symbols {
+        font-size: 1rem;
+      }
+
+      &:hover,
+      &:focus {
+        background: color-mix(in srgb, var(--del-color) 14%, transparent);
+        color: var(--del-color);
+      }
+    }
+
+    .browser-trail-title,
+    .browser-trail-url {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      line-height: 1.2;
+    }
+
+    .browser-trail-title {
+      font-size: 0.86rem;
+      font-weight: 600;
+    }
+
+    .browser-trail-url {
+      color: color-mix(in srgb, var(--muted-color) 74%, var(--background-color));
+      font-size: 0.76rem;
+      font-weight: 400;
     }
 
     form.browser-address-bar {
@@ -152,16 +327,245 @@ div.browser-shell {
       radial-gradient(circle at top left, color-mix(in srgb, var(--primary) 7%, transparent), transparent 35%),
       linear-gradient(180deg, color-mix(in srgb, var(--background-color) 96%, black 4%), var(--background-color));
 
-    > .split-pane.browser-main {
+    > .split-pane.browser-main,
+    .browser-trail-secondary > .split-pane.browser-main {
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    > .split-pane.browser-with-trail {
       width: 100%;
       height: 100%;
       min-width: 0;
     }
 
     .browser-content,
+    .browser-trail-secondary,
     .browser-webview-slot {
       min-width: 0;
       min-height: 0;
+    }
+
+    .browser-trail-secondary {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+
+    .browser-trail-sidebar {
+      min-width: 260px;
+      max-width: min(520px, 70vw);
+      background: var(--background-color);
+      border-right: 1px solid var(--pane-border-color);
+    }
+
+    .browser-trail-pane {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .browser-trail-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      flex-shrink: 0;
+      min-height: 2.8rem;
+      padding: 0.45rem 0.65rem 0.45rem 0.85rem;
+      border-bottom: 1px solid color-mix(in srgb, var(--primary) 10%, var(--pane-border-color));
+      background: color-mix(in srgb, var(--card-background-color) 84%, var(--background-color));
+
+      h2 {
+        min-width: 0;
+        margin: 0;
+        overflow: hidden;
+        font-size: 0.94rem;
+        font-weight: 650;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      button.browser-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 1.85rem;
+        height: 1.85rem;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--browser-tool-color);
+        box-shadow: none;
+
+        &:hover {
+          background: var(--browser-tool-hover-background);
+          color: var(--primary);
+        }
+      }
+    }
+
+    .browser-trail-menu {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 0.45rem;
+    }
+
+    .browser-trail-empty {
+      padding: 0.8rem 0.9rem;
+      color: var(--muted-color);
+      font-size: 0.86rem;
+      text-align: center;
+    }
+
+    .browser-trail-groups,
+    .browser-trail-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .browser-trail-group + .browser-trail-group {
+      margin-top: 0.35rem;
+      padding-top: 0.35rem;
+      border-top: 1px solid color-mix(in srgb, var(--primary) 9%, var(--pane-border-color));
+    }
+
+    .browser-trail-entry {
+      position: relative;
+
+      > button.browser-trail-open {
+        display: grid;
+        grid-template-columns: 1.3rem minmax(0, 1fr);
+        align-items: center;
+        gap: 0.55rem;
+        width: 100%;
+        min-height: 2.55rem;
+        margin: 0;
+        padding: 0.36rem 0.5rem;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--contrast);
+        box-shadow: none;
+        text-align: left;
+
+        &:hover,
+        &:focus {
+          background: var(--browser-tool-hover-background);
+          color: var(--contrast);
+        }
+      }
+
+      &.level-2 > button.browser-trail-open {
+        padding-left: 1.75rem;
+      }
+
+      &.current > button.browser-trail-open {
+        border-left: 3px solid var(--primary);
+        background: color-mix(in srgb, var(--primary) 24%, var(--card-background-color));
+        color: var(--primary);
+        font-weight: 650;
+
+        .browser-trail-title,
+        .browser-trail-url {
+          color: var(--primary);
+        }
+      }
+
+      &:hover .browser-trail-delete,
+      &:focus-within .browser-trail-delete {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    }
+
+    .browser-trail-favicon {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.1rem;
+      height: 1.1rem;
+      color: var(--muted-color);
+
+      .material-symbols {
+        font-size: 1.05rem;
+      }
+
+      img {
+        position: absolute;
+        inset: 0;
+        display: block;
+        width: 1.1rem;
+        height: 1.1rem;
+        border-radius: 3px;
+        background: #fff;
+        object-fit: contain;
+      }
+    }
+
+    .browser-trail-text {
+      display: grid;
+      gap: 0.08rem;
+      min-width: 0;
+    }
+
+    button.browser-trail-delete {
+      position: absolute;
+      top: 50%;
+      right: 0.4rem;
+      transform: translateY(-50%);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.55rem;
+      height: 1.55rem;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--card-background-color) 92%, transparent);
+      color: var(--muted-color);
+      box-shadow: none;
+      opacity: 0;
+      pointer-events: none;
+
+      .material-symbols {
+        font-size: 1rem;
+      }
+
+      &:hover,
+      &:focus {
+        background: color-mix(in srgb, var(--del-color) 14%, transparent);
+        color: var(--del-color);
+      }
+    }
+
+    .browser-trail-title,
+    .browser-trail-url {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      line-height: 1.2;
+    }
+
+    .browser-trail-title {
+      font-size: 0.86rem;
+      font-weight: 600;
+    }
+
+    .browser-trail-url {
+      color: color-mix(in srgb, var(--muted-color) 74%, var(--background-color));
+      font-size: 0.76rem;
+      font-weight: 400;
     }
 
     .browser-webview-slot {

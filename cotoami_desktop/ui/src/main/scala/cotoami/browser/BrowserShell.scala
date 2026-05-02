@@ -29,6 +29,7 @@ object BrowserShell {
 
   final val TimelinePaneName = "BrowserTimeline"
   final val DefaultTimelineWidth = 380
+  private val DefaultTrailWidth = 340
 
   private val ToolbarHeight = 54.0
   private val ResizeSettleMs = 50.0
@@ -58,7 +59,8 @@ object BrowserShell {
       timelineWidth: Int,
       onTimelineOpenChange: Boolean => Unit,
       onTimelineWidthChange: Int => Unit,
-      onStateChange: (String, Option[String]) => Unit
+      onStateChange: (String, Option[String]) => Unit,
+      onTrailEntryDelete: (App.BrowserTrailEntry, Int) => Unit
   )
 
   private def normalizeUrl(input: String): Option[String] = {
@@ -87,6 +89,13 @@ object BrowserShell {
     trimmed.contains(":") ||
     Ipv4AddressPattern.matches(trimmed)
   }
+
+  private def isSecureUrl(url: String): Boolean =
+    try {
+      new dom.URL(url).protocol == "https:"
+    } catch {
+      case _: Throwable => false
+    }
 
   private def resolveAddressBarInput(input: String): Option[String] = {
     val trimmed = input.trim
@@ -130,7 +139,8 @@ object BrowserShell {
       setTitle: Option[String] => Unit,
       setLoading: Boolean => Unit,
       editingRef: ReactRef[Boolean],
-      currentWindowTitleRef: ReactRef[String]
+      currentWindowTitleRef: ReactRef[String],
+      onStateChange: (String, Option[String]) => Unit
   ): Unit = {
     val title = optionString(state.title)
     setActualUrl(state.url)
@@ -144,14 +154,16 @@ object BrowserShell {
       tauri.window.getCurrentWindow().setTitle(nextWindowTitle)
       ()
     }
+    onStateChange(state.url, title)
   }
 
   val component = FunctionalComponent[Props] { props =>
     val (actualUrl, setActualUrlRaw) = useState(props.initialUrl)
     val (draftUrl, setDraftUrlRaw) = useState(props.initialUrl)
-    val (pageTitle, setTitleRaw) = useState(props.model.title)
+    val (_, setTitleRaw) = useState(props.model.title)
     val (loading, setLoadingRaw) = useState(true)
     val (error, setErrorRaw) = useState(Option.empty[String])
+    val (trailOpen, setTrailOpenRaw) = useState(false)
     val browserAttachedRef = useRef(false)
     val resizeInFlightRef = useRef(false)
     val pendingResizeRef = useRef(false)
@@ -176,6 +188,9 @@ object BrowserShell {
 
     def setError(value: Option[String]): Unit =
       setErrorRaw(_ => value)
+
+    def setTrailOpen(value: Boolean): Unit =
+      setTrailOpenRaw(_ => value)
 
     def setToolbarHeight(height: Double): Unit =
       setToolbarHeightRaw(current =>
@@ -254,7 +269,8 @@ object BrowserShell {
                 setTitle,
                 setLoading,
                 editingRef,
-                windowTitleRef
+                windowTitleRef,
+                props.onStateChange
               )
               if (pendingResizeRef.current) {
                 pendingResizeRef.current = false
@@ -272,6 +288,11 @@ object BrowserShell {
         pendingResizeRef.current = true
         flushBrowserResize()
       }
+
+    def resizeBrowserViewAfterLayout(): Unit =
+      dom.window.requestAnimationFrame(_ =>
+        dom.window.requestAnimationFrame(_ => resizeBrowserView())
+      )
 
     def attachBrowserView(): Unit =
       tauri.core
@@ -294,7 +315,8 @@ object BrowserShell {
               setTitle,
               setLoading,
               editingRef,
-              windowTitleRef
+              windowTitleRef,
+              props.onStateChange
             )
             resizeBrowserView()
           case Failure(throwable) =>
@@ -318,7 +340,8 @@ object BrowserShell {
               setTitle,
               setLoading,
               editingRef,
-              windowTitleRef
+              windowTitleRef,
+              props.onStateChange
             )
           case Failure(throwable) =>
             handleFailure("Browser command failed")(throwable)
@@ -336,13 +359,107 @@ object BrowserShell {
           setError(Some(props.text.BrowserShell_invalidUrl))
       }
 
-    useEffect(
-      () => {
-        props.onStateChange(actualUrl, pageTitle)
-        () => ()
-      },
-      Seq(actualUrl, pageTitle.orNull)
-    )
+    def navigateToTrail(url: String): Unit = {
+      setActualUrl(url)
+      setDraftUrl(url)
+      setLoading(true)
+      setError(None)
+      invokeBrowserCommand("browser_navigate", jso(url = url))
+    }
+
+    def trailEntry(
+        entry: App.BrowserTrailEntry,
+        level: Int,
+        displayUrl: String,
+        entryKey: Option[String] = None
+    ): ReactElement = {
+      val currentEntry = props.model.trail.entryForUrl(actualUrl)
+      val current = currentEntry.exists(_.url == entry.url)
+      val canDelete =
+        !current && !(level == 1 && currentEntry.exists(_.origin == entry.origin))
+      val entryClass = optionalClasses(
+        Seq(
+          (s"browser-trail-entry level-${level}", true),
+          ("current", current)
+        )
+      )
+      val deleteButton = Option.when(canDelete) {
+        button(
+          className := "browser-trail-delete",
+          `type` := "button",
+          title := "Delete",
+          onMouseDown := (e => {
+            e.preventDefault()
+            e.stopPropagation()
+          }),
+          onClick := (e => {
+            e.stopPropagation()
+            props.onTrailEntryDelete(entry, level)
+          })
+        )(
+          materialSymbol("delete")
+        )
+      }
+      val content =
+        Seq(
+          button(
+            className := "browser-trail-open",
+            `type` := "button",
+            title := entry.url,
+            onMouseDown := (e => e.preventDefault()),
+            onClick := (_ => navigateToTrail(entry.url))
+          )(
+            span(className := "browser-trail-favicon")(
+              materialSymbol("language"),
+              img(
+                alt := "",
+                src := entry.faviconUrl,
+                onError := (e =>
+                  e.currentTarget
+                    .asInstanceOf[dom.HTMLImageElement]
+                    .style
+                    .display = "none"
+                )
+              )
+            ),
+            span(className := "browser-trail-text")(
+              span(className := "browser-trail-title")(entry.label),
+              span(className := "browser-trail-url")(displayUrl)
+            )
+          )
+        ) ++ deleteButton.toSeq
+      entryKey match {
+        case Some(value) =>
+          li(className := entryClass, key := value)(
+            content*
+          )
+        case None =>
+          li(className := entryClass)(content*)
+      }
+    }
+
+    def trailList: ReactElement = {
+      val groups = props.model.trail.groups
+      div(className := "browser-trail-menu")(
+        if (groups.isEmpty)
+          div(className := "browser-trail-empty")(
+            props.text.BrowserShell_trailEmpty
+          )
+        else
+          ul(className := "browser-trail-groups")(
+            groups.map(group =>
+              li(className := "browser-trail-group", key := group.parent.origin)(
+                ul(className := "browser-trail-list")(
+                  (Seq(trailEntry(group.parent, 1, group.parent.url)) ++
+                    group.children.map(child =>
+                      trailEntry(child, 2, child.path, Some(child.url))
+                    ))*
+                )
+              )
+            )*
+          )
+      )
+    }
 
     useEffect(
       () => {
@@ -414,7 +531,8 @@ object BrowserShell {
                     setTitle,
                     setLoading,
                     editingRef,
-                    windowTitleRef
+                    windowTitleRef,
+                    props.onStateChange
                   )
                 })
           )
@@ -457,12 +575,13 @@ object BrowserShell {
 
     useEffect(
       () => {
-        resizeBrowserView()
+        resizeBrowserViewAfterLayout()
         () => ()
       },
       Seq(
         props.contentLabel,
         toolbarHeight,
+        trailOpen,
         props.timelineOpened,
         props.timelineWidth
       )
@@ -496,10 +615,16 @@ object BrowserShell {
           }
         }
       },
-      Seq(props.contentLabel, props.timelineOpened, props.timelineWidth)
+      Seq(
+        props.contentLabel,
+        trailOpen,
+        props.timelineOpened,
+        props.timelineWidth
+      )
     )
 
-    val secure = actualUrl.startsWith("https://")
+    val displayedUrl = if (editingRef.current) draftUrl else actualUrl
+    val secure = isSecureUrl(displayedUrl)
     val addressIcon = if (secure) "lock" else "language"
 
     val browserWebviewSlot =
@@ -510,7 +635,7 @@ object BrowserShell {
         )
       )
 
-    val browserSurfaceContent =
+    val browserContent =
       props.timeline.map(timeline =>
         SplitPane(
           vertical = true,
@@ -518,6 +643,7 @@ object BrowserShell {
           initialPrimarySize = props.timelineWidth,
           resizable = props.timelineOpened,
           className = Some("browser-main"),
+          onResizing = Some(_ => resizeBrowserViewAfterLayout()),
           onResizeEnd = Some(() => resizeBrowserView()),
           onPrimarySizeChanged = Some(props.onTimelineWidthChange),
           primary = SplitPane.Primary.Props(
@@ -552,6 +678,39 @@ object BrowserShell {
         ).withKey(s"${props.timelineOpened}-${props.timelineWidth}")
       ).getOrElse(browserWebviewSlot)
 
+    val trailPane =
+      div(className := "browser-trail-pane")(
+        header(className := "browser-trail-header")(
+          h2()(props.text.BrowserShell_trail),
+          button(
+            className := "browser-action",
+            `type` := "button",
+            title := "Close",
+            onClick := (_ => setTrailOpen(false))
+          )(materialSymbol("close"))
+        ),
+        trailList
+      )
+
+    val browserSurfaceContent =
+      if (trailOpen)
+        SplitPane(
+          vertical = true,
+          initialPrimarySize = DefaultTrailWidth,
+          resizable = true,
+          className = Some("browser-with-trail"),
+          onResizing = Some(_ => resizeBrowserViewAfterLayout()),
+          onResizeEnd = Some(() => resizeBrowserView()),
+          primary = SplitPane.Primary.Props(
+            className = Some("browser-trail-sidebar")
+          )(trailPane),
+          secondary = SplitPane.Secondary.Props(
+            className = Some("browser-trail-secondary")
+          )(browserContent)
+        ).withKey("trail-open")
+      else
+        browserContent
+
     div(className := "browser-shell")(
       header(className := "browser-toolbar", ref := toolbarRef)(
         div(className := "browser-toolbar-main")(
@@ -584,6 +743,21 @@ object BrowserShell {
                 if (loading) "progress_activity" else "refresh",
                 if (loading) "loading" else ""
               )
+            ),
+            div(
+              className := "browser-trail-tool"
+            )(
+              button(
+                className := optionalClasses(
+                  Seq(
+                    ("browser-action", true),
+                    ("active", trailOpen)
+                  )
+                ),
+                `type` := "button",
+                title := props.text.BrowserShell_trail,
+                onClick := (_ => setTrailOpen(!trailOpen))
+              )(materialSymbol("route"))
             )
           ),
           form(

@@ -283,6 +283,8 @@ object en extends Text {
 
   val BrowserShell_forward = "Forward"
   val BrowserShell_reload = "Reload"
+  val BrowserShell_trail = "Trail"
+  val BrowserShell_trailEmpty = "No browsing trail yet."
   val BrowserShell_go = "Go"
   val BrowserShell_loadingPage = "Loading page..."
   val BrowserShell_pageReady = "Page ready."
