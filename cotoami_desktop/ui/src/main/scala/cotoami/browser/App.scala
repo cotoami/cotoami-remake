@@ -24,16 +24,13 @@ import cotoami.backend.{
   ErrorJson,
   SystemInfoJson
 }
-import cotoami.backend.CotonomaBackend
 import cotoami.models.{Cotonoma, I18n, Id, Node, UiState}
 import cotoami.repository.Root
 import cotoami.subparts.{
   SectionFlowInput,
   SectionGeomap,
-  SectionTimeline,
-  SelectCotonoma
+  SectionTimeline
 }
-import cotoami.subparts.SelectCotonoma.ExistingCotonoma
 import cotoami.updates.{Changelog, DatabaseFocus}
 
 object App {
@@ -87,36 +84,6 @@ object App {
     case class BackendChange(log: ChangelogEntryJson) extends Msg
     case class AppMsg(msg: cotoami.Msg) extends Msg
     case class CotonomaSelectMsg(msg: CotonomaSelect.Msg) extends Msg
-  }
-
-  object CotonomaSelect {
-    val MaxHistorySize = 10
-
-    case class Model(
-        query: String = "",
-        options: Seq[ExistingCotonoma] = Seq.empty,
-        history: Seq[Cotonoma] = Seq.empty,
-        loading: Boolean = false
-    ) {
-      def historyOptions: Seq[ExistingCotonoma] =
-        history.map(new ExistingCotonoma(_))
-
-      def remember(cotonoma: Cotonoma): Model =
-        copy(history =
-          (cotonoma +: history.filterNot(_.id == cotonoma.id))
-            .take(MaxHistorySize)
-        )
-    }
-
-    sealed trait Msg
-    object Msg {
-      case class QueryInput(query: String) extends Msg
-      case class CotonomasFetched(
-          query: String,
-          result: Either[ErrorJson, js.Array[Cotonoma]]
-      ) extends Msg
-      case class Selected(cotonoma: scala.Option[Cotonoma]) extends Msg
-    }
   }
 
   private case class Props(
@@ -348,68 +315,26 @@ object App {
       msg: CotonomaSelect.Msg,
       model: Model
   ): (Model, Cmd[Msg]) = {
-    val select = model.cotonomaSelect
-    msg match {
-      case CotonomaSelect.Msg.QueryInput(query) =>
-        if (query.isBlank())
-          (
-            model.copy(cotonomaSelect =
-              select.copy(query = query, loading = false)
-            ),
-            Cmd.none
-          )
-        else
-          (
-            model.copy(cotonomaSelect =
-              select.copy(query = query, loading = true)
-            ),
-            CotonomaBackend.fetchByPartial(query, None)
-              .map(CotonomaSelect.Msg.CotonomasFetched(query, _))
-              .map(Msg.CotonomaSelectMsg.apply)
-          )
-
-      case CotonomaSelect.Msg.CotonomasFetched(query, Right(cotonomas))
-          if query == select.query =>
-        (
-          model.copy(cotonomaSelect =
-            select.copy(
-              options = cotonomas.map(new ExistingCotonoma(_)).toSeq,
-              loading = false
-            )
-          ),
-          Cmd.none
-        )
-
-      case CotonomaSelect.Msg.CotonomasFetched(query, Left(_))
-          if query == select.query =>
-        (
-          model.copy(cotonomaSelect = select.copy(loading = false)),
-          Cmd.none
-        )
-
-      case CotonomaSelect.Msg.CotonomasFetched(_, _) =>
-        (model, Cmd.none)
-
-      case CotonomaSelect.Msg.Selected(Some(cotonoma)) => {
-        focusCotonoma(
-          model,
-          cotonoma,
-          Some(select.copy(query = "", options = Seq.empty, loading = false))
-        )
-      }
-
-      case CotonomaSelect.Msg.Selected(None) =>
-        model.app
-          .pipe(DatabaseFocus.node(model.app.repo.nodes.focusedId))
+    val (select, cmd, effect) =
+      CotonomaSelect.update(msg, model.cotonomaSelect)
+    val nextModel = model.copy(cotonomaSelect = select)
+    val nextCmd = cmd.map(Msg.CotonomaSelectMsg.apply)
+    effect match {
+      case Some(CotonomaSelect.Effect.FocusCotonoma(cotonoma, select)) =>
+        focusCotonoma(nextModel, cotonoma, Some(select)).pipe {
+          case (model, cmd) => (model, nextCmd ++ cmd)
+        }
+      case Some(CotonomaSelect.Effect.ClearCotonoma(select)) =>
+        nextModel.app
+          .pipe(DatabaseFocus.node(nextModel.app.repo.nodes.focusedId))
           .pipe { case (app, cmd) =>
             (
-              model.copy(
-                app = app,
-                cotonomaSelect = select.copy(query = "", loading = false)
-              ),
-              (cmd ++ emitDatabaseFocus(app)).map(Msg.AppMsg.apply)
+              nextModel.copy(app = app, cotonomaSelect = select),
+              nextCmd ++ (cmd ++ emitDatabaseFocus(app)).map(Msg.AppMsg.apply)
             )
           }
+      case None =>
+        (nextModel, nextCmd)
     }
   }
 
@@ -479,7 +404,11 @@ object App {
             .getOrElse(div(className := "browser-timeline-empty")())
         ),
         cotonomaSelect = props.databaseFolder.map(_ =>
-          cotonomaSelect(model.cotonomaSelect, model.app, dispatch)
+          CotonomaSelect.view(
+            model.cotonomaSelect,
+            model.app,
+            msg => dispatch(Msg.CotonomaSelectMsg(msg))
+          )
         ),
         trail = (currentUrl, onClose, onNavigate) =>
           BrowserTrail.view(
@@ -504,46 +433,6 @@ object App {
         onStateChange =
           (url, title) => dispatch(Msg.BrowserStateChanged(url, title))
       )
-    )
-  }
-
-  private def cotonomaSelect(
-      model: CotonomaSelect.Model,
-      app: CotoamiModel,
-      dispatch: Msg => Unit
-  ): ReactElement = {
-    given Context = app
-    val focused =
-      app.repo.currentCotonoma.map(new ExistingCotonoma(_))
-    SelectCotonoma(
-      className = "browser-cotonoma-select",
-      options =
-        if (model.query.isBlank()) model.historyOptions
-        else model.options,
-      placeholder = Some(app.i18n.text.Cotonoma),
-      value = focused,
-      onInputChange = Some((input, actionMeta) => {
-        if (actionMeta.action == "input-change")
-          dispatch(Msg.CotonomaSelectMsg(CotonomaSelect.Msg.QueryInput(input)))
-        else if (input != model.query)
-          dispatch(Msg.CotonomaSelectMsg(CotonomaSelect.Msg.QueryInput(input)))
-        input
-      }),
-      noOptionsMessage =
-        Some(_ => div()(app.i18n.text.ModalRepost_typeCotonomaName)),
-      isLoading = model.loading,
-      isClearable = true,
-      onChange = Some((option, _) => {
-        dispatch(
-          Msg.CotonomaSelectMsg(
-            CotonomaSelect.Msg.Selected(
-              option.collect { case option: ExistingCotonoma =>
-                option.cotonoma
-              }
-            )
-          )
-        )
-      })
     )
   }
 
