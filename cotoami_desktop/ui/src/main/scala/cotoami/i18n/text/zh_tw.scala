@@ -285,6 +285,7 @@ object zh_tw extends Text {
   val BrowserShell_reload = "重新載入"
   val BrowserShell_trail = "瀏覽軌跡"
   val BrowserShell_trailEmpty = "暫無瀏覽軌跡。"
+  val BrowserShell_addressPlaceholder = "搜尋或輸入 URL"
   val BrowserShell_go = "前往"
   val BrowserShell_loadingPage = "正在載入頁面..."
   val BrowserShell_pageReady = "頁面已就緒。"

@@ -287,6 +287,7 @@ object fr extends Text {
   val BrowserShell_reload = "Recharger"
   val BrowserShell_trail = "Trail"
   val BrowserShell_trailEmpty = "No browsing trail yet."
+  val BrowserShell_addressPlaceholder = "Rechercher ou saisir une URL"
   val BrowserShell_go = "Aller"
   val BrowserShell_loadingPage = "Chargement de la page..."
   val BrowserShell_pageReady = "Page prête."

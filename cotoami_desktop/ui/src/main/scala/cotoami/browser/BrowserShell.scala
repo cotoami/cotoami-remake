@@ -2,6 +2,7 @@ package cotoami.browser
 
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => jso}
+import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.URIUtils
 import scala.util.{Failure, Success}
 
@@ -50,7 +51,7 @@ object BrowserShell {
 
   case class Props(
       contentLabel: String,
-      initialUrl: String,
+      initialUrl: Option[String],
       model: App.Model,
       text: Text,
       timeline: Option[ReactElement],
@@ -120,17 +121,24 @@ object BrowserShell {
     value.toOption.flatMap(Option(_))
 
   private def windowTitle(url: String, pageTitle: Option[String]): String =
-    pageTitle
-      .map(_.trim)
-      .filter(_.nonEmpty)
-      .orElse {
-        try {
-          Option(new dom.URL(url).host).filter(_.nonEmpty)
-        } catch {
-          case _: Throwable => None
+    if (url.isBlank())
+      "Browser"
+    else
+      pageTitle
+        .map(_.trim)
+        .filter(_.nonEmpty)
+        .orElse {
+          try {
+            Option(new dom.URL(url).host).filter(_.nonEmpty)
+          } catch {
+            case _: Throwable => None
+          }
         }
-      }
-      .getOrElse(url)
+        .getOrElse(url)
+
+  private def applyStateUrl(url: String): String =
+    if (url == "about:blank" || url.endsWith("/browser-blank.html")) ""
+    else url
 
   private def applyState(
       state: BrowserViewStateJson,
@@ -143,36 +151,39 @@ object BrowserShell {
       onStateChange: (String, Option[String]) => Unit
   ): Unit = {
     val title = optionString(state.title)
-    setActualUrl(state.url)
+    val url = applyStateUrl(state.url)
+    setActualUrl(url)
     if (!editingRef.current)
-      setDraftUrl(state.url)
+      setDraftUrl(url)
     setTitle(title)
     setLoading(state.is_loading)
-    val nextWindowTitle = windowTitle(state.url, title)
+    val nextWindowTitle = windowTitle(url, title)
     if (currentWindowTitleRef.current != nextWindowTitle) {
       currentWindowTitleRef.current = nextWindowTitle
       tauri.window.getCurrentWindow().setTitle(nextWindowTitle)
       ()
     }
-    onStateChange(state.url, title)
+    onStateChange(url, title)
   }
 
   val component = FunctionalComponent[Props] { props =>
-    val (actualUrl, setActualUrlRaw) = useState(props.initialUrl)
-    val (draftUrl, setDraftUrlRaw) = useState(props.initialUrl)
+    val initialUrl = props.initialUrl.getOrElse("")
+    val (actualUrl, setActualUrlRaw) = useState(initialUrl)
+    val (draftUrl, setDraftUrlRaw) = useState(initialUrl)
     val (_, setTitleRaw) = useState(props.model.title)
-    val (loading, setLoadingRaw) = useState(true)
+    val (loading, setLoadingRaw) = useState(props.initialUrl.nonEmpty)
     val (error, setErrorRaw) = useState(Option.empty[String])
     val (trailOpen, setTrailOpenRaw) = useState(false)
     val browserAttachedRef = useRef(false)
     val resizeInFlightRef = useRef(false)
     val pendingResizeRef = useRef(false)
     val editingRef = useRef(false)
-    val windowTitleRef = useRef(windowTitle(props.initialUrl, props.model.title))
+    val windowTitleRef = useRef(windowTitle(initialUrl, props.model.title))
     val toolbarRef = useRef[html.Element](null)
     val webviewSlotRef = useRef[html.Element](null)
     val windowViewportInsetTopRef = useRef(0.0)
     val (toolbarHeight, setToolbarHeightRaw) = useState(ToolbarHeight)
+    val currentTheme = props.model.app.uiState.map(_.theme).getOrElse("dark")
 
     def setActualUrl(url: String): Unit =
       setActualUrlRaw(_ => url)
@@ -300,7 +311,10 @@ object BrowserShell {
           "browser_attach",
           js.Object.assign(
             browserBoundsArgs,
-            jso(initialUrl = props.initialUrl)
+            jso(
+              initialUrl = props.initialUrl.orUndefined,
+              theme = currentTheme
+            )
           )
         )
         .toFuture
@@ -495,6 +509,24 @@ object BrowserShell {
 
     useEffect(
       () => {
+        if (actualUrl.isBlank())
+          tauri.core
+            .invoke[Unit](
+              "browser_set_blank_theme",
+              jso(
+                contentLabel = props.contentLabel,
+                theme = currentTheme
+              )
+            )
+            .toFuture
+            .onComplete(_ => ())
+        () => ()
+      },
+      Seq(props.contentLabel, actualUrl, currentTheme)
+    )
+
+    useEffect(
+      () => {
         val slot = webviewSlotRef.current
         if (slot == null) () => ()
         else {
@@ -668,6 +700,7 @@ object BrowserShell {
               className := "browser-address-input",
               `type` := "text",
               value := draftUrl,
+              placeholder := props.text.BrowserShell_addressPlaceholder,
               spellCheck := false,
               onFocus := (_ => editingRef.current = true),
               onBlur := (_ => {

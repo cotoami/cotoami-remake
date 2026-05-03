@@ -287,6 +287,7 @@ object de extends Text {
   val BrowserShell_reload = "Neu laden"
   val BrowserShell_trail = "Trail"
   val BrowserShell_trailEmpty = "No browsing trail yet."
+  val BrowserShell_addressPlaceholder = "Suchen oder URL eingeben"
   val BrowserShell_go = "Aufrufen"
   val BrowserShell_loadingPage = "Seite wird geladen..."
   val BrowserShell_pageReady = "Seite bereit."

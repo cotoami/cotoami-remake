@@ -55,7 +55,7 @@ package object browser {
           ()
         case None =>
           openUrlInNewWindow(
-            url,
+            Some(url),
             locale,
             databaseFolder,
             focusedNodeId,
@@ -65,6 +65,22 @@ package object browser {
       }
     }
 
+  def openBlankInNewWindow(
+      locale: Option[String] = None,
+      databaseFolder: Option[String] = None,
+      focusedNodeId: Option[String] = None,
+      focusedCotonomaId: Option[String] = None,
+      theme: Option[String] = None
+  ): Unit =
+    openUrlInNewWindow(
+      None,
+      locale,
+      databaseFolder,
+      focusedNodeId,
+      focusedCotonomaId,
+      theme
+    )
+
   def openUrlInNewWindow(
       url: String,
       locale: Option[String] = None,
@@ -73,18 +89,35 @@ package object browser {
       focusedCotonomaId: Option[String] = None,
       theme: Option[String] = None
   ): Unit =
-    if (tauri.isSupportedBrowserUrl(url)) {
-      tauri.core.invoke[Unit](
-        "open_browser_window",
-        jso(
-          url = url,
-          locale = locale.orUndefined,
-          databaseFolder = databaseFolder.orUndefined,
-          focusedNodeId = focusedNodeId.orUndefined,
-          focusedCotonomaId = focusedCotonomaId.orUndefined,
-          theme = theme.orUndefined
-        )
+    if (tauri.isSupportedBrowserUrl(url))
+      openUrlInNewWindow(
+        Some(url),
+        locale,
+        databaseFolder,
+        focusedNodeId,
+        focusedCotonomaId,
+        theme
       )
-      ()
-    }
+
+  private def openUrlInNewWindow(
+      url: Option[String],
+      locale: Option[String],
+      databaseFolder: Option[String],
+      focusedNodeId: Option[String],
+      focusedCotonomaId: Option[String],
+      theme: Option[String]
+  ): Unit = {
+    tauri.core.invoke[Unit](
+      "open_browser_window",
+      jso(
+        url = url.orUndefined,
+        locale = locale.orUndefined,
+        databaseFolder = databaseFolder.orUndefined,
+        focusedNodeId = focusedNodeId.orUndefined,
+        focusedCotonomaId = focusedCotonomaId.orUndefined,
+        theme = theme.orUndefined
+      )
+    )
+    ()
+  }
 }
