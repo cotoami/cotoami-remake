@@ -315,12 +315,15 @@ object App {
       msg: CotonomaSelect.Msg,
       model: Model
   ): (Model, Cmd[Msg]) = {
+    given Context = model.app
     val (select, cmd, effect) =
       CotonomaSelect.update(msg, model.cotonomaSelect)
     val nextModel = model.copy(cotonomaSelect = select)
     val nextCmd = cmd.map(Msg.CotonomaSelectMsg.apply)
     effect match {
-      case Some(CotonomaSelect.Effect.FocusCotonoma(cotonoma, select)) =>
+      case Some(effect: CotonomaSelect.Effect.FocusCotonoma) =>
+        val cotonoma = effect.cotonoma
+        val select = effect.select
         focusCotonoma(nextModel, cotonoma, Some(select)).pipe {
           case (model, cmd) => (model, nextCmd ++ cmd)
         }

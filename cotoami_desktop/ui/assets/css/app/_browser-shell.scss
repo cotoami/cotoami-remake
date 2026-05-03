@@ -622,15 +622,43 @@ div.browser-shell {
       }
 
       .browser-timeline-focus {
+        display: flex;
+        align-items: flex-start;
+        gap: 4px;
         flex-shrink: 0;
         padding: 0.7rem 0.8rem 0.55rem 2.25rem;
         background:
           color-mix(in srgb, var(--card-background-color) 84%, var(--background-color));
       }
 
+      .browser-cotonoma-select-with-create {
+        display: flex;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 4px;
+        width: 100%;
+
+        .error {
+          flex-basis: 100%;
+        }
+      }
+
       .browser-cotonoma-select {
+        flex: 1;
+        min-width: 0;
         width: 100%;
         font-size: 0.9rem;
+      }
+
+      button.create-cotonoma {
+        flex: 0 0 auto;
+        height: 38px;
+        margin: 0;
+        padding: 0 0.55rem;
+
+        span.material-symbols {
+          font-size: 20px;
+        }
       }
 
       section.timeline {
