@@ -16,6 +16,8 @@ use super::error::Error;
 const BROWSER_STATE_EVENT: &str = "browser-state";
 const BROWSER_SHELL_QUERY_KEY: &str = "browserShell";
 const BROWSER_SHELL_QUERY_VALUE: &str = "1";
+const BLANK_BROWSER_URL: &str = "about:blank";
+const BLANK_BROWSER_TITLE: &str = "Browser";
 
 static BROWSER_WINDOW_COUNTER: AtomicU64 = AtomicU64::new(1);
 
@@ -94,6 +96,25 @@ fn parse_browser_url(url: &str) -> Result<tauri::Url, Error> {
     }
 }
 
+fn parse_optional_browser_url(url: Option<&str>) -> Result<Option<tauri::Url>, Error> {
+    url.map(str::trim)
+        .filter(|url| !url.is_empty())
+        .map(parse_browser_url)
+        .transpose()
+}
+
+fn blank_browser_url() -> tauri::Url {
+    tauri::Url::parse(BLANK_BROWSER_URL).expect("static blank browser URL must be valid")
+}
+
+fn browser_state_url(url: &tauri::Url) -> String {
+    if url.as_str() == BLANK_BROWSER_URL {
+        String::new()
+    } else {
+        url.to_string()
+    }
+}
+
 fn browser_window_title(url: &tauri::Url) -> String {
     url.host_str()
         .filter(|host| !host.is_empty())
@@ -112,7 +133,13 @@ fn browser_window_title_from_state(state: &BrowserViewState) -> String {
                 .ok()
                 .map(|url| browser_window_title(&url))
         })
-        .unwrap_or_else(|| state.url.clone())
+        .unwrap_or_else(|| {
+            if state.url.is_empty() {
+                BLANK_BROWSER_TITLE.to_string()
+            } else {
+                state.url.clone()
+            }
+        })
 }
 
 fn next_browser_labels() -> (String, String) {
@@ -125,7 +152,7 @@ fn next_browser_labels() -> (String, String) {
 
 fn browser_shell_path(
     content_label: &str,
-    initial_url: &str,
+    initial_url: Option<&str>,
     locale: Option<&str>,
     database_folder: Option<&str>,
     focused_node_id: Option<&str>,
@@ -137,8 +164,10 @@ fn browser_shell_path(
     let mut query_pairs = params.query_pairs_mut();
     query_pairs
         .append_pair(BROWSER_SHELL_QUERY_KEY, BROWSER_SHELL_QUERY_VALUE)
-        .append_pair("contentLabel", content_label)
-        .append_pair("initialUrl", initial_url);
+        .append_pair("contentLabel", content_label);
+    if let Some(initial_url) = initial_url.filter(|url| !url.is_empty()) {
+        query_pairs.append_pair("initialUrl", initial_url);
+    }
     if let Some(locale) = locale.filter(|locale| !locale.is_empty()) {
         query_pairs.append_pair("locale", locale);
     }
@@ -160,7 +189,7 @@ fn browser_shell_path(
 
 fn open_browser_window_internal(
     app_handle: &AppHandle,
-    url: &tauri::Url,
+    url: Option<&tauri::Url>,
     locale: Option<&str>,
     database_folder: Option<&str>,
     focused_node_id: Option<&str>,
@@ -174,7 +203,7 @@ fn open_browser_window_internal(
         WebviewUrl::App(
             browser_shell_path(
                 &content_label,
-                url.as_str(),
+                url.map(|url| url.as_str()),
                 locale,
                 database_folder,
                 focused_node_id,
@@ -184,7 +213,10 @@ fn open_browser_window_internal(
             .into(),
         ),
     )
-    .title(browser_window_title(url))
+    .title(
+        url.map(browser_window_title)
+            .unwrap_or_else(|| BLANK_BROWSER_TITLE.to_string()),
+    )
     .inner_size(1200.0, 900.0)
     .center()
     .focused(true)
@@ -256,17 +288,17 @@ fn emit_browser_state(
 #[tauri::command]
 pub fn open_browser_window(
     app_handle: AppHandle,
-    url: String,
+    url: Option<String>,
     locale: Option<String>,
     database_folder: Option<String>,
     focused_node_id: Option<String>,
     focused_cotonoma_id: Option<String>,
     theme: Option<String>,
 ) -> Result<(), Error> {
-    let url = parse_browser_url(&url)?;
+    let url = parse_optional_browser_url(url.as_deref())?;
     open_browser_window_internal(
         &app_handle,
-        &url,
+        url.as_ref(),
         locale.as_deref(),
         database_folder.as_deref(),
         focused_node_id.as_deref(),
@@ -281,22 +313,28 @@ pub fn browser_attach(
     app_handle: AppHandle,
     registry: tauri::State<'_, BrowserRegistry>,
     content_label: String,
-    initial_url: String,
+    initial_url: Option<String>,
     x: f64,
     y: f64,
     width: f64,
     height: f64,
 ) -> Result<BrowserViewState, Error> {
-    let initial_url = parse_browser_url(&initial_url)?;
+    let initial_url = parse_optional_browser_url(initial_url.as_deref())?;
 
     if app_handle.get_webview(&content_label).is_none() {
         registry.upsert(
             &content_label,
-            Some(initial_url.to_string()),
+            Some(
+                initial_url
+                    .as_ref()
+                    .map(|url| url.to_string())
+                    .unwrap_or_default(),
+            ),
             None,
-            Some(true),
+            Some(initial_url.is_some()),
         );
 
+        let webview_url = initial_url.clone().unwrap_or_else(blank_browser_url);
         let shell_label = window.label().to_string();
         let browser_registry = registry.inner().clone();
         let browser_registry_for_page_load = browser_registry.clone();
@@ -310,55 +348,58 @@ pub fn browser_attach(
         let shell_label_for_title = shell_label.clone();
 
         window.add_child(
-            tauri::webview::WebviewBuilder::new(
-                &content_label,
-                WebviewUrl::External(initial_url.clone()),
-            )
-            .on_page_load(move |_webview, payload| {
-                browser_registry_for_page_load.upsert(
-                    &content_label_for_page_load,
-                    Some(payload.url().to_string()),
-                    None,
-                    Some(matches!(
-                        payload.event(),
-                        tauri::webview::PageLoadEvent::Started
-                    )),
-                );
-                let _ = emit_browser_state(
-                    &app_for_page_load,
-                    &browser_registry_for_page_load,
-                    &shell_label_for_page_load,
-                    &content_label_for_page_load,
-                );
-            })
-            .on_document_title_changed(move |webview, title| {
-                browser_registry_for_title.upsert(
-                    &content_label_for_title,
-                    webview.url().ok().map(|url| url.to_string()),
-                    Some(title),
-                    None,
-                );
-                let _ = emit_browser_state(
-                    &app_for_title,
-                    &browser_registry_for_title,
-                    &shell_label_for_title,
-                    &content_label_for_title,
-                );
-            })
-            .on_new_window(move |url, _features| {
-                if matches!(url.scheme(), "http" | "https") {
-                    let _ = open_browser_window_internal(
-                        &app_for_new_window,
-                        &url,
+            tauri::webview::WebviewBuilder::new(&content_label, WebviewUrl::External(webview_url))
+                .on_page_load(move |_webview, payload| {
+                    browser_registry_for_page_load.upsert(
+                        &content_label_for_page_load,
+                        Some(browser_state_url(payload.url())),
                         None,
-                        None,
-                        None,
-                        None,
-                        None,
+                        Some(matches!(
+                            payload.event(),
+                            tauri::webview::PageLoadEvent::Started
+                        )),
                     );
-                }
-                tauri::webview::NewWindowResponse::Deny
-            }),
+                    let _ = emit_browser_state(
+                        &app_for_page_load,
+                        &browser_registry_for_page_load,
+                        &shell_label_for_page_load,
+                        &content_label_for_page_load,
+                    );
+                })
+                .on_document_title_changed(move |webview, title| {
+                    if let Some(url) = webview
+                        .url()
+                        .ok()
+                        .filter(|url| url.as_str() != BLANK_BROWSER_URL)
+                    {
+                        browser_registry_for_title.upsert(
+                            &content_label_for_title,
+                            Some(url.to_string()),
+                            Some(title),
+                            None,
+                        );
+                        let _ = emit_browser_state(
+                            &app_for_title,
+                            &browser_registry_for_title,
+                            &shell_label_for_title,
+                            &content_label_for_title,
+                        );
+                    }
+                })
+                .on_new_window(move |url, _features| {
+                    if matches!(url.scheme(), "http" | "https") {
+                        let _ = open_browser_window_internal(
+                            &app_for_new_window,
+                            Some(&url),
+                            None,
+                            None,
+                            None,
+                            None,
+                            None,
+                        );
+                    }
+                    tauri::webview::NewWindowResponse::Deny
+                }),
             tauri::LogicalPosition::new(x.max(0.0), y.max(0.0)),
             tauri::LogicalSize::new(width.max(1.0), height.max(1.0)),
         )?;

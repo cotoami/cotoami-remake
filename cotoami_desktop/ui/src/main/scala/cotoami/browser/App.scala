@@ -121,7 +121,7 @@ object App {
 
   private case class Props(
       contentLabel: String,
-      initialUrl: String,
+      initialUrl: Option[String],
       locale: Option[String],
       databaseFolder: Option[String],
       focusedNodeId: Option[String],
@@ -196,7 +196,7 @@ object App {
     )
     (
       Model(
-        url = props.initialUrl,
+        url = props.initialUrl.getOrElse(""),
         title = None,
         databaseFolder = props.databaseFolder,
         initialTheme = props.theme,
@@ -578,10 +578,9 @@ object App {
       browserShell <- params.get("browserShell")
       if browserShell == "1"
       contentLabel <- params.get("contentLabel")
-      initialUrl <- params.get("initialUrl")
     } yield Props(
       contentLabel,
-      initialUrl,
+      params.get("initialUrl").filter(_.nonEmpty),
       params.get("locale"),
       params.get("databaseFolder"),
       params.get("focusedNodeId"),
