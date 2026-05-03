@@ -225,6 +225,7 @@ trait Text {
   val BrowserShell_reload: String
   val BrowserShell_trail: String
   val BrowserShell_trailEmpty: String
+  val BrowserShell_addressPlaceholder: String
   val BrowserShell_go: String
   val BrowserShell_loadingPage: String
   val BrowserShell_pageReady: String

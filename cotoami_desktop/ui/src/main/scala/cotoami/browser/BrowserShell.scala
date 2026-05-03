@@ -700,6 +700,7 @@ object BrowserShell {
               className := "browser-address-input",
               `type` := "text",
               value := draftUrl,
+              placeholder := props.text.BrowserShell_addressPlaceholder,
               spellCheck := false,
               onFocus := (_ => editingRef.current = true),
               onBlur := (_ => {

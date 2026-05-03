@@ -283,6 +283,7 @@ object ja extends Text {
   val BrowserShell_reload = "再読み込み"
   val BrowserShell_trail = "トレイル"
   val BrowserShell_trailEmpty = "閲覧トレイルはまだありません。"
+  val BrowserShell_addressPlaceholder = "検索または URL を入力"
   val BrowserShell_go = "移動"
   val BrowserShell_loadingPage = "ページを読み込み中..."
   val BrowserShell_pageReady = "ページを表示しました。"
