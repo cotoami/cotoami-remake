@@ -17,12 +17,7 @@ import slinky.web.html._
 import marubinotto.fui.{Browser, Cmd, Program, Sub}
 import marubinotto.libs.tauri
 
-import cotoami.{
-  Context,
-  Into,
-  Model => CotoamiModel,
-  Msg => AppMsg
-}
+import cotoami.{Context, Into, Model => CotoamiModel, Msg => AppMsg}
 import cotoami.backend.{
   ChangelogEntryJson,
   DatabaseInfo,
@@ -30,13 +25,13 @@ import cotoami.backend.{
   SystemInfoJson
 }
 import cotoami.backend.CotonomaBackend
-import cotoami.models.{Cotonoma, Id, I18n, Node, UiState}
+import cotoami.models.{Cotonoma, I18n, Id, Node, UiState}
 import cotoami.repository.Root
 import cotoami.subparts.{
-  SelectCotonoma,
   SectionFlowInput,
   SectionGeomap,
-  SectionTimeline
+  SectionTimeline,
+  SelectCotonoma
 }
 import cotoami.subparts.SelectCotonoma.ExistingCotonoma
 import cotoami.updates.{Changelog, DatabaseFocus}
@@ -51,119 +46,6 @@ object App {
       focusedNodeId: Option[Id[Node]],
       focusedCotonomaId: Option[Id[Cotonoma]]
   )
-
-  case class BrowserTrailEntry(
-      url: String,
-      title: Option[String],
-      origin: String,
-      host: String,
-      path: String,
-      faviconUrl: String,
-      firstVisited: Int,
-      lastVisited: Int
-  ) {
-    def label: String =
-      title.map(_.trim).filter(_.nonEmpty).getOrElse(host)
-  }
-
-  case class BrowserTrailGroup(
-      parent: BrowserTrailEntry,
-      children: Seq[BrowserTrailEntry],
-      lastVisited: Int
-  )
-
-  case class BrowserTrail(
-      entries: Seq[BrowserTrailEntry] = Seq.empty,
-      nextVisit: Int = 1
-  ) {
-    def remember(url: String, title: Option[String]): BrowserTrail =
-      BrowserTrail.parse(url) match {
-        case Some(parsed) =>
-          val nextEntries =
-            entries.indexWhere(_.url == parsed.url) match {
-              case -1 =>
-                entries :+ BrowserTrailEntry(
-                  url = parsed.url,
-                  title = title,
-                  origin = parsed.origin,
-                  host = parsed.host,
-                  path = parsed.path,
-                  faviconUrl = s"${parsed.origin}/favicon.ico",
-                  firstVisited = nextVisit,
-                  lastVisited = nextVisit
-                )
-              case index =>
-                entries.updated(
-                  index,
-                  entries(index).copy(
-                    title = title.orElse(entries(index).title),
-                    lastVisited = nextVisit
-                  )
-                )
-            }
-          copy(entries = nextEntries, nextVisit = nextVisit + 1)
-        case None => this
-      }
-
-    def groups: Seq[BrowserTrailGroup] =
-      entries.map(_.origin).distinct.reverse.flatMap(origin =>
-        entries.filter(_.origin == origin) match {
-          case Seq() => None
-          case entriesInOrigin =>
-          val parent = entriesInOrigin.minBy(_.firstVisited)
-          val children = entriesInOrigin
-            .filterNot(_.url == parent.url)
-            .reverse
-            .toSeq
-          Some(
-            BrowserTrailGroup(
-              parent,
-              children,
-              entriesInOrigin.map(_.lastVisited).max
-            )
-          )
-        }
-      )
-
-    def deleteEntry(entry: BrowserTrailEntry, level: Int): BrowserTrail =
-      if (level == 1)
-        copy(entries = entries.filterNot(_.origin == entry.origin))
-      else
-        copy(entries = entries.filterNot(_.url == entry.url))
-
-    def entryForUrl(url: String): Option[BrowserTrailEntry] =
-      BrowserTrail.parse(url).flatMap(parsed =>
-        entries.find(_.url == parsed.url)
-      )
-  }
-
-  object BrowserTrail {
-    private case class ParsedUrl(
-        url: String,
-        origin: String,
-        host: String,
-        path: String
-    )
-
-    private def parse(url: String): Option[ParsedUrl] =
-      try {
-        val parsed = new URL(url)
-        Option
-          .when(parsed.protocol == "http:" || parsed.protocol == "https:") {
-            val path = Seq(parsed.pathname, parsed.search, parsed.hash)
-              .filter(_.nonEmpty)
-              .mkString
-            ParsedUrl(
-              url = parsed.href,
-              origin = parsed.origin,
-              host = parsed.host,
-              path = if (path.nonEmpty) path else "/"
-            )
-          }
-      } catch {
-        case _: Throwable => None
-      }
-  }
 
   @js.native
   trait BrowserDatabaseFocusJson extends js.Object {
@@ -184,7 +66,7 @@ object App {
       initialTheme: Option[String],
       app: CotoamiModel,
       cotonomaSelect: CotonomaSelect.Model,
-      trail: BrowserTrail,
+      trail: BrowserTrail.Model,
       pendingFocus: Option[BrowserDatabaseFocus],
       currentFocus: Option[BrowserDatabaseFocus]
   )
@@ -194,10 +76,7 @@ object App {
   object Msg {
     case class BrowserStateChanged(url: String, title: Option[String])
         extends Msg
-    case class BrowserTrailEntryDeleted(
-        entry: BrowserTrailEntry,
-        level: Int
-    ) extends Msg
+    case class BrowserTrailMsg(msg: BrowserTrail.Msg) extends Msg
     case class SystemInfoFetched(result: Either[Unit, SystemInfoJson])
         extends Msg
     case class UiStateRestored(uiState: Option[UiState]) extends Msg
@@ -323,7 +202,7 @@ object App {
         initialTheme = props.theme,
         app = app,
         cotonomaSelect = CotonomaSelect.Model(),
-        trail = BrowserTrail(),
+        trail = BrowserTrail.Model(),
         pendingFocus = props.initialFocus,
         currentFocus = None
       ),
@@ -349,11 +228,9 @@ object App {
           Cmd.none
         )
 
-      case Msg.BrowserTrailEntryDeleted(entry, level) =>
-        (
-          model.copy(trail = model.trail.deleteEntry(entry, level)),
-          Cmd.none
-        )
+      case Msg.BrowserTrailMsg(msg) =>
+        val (trail, cmd) = BrowserTrail.update(msg, model.trail)
+        (model.copy(trail = trail), cmd.map(Msg.BrowserTrailMsg.apply))
 
       case Msg.SystemInfoFetched(Right(info)) =>
         (model.copy(app = model.app.setSystemInfo(info)), Cmd.none)
@@ -496,8 +373,7 @@ object App {
         (
           model.copy(cotonomaSelect =
             select.copy(
-              options =
-                cotonomas.map(new ExistingCotonoma(_)).toSeq,
+              options = cotonomas.map(new ExistingCotonoma(_)).toSeq,
               loading = false
             )
           ),
@@ -507,9 +383,7 @@ object App {
       case CotonomaSelect.Msg.CotonomasFetched(query, Left(_))
           if query == select.query =>
         (
-          model.copy(cotonomaSelect =
-            select.copy(loading = false)
-          ),
+          model.copy(cotonomaSelect = select.copy(loading = false)),
           Cmd.none
         )
 
@@ -531,8 +405,7 @@ object App {
             (
               model.copy(
                 app = app,
-                cotonomaSelect =
-                  select.copy(query = "", loading = false)
+                cotonomaSelect = select.copy(query = "", loading = false)
               ),
               (cmd ++ emitDatabaseFocus(app)).map(Msg.AppMsg.apply)
             )
@@ -608,6 +481,16 @@ object App {
         cotonomaSelect = props.databaseFolder.map(_ =>
           cotonomaSelect(model.cotonomaSelect, model.app, dispatch)
         ),
+        trail = (currentUrl, onClose, onNavigate) =>
+          BrowserTrail.view(
+            model = model.trail,
+            currentUrl = currentUrl,
+            paneTitle = model.app.i18n.text.BrowserShell_trail,
+            emptyText = model.app.i18n.text.BrowserShell_trailEmpty,
+            onClose = onClose,
+            onNavigate = onNavigate,
+            dispatch = msg => dispatch(Msg.BrowserTrailMsg(msg))
+          ),
         timelineOpened = timelineOpened,
         timelineWidth = timelineWidth,
         onTimelineOpenChange = open =>
@@ -618,10 +501,8 @@ object App {
           dispatch(
             Msg.AppMsg(AppMsg.ResizePane(BrowserShell.TimelinePaneName, width))
           ),
-        onStateChange = (url, title) =>
-          dispatch(Msg.BrowserStateChanged(url, title)),
-        onTrailEntryDelete = (entry, level) =>
-          dispatch(Msg.BrowserTrailEntryDeleted(entry, level))
+        onStateChange =
+          (url, title) => dispatch(Msg.BrowserStateChanged(url, title))
       )
     )
   }
