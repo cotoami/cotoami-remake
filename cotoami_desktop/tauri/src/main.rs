@@ -52,6 +52,7 @@ fn main() {
             commands::browser::browser_attach,
             commands::browser::browser_resize,
             commands::browser::browser_navigate,
+            commands::browser::browser_set_blank_theme,
             commands::browser::browser_reload,
             commands::browser::browser_go_back,
             commands::browser::browser_go_forward,

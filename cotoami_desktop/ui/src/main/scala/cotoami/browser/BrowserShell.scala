@@ -137,7 +137,8 @@ object BrowserShell {
         .getOrElse(url)
 
   private def applyStateUrl(url: String): String =
-    if (url == "about:blank") "" else url
+    if (url == "about:blank" || url.endsWith("/browser-blank.html")) ""
+    else url
 
   private def applyState(
       state: BrowserViewStateJson,
@@ -182,6 +183,7 @@ object BrowserShell {
     val webviewSlotRef = useRef[html.Element](null)
     val windowViewportInsetTopRef = useRef(0.0)
     val (toolbarHeight, setToolbarHeightRaw) = useState(ToolbarHeight)
+    val currentTheme = props.model.app.uiState.map(_.theme).getOrElse("dark")
 
     def setActualUrl(url: String): Unit =
       setActualUrlRaw(_ => url)
@@ -309,7 +311,10 @@ object BrowserShell {
           "browser_attach",
           js.Object.assign(
             browserBoundsArgs,
-            jso(initialUrl = props.initialUrl.orUndefined)
+            jso(
+              initialUrl = props.initialUrl.orUndefined,
+              theme = currentTheme
+            )
           )
         )
         .toFuture
@@ -500,6 +505,24 @@ object BrowserShell {
         props.timelineOpened,
         props.timelineWidth
       )
+    )
+
+    useEffect(
+      () => {
+        if (actualUrl.isBlank())
+          tauri.core
+            .invoke[Unit](
+              "browser_set_blank_theme",
+              jso(
+                contentLabel = props.contentLabel,
+                theme = currentTheme
+              )
+            )
+            .toFuture
+            .onComplete(_ => ())
+        () => ()
+      },
+      Seq(props.contentLabel, actualUrl, currentTheme)
     )
 
     useEffect(

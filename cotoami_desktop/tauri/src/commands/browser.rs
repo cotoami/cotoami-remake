@@ -16,7 +16,7 @@ use super::error::Error;
 const BROWSER_STATE_EVENT: &str = "browser-state";
 const BROWSER_SHELL_QUERY_KEY: &str = "browserShell";
 const BROWSER_SHELL_QUERY_VALUE: &str = "1";
-const BLANK_BROWSER_URL: &str = "about:blank";
+const BLANK_BROWSER_PATH: &str = "browser-blank.html";
 const BLANK_BROWSER_TITLE: &str = "Browser";
 
 static BROWSER_WINDOW_COUNTER: AtomicU64 = AtomicU64::new(1);
@@ -103,16 +103,39 @@ fn parse_optional_browser_url(url: Option<&str>) -> Result<Option<tauri::Url>, E
         .transpose()
 }
 
-fn blank_browser_url() -> tauri::Url {
-    tauri::Url::parse(BLANK_BROWSER_URL).expect("static blank browser URL must be valid")
-}
-
 fn browser_state_url(url: &tauri::Url) -> String {
-    if url.as_str() == BLANK_BROWSER_URL {
+    if url.path().ends_with(BLANK_BROWSER_PATH) {
         String::new()
     } else {
         url.to_string()
     }
+}
+
+fn blank_browser_path(theme: Option<&str>) -> String {
+    let Some(theme) = theme.filter(|theme| matches!(*theme, "light" | "dark")) else {
+        return BLANK_BROWSER_PATH.to_string();
+    };
+    let mut url = tauri::Url::parse("https://browser-blank.local/")
+        .expect("static blank browser URL must be valid");
+    url.query_pairs_mut().append_pair("theme", theme);
+    format!("{BLANK_BROWSER_PATH}?{}", url.query().unwrap_or_default())
+}
+
+fn set_blank_browser_theme(webview: &tauri::Webview, theme: &str) -> Result<(), Error> {
+    if !matches!(theme, "light" | "dark") {
+        return Ok(());
+    }
+    let Some(url) = webview.url().ok() else {
+        return Ok(());
+    };
+    if !url.path().ends_with(BLANK_BROWSER_PATH) {
+        return Ok(());
+    }
+    webview.eval(&format!(
+        "document.documentElement.dataset.theme = '{}';",
+        theme
+    ))?;
+    Ok(())
 }
 
 fn browser_window_title(url: &tauri::Url) -> String {
@@ -314,6 +337,7 @@ pub fn browser_attach(
     registry: tauri::State<'_, BrowserRegistry>,
     content_label: String,
     initial_url: Option<String>,
+    theme: Option<String>,
     x: f64,
     y: f64,
     width: f64,
@@ -334,7 +358,9 @@ pub fn browser_attach(
             Some(initial_url.is_some()),
         );
 
-        let webview_url = initial_url.clone().unwrap_or_else(blank_browser_url);
+        let webview_url = initial_url
+            .map(WebviewUrl::External)
+            .unwrap_or_else(|| WebviewUrl::App(blank_browser_path(theme.as_deref()).into()));
         let shell_label = window.label().to_string();
         let browser_registry = registry.inner().clone();
         let browser_registry_for_page_load = browser_registry.clone();
@@ -348,7 +374,7 @@ pub fn browser_attach(
         let shell_label_for_title = shell_label.clone();
 
         window.add_child(
-            tauri::webview::WebviewBuilder::new(&content_label, WebviewUrl::External(webview_url))
+            tauri::webview::WebviewBuilder::new(&content_label, webview_url)
                 .on_page_load(move |_webview, payload| {
                     browser_registry_for_page_load.upsert(
                         &content_label_for_page_load,
@@ -370,7 +396,7 @@ pub fn browser_attach(
                     if let Some(url) = webview
                         .url()
                         .ok()
-                        .filter(|url| url.as_str() != BLANK_BROWSER_URL)
+                        .filter(|url| !url.path().ends_with(BLANK_BROWSER_PATH))
                     {
                         browser_registry_for_title.upsert(
                             &content_label_for_title,
@@ -450,6 +476,16 @@ pub fn browser_navigate(
     webview.navigate(url)?;
 
     emit_browser_state(&app_handle, registry.inner(), &shell_label, &content_label)
+}
+
+#[tauri::command]
+pub fn browser_set_blank_theme(
+    app_handle: AppHandle,
+    content_label: String,
+    theme: String,
+) -> Result<(), Error> {
+    let webview = browser_webview(&app_handle, &content_label)?;
+    set_blank_browser_theme(&webview, &theme)
 }
 
 #[tauri::command]
