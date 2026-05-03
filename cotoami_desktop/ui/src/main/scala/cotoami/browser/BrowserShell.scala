@@ -55,12 +55,12 @@ object BrowserShell {
       text: Text,
       timeline: Option[ReactElement],
       cotonomaSelect: Option[ReactElement],
+      trail: (String, () => Unit, String => Unit) => ReactElement,
       timelineOpened: Boolean,
       timelineWidth: Int,
       onTimelineOpenChange: Boolean => Unit,
       onTimelineWidthChange: Int => Unit,
-      onStateChange: (String, Option[String]) => Unit,
-      onTrailEntryDelete: (App.BrowserTrailEntry, Int) => Unit
+      onStateChange: (String, Option[String]) => Unit
   )
 
   private def normalizeUrl(input: String): Option[String] = {
@@ -367,100 +367,6 @@ object BrowserShell {
       invokeBrowserCommand("browser_navigate", jso(url = url))
     }
 
-    def trailEntry(
-        entry: App.BrowserTrailEntry,
-        level: Int,
-        displayUrl: String,
-        entryKey: Option[String] = None
-    ): ReactElement = {
-      val currentEntry = props.model.trail.entryForUrl(actualUrl)
-      val current = currentEntry.exists(_.url == entry.url)
-      val canDelete =
-        !current && !(level == 1 && currentEntry.exists(_.origin == entry.origin))
-      val entryClass = optionalClasses(
-        Seq(
-          (s"browser-trail-entry level-${level}", true),
-          ("current", current)
-        )
-      )
-      val deleteButton = Option.when(canDelete) {
-        button(
-          className := "browser-trail-delete",
-          `type` := "button",
-          title := "Delete",
-          onMouseDown := (e => {
-            e.preventDefault()
-            e.stopPropagation()
-          }),
-          onClick := (e => {
-            e.stopPropagation()
-            props.onTrailEntryDelete(entry, level)
-          })
-        )(
-          materialSymbol("delete")
-        )
-      }
-      val content =
-        Seq(
-          button(
-            className := "browser-trail-open",
-            `type` := "button",
-            title := entry.url,
-            onMouseDown := (e => e.preventDefault()),
-            onClick := (_ => navigateToTrail(entry.url))
-          )(
-            span(className := "browser-trail-favicon")(
-              materialSymbol("language"),
-              img(
-                alt := "",
-                src := entry.faviconUrl,
-                onError := (e =>
-                  e.currentTarget
-                    .asInstanceOf[dom.HTMLImageElement]
-                    .style
-                    .display = "none"
-                )
-              )
-            ),
-            span(className := "browser-trail-text")(
-              span(className := "browser-trail-title")(entry.label),
-              span(className := "browser-trail-url")(displayUrl)
-            )
-          )
-        ) ++ deleteButton.toSeq
-      entryKey match {
-        case Some(value) =>
-          li(className := entryClass, key := value)(
-            content*
-          )
-        case None =>
-          li(className := entryClass)(content*)
-      }
-    }
-
-    def trailList: ReactElement = {
-      val groups = props.model.trail.groups
-      div(className := "browser-trail-menu")(
-        if (groups.isEmpty)
-          div(className := "browser-trail-empty")(
-            props.text.BrowserShell_trailEmpty
-          )
-        else
-          ul(className := "browser-trail-groups")(
-            groups.map(group =>
-              li(className := "browser-trail-group", key := group.parent.origin)(
-                ul(className := "browser-trail-list")(
-                  (Seq(trailEntry(group.parent, 1, group.parent.url)) ++
-                    group.children.map(child =>
-                      trailEntry(child, 2, child.path, Some(child.url))
-                    ))*
-                )
-              )
-            )*
-          )
-      )
-    }
-
     useEffect(
       () => {
         val toolbar = toolbarRef.current
@@ -678,20 +584,6 @@ object BrowserShell {
         ).withKey(s"${props.timelineOpened}-${props.timelineWidth}")
       ).getOrElse(browserWebviewSlot)
 
-    val trailPane =
-      div(className := "browser-trail-pane")(
-        header(className := "browser-trail-header")(
-          h2()(props.text.BrowserShell_trail),
-          button(
-            className := "browser-action",
-            `type` := "button",
-            title := "Close",
-            onClick := (_ => setTrailOpen(false))
-          )(materialSymbol("close"))
-        ),
-        trailList
-      )
-
     val browserSurfaceContent =
       if (trailOpen)
         SplitPane(
@@ -703,7 +595,7 @@ object BrowserShell {
           onResizeEnd = Some(() => resizeBrowserView()),
           primary = SplitPane.Primary.Props(
             className = Some("browser-trail-sidebar")
-          )(trailPane),
+          )(props.trail(actualUrl, () => setTrailOpen(false), navigateToTrail)),
           secondary = SplitPane.Secondary.Props(
             className = Some("browser-trail-secondary")
           )(browserContent)
