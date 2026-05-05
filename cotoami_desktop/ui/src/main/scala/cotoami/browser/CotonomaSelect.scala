@@ -238,8 +238,10 @@ object CotonomaSelect {
       ),
       model.selected.collect { case _: NewCotonoma =>
         button(
-          className := "default create-cotonoma",
+          className := "browser-action create-cotonoma",
           `type` := "button",
+          title := app.i18n.text.SelectCotonoma_newCotonoma,
+          aria - "label" := app.i18n.text.SelectCotonoma_newCotonoma,
           disabled := model.creating,
           aria - "busy" := model.creating.toString,
           onClick := (_ => dispatch(Msg.CreateSelected))

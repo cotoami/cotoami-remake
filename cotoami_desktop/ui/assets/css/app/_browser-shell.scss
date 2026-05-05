@@ -652,12 +652,33 @@ div.browser-shell {
 
       button.create-cotonoma {
         flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
         height: 38px;
         margin: 0;
-        padding: 0 0.55rem;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--browser-tool-color);
+        box-shadow: none;
+        transition:
+          background-color 120ms ease,
+          color 120ms ease;
+
+        &:not([disabled]):hover {
+          background: var(--browser-tool-hover-background);
+          color: var(--primary);
+        }
+
+        &[disabled] {
+          opacity: 0.5;
+        }
 
         span.material-symbols {
-          font-size: 20px;
+          font-size: 1.35rem;
         }
       }
 
