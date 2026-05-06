@@ -32,6 +32,11 @@ import cotoami.subparts.SectionGeomap.{Model => Geomap}
 object SectionFlowInput {
   final val DraftStorageKey = "NewCotoDraft"
 
+  case class Options(
+      showOpenNewCotoModal: Boolean = true,
+      allowCotonomaForm: Boolean = true
+  )
+
   /////////////////////////////////////////////////////////////////////////////
   // Model
   /////////////////////////////////////////////////////////////////////////////
@@ -335,7 +340,8 @@ object SectionFlowInput {
       currentCotonoma: Cotonoma,
       @unused _geomap: Geomap,
       editorHeight: Int,
-      onEditorHeightChanged: Int => Unit
+      onEditorHeightChanged: Int => Unit,
+      options: Options = Options()
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(
       className := optionalClasses(
@@ -345,14 +351,15 @@ object SectionFlowInput {
         )
       )
     )(
-      header(model, currentCotonoma),
+      header(model, currentCotonoma, options),
       model.form match {
         case form: CotoForm.Model => {
           val divForm = formCoto(
             form,
             model,
             editorHeight,
-            onEditorHeightChanged
+            onEditorHeightChanged,
+            options
           )
 
           CotoForm.sectionMediaPreview(form)(using
@@ -376,10 +383,11 @@ object SectionFlowInput {
       }
     )
 
-  private def header(model: Model, currentCotonoma: Cotonoma)(using
-      context: Context,
-      dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  private def header(
+      model: Model,
+      currentCotonoma: Cotonoma,
+      options: Options
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     slinky.web.html.header()(
       section(
         className := "posting-to",
@@ -392,44 +400,47 @@ object SectionFlowInput {
           .map(PartsNode.imgNode(_)),
         currentCotonoma.name
       ),
-      section(
-        className := optionalClasses(
-          Seq(
-            ("coto-type-switch", true),
-            ("cotonoma-disabled", !context.repo.canPostCotonoma)
-          )
-        )
-      )(
-        button(
-          className := "new-coto default",
-          disabled := model.form.isInstanceOf[CotoForm.Model],
-          onClick := (_ => dispatch(Msg.SetCotoForm))
-        )(
-          span(className := "label")(
-            materialSymbol(Coto.IconName),
-            context.i18n.text.Coto
-          )
-        ),
-        Option.when(context.repo.canPostCotonoma) {
-          button(
-            className := "new-cotonoma default",
-            disabled := model.form.isInstanceOf[CotonomaForm.Model],
-            onClick := (_ => dispatch(Msg.SetCotonomaForm))
-          )(
-            span(className := "label")(
-              materialSymbol(Cotonoma.IconName),
-              context.i18n.text.Cotonoma
+      Option.when(options.allowCotonomaForm) {
+        section(
+          className := optionalClasses(
+            Seq(
+              ("coto-type-switch", true),
+              ("cotonoma-disabled", !context.repo.canPostCotonoma)
             )
           )
-        }
-      )
+        )(
+          button(
+            className := "new-coto default",
+            disabled := model.form.isInstanceOf[CotoForm.Model],
+            onClick := (_ => dispatch(Msg.SetCotoForm))
+          )(
+            span(className := "label")(
+              materialSymbol(Coto.IconName),
+              context.i18n.text.Coto
+            )
+          ),
+          Option.when(context.repo.canPostCotonoma) {
+            button(
+              className := "new-cotonoma default",
+              disabled := model.form.isInstanceOf[CotonomaForm.Model],
+              onClick := (_ => dispatch(Msg.SetCotonomaForm))
+            )(
+              span(className := "label")(
+                materialSymbol(Cotonoma.IconName),
+                context.i18n.text.Cotonoma
+              )
+            )
+          }
+        )
+      }
     )
 
   private def formCoto(
       form: CotoForm.Model,
       model: Model,
       editorHeight: Int,
-      onEditorHeightChanged: Int => Unit
+      onEditorHeightChanged: Int => Unit,
+      options: Options = Options()
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     SplitPane(
       vertical = false,
@@ -444,7 +455,7 @@ object SectionFlowInput {
             onFocus = Some(() => dispatch(Msg.Unfold)),
             showLineNumbers = false
           )(using context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
-          Option.when(!form.inPreview) {
+          Option.when(!form.inPreview && options.showOpenNewCotoModal) {
             buttonOpenNewCotoModal(
               model = model,
               classes = "default open-new-coto-modal overlay"
