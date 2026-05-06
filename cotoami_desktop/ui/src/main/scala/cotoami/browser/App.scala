@@ -446,7 +446,8 @@ object App {
                       ),
                     SectionFlowInput.Options(
                       showOpenNewCotoModal = false,
-                      allowCotonomaForm = false
+                      allowCotonomaForm = false,
+                      showPostTo = false
                     )
                   )
                 )

@@ -34,7 +34,8 @@ object SectionFlowInput {
 
   case class Options(
       showOpenNewCotoModal: Boolean = true,
-      allowCotonomaForm: Boolean = true
+      allowCotonomaForm: Boolean = true,
+      showPostTo: Boolean = true
   )
 
   /////////////////////////////////////////////////////////////////////////////
@@ -351,7 +352,9 @@ object SectionFlowInput {
         )
       )
     )(
-      header(model, currentCotonoma, options),
+      Option.when(options.showPostTo || options.allowCotonomaForm) {
+        header(model, currentCotonoma, options)
+      },
       model.form match {
         case form: CotoForm.Model => {
           val divForm = formCoto(
@@ -389,17 +392,19 @@ object SectionFlowInput {
       options: Options
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     slinky.web.html.header()(
-      section(
-        className := "posting-to",
-        onDoubleClick := (_ =>
-          context.repo.cotos.get(currentCotonoma.cotoId)
-            .foreach(coto => dispatch(ModelessCoto.Msg.Open(coto)))
+      Option.when(options.showPostTo) {
+        section(
+          className := "posting-to",
+          onDoubleClick := (_ =>
+            context.repo.cotos.get(currentCotonoma.cotoId)
+              .foreach(coto => dispatch(ModelessCoto.Msg.Open(coto)))
+          )
+        )(
+          context.repo.nodes.get(currentCotonoma.nodeId)
+            .map(PartsNode.imgNode(_)),
+          currentCotonoma.name
         )
-      )(
-        context.repo.nodes.get(currentCotonoma.nodeId)
-          .map(PartsNode.imgNode(_)),
-        currentCotonoma.name
-      ),
+      },
       Option.when(options.allowCotonomaForm) {
         section(
           className := optionalClasses(
