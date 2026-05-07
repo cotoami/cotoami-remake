@@ -571,6 +571,10 @@ object SectionFlowInput {
       className := classes,
       title := context.i18n.text.ModelessNewCoto_title,
       disabled := model.posting,
+      onMouseDown := (e => {
+        e.preventDefault()
+        e.stopPropagation()
+      }),
       onClick := (_ => dispatch(Msg.OpenNewCotoModal))
     )(
       materialSymbol("open_in_new")
