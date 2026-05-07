@@ -4,6 +4,7 @@ import scala.util.chaining._
 import scala.annotation.unused
 import scala.scalajs.js
 
+import org.scalajs.dom
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
@@ -45,6 +46,8 @@ object SectionFlowInput {
   case class Model(
       form: Form = CotoForm.Model(),
       folded: Boolean = true,
+      focused: Boolean = false,
+      interacting: Boolean = false,
       posting: Boolean = false
   ) {
     def onFocusChange: Model =
@@ -77,7 +80,7 @@ object SectionFlowInput {
           case form: CotoForm.Model     => CotoForm.Model()
           case form: CotonomaForm.Model => CotonomaForm.Model()
         },
-        folded = true
+        folded = !focused
       )
 
     def save: Cmd.One[AppMsg] =
@@ -118,7 +121,10 @@ object SectionFlowInput {
     case class CotonomaFormMsg(submsg: CotonomaForm.Msg) extends Msg
     case class ContentRestored(content: Option[String]) extends Msg
     case class SetFolded(folded: Boolean) extends Msg
-    case object Unfold extends Msg
+    case object Focus extends Msg
+    case object Blur extends Msg
+    case object InteractionStart extends Msg
+    case object InteractionEnd extends Msg
     case object Post extends Msg
     case class PostCoto(
         form: CotoForm.Model,
@@ -172,7 +178,8 @@ object SectionFlowInput {
         )
 
       case (Msg.OpenNewCotoModal, form: CotoForm.Model, Some(_)) =>
-        val cleared = model.clear
+        val cleared =
+          model.copy(focused = false, interacting = false).clear
         default.copy(
           _1 = cleared,
           _4 = Cmd.Batch(ModelessNewCoto.open(form), cleared.save)
@@ -237,11 +244,27 @@ object SectionFlowInput {
       case (Msg.SetFolded(folded), _, _) =>
         default.copy(_1 = model.copy(folded = folded))
 
-      case (Msg.Unfold, _, _) =>
+      case (Msg.Focus, _, _) =>
         default.copy(_1 =
-          model.copy(folded = false)
+          model.copy(folded = false, focused = true)
             .setGeolocation(context.geomap.focusedLocation)
         )
+
+      case (Msg.Blur, _, _) =>
+        if (model.interacting)
+          default
+        else
+          default.copy(_1 =
+            model.copy(focused = false, folded = !model.hasContents)
+          )
+
+      case (Msg.InteractionStart, _, _) =>
+        default.copy(_1 =
+          model.copy(folded = false, focused = true, interacting = true)
+        )
+
+      case (Msg.InteractionEnd, _, _) =>
+        default.copy(_1 = model.copy(interacting = false))
 
       case (Msg.Post, form: CotoForm.Model, Some(cotonoma)) => {
         val postId = WaitingPost.newPostId()
@@ -343,14 +366,32 @@ object SectionFlowInput {
       editorHeight: Int,
       onEditorHeightChanged: Int => Unit,
       options: Options = Options()
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+    def finishInteraction(): Unit =
+      dom.window.setTimeout(() => dispatch(Msg.InteractionEnd), 0)
+
     section(
       className := optionalClasses(
         Seq(
           ("flow-input", true),
           ("folded", model.folded)
         )
-      )
+      ),
+      onFocus := (_ => dispatch(Msg.Focus)),
+      onBlur := (e => {
+        val container = e.currentTarget.asInstanceOf[dom.Element]
+        dom.window.setTimeout(
+          () =>
+            dom.document.activeElement match {
+              case active: dom.Node if container.contains(active) =>
+              case _ => dispatch(Msg.Blur)
+            },
+          0
+        )
+      }),
+      onMouseDown := (_ => dispatch(Msg.InteractionStart)),
+      onMouseUp := (_ => finishInteraction()),
+      onClick := (_ => finishInteraction())
     )(
       Option.when(options.showPostTo || options.allowCotonomaForm) {
         header(model, currentCotonoma, options)
@@ -385,6 +426,7 @@ object SectionFlowInput {
           formCotonoma(form, model)
       }
     )
+  }
 
   private def header(
       model: Model,
@@ -445,7 +487,7 @@ object SectionFlowInput {
       model: Model,
       editorHeight: Int,
       onEditorHeightChanged: Int => Unit,
-      options: Options = Options()
+      options: Options
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     SplitPane(
       vertical = false,
@@ -457,7 +499,6 @@ object SectionFlowInput {
           CotoForm.sectionEditorOrPreview(
             form = form,
             onCtrlEnter = Some(() => dispatch(Msg.Post)),
-            onFocus = Some(() => dispatch(Msg.Unfold)),
             showLineNumbers = false
           )(using context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
           Option.when(!form.inPreview && options.showOpenNewCotoModal) {
@@ -476,16 +517,6 @@ object SectionFlowInput {
         div(className := "post")(
           CotoForm.sectionValidationError(form),
           section(className := "post")(
-            Option.when(!form.inPreview) {
-              div(className := "fold-button")(
-                button(
-                  className := "default fold",
-                  onClick := (_ => dispatch(Msg.SetFolded(true)))
-                )(
-                  materialSymbol("arrow_drop_up")
-                )
-              )
-            },
             div(className := "buttons")(
               CotoForm.buttonPreview(form)(using
                 context,
@@ -506,8 +537,6 @@ object SectionFlowInput {
       div(className := "cotonoma-form")(
         CotonomaForm.inputName(
           model = form,
-          onFocus = Some(() => dispatch(Msg.Unfold)),
-          onBlur = Some(() => dispatch(Msg.SetFolded(!model.hasContents))),
           onCtrlEnter = Some(() => dispatch(Msg.Post))
         )(using context, submsg => dispatch(Msg.CotonomaFormMsg(submsg)))
       ),

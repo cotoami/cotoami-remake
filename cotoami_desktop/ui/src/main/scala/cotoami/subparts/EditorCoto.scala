@@ -301,6 +301,7 @@ object EditorCoto {
         form: Model,
         onCtrlEnter: Option[() => Unit] = None,
         onFocus: Option[() => Unit] = None,
+        onBlur: Option[() => Unit] = None,
         enableImageInput: Boolean = true,
         showLineNumbers: Boolean = true
     )(using context: Context, dispatch: Msg => Unit): ReactElement =
@@ -311,6 +312,7 @@ object EditorCoto {
           form,
           onCtrlEnter,
           onFocus,
+          onBlur,
           enableImageInput,
           showLineNumbers
         )
@@ -319,6 +321,7 @@ object EditorCoto {
         form: Model,
         onCtrlEnter: Option[() => Unit] = None,
         onFocus: Option[() => Unit] = None,
+        onBlur: Option[() => Unit] = None,
         enableImageInput: Boolean = true,
         showLineNumbers: Boolean = true
     )(using context: Context, dispatch: Msg => Unit): ReactElement =
@@ -332,6 +335,7 @@ object EditorCoto {
              else context.i18n.text.EditorCoto_placeholder_coto),
           onCtrlEnter = onCtrlEnter,
           onFocus = onFocus,
+          onBlur = onBlur,
           showLineNumbers = showLineNumbers,
           onDraftCommitted = dispatch
         ),
@@ -365,6 +369,7 @@ object EditorCoto {
           contentPlaceholder: String,
           onCtrlEnter: Option[() => Unit],
           onFocus: Option[() => Unit],
+          onBlur: Option[() => Unit],
           showLineNumbers: Boolean,
           onDraftCommitted: Msg => Unit
       )
@@ -375,6 +380,7 @@ object EditorCoto {
           contentPlaceholder: String,
           onCtrlEnter: Option[() => Unit],
           onFocus: Option[() => Unit],
+          onBlur: Option[() => Unit],
           showLineNumbers: Boolean,
           onDraftCommitted: Msg => Unit
       ) =
@@ -385,6 +391,7 @@ object EditorCoto {
             contentPlaceholder,
             onCtrlEnter,
             onFocus,
+            onBlur,
             showLineNumbers,
             onDraftCommitted
           )
@@ -495,8 +502,12 @@ object EditorCoto {
               `type` := "text",
               placeholder := props.summaryPlaceholder,
               value := summaryDraft,
+              onFocus := (_ => props.onFocus.foreach(_())),
               onChange := (e => setSummaryDraft(e.target.value)),
-              onBlur := (_ => flushDraft()),
+              onBlur := (_ => {
+                flushDraft()
+                props.onBlur.foreach(_())
+              }),
               onCompositionStart := (_ => setImeActive(true)),
               onCompositionEnd := (_ => {
                 setImeActive(false)
@@ -515,7 +526,10 @@ object EditorCoto {
             showLineNumbers = props.showLineNumbers,
             onFocus = () => props.onFocus.foreach(_()),
             onChange = content => setContentDraft(content),
-            onBlur = () => flushDraft(),
+            onBlur = () => {
+              flushDraft()
+              props.onBlur.foreach(_())
+            },
             onCompositionStart = () => setImeActive(true),
             onCompositionEnd = () => {
               setImeActive(false)
