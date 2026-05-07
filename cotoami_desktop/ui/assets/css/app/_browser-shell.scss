@@ -688,6 +688,44 @@ div.browser-shell {
         margin-top: 0;
       }
 
+      section.flow-input {
+        flex-shrink: 0;
+        background:
+          color-mix(in srgb, var(--card-background-color) 92%, var(--background-color));
+
+        > header {
+          height: 38px;
+
+          section.posting-to {
+            min-width: 0;
+            padding-left: 2.25rem;
+            font-size: 0.82rem;
+          }
+        }
+
+        div.coto-form-pane {
+          min-height: 2.5rem;
+        }
+
+        div.post {
+          margin-bottom: 0;
+        }
+
+        section.post div.buttons {
+          padding-right: 0.55rem;
+
+          button {
+            height: 32px;
+            padding: 4px 10px;
+            font-size: 0.82rem;
+          }
+        }
+
+        .shortcut-help {
+          display: none;
+        }
+      }
+
       section.timeline > header.tools button.default {
         color: var(--browser-tool-color);
 

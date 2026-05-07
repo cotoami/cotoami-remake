@@ -10,7 +10,7 @@ import cats.effect.std.Dispatcher
 import org.scalajs.dom
 import org.scalajs.dom.URL
 
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.ReactDOMClient
 import slinky.web.html._
 
@@ -37,6 +37,8 @@ object App {
 
   private val DatabaseFocusEvent = "browser-database-focus"
   private val ThemeEvent = "browser-theme"
+  private val TimelineEditorPaneName = "BrowserTimeline.editor"
+  private val TimelineEditorDefaultHeight = 180
 
   case class BrowserDatabaseFocus(
       databaseFolder: String,
@@ -153,12 +155,13 @@ object App {
   private def init(props: Props)(url: URL): (Model, Cmd[Msg]) = {
     val i18n = props.locale.map(I18n.fromBcp47).getOrElse(I18n())
     val initialTheme = props.theme.getOrElse(UiState.DefaultTheme)
+    val (flowInput, flowInputCmd) = SectionFlowInput.init
     val app = CotoamiModel(
       url = url,
       i18n = i18n,
       databaseFolder = props.databaseFolder,
       uiState = Some(UiState(theme = initialTheme)),
-      flowInput = SectionFlowInput.Model(),
+      flowInput = flowInput,
       geomap = SectionGeomap.Model(SectionGeomap.DefaultRemotePmtilesUrl)
     )
     (
@@ -178,7 +181,8 @@ object App {
         SystemInfoJson.fetch().map(Msg.SystemInfoFetched.apply),
         props.databaseFolder
           .map(DatabaseInfo.openDatabase(_).map(Msg.DatabaseOpened.apply))
-          .getOrElse(Cmd.none)
+          .getOrElse(Cmd.none),
+        flowInputCmd.map(Msg.AppMsg.apply)
       )
     )
   }
@@ -295,6 +299,27 @@ object App {
         )
       }
 
+      case AppMsg.FlowInputMsg(submsg) => {
+        given Context = model.app
+        val (flowInput, geomap, waitingPosts, cmd) =
+          SectionFlowInput.update(
+            submsg,
+            model.app.flowInput,
+            model.app.timeline.waitingPosts
+          )
+        val timeline = model.app.timeline.copy(waitingPosts = waitingPosts)
+        (
+          model.copy(app =
+            model.app.copy(
+              flowInput = flowInput,
+              geomap = geomap,
+              timeline = timeline
+            )
+          ),
+          cmd.map(Msg.AppMsg.apply)
+        )
+      }
+
       case AppMsg.FocusCotonoma(cotonoma) =>
         focusCotonoma(model, cotonoma)
 
@@ -392,6 +417,10 @@ object App {
       msg => dispatch(Msg.AppMsg(msg.into))
     given Context = model.app
     given (Into[AppMsg] => Unit) = appDispatch
+    val timelineEditorHeight = uiState.paneSizes.getOrElse(
+      TimelineEditorPaneName,
+      TimelineEditorDefaultHeight
+    )
 
     BrowserShell.component(
       BrowserShell.Props(
@@ -400,11 +429,35 @@ object App {
         model = model,
         text = model.app.i18n.text,
         timeline = props.databaseFolder.map(_ =>
-          SectionTimeline(
-            model.app.timeline,
-            SectionTimeline.Options(showItoTraversalParts = false)
+          Fragment(
+            (model.app.repo.currentCotonoma, model.app.repo.canPostCoto) match {
+              case (Some(cotonoma), true) =>
+                Some(
+                  SectionFlowInput(
+                    model.app.flowInput,
+                    cotonoma,
+                    model.app.geomap,
+                    timelineEditorHeight,
+                    newSize =>
+                      dispatch(
+                        Msg.AppMsg(
+                          AppMsg.ResizePane(TimelineEditorPaneName, newSize)
+                        )
+                      ),
+                    SectionFlowInput.Options(
+                      showOpenNewCotoModal = false,
+                      allowCotonomaForm = false,
+                      showPostTo = false
+                    )
+                  )
+                )
+              case _ => None
+            },
+            SectionTimeline(
+              model.app.timeline,
+              SectionTimeline.Options(showItoTraversalParts = false)
+            ).getOrElse(div(className := "browser-timeline-empty")())
           )
-            .getOrElse(div(className := "browser-timeline-empty")())
         ),
         cotonomaSelect = props.databaseFolder.map(_ =>
           CotonomaSelect.view(

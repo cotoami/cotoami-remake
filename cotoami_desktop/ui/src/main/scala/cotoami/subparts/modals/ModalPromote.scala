@@ -190,7 +190,12 @@ object ModalPromote {
       dispatch: CotoForm.Msg => Unit
   ): ReactElement = {
     val editor = Fragment(
-      CotoForm.sectionEditorOrPreview(form, None, None, false),
+      CotoForm.sectionEditorOrPreview(
+        form = form,
+        onCtrlEnter = None,
+        onFocus = None,
+        enableImageInput = false
+      ),
       CotoForm.sectionValidationError(form)
     )
     div(className := "coto-form")(
