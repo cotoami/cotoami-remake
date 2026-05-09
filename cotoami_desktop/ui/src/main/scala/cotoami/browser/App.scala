@@ -10,7 +10,7 @@ import cats.effect.std.Dispatcher
 import org.scalajs.dom
 import org.scalajs.dom.URL
 
-import slinky.core.facade.{Fragment, ReactElement}
+import slinky.core.facade.ReactElement
 import slinky.web.ReactDOMClient
 import slinky.web.html._
 
@@ -37,8 +37,6 @@ object App {
 
   private val DatabaseFocusEvent = "browser-database-focus"
   private val ThemeEvent = "browser-theme"
-  private val TimelineEditorPaneName = "BrowserTimeline.editor"
-  private val TimelineEditorDefaultHeight = 180
 
   case class BrowserDatabaseFocus(
       databaseFolder: String,
@@ -418,9 +416,19 @@ object App {
     given Context = model.app
     given (Into[AppMsg] => Unit) = appDispatch
     val timelineEditorHeight = uiState.paneSizes.getOrElse(
-      TimelineEditorPaneName,
-      TimelineEditorDefaultHeight
+      CotoTimeline.EditorPaneName,
+      CotoTimeline.DefaultEditorHeight
     )
+    val cotoTimeline =
+      CotoTimeline(
+        model,
+        timelineEditorHeight,
+        newSize =>
+          dispatch(
+            Msg.AppMsg(AppMsg.ResizePane(CotoTimeline.EditorPaneName, newSize))
+          ),
+        msg => dispatch(Msg.CotonomaSelectMsg(msg))
+      )
 
     BrowserShell.component(
       BrowserShell.Props(
@@ -428,44 +436,8 @@ object App {
         initialUrl = props.initialUrl,
         model = model,
         text = model.app.i18n.text,
-        timeline = props.databaseFolder.map(_ =>
-          Fragment(
-            (model.app.repo.currentCotonoma, model.app.repo.canPostCoto) match {
-              case (Some(cotonoma), true) =>
-                Some(
-                  SectionFlowInput(
-                    model.app.flowInput,
-                    cotonoma,
-                    model.app.geomap,
-                    timelineEditorHeight,
-                    newSize =>
-                      dispatch(
-                        Msg.AppMsg(
-                          AppMsg.ResizePane(TimelineEditorPaneName, newSize)
-                        )
-                      ),
-                    SectionFlowInput.Options(
-                      showOpenNewCotoModal = false,
-                      allowCotonomaForm = false,
-                      showPostTo = false
-                    )
-                  )
-                )
-              case _ => None
-            },
-            SectionTimeline(
-              model.app.timeline,
-              SectionTimeline.Options(showItoTraversalParts = false)
-            ).getOrElse(div(className := "browser-timeline-empty")())
-          )
-        ),
-        cotonomaSelect = props.databaseFolder.map(_ =>
-          CotonomaSelect.view(
-            model.cotonomaSelect,
-            model.app,
-            msg => dispatch(Msg.CotonomaSelectMsg(msg))
-          )
-        ),
+        timeline = cotoTimeline.timeline,
+        cotonomaSelect = cotoTimeline.cotonomaSelect,
         trail = (currentUrl, onClose, onNavigate) =>
           BrowserTrail.view(
             model = model.trail,
