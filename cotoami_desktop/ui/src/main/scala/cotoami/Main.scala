@@ -83,7 +83,7 @@ object Main {
   }
 
   def init(url: URL): (Model, Cmd[Msg]) = {
-    val (flowInput, flowInputCmd) = SectionFlowInput.init
+    val (flowInput, flowInputCmd) = SectionFlowInput.init()
     val (geomap, geomapCmd) = SectionGeomap.init
     (
       Model(url = url, flowInput = flowInput, geomap = geomap),

@@ -153,7 +153,8 @@ object App {
   private def init(props: Props)(url: URL): (Model, Cmd[Msg]) = {
     val i18n = props.locale.map(I18n.fromBcp47).getOrElse(I18n())
     val initialTheme = props.theme.getOrElse(UiState.DefaultTheme)
-    val (flowInput, flowInputCmd) = SectionFlowInput.init
+    val (flowInput, flowInputCmd) =
+      SectionFlowInput.init(persistDraft = false)
     val app = CotoamiModel(
       url = url,
       i18n = i18n,
@@ -303,7 +304,8 @@ object App {
           SectionFlowInput.update(
             submsg,
             model.app.flowInput,
-            model.app.timeline.waitingPosts
+            model.app.timeline.waitingPosts,
+            persistDraft = Some(false)
           )
         val timeline = model.app.timeline.copy(waitingPosts = waitingPosts)
         (

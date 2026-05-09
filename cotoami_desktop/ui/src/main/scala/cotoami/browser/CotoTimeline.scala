@@ -37,7 +37,8 @@ object CotoTimeline {
                   SectionFlowInput.Options(
                     showOpenNewCotoModal = false,
                     allowCotonomaForm = false,
-                    showPostTo = false
+                    showPostTo = false,
+                    persistDraft = false
                   )
                 )
               )

@@ -36,7 +36,8 @@ object SectionFlowInput {
   case class Options(
       showOpenNewCotoModal: Boolean = true,
       allowCotonomaForm: Boolean = true,
-      showPostTo: Boolean = true
+      showPostTo: Boolean = true,
+      persistDraft: Boolean = true
   )
 
   /////////////////////////////////////////////////////////////////////////////
@@ -48,7 +49,8 @@ object SectionFlowInput {
       folded: Boolean = true,
       focused: Boolean = false,
       interacting: Boolean = false,
-      posting: Boolean = false
+      posting: Boolean = false,
+      persistDraft: Boolean = true
   ) {
     def onFocusChange: Model =
       copy(posting = false).pipe { model =>
@@ -84,24 +86,30 @@ object SectionFlowInput {
       )
 
     def save: Cmd.One[AppMsg] =
-      form match {
-        case form: CotoForm.Model =>
-          Browser.setLocalStorage(DraftStorageKey, form.contentInput)
-        case _ => Cmd.none
-      }
+      if (persistDraft)
+        form match {
+          case form: CotoForm.Model =>
+            Browser.setLocalStorage(DraftStorageKey, form.contentInput)
+          case _ => Cmd.none
+        }
+      else
+        Cmd.none
 
     def restore: Cmd.One[AppMsg] =
-      form match {
-        case form: CotoForm.Model =>
-          Browser.getLocalStorage(DraftStorageKey).map(
-            Msg.ContentRestored(_).into
-          )
-        case _ => Cmd.none
-      }
+      if (persistDraft)
+        form match {
+          case form: CotoForm.Model =>
+            Browser.getLocalStorage(DraftStorageKey).map(
+              Msg.ContentRestored(_).into
+            )
+          case _ => Cmd.none
+        }
+      else
+        Cmd.none
   }
 
-  def init: (Model, Cmd.One[AppMsg]) = {
-    val model = Model()
+  def init(persistDraft: Boolean = true): (Model, Cmd.One[AppMsg]) = {
+    val model = Model(persistDraft = persistDraft)
     (model, model.restore)
   }
 
@@ -140,11 +148,16 @@ object SectionFlowInput {
 
   def update(
       msg: Msg,
-      model: Model,
-      waitingPosts: WaitingPosts
+      currentModel: Model,
+      waitingPosts: WaitingPosts,
+      persistDraft: Option[Boolean] = None
   )(using
       context: Context
   ): (Model, Geomap, WaitingPosts, Cmd[AppMsg]) = {
+    val model =
+      currentModel.copy(
+        persistDraft = persistDraft.getOrElse(currentModel.persistDraft)
+      )
     val default = (model, context.geomap, waitingPosts, Cmd.none)
     (msg, model.form, context.repo.currentCotonoma) match {
       case (Msg.SetCotoForm, _, _) =>
