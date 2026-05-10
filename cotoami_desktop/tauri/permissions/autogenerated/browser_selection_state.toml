@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-browser-selection-state"
+description = "Enables the browser_selection_state command without any pre-configured scope."
+commands.allow = ["browser_selection_state"]
+
+[[permission]]
+identifier = "deny-browser-selection-state"
+description = "Denies the browser_selection_state command without any pre-configured scope."
+commands.deny = ["browser_selection_state"]

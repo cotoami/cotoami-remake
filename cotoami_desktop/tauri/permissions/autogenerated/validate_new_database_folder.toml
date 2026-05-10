@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-validate-new-database-folder"
+description = "Enables the validate_new_database_folder command without any pre-configured scope."
+commands.allow = ["validate_new_database_folder"]
+
+[[permission]]
+identifier = "deny-validate-new-database-folder"
+description = "Denies the validate_new_database_folder command without any pre-configured scope."
+commands.deny = ["validate_new_database_folder"]

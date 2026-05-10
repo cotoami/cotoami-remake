@@ -7,13 +7,15 @@ use std::{
 };
 
 use parking_lot::Mutex;
-use serde::Serialize;
-use tauri::{AppHandle, Emitter, Manager, WebviewUrl, Window};
+use serde::{Deserialize, Serialize};
+use tauri::{AppHandle, Emitter, Manager, Webview, WebviewUrl, Window};
 use tracing::error;
 
 use super::error::Error;
 
 const BROWSER_STATE_EVENT: &str = "browser-state";
+const BROWSER_SELECTION_STATE_EVENT: &str = "browser-selection-state";
+const BROWSER_SELECTION_CAPTURE_EVENT: &str = "browser-selection-capture";
 const BROWSER_SHELL_QUERY_KEY: &str = "browserShell";
 const BROWSER_SHELL_QUERY_VALUE: &str = "1";
 const BLANK_BROWSER_PATH: &str = "browser-blank.html";
@@ -46,6 +48,34 @@ struct BrowserStatePayload {
     url: String,
     title: Option<String>,
     is_loading: bool,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct SelectionRect {
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct BrowserSelectionStatePayload {
+    content_label: String,
+    url: String,
+    has_selection: bool,
+    rect: Option<SelectionRect>,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct BrowserSelectionCapturePayload {
+    content_label: String,
+    request_id: Option<String>,
+    url: String,
+    title: Option<String>,
+    selected_text: String,
+    selected_html: String,
+    has_selection: bool,
+    rect: Option<SelectionRect>,
 }
 
 impl BrowserRegistry {
@@ -135,6 +165,252 @@ fn set_blank_browser_theme(webview: &tauri::Webview, theme: &str) -> Result<(), 
         "document.documentElement.dataset.theme = '{}';",
         theme
     ))?;
+    Ok(())
+}
+
+fn browser_selection_script(content_label: &str) -> String {
+    let content_label = serde_json::to_string(content_label)
+        .expect("serializing browser content label to JavaScript must succeed");
+    format!(
+        r#"
+(function () {{
+  if (window.__cotoamiSelectionClipInstalled) return;
+  window.__cotoamiSelectionClipInstalled = true;
+
+  const contentLabel = {content_label};
+  let scheduled = false;
+  let postMessageIpcPreferred = false;
+  let clipButton = null;
+
+  function preferPostMessageIpc() {{
+    if (postMessageIpcPreferred) return;
+    postMessageIpcPreferred = true;
+
+    const originalFetch = window.fetch;
+    const originalWarn = console.warn;
+    window.fetch = function (resource, options) {{
+      const url = String(resource && resource.url ? resource.url : resource);
+      if (url.startsWith("ipc://localhost/")) {{
+        return Promise.reject(new Error("Cotoami browser selection uses native IPC."));
+      }}
+      return originalFetch.call(this, resource, options);
+    }};
+    console.warn = function (message, error) {{
+      if (
+        typeof message === "string" &&
+        message.indexOf("IPC custom protocol failed") !== -1 &&
+        error &&
+        error.message === "Cotoami browser selection uses native IPC."
+      ) {{
+        return;
+      }}
+      return originalWarn.apply(this, arguments);
+    }};
+
+    window.setTimeout(function () {{
+      window.fetch = originalFetch;
+      console.warn = originalWarn;
+    }}, 1000);
+  }}
+
+  function invoke(command, args) {{
+    try {{
+      if (window.__TAURI_INTERNALS__ && window.__TAURI_INTERNALS__.invoke) {{
+        preferPostMessageIpc();
+        window.__TAURI_INTERNALS__.invoke(command, args).catch(function () {{}});
+      }}
+    }} catch (_) {{}}
+  }}
+
+  function selectedRange() {{
+    const selection = window.getSelection && window.getSelection();
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return null;
+    const text = selection.toString();
+    if (!text || !text.trim()) return null;
+    return selection.getRangeAt(0);
+  }}
+
+  function usefulRect(range) {{
+    const rects = Array.from(range.getClientRects ? range.getClientRects() : []);
+    const rect = rects.find(r => r.width > 0 && r.height > 0) ||
+      (range.getBoundingClientRect && range.getBoundingClientRect());
+    if (!rect || rect.width <= 0 || rect.height <= 0) return null;
+    return {{
+      x: rect.left,
+      y: rect.top,
+      width: rect.width,
+      height: rect.height
+    }};
+  }}
+
+  function selectionHtml(range) {{
+    const container = document.createElement("div");
+    container.appendChild(range.cloneContents());
+    return container.innerHTML;
+  }}
+
+  function ensureClipButton() {{
+    if (clipButton) return clipButton;
+    clipButton = document.createElement("button");
+    clipButton.type = "button";
+    clipButton.setAttribute("aria-label", "Clip");
+    clipButton.style.cssText = [
+      "position:fixed",
+      "z-index:2147483647",
+      "display:none",
+      "align-items:center",
+      "gap:6px",
+      "height:34px",
+      "padding:0 10px",
+      "border:1px solid rgba(0,0,0,.18)",
+      "border-radius:8px",
+      "background:#fff",
+      "color:#202124",
+      "box-shadow:0 8px 24px rgba(0,0,0,.22)",
+      "font:600 13px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif",
+      "line-height:1",
+      "cursor:pointer",
+      "user-select:none"
+    ].join(";");
+    clipButton.innerHTML = '<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:#30a46c;color:#fff;font-weight:800;font-size:12px;">c</span><span data-cotoami-clip-label>Clip</span>';
+    clipButton.addEventListener("mousedown", function (event) {{
+      event.preventDefault();
+      event.stopPropagation();
+    }}, true);
+    clipButton.addEventListener("click", function (event) {{
+      event.preventDefault();
+      event.stopPropagation();
+      window.dispatchEvent(new CustomEvent("__cotoami_clip_capture_request", {{
+        detail: {{ requestId: null }}
+      }}));
+    }}, true);
+    return clipButton;
+  }}
+
+  function hideClipButton() {{
+    if (clipButton) clipButton.style.display = "none";
+  }}
+
+  function showClipButton(rect, label) {{
+    if (!rect) {{
+      hideClipButton();
+      return;
+    }}
+    const button = ensureClipButton();
+    const labelElement = button.querySelector("[data-cotoami-clip-label]");
+    const displayLabel = label || "Clip";
+    button.setAttribute("aria-label", displayLabel);
+    button.title = displayLabel;
+    if (labelElement) labelElement.textContent = displayLabel;
+    if (!button.isConnected) {{
+      const parent = document.documentElement || document.body;
+      parent.appendChild(button);
+    }}
+    button.style.left = Math.max(4, rect.x) + "px";
+    button.style.top = Math.max(4, rect.y - 42) + "px";
+    button.style.display = "inline-flex";
+  }}
+
+  function clearSelectionState() {{
+    hideClipButton();
+    invoke("browser_selection_state", {{ payload: {{
+      content_label: contentLabel,
+      url: window.location.href,
+      has_selection: false
+    }} }});
+  }}
+
+  function reportSelectionState() {{
+    scheduled = false;
+    const range = selectedRange();
+    const rect = range && usefulRect(range);
+    if (!range || !rect) {{
+      clearSelectionState();
+      return;
+    }}
+    invoke("browser_selection_state", {{ payload: {{
+      content_label: contentLabel,
+      url: window.location.href,
+      has_selection: true,
+      rect
+    }} }});
+  }}
+
+  function scheduleSelectionState() {{
+    if (scheduled) return;
+    scheduled = true;
+    window.requestAnimationFrame(reportSelectionState);
+  }}
+
+  document.addEventListener("selectionchange", scheduleSelectionState, true);
+  document.addEventListener("mouseup", scheduleSelectionState, true);
+  document.addEventListener("keyup", event => {{
+    if (event.key === "Escape") clearSelectionState();
+    else scheduleSelectionState();
+  }}, true);
+  window.addEventListener("scroll", clearSelectionState, true);
+  window.addEventListener("resize", clearSelectionState, true);
+  window.addEventListener("blur", clearSelectionState, true);
+  window.addEventListener("__cotoami_clip_overlay", event => {{
+    const detail = event.detail || {{}};
+    if (detail.visible) showClipButton(detail.rect, detail.label);
+    else hideClipButton();
+  }}, true);
+  window.addEventListener("__cotoami_clip_capture_request", event => {{
+    const requestId = event.detail && event.detail.requestId;
+    const range = selectedRange();
+    const rect = range && usefulRect(range);
+    const selection = window.getSelection && window.getSelection();
+    invoke("browser_selection_capture", {{ payload: {{
+      content_label: contentLabel,
+      request_id: requestId,
+      url: window.location.href,
+      title: document.title || "",
+      selected_text: selection ? selection.toString() : "",
+      selected_html: range ? selectionHtml(range) : "",
+      has_selection: Boolean(range && rect),
+      rect
+    }} }});
+  }}, true);
+}})();
+"#
+    )
+}
+
+fn dispatch_selection_capture_request(
+    webview: &tauri::Webview,
+    request_id: &str,
+) -> Result<(), Error> {
+    let request_id = serde_json::to_string(request_id)
+        .expect("serializing browser selection request id must succeed");
+    webview.eval(&format!(
+        r#"window.dispatchEvent(new CustomEvent("__cotoami_clip_capture_request", {{ detail: {{ requestId: {request_id} }} }}));"#
+    ))?;
+    Ok(())
+}
+
+fn dispatch_selection_clip_overlay(
+    webview: &tauri::Webview,
+    visible: bool,
+    label: &str,
+    rect: Option<&SelectionRect>,
+) -> Result<(), Error> {
+    let label =
+        serde_json::to_string(label).expect("serializing browser clip label must succeed");
+    let rect = serde_json::to_string(&rect).expect("serializing browser clip rect must succeed");
+    webview.eval(&format!(
+        r#"window.dispatchEvent(new CustomEvent("__cotoami_clip_overlay", {{ detail: {{ visible: {visible}, label: {label}, rect: {rect} }} }}));"#
+    ))?;
+    Ok(())
+}
+
+fn validate_selection_payload(webview: &Webview, content_label: &str) -> Result<(), Error> {
+    if !content_label.starts_with("browser-content-") || webview.label() != content_label {
+        return Err(Error::new(
+            "invalid-browser-selection-source",
+            "Invalid browser selection source.",
+        ));
+    }
     Ok(())
 }
 
@@ -375,6 +651,7 @@ pub fn browser_attach(
 
         window.add_child(
             tauri::webview::WebviewBuilder::new(&content_label, webview_url)
+                .initialization_script(browser_selection_script(&content_label))
                 .on_page_load(move |_webview, payload| {
                     browser_registry_for_page_load.upsert(
                         &content_label_for_page_load,
@@ -486,6 +763,54 @@ pub fn browser_set_blank_theme(
 ) -> Result<(), Error> {
     let webview = browser_webview(&app_handle, &content_label)?;
     set_blank_browser_theme(&webview, &theme)
+}
+
+#[tauri::command]
+pub fn browser_selection_state(
+    webview: Webview,
+    app_handle: AppHandle,
+    payload: BrowserSelectionStatePayload,
+) -> Result<(), Error> {
+    validate_selection_payload(&webview, &payload.content_label)?;
+    if let Err(e) = app_handle.emit(BROWSER_SELECTION_STATE_EVENT, payload) {
+        error!("failed to emit browser selection state: reason={e}");
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn browser_selection_capture(
+    webview: Webview,
+    app_handle: AppHandle,
+    payload: BrowserSelectionCapturePayload,
+) -> Result<(), Error> {
+    validate_selection_payload(&webview, &payload.content_label)?;
+    if let Err(e) = app_handle.emit(BROWSER_SELECTION_CAPTURE_EVENT, payload) {
+        error!("failed to emit browser selection capture: reason={e}");
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn browser_request_selection_capture(
+    app_handle: AppHandle,
+    content_label: String,
+    request_id: String,
+) -> Result<(), Error> {
+    let webview = browser_webview(&app_handle, &content_label)?;
+    dispatch_selection_capture_request(&webview, &request_id)
+}
+
+#[tauri::command]
+pub fn browser_set_selection_clip_overlay(
+    app_handle: AppHandle,
+    content_label: String,
+    visible: bool,
+    label: String,
+    rect: Option<SelectionRect>,
+) -> Result<(), Error> {
+    let webview = browser_webview(&app_handle, &content_label)?;
+    dispatch_selection_clip_overlay(&webview, visible, &label, rect.as_ref())
 }
 
 #[tauri::command]

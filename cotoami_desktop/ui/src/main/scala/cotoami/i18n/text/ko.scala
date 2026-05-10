@@ -291,4 +291,5 @@ object ko extends Text {
   val BrowserShell_pageReady = "페이지가 준비되었습니다."
   val BrowserShell_invalidUrl =
     "유효한 http:// 또는 https:// URL을 입력해 주세요."
+  val BrowserShell_clipSelection = "클립"
 }

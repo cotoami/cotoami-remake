@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-browser-set-blank-theme"
+description = "Enables the browser_set_blank_theme command without any pre-configured scope."
+commands.allow = ["browser_set_blank_theme"]
+
+[[permission]]
+identifier = "deny-browser-set-blank-theme"
+description = "Denies the browser_set_blank_theme command without any pre-configured scope."
+commands.deny = ["browser_set_blank_theme"]

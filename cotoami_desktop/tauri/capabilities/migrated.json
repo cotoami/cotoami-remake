@@ -50,5 +50,26 @@
     "log:default",
     "os:default",
     "process:default"
+    ,
+    "allow-show-window",
+    "allow-open-browser-window",
+    "allow-browser-attach",
+    "allow-browser-resize",
+    "allow-browser-navigate",
+    "allow-browser-set-blank-theme",
+    "allow-browser-request-selection-capture",
+    "allow-browser-set-selection-clip-overlay",
+    "allow-browser-reload",
+    "allow-browser-go-back",
+    "allow-browser-go-forward",
+    "allow-node-command",
+    "allow-operate-as",
+    "allow-system-info",
+    "allow-validate-new-database-folder",
+    "allow-validate-database-folder",
+    "allow-create-database",
+    "allow-open-database",
+    "allow-new-owner-password",
+    "allow-connect-to-servers"
   ]
 }

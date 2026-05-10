@@ -293,4 +293,5 @@ object de extends Text {
   val BrowserShell_pageReady = "Seite bereit."
   val BrowserShell_invalidUrl =
     "Geben Sie eine gültige http://- oder https://-URL ein."
+  val BrowserShell_clipSelection = "Clip"
 }

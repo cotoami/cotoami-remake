@@ -128,6 +128,7 @@ object SectionFlowInput {
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
     case class CotonomaFormMsg(submsg: CotonomaForm.Msg) extends Msg
     case class ContentRestored(content: Option[String]) extends Msg
+    case class ReplaceCotoDraft(content: String, preview: Boolean) extends Msg
     case class SetFolded(folded: Boolean) extends Msg
     case object Focus extends Msg
     case object Blur extends Msg
@@ -253,6 +254,21 @@ object SectionFlowInput {
             else
               model.copy(folded = false)
         )
+
+      case (Msg.ReplaceCotoDraft(content, preview), _, _) => {
+        val updated =
+          model.copy(
+            form = CotoForm.Model(
+              inPreview = preview,
+              contentInput = content
+            ),
+            folded = false,
+            focused = true,
+            interacting = false,
+            posting = false
+          )
+        default.copy(_1 = updated, _4 = updated.save)
+      }
 
       case (Msg.SetFolded(folded), _, _) =>
         default.copy(_1 = model.copy(folded = folded))

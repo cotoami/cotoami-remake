@@ -49,6 +49,43 @@ object BrowserShell {
     val content_label: String = js.native
   }
 
+  @js.native
+  trait SelectionRectJson extends js.Object {
+    val x: Double = js.native
+    val y: Double = js.native
+    val width: Double = js.native
+    val height: Double = js.native
+  }
+
+  @js.native
+  trait SelectionStateEventJson extends js.Object {
+    val content_label: String = js.native
+    val url: String = js.native
+    val has_selection: Boolean = js.native
+    val rect: js.UndefOr[SelectionRectJson] = js.native
+  }
+
+  @js.native
+  trait SelectionCaptureEventJson extends js.Object {
+    val content_label: String = js.native
+    val request_id: js.UndefOr[String] = js.native
+    val url: String = js.native
+    val title: js.UndefOr[String] = js.native
+    val selected_text: String = js.native
+    val selected_html: String = js.native
+    val has_selection: Boolean = js.native
+    val rect: js.UndefOr[SelectionRectJson] = js.native
+  }
+
+  case class SelectionRect(x: Double, y: Double, width: Double, height: Double)
+  case class SelectionState(url: String, rect: SelectionRect)
+  case class SelectionCapture(
+      url: String,
+      title: Option[String],
+      selectedText: String,
+      selectedHtml: String
+  )
+
   case class Props(
       contentLabel: String,
       initialUrl: Option[String],
@@ -61,7 +98,9 @@ object BrowserShell {
       timelineWidth: Int,
       onTimelineOpenChange: Boolean => Unit,
       onTimelineWidthChange: Int => Unit,
-      onStateChange: (String, Option[String]) => Unit
+      onStateChange: (String, Option[String]) => Unit,
+      canClipSelection: Boolean,
+      onClipSelection: SelectionCapture => Unit
   )
 
   private def normalizeUrl(input: String): Option[String] = {
@@ -173,10 +212,13 @@ object BrowserShell {
     val (_, setTitleRaw) = useState(props.model.title)
     val (loading, setLoadingRaw) = useState(props.initialUrl.nonEmpty)
     val (error, setErrorRaw) = useState(Option.empty[String])
+    val (selectionState, setSelectionStateRaw) =
+      useState(Option.empty[SelectionState])
     val (trailOpen, setTrailOpenRaw) = useState(false)
     val browserAttachedRef = useRef(false)
     val resizeInFlightRef = useRef(false)
     val pendingResizeRef = useRef(false)
+    val pendingSelectionCaptureRef = useRef(Option.empty[String])
     val editingRef = useRef(false)
     val windowTitleRef = useRef(windowTitle(initialUrl, props.model.title))
     val toolbarRef = useRef[html.Element](null)
@@ -199,6 +241,42 @@ object BrowserShell {
 
     def setError(value: Option[String]): Unit =
       setErrorRaw(_ => value)
+
+    def setSelectionState(value: Option[SelectionState]): Unit =
+      setSelectionStateRaw(_ => value)
+
+    def setContentClipOverlay(
+        visible: Boolean,
+        rect: Option[SelectionRect] = None
+    ): Unit =
+      tauri.core
+        .invoke[Unit](
+          "browser_set_selection_clip_overlay",
+          jso(
+            contentLabel = props.contentLabel,
+            visible = visible,
+            label = props.text.BrowserShell_clipSelection,
+            rect = rect
+              .map(rect =>
+                jso(
+                  x = rect.x,
+                  y = rect.y,
+                  width = rect.width,
+                  height = rect.height
+                )
+              )
+              .orUndefined
+          )
+        )
+        .toFuture
+        .failed
+        .foreach(handleFailure("Couldn't update the browser clip button"))
+
+    def clearSelectionState(): Unit = {
+      setContentClipOverlay(false)
+      setSelectionState(None)
+      pendingSelectionCaptureRef.current = None
+    }
 
     def setTrailOpen(value: Boolean): Unit =
       setTrailOpenRaw(_ => value)
@@ -365,6 +443,7 @@ object BrowserShell {
       resolveAddressBarInput(draftUrl) match {
         case Some(url) =>
           setActualUrl(url)
+          clearSelectionState()
           setDraftUrl(url)
           setLoading(true)
           setError(None)
@@ -375,6 +454,7 @@ object BrowserShell {
 
     def navigateToTrail(url: String): Unit = {
       setActualUrl(url)
+      clearSelectionState()
       setDraftUrl(url)
       setLoading(true)
       setError(None)
@@ -444,6 +524,7 @@ object BrowserShell {
                 .filter(_.content_label == props.contentLabel)
                 .foreach(payload => {
                   setError(None)
+                  clearSelectionState()
                   applyState(
                     payload,
                     setActualUrl,
@@ -473,6 +554,7 @@ object BrowserShell {
 
         val onResize: js.Function1[dom.Event, Unit] =
           (_: dom.Event) => {
+            clearSelectionState()
             scheduleBrowserResize()
             scheduleViewportInsetRefresh()
           }
@@ -491,6 +573,109 @@ object BrowserShell {
         }
       },
       Seq(props.contentLabel)
+    )
+
+    useEffect(
+      () => {
+        var unlistenSelectionState: Option[js.Function0[Unit]] = None
+        var unlistenSelectionCapture: Option[js.Function0[Unit]] = None
+        var disposed = false
+
+        tauri.event
+          .listen[SelectionStateEventJson](
+            "browser-selection-state",
+            event =>
+              Option(event.payload)
+                .filter(_.content_label == props.contentLabel)
+                .foreach(payload => {
+                  val rect = payload.rect.toOption
+                  if (
+                    props.canClipSelection &&
+                    payload.has_selection &&
+                    payload.url == actualUrl &&
+                    rect.isDefined
+                  ) {
+                    val selectionRect =
+                      SelectionRect(
+                        rect.get.x,
+                        rect.get.y,
+                        rect.get.width,
+                        rect.get.height
+                      )
+                    setSelectionState(
+                      Some(SelectionState(payload.url, selectionRect))
+                    )
+                    setContentClipOverlay(true, Some(selectionRect))
+                  } else
+                    clearSelectionState()
+                })
+          )
+          .toFuture
+          .onComplete {
+            case Success(unlistenFn) =>
+              if (disposed)
+                unlistenFn()
+              else
+                unlistenSelectionState = Some(unlistenFn)
+            case Failure(throwable) =>
+              handleFailure("Couldn't subscribe to browser selection events")(
+                throwable
+              )
+          }
+
+        tauri.event
+          .listen[SelectionCaptureEventJson](
+            "browser-selection-capture",
+            event =>
+              Option(event.payload)
+                .filter(_.content_label == props.contentLabel)
+                .foreach(payload => {
+                  val pending = pendingSelectionCaptureRef.current
+                  if (
+                    pending.isEmpty ||
+                    pending.exists(id => payload.request_id.toOption.contains(id))
+                  ) {
+                    pendingSelectionCaptureRef.current = None
+                    if (
+                      props.canClipSelection &&
+                      payload.has_selection &&
+                      payload.url == actualUrl &&
+                      !payload.selected_text.trim.isEmpty
+                    ) {
+                      clearSelectionState()
+                      props.onClipSelection(
+                        SelectionCapture(
+                          payload.url,
+                          optionString(payload.title),
+                          payload.selected_text,
+                          payload.selected_html
+                        )
+                      )
+                    } else
+                      clearSelectionState()
+                  }
+                })
+          )
+          .toFuture
+          .onComplete {
+            case Success(unlistenFn) =>
+              if (disposed)
+                unlistenFn()
+              else
+                unlistenSelectionCapture = Some(unlistenFn)
+            case Failure(throwable) =>
+              handleFailure("Couldn't subscribe to browser clip events")(
+                throwable
+              )
+          }
+
+        () => {
+          disposed = true
+          unlistenSelectionState.foreach(_())
+          unlistenSelectionCapture.foreach(_())
+        }
+      },
+      Seq(props.contentLabel, props.canClipSelection, actualUrl)
     )
 
     useEffect(
@@ -564,6 +749,27 @@ object BrowserShell {
     val displayedUrl = if (editingRef.current) draftUrl else actualUrl
     val secure = isSecureUrl(displayedUrl)
     val addressIcon = if (secure) "lock" else "language"
+
+    def requestSelectionCapture(): Unit = {
+      val requestId =
+        s"${js.Date.now().toLong}-${js.Math.random().toString.drop(2)}"
+      pendingSelectionCaptureRef.current = Some(requestId)
+      tauri.core
+        .invoke[Unit](
+          "browser_request_selection_capture",
+          jso(
+            contentLabel = props.contentLabel,
+            requestId = requestId
+          )
+        )
+        .toFuture
+        .onComplete {
+          case Success(_) =>
+          case Failure(throwable) =>
+            pendingSelectionCaptureRef.current = None
+            handleFailure("Couldn't capture the selection")(throwable)
+        }
+    }
 
     val browserWebviewSlot =
       div(className := "browser-webview-slot", ref := webviewSlotRef)(
