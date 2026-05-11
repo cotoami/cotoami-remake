@@ -212,7 +212,7 @@ object BrowserShell {
     val (_, setTitleRaw) = useState(props.model.title)
     val (loading, setLoadingRaw) = useState(props.initialUrl.nonEmpty)
     val (error, setErrorRaw) = useState(Option.empty[String])
-    val (selectionState, setSelectionStateRaw) =
+    val (_, setSelectionStateRaw) =
       useState(Option.empty[SelectionState])
     val (trailOpen, setTrailOpenRaw) = useState(false)
     val browserAttachedRef = useRef(false)
@@ -749,27 +749,6 @@ object BrowserShell {
     val displayedUrl = if (editingRef.current) draftUrl else actualUrl
     val secure = isSecureUrl(displayedUrl)
     val addressIcon = if (secure) "lock" else "language"
-
-    def requestSelectionCapture(): Unit = {
-      val requestId =
-        s"${js.Date.now().toLong}-${js.Math.random().toString.drop(2)}"
-      pendingSelectionCaptureRef.current = Some(requestId)
-      tauri.core
-        .invoke[Unit](
-          "browser_request_selection_capture",
-          jso(
-            contentLabel = props.contentLabel,
-            requestId = requestId
-          )
-        )
-        .toFuture
-        .onComplete {
-          case Success(_) =>
-          case Failure(throwable) =>
-            pendingSelectionCaptureRef.current = None
-            handleFailure("Couldn't capture the selection")(throwable)
-        }
-    }
 
     val browserWebviewSlot =
       div(className := "browser-webview-slot", ref := webviewSlotRef)(
