@@ -20,6 +20,8 @@ const BROWSER_SHELL_QUERY_KEY: &str = "browserShell";
 const BROWSER_SHELL_QUERY_VALUE: &str = "1";
 const BLANK_BROWSER_PATH: &str = "browser-blank.html";
 const BLANK_BROWSER_TITLE: &str = "Browser";
+const COTOAMI_LOGOMARK_SVG: &str =
+    include_str!("../../../ui/assets/static/images/logo/logomark.svg");
 
 static BROWSER_WINDOW_COUNTER: AtomicU64 = AtomicU64::new(1);
 
@@ -171,6 +173,8 @@ fn set_blank_browser_theme(webview: &tauri::Webview, theme: &str) -> Result<(), 
 fn browser_selection_script(content_label: &str) -> String {
     let content_label = serde_json::to_string(content_label)
         .expect("serializing browser content label to JavaScript must succeed");
+    let logomark_svg =
+        serde_json::to_string(COTOAMI_LOGOMARK_SVG).expect("serializing Cotoami logomark SVG must succeed");
     format!(
         r#"
 (function () {{
@@ -178,6 +182,7 @@ fn browser_selection_script(content_label: &str) -> String {
   window.__cotoamiSelectionClipInstalled = true;
 
   const contentLabel = {content_label};
+  const cotoamiLogomark = {logomark_svg};
   let scheduled = false;
   let postMessageIpcPreferred = false;
   let clipButton = null;
@@ -272,7 +277,23 @@ fn browser_selection_script(content_label: &str) -> String {
       "cursor:pointer",
       "user-select:none"
     ].join(";");
-    clipButton.innerHTML = '<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:#30a46c;color:#fff;font-weight:800;font-size:12px;">c</span><span data-cotoami-clip-label>Clip</span>';
+    const icon = document.createElement("span");
+    icon.setAttribute("aria-hidden", "true");
+    icon.style.cssText = "display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;line-height:0;";
+    icon.innerHTML = cotoamiLogomark;
+    const svg = icon.querySelector("svg");
+    if (svg) {{
+      svg.removeAttribute("width");
+      svg.removeAttribute("height");
+      svg.style.width = "18px";
+      svg.style.height = "18px";
+      svg.style.display = "block";
+    }}
+    const label = document.createElement("span");
+    label.dataset.cotoamiClipLabel = "";
+    label.textContent = "Clip";
+    clipButton.appendChild(icon);
+    clipButton.appendChild(label);
     clipButton.addEventListener("mousedown", function (event) {{
       event.preventDefault();
       event.stopPropagation();
