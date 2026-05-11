@@ -1,5 +1,6 @@
 package cotoami.browser
 
+import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => jso}
 
 import org.scalajs.dom
@@ -10,10 +11,11 @@ import marubinotto.libs.unified.htmlToMarkdownPlugins
 object WebClipMarkdown {
   case class Source(title: Option[String], url: String)
 
-  private lazy val processor =
+  private def processor(baseUrl: String) =
     Unified
       .unified()
       .use(htmlToMarkdownPlugins.RehypeParse, jso(fragment = true))
+      .use(absolutizeImageUrlsPlugin(baseUrl))
       .use(htmlToMarkdownPlugins.RehypeRemark)
       .use(
         htmlToMarkdownPlugins.RemarkStringify,
@@ -29,7 +31,7 @@ object WebClipMarkdown {
       selectedText: String,
       source: Source
   ): String = {
-    val markdown = normalize(convertHtml(selectedHtml))
+    val markdown = normalize(convertHtml(selectedHtml, source.url))
     val text = normalize(selectedText)
     val body =
       if (markdown.isBlank()) text
@@ -38,16 +40,50 @@ object WebClipMarkdown {
     Seq(body, sourceLink(source)).filterNot(_.isBlank()).mkString("\n\n")
   }
 
-  private def convertHtml(html: String): String =
+  private def convertHtml(html: String, baseUrl: String): String =
     if (html.isBlank()) ""
     else
       try {
-        processor.processSync(html).toString()
+        processor(baseUrl).processSync(html).toString()
       } catch {
         case e: Throwable =>
           println(s"HTML to Markdown conversion failed: ${e.toString}")
           ""
       }
+
+  private def absolutizeImageUrlsPlugin(baseUrl: String): js.Function0[js.Function1[js.Dynamic, Unit]] =
+    () =>
+      (tree: js.Dynamic) => {
+        def visit(node: js.Dynamic): Unit = {
+          if (
+            !js.isUndefined(node.tagName) &&
+            node.tagName.asInstanceOf[String] == "img" &&
+            !js.isUndefined(node.properties) &&
+            !js.isUndefined(node.properties.src)
+          ) {
+            resolveUrl(node.properties.src.asInstanceOf[String], baseUrl)
+              .foreach(node.properties.updateDynamic("src")(_))
+          }
+
+          if (!js.isUndefined(node.children))
+            node.children
+              .asInstanceOf[js.Array[js.Dynamic]]
+              .foreach(visit)
+        }
+        visit(tree)
+      }
+
+  private def resolveUrl(url: String, baseUrl: String): Option[String] =
+    Option(url)
+      .map(_.trim)
+      .filter(_.nonEmpty)
+      .flatMap(url =>
+        try {
+          Some(new dom.URL(url, baseUrl).href)
+        } catch {
+          case _: Throwable => None
+        }
+      )
 
   private def conversionLooksWorse(markdown: String, text: String): Boolean = {
     if (text.isBlank()) false

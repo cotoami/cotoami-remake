@@ -38,4 +38,17 @@ class WebClipMarkdownSpec extends AnyFunSuite {
       link == "[A \\[tricky\\] title with newline](https://example.com/a%20path/paren%29)"
     )
   }
+
+  test("converts relative image URLs to absolute URLs") {
+    val markdown = WebClipMarkdown.fromSelection(
+      """<p><img alt="Logo" src="../images/logo.png"></p>""",
+      "",
+      WebClipMarkdown.Source(
+        Some("Example"),
+        "https://example.com/docs/page/index.html"
+      )
+    )
+
+    assert(markdown.contains("![Logo](https://example.com/docs/images/logo.png)"))
+  }
 }
