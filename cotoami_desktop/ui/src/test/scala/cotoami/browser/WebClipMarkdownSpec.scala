@@ -51,4 +51,19 @@ class WebClipMarkdownSpec extends AnyFunSuite {
 
     assert(markdown.contains("![Logo](https://example.com/docs/images/logo.png)"))
   }
+
+  test("converts relative link URLs to absolute URLs") {
+    val markdown = WebClipMarkdown.fromSelection(
+      """<p>Read <a href="/docs/intro?from=clip">the intro</a>.</p>""",
+      "Read the intro.",
+      WebClipMarkdown.Source(
+        Some("Example"),
+        "https://example.com/docs/page/index.html"
+      )
+    )
+
+    assert(
+      markdown.contains("[the intro](https://example.com/docs/intro?from=clip)")
+    )
+  }
 }

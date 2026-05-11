@@ -15,7 +15,7 @@ object WebClipMarkdown {
     Unified
       .unified()
       .use(htmlToMarkdownPlugins.RehypeParse, jso(fragment = true))
-      .use(absolutizeImageUrlsPlugin(baseUrl))
+      .use(absolutizeUrlAttributesPlugin(baseUrl))
       .use(htmlToMarkdownPlugins.RehypeRemark)
       .use(
         htmlToMarkdownPlugins.RemarkStringify,
@@ -51,19 +51,18 @@ object WebClipMarkdown {
           ""
       }
 
-  private def absolutizeImageUrlsPlugin(baseUrl: String): js.Function0[js.Function1[js.Dynamic, Unit]] =
+  private def absolutizeUrlAttributesPlugin(baseUrl: String): js.Function0[js.Function1[js.Dynamic, Unit]] =
     () =>
       (tree: js.Dynamic) => {
         def visit(node: js.Dynamic): Unit = {
-          if (
-            !js.isUndefined(node.tagName) &&
-            node.tagName.asInstanceOf[String] == "img" &&
-            !js.isUndefined(node.properties) &&
-            !js.isUndefined(node.properties.src)
-          ) {
-            resolveUrl(node.properties.src.asInstanceOf[String], baseUrl)
-              .foreach(node.properties.updateDynamic("src")(_))
-          }
+          if (!js.isUndefined(node.properties))
+            urlAttributesFor(node).foreach(attribute =>
+              if (!js.isUndefined(node.properties.selectDynamic(attribute)))
+                resolveUrl(
+                  node.properties.selectDynamic(attribute).asInstanceOf[String],
+                  baseUrl
+                ).foreach(node.properties.updateDynamic(attribute)(_))
+            )
 
           if (!js.isUndefined(node.children))
             node.children
@@ -71,6 +70,18 @@ object WebClipMarkdown {
               .foreach(visit)
         }
         visit(tree)
+      }
+
+  private def urlAttributesFor(node: js.Dynamic): Seq[String] =
+    if (js.isUndefined(node.tagName)) Seq.empty
+    else
+      node.tagName.asInstanceOf[String] match {
+        case "a" | "area" | "link" => Seq("href")
+        case "img" | "source" | "video" | "audio" | "track" | "iframe" |
+            "embed" | "script" =>
+          Seq("src")
+        case "object" => Seq("data")
+        case _ => Seq.empty
       }
 
   private def resolveUrl(url: String, baseUrl: String): Option[String] =
