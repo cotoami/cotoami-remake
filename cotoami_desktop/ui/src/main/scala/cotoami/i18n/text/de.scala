@@ -23,6 +23,7 @@ object de extends Text {
   val OK = "OK"
   val Cancel = "Abbrechen"
   val Post = "Posten"
+  val Clear = "Löschen"
   val Insert = "Einfügen"
   val Save = "Speichern"
   val Edit = "Bearbeiten"

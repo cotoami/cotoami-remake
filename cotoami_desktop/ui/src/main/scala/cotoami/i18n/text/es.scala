@@ -23,6 +23,7 @@ object es extends Text {
   val OK = "OK"
   val Cancel = "Cancelar"
   val Post = "Publicar"
+  val Clear = "Limpiar"
   val Insert = "Insertar"
   val Save = "Guardar"
   val Edit = "Editar"

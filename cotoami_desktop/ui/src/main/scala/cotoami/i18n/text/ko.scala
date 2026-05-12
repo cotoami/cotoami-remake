@@ -23,6 +23,7 @@ object ko extends Text {
   val OK = "확인"
   val Cancel = "취소"
   val Post = "게시"
+  val Clear = "지우기"
   val Insert = "삽입"
   val Save = "저장"
   val Edit = "편집"

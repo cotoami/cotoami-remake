@@ -23,6 +23,7 @@ object fr extends Text {
   val OK = "OK"
   val Cancel = "Annuler"
   val Post = "Publier"
+  val Clear = "Effacer"
   val Insert = "Insérer"
   val Save = "Enregistrer"
   val Edit = "Modifier"

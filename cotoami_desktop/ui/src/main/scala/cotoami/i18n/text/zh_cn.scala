@@ -23,6 +23,7 @@ object zh_cn extends Text {
   val OK = "确定"
   val Cancel = "取消"
   val Post = "发布"
+  val Clear = "清除"
   val Insert = "插入"
   val Save = "保存"
   val Edit = "编辑"

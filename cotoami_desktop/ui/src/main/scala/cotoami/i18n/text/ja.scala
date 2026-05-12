@@ -23,6 +23,7 @@ object ja extends Text {
   val OK = "OK"
   val Cancel = "キャンセル"
   val Post = "投稿"
+  val Clear = "クリア"
   val Insert = "挿入"
   val Save = "保存"
   val Edit = "編集"

@@ -20,6 +20,7 @@ trait Text {
   val OK: String
   val Cancel: String
   val Post: String
+  val Clear: String
   val Insert: String
   val Save: String
   val Edit: String

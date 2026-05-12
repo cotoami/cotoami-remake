@@ -23,6 +23,7 @@ object zh_tw extends Text {
   val OK = "確定"
   val Cancel = "取消"
   val Post = "發布"
+  val Clear = "清除"
   val Insert = "插入"
   val Save = "儲存"
   val Edit = "編輯"
