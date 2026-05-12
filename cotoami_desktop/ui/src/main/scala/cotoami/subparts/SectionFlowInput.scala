@@ -128,11 +128,13 @@ object SectionFlowInput {
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
     case class CotonomaFormMsg(submsg: CotonomaForm.Msg) extends Msg
     case class ContentRestored(content: Option[String]) extends Msg
+    case class ReplaceCotoDraft(content: String, preview: Boolean) extends Msg
     case class SetFolded(folded: Boolean) extends Msg
     case object Focus extends Msg
     case object Blur extends Msg
     case object InteractionStart extends Msg
     case object InteractionEnd extends Msg
+    case object Clear extends Msg
     case object Post extends Msg
     case class PostCoto(
         form: CotoForm.Model,
@@ -254,6 +256,21 @@ object SectionFlowInput {
               model.copy(folded = false)
         )
 
+      case (Msg.ReplaceCotoDraft(content, preview), _, _) => {
+        val updated =
+          model.copy(
+            form = CotoForm.Model(
+              inPreview = preview,
+              contentInput = content
+            ),
+            folded = false,
+            focused = true,
+            interacting = false,
+            posting = false
+          )
+        default.copy(_1 = updated, _4 = updated.save)
+      }
+
       case (Msg.SetFolded(folded), _, _) =>
         default.copy(_1 = model.copy(folded = folded))
 
@@ -279,25 +296,38 @@ object SectionFlowInput {
       case (Msg.InteractionEnd, _, _) =>
         default.copy(_1 = model.copy(interacting = false))
 
+      case (Msg.Clear, _, _) => {
+        val cleared =
+          model.copy(focused = false, interacting = false).clear
+        default.copy(
+          _1 = cleared,
+          _2 = context.geomap.copy(focusedLocation = None),
+          _4 = cleared.save
+        )
+      }
+
       case (Msg.Post, form: CotoForm.Model, Some(cotonoma)) => {
         val postId = WaitingPost.newPostId()
-        model.copy(posting = true).clear.pipe { model =>
-          default.copy(
-            _1 = model,
-            _2 = context.geomap.copy(focusedLocation = None),
-            _3 = waitingPosts.addCoto(
-              postId,
-              form.content,
-              form.summary,
-              form.mediaBase64,
-              cotonoma
-            ),
-            _4 = Cmd.Batch(
-              postCoto(postId, form, cotonoma.id),
-              model.save
+        model
+          .copy(posting = true, focused = model.focused && !form.inPreview)
+          .clear
+          .pipe { model =>
+            default.copy(
+              _1 = model,
+              _2 = context.geomap.copy(focusedLocation = None),
+              _3 = waitingPosts.addCoto(
+                postId,
+                form.content,
+                form.summary,
+                form.mediaBase64,
+                cotonoma
+              ),
+              _4 = Cmd.Batch(
+                postCoto(postId, form, cotonoma.id),
+                model.save
+              )
             )
-          )
-        }
+          }
       }
 
       case (Msg.Post, form: CotonomaForm.Model, Some(cotonoma)) => {
@@ -531,11 +561,14 @@ object SectionFlowInput {
           CotoForm.sectionValidationError(form),
           section(className := "post")(
             div(className := "buttons")(
-              CotoForm.buttonPreview(form)(using
-                context,
-                submsg => dispatch(Msg.CotoFormMsg(submsg))
-              ),
-              buttonPost(model)
+              buttonClear(model),
+              div(className := "primary-buttons")(
+                CotoForm.buttonPreview(form)(using
+                  context,
+                  submsg => dispatch(Msg.CotoFormMsg(submsg))
+                ),
+                buttonPost(model)
+              )
             )
           )
         )
@@ -557,10 +590,24 @@ object SectionFlowInput {
         Validation.sectionValidationError(form.validation),
         section(className := "post")(
           div(className := "buttons")(
-            buttonPost(model)
+            buttonClear(model),
+            div(className := "primary-buttons")(
+              buttonPost(model)
+            )
           )
         )
       )
+    )
+
+  private def buttonClear(
+      model: Model
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    button(
+      className := "clear contrast outline",
+      disabled := model.posting || !model.hasContents,
+      onClick := (_ => dispatch(Msg.Clear))
+    )(
+      context.i18n.text.Clear
     )
 
   private def buttonPost(

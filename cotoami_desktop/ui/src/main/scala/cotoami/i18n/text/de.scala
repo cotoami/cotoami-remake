@@ -23,6 +23,7 @@ object de extends Text {
   val OK = "OK"
   val Cancel = "Abbrechen"
   val Post = "Posten"
+  val Clear = "Löschen"
   val Insert = "Einfügen"
   val Save = "Speichern"
   val Edit = "Bearbeiten"
@@ -293,4 +294,5 @@ object de extends Text {
   val BrowserShell_pageReady = "Seite bereit."
   val BrowserShell_invalidUrl =
     "Geben Sie eine gültige http://- oder https://-URL ein."
+  val BrowserShell_clipSelection = "Clip"
 }

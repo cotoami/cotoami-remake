@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-connect-to-servers"
+description = "Enables the connect_to_servers command without any pre-configured scope."
+commands.allow = ["connect_to_servers"]
+
+[[permission]]
+identifier = "deny-connect-to-servers"
+description = "Denies the connect_to_servers command without any pre-configured scope."
+commands.deny = ["connect_to_servers"]

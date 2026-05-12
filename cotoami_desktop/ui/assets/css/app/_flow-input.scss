@@ -207,10 +207,17 @@ section.flow-input {
 
         display: flex;
         flex-direction: row;
-        justify-content: end;
+        justify-content: space-between;
         align-items: center;
 
+        padding-left: 10px;
         padding-right: 10px;
+
+        div.primary-buttons {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+        }
 
         button {
           width: auto;

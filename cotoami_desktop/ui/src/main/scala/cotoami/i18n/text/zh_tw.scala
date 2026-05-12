@@ -23,6 +23,7 @@ object zh_tw extends Text {
   val OK = "確定"
   val Cancel = "取消"
   val Post = "發布"
+  val Clear = "清除"
   val Insert = "插入"
   val Save = "儲存"
   val Edit = "編輯"
@@ -290,4 +291,5 @@ object zh_tw extends Text {
   val BrowserShell_loadingPage = "正在載入頁面..."
   val BrowserShell_pageReady = "頁面已就緒。"
   val BrowserShell_invalidUrl = "請輸入有效的 http:// 或 https:// URL。"
+  val BrowserShell_clipSelection = "剪藏"
 }

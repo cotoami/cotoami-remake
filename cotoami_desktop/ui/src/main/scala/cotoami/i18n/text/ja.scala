@@ -23,6 +23,7 @@ object ja extends Text {
   val OK = "OK"
   val Cancel = "キャンセル"
   val Post = "投稿"
+  val Clear = "クリア"
   val Insert = "挿入"
   val Save = "保存"
   val Edit = "編集"
@@ -289,4 +290,5 @@ object ja extends Text {
   val BrowserShell_pageReady = "ページを表示しました。"
   val BrowserShell_invalidUrl =
     "有効な http:// または https:// の URL を入力してください。"
+  val BrowserShell_clipSelection = "クリップ"
 }

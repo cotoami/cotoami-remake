@@ -1,3 +1,31 @@
 fn main() {
-    tauri_build::build()
+    tauri_build::try_build(
+        tauri_build::Attributes::new().app_manifest(
+            tauri_build::AppManifest::new().commands(&[
+                "show_window",
+                "open_browser_window",
+                "browser_attach",
+                "browser_resize",
+                "browser_navigate",
+                "browser_set_blank_theme",
+                "browser_selection_state",
+                "browser_selection_capture",
+                "browser_request_selection_capture",
+                "browser_set_selection_clip_overlay",
+                "browser_reload",
+                "browser_go_back",
+                "browser_go_forward",
+                "node_command",
+                "operate_as",
+                "system_info",
+                "validate_new_database_folder",
+                "validate_database_folder",
+                "create_database",
+                "open_database",
+                "new_owner_password",
+                "connect_to_servers",
+            ]),
+        ),
+    )
+    .expect("failed to build Tauri app")
 }

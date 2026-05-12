@@ -20,6 +20,7 @@ trait Text {
   val OK: String
   val Cancel: String
   val Post: String
+  val Clear: String
   val Insert: String
   val Save: String
   val Edit: String
@@ -230,6 +231,7 @@ trait Text {
   val BrowserShell_loadingPage: String
   val BrowserShell_pageReady: String
   val BrowserShell_invalidUrl: String
+  val BrowserShell_clipSelection: String
 }
 
 object Text {

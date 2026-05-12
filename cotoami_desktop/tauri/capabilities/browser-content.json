@@ -1,0 +1,18 @@
+{
+  "identifier": "browser-content",
+  "description": "Allows remote pages in the in-app browser content webview to report lightweight selection state for the Clip affordance.",
+  "local": false,
+  "webviews": [
+    "browser-content-*"
+  ],
+  "remote": {
+    "urls": [
+      "http://*",
+      "https://*"
+    ]
+  },
+  "permissions": [
+    "allow-browser-selection-state",
+    "allow-browser-selection-capture"
+  ]
+}

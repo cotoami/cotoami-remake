@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-browser-selection-capture"
+description = "Enables the browser_selection_capture command without any pre-configured scope."
+commands.allow = ["browser_selection_capture"]
+
+[[permission]]
+identifier = "deny-browser-selection-capture"
+description = "Denies the browser_selection_capture command without any pre-configured scope."
+commands.deny = ["browser_selection_capture"]

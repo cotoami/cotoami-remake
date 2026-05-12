@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-operate-as"
+description = "Enables the operate_as command without any pre-configured scope."
+commands.allow = ["operate_as"]
+
+[[permission]]
+identifier = "deny-operate-as"
+description = "Denies the operate_as command without any pre-configured scope."
+commands.deny = ["operate_as"]

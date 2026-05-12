@@ -73,6 +73,8 @@ object App {
   object Msg {
     case class BrowserStateChanged(url: String, title: Option[String])
         extends Msg
+    case class BrowserSelectionClipped(capture: BrowserShell.SelectionCapture)
+        extends Msg
     case class BrowserTrailMsg(msg: BrowserTrail.Msg) extends Msg
     case class SystemInfoFetched(result: Either[Unit, SystemInfoJson])
         extends Msg
@@ -197,6 +199,9 @@ object App {
           ),
           Cmd.none
         )
+
+      case Msg.BrowserSelectionClipped(capture) =>
+        clipSelectionToDraft(capture, model)
 
       case Msg.BrowserTrailMsg(msg) =>
         val (trail, cmd) = BrowserTrail.update(msg, model.trail)
@@ -366,6 +371,39 @@ object App {
     }
   }
 
+  private def clipSelectionToDraft(
+      capture: BrowserShell.SelectionCapture,
+      model: Model
+  ): (Model, Cmd[Msg]) = {
+    val content = WebClipMarkdown.fromSelection(
+      capture.selectedHtml,
+      capture.selectedText,
+      WebClipMarkdown.Source(capture.title, capture.url)
+    )
+    given Context = model.app
+    val (flowInput, geomap, waitingPosts, cmd) =
+      SectionFlowInput.update(
+        SectionFlowInput.Msg.ReplaceCotoDraft(content, preview = true),
+        model.app.flowInput,
+        model.app.timeline.waitingPosts,
+        persistDraft = Some(false)
+      )
+    val timeline = model.app.timeline.copy(waitingPosts = waitingPosts)
+    val uiState = model.app.uiState
+      .getOrElse(UiState())
+      .setPaneOpen(BrowserShell.TimelinePaneName, true)
+    val app = model.app.copy(
+      flowInput = flowInput,
+      geomap = geomap,
+      timeline = timeline,
+      uiState = Some(uiState)
+    )
+    (
+      model.copy(app = app),
+      cmd.map(Msg.AppMsg.apply) ++ uiState.save.map(Msg.AppMsg.apply)
+    )
+  }
+
   private def focusCotonoma(
       model: Model,
       cotonoma: Cotonoma,
@@ -461,7 +499,11 @@ object App {
             Msg.AppMsg(AppMsg.ResizePane(BrowserShell.TimelinePaneName, width))
           ),
         onStateChange =
-          (url, title) => dispatch(Msg.BrowserStateChanged(url, title))
+          (url, title) => dispatch(Msg.BrowserStateChanged(url, title)),
+        canClipSelection =
+          model.databaseFolder.isDefined && model.app.repo.canPostCoto,
+        onClipSelection =
+          capture => dispatch(Msg.BrowserSelectionClipped(capture))
       )
     )
   }

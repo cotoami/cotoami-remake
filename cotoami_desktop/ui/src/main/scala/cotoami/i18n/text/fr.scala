@@ -23,6 +23,7 @@ object fr extends Text {
   val OK = "OK"
   val Cancel = "Annuler"
   val Post = "Publier"
+  val Clear = "Effacer"
   val Insert = "Insérer"
   val Save = "Enregistrer"
   val Edit = "Modifier"
@@ -293,4 +294,5 @@ object fr extends Text {
   val BrowserShell_pageReady = "Page prête."
   val BrowserShell_invalidUrl =
     "Saisissez une URL valide en http:// ou https://."
+  val BrowserShell_clipSelection = "Clip"
 }

@@ -23,6 +23,7 @@ object ko extends Text {
   val OK = "확인"
   val Cancel = "취소"
   val Post = "게시"
+  val Clear = "지우기"
   val Insert = "삽입"
   val Save = "저장"
   val Edit = "편집"
@@ -291,4 +292,5 @@ object ko extends Text {
   val BrowserShell_pageReady = "페이지가 준비되었습니다."
   val BrowserShell_invalidUrl =
     "유효한 http:// 또는 https:// URL을 입력해 주세요."
+  val BrowserShell_clipSelection = "클립"
 }

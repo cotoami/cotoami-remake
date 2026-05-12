@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-browser-attach"
+description = "Enables the browser_attach command without any pre-configured scope."
+commands.allow = ["browser_attach"]
+
+[[permission]]
+identifier = "deny-browser-attach"
+description = "Denies the browser_attach command without any pre-configured scope."
+commands.deny = ["browser_attach"]
