@@ -308,23 +308,26 @@ object SectionFlowInput {
 
       case (Msg.Post, form: CotoForm.Model, Some(cotonoma)) => {
         val postId = WaitingPost.newPostId()
-        model.copy(posting = true).clear.pipe { model =>
-          default.copy(
-            _1 = model,
-            _2 = context.geomap.copy(focusedLocation = None),
-            _3 = waitingPosts.addCoto(
-              postId,
-              form.content,
-              form.summary,
-              form.mediaBase64,
-              cotonoma
-            ),
-            _4 = Cmd.Batch(
-              postCoto(postId, form, cotonoma.id),
-              model.save
+        model
+          .copy(posting = true, focused = model.focused && !form.inPreview)
+          .clear
+          .pipe { model =>
+            default.copy(
+              _1 = model,
+              _2 = context.geomap.copy(focusedLocation = None),
+              _3 = waitingPosts.addCoto(
+                postId,
+                form.content,
+                form.summary,
+                form.mediaBase64,
+                cotonoma
+              ),
+              _4 = Cmd.Batch(
+                postCoto(postId, form, cotonoma.id),
+                model.save
+              )
             )
-          )
-        }
+          }
       }
 
       case (Msg.Post, form: CotonomaForm.Model, Some(cotonoma)) => {
