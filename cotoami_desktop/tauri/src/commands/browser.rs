@@ -144,7 +144,7 @@ fn parse_optional_browser_url(url: Option<&str>) -> Result<Option<tauri::Url>, E
         .transpose()
 }
 
-fn browser_state_url(url: &tauri::Url) -> String {
+fn state_url(url: &tauri::Url) -> String {
     if url.path().ends_with(BLANK_BROWSER_PATH) {
         String::new()
     } else {
@@ -162,7 +162,7 @@ fn blank_browser_path(theme: Option<&str>) -> String {
     format!("{BLANK_BROWSER_PATH}?{}", url.query().unwrap_or_default())
 }
 
-fn set_blank_browser_theme(webview: &tauri::Webview, theme: &str) -> Result<(), Error> {
+fn set_blank_theme(webview: &tauri::Webview, theme: &str) -> Result<(), Error> {
     if !matches!(theme, "light" | "dark") {
         return Ok(());
     }
@@ -489,14 +489,14 @@ fn validate_scroll_payload(webview: &Webview, content_label: &str) -> Result<(),
     Ok(())
 }
 
-fn browser_window_title(url: &tauri::Url) -> String {
+fn window_title(url: &tauri::Url) -> String {
     url.host_str()
         .filter(|host| !host.is_empty())
         .unwrap_or(url.as_str())
         .to_string()
 }
 
-fn browser_window_title_from_state(state: &BrowserViewState) -> String {
+fn window_title_from_state(state: &BrowserViewState) -> String {
     state
         .title
         .as_deref()
@@ -505,7 +505,7 @@ fn browser_window_title_from_state(state: &BrowserViewState) -> String {
         .or_else(|| {
             tauri::Url::parse(&state.url)
                 .ok()
-                .map(|url| browser_window_title(&url))
+                .map(|url| window_title(&url))
         })
         .unwrap_or_else(|| {
             if state.url.is_empty() {
@@ -516,7 +516,7 @@ fn browser_window_title_from_state(state: &BrowserViewState) -> String {
         })
 }
 
-fn next_browser_labels() -> (String, String) {
+fn next_labels() -> (String, String) {
     let id = BROWSER_WINDOW_COUNTER.fetch_add(1, Ordering::Relaxed);
     (
         format!("browser-shell-{id}"),
@@ -524,7 +524,7 @@ fn next_browser_labels() -> (String, String) {
     )
 }
 
-fn browser_shell_path(
+fn shell_path(
     content_label: &str,
     initial_url: Option<&str>,
     locale: Option<&str>,
@@ -570,12 +570,12 @@ fn open_browser_window_internal(
     focused_cotonoma_id: Option<&str>,
     theme: Option<&str>,
 ) -> Result<(), Error> {
-    let (shell_label, content_label) = next_browser_labels();
+    let (shell_label, content_label) = next_labels();
     tauri::WebviewWindowBuilder::new(
         app_handle,
         &shell_label,
         WebviewUrl::App(
-            browser_shell_path(
+            shell_path(
                 &content_label,
                 url.map(|url| url.as_str()),
                 locale,
@@ -588,7 +588,7 @@ fn open_browser_window_internal(
         ),
     )
     .title(
-        url.map(browser_window_title)
+        url.map(window_title)
             .unwrap_or_else(|| BLANK_BROWSER_TITLE.to_string()),
     )
     .inner_size(1200.0, 900.0)
@@ -599,7 +599,7 @@ fn open_browser_window_internal(
     Ok(())
 }
 
-fn browser_webview(app_handle: &AppHandle, content_label: &str) -> Result<tauri::Webview, Error> {
+fn content_webview(app_handle: &AppHandle, content_label: &str) -> Result<tauri::Webview, Error> {
     app_handle.get_webview(content_label).ok_or_else(|| {
         Error::new(
             "browser-not-found",
@@ -616,7 +616,7 @@ fn resize_browser_view(
     width: f64,
     height: f64,
 ) -> Result<(), Error> {
-    let webview = browser_webview(app_handle, content_label)?;
+    let webview = content_webview(app_handle, content_label)?;
     webview.set_position(tauri::LogicalPosition::new(x.max(0.0), y.max(0.0)))?;
     webview.set_size(tauri::LogicalSize::new(width.max(1.0), height.max(1.0)))?;
     Ok(())
@@ -628,7 +628,7 @@ fn emit_browser_state(
     shell_label: &str,
     content_label: &str,
 ) -> Result<BrowserViewState, Error> {
-    let webview = browser_webview(app_handle, content_label)?;
+    let webview = content_webview(app_handle, content_label)?;
     let snapshot = registry.snapshot(content_label);
     let state = BrowserViewState {
         url: snapshot
@@ -639,7 +639,7 @@ fn emit_browser_state(
     };
 
     if let Some(window) = app_handle.get_webview_window(shell_label) {
-        let _ = window.set_title(&browser_window_title_from_state(&state));
+        let _ = window.set_title(&window_title_from_state(&state));
     }
 
     if let Err(e) = app_handle.emit(
@@ -730,7 +730,7 @@ pub fn browser_attach(
                 .on_page_load(move |_webview, payload| {
                     browser_registry_for_page_load.upsert(
                         &content_label_for_page_load,
-                        Some(browser_state_url(payload.url())),
+                        Some(state_url(payload.url())),
                         None,
                         Some(matches!(
                             payload.event(),
@@ -821,7 +821,7 @@ pub fn browser_navigate(
     url: String,
 ) -> Result<BrowserViewState, Error> {
     let url = parse_browser_url(&url)?;
-    let webview = browser_webview(&app_handle, &content_label)?;
+    let webview = content_webview(&app_handle, &content_label)?;
     let shell_label = webview.window().label().to_string();
 
     registry.upsert(&content_label, Some(url.to_string()), None, Some(true));
@@ -836,8 +836,8 @@ pub fn browser_set_blank_theme(
     content_label: String,
     theme: String,
 ) -> Result<(), Error> {
-    let webview = browser_webview(&app_handle, &content_label)?;
-    set_blank_browser_theme(&webview, &theme)
+    let webview = content_webview(&app_handle, &content_label)?;
+    set_blank_theme(&webview, &theme)
 }
 
 #[tauri::command]
@@ -885,7 +885,7 @@ pub fn browser_request_selection_capture(
     content_label: String,
     request_id: String,
 ) -> Result<(), Error> {
-    let webview = browser_webview(&app_handle, &content_label)?;
+    let webview = content_webview(&app_handle, &content_label)?;
     dispatch_selection_capture_request(&webview, &request_id)
 }
 
@@ -897,7 +897,7 @@ pub fn browser_set_selection_clip_overlay(
     label: String,
     rect: Option<SelectionRect>,
 ) -> Result<(), Error> {
-    let webview = browser_webview(&app_handle, &content_label)?;
+    let webview = content_webview(&app_handle, &content_label)?;
     dispatch_selection_clip_overlay(&webview, visible, &label, rect.as_ref())
 }
 
@@ -908,7 +908,7 @@ pub fn browser_restore_scroll(
     x: f64,
     y: f64,
 ) -> Result<(), Error> {
-    let webview = browser_webview(&app_handle, &content_label)?;
+    let webview = content_webview(&app_handle, &content_label)?;
     dispatch_scroll_restore(&webview, x, y)
 }
 
@@ -918,7 +918,7 @@ pub fn browser_reload(
     registry: tauri::State<'_, BrowserRegistry>,
     content_label: String,
 ) -> Result<BrowserViewState, Error> {
-    let webview = browser_webview(&app_handle, &content_label)?;
+    let webview = content_webview(&app_handle, &content_label)?;
     let shell_label = webview.window().label().to_string();
 
     webview.reload()?;
@@ -932,7 +932,7 @@ pub fn browser_go_back(
     registry: tauri::State<'_, BrowserRegistry>,
     content_label: String,
 ) -> Result<BrowserViewState, Error> {
-    let webview = browser_webview(&app_handle, &content_label)?;
+    let webview = content_webview(&app_handle, &content_label)?;
     let shell_label = webview.window().label().to_string();
 
     webview.eval("window.history.back();")?;
@@ -946,7 +946,7 @@ pub fn browser_go_forward(
     registry: tauri::State<'_, BrowserRegistry>,
     content_label: String,
 ) -> Result<BrowserViewState, Error> {
-    let webview = browser_webview(&app_handle, &content_label)?;
+    let webview = content_webview(&app_handle, &content_label)?;
     let shell_label = webview.window().label().to_string();
 
     webview.eval("window.history.forward();")?;
