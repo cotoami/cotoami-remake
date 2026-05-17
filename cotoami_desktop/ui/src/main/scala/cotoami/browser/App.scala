@@ -73,6 +73,8 @@ object App {
   object Msg {
     case class BrowserStateChanged(url: String, title: Option[String])
         extends Msg
+    case class BrowserScrollPositionChanged(url: String, x: Double, y: Double)
+        extends Msg
     case class BrowserSelectionClipped(capture: BrowserShell.SelectionCapture)
         extends Msg
     case class BrowserTrailMsg(msg: BrowserTrail.Msg) extends Msg
@@ -197,6 +199,12 @@ object App {
             title = title,
             trail = model.trail.remember(url, title)
           ),
+          Cmd.none
+        )
+
+      case Msg.BrowserScrollPositionChanged(url, x, y) =>
+        (
+          model.copy(trail = model.trail.saveScrollPosition(url, x, y)),
           Cmd.none
         )
 
@@ -500,6 +508,9 @@ object App {
           ),
         onStateChange =
           (url, title) => dispatch(Msg.BrowserStateChanged(url, title)),
+        onScrollPositionChange =
+          (url, x, y) =>
+            dispatch(Msg.BrowserScrollPositionChanged(url, x, y)),
         canClipSelection =
           model.databaseFolder.isDefined && model.app.repo.canPostCoto,
         onClipSelection =

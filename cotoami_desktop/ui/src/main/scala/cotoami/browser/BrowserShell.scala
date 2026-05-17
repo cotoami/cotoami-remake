@@ -66,6 +66,14 @@ object BrowserShell {
   }
 
   @js.native
+  trait ScrollStateEventJson extends js.Object {
+    val content_label: String = js.native
+    val url: String = js.native
+    val x: Double = js.native
+    val y: Double = js.native
+  }
+
+  @js.native
   trait SelectionCaptureEventJson extends js.Object {
     val content_label: String = js.native
     val request_id: js.UndefOr[String] = js.native
@@ -85,6 +93,7 @@ object BrowserShell {
       selectedText: String,
       selectedHtml: String
   )
+  private case class PendingScrollRestore(url: String, x: Double, y: Double)
 
   case class Props(
       contentLabel: String,
@@ -93,12 +102,17 @@ object BrowserShell {
       text: Text,
       timeline: Option[ReactElement],
       cotonomaSelect: Option[ReactElement],
-      trail: (String, () => Unit, String => Unit) => ReactElement,
+      trail: (
+          String,
+          () => Unit,
+          BrowserTrail.NavigationRequest => Unit
+      ) => ReactElement,
       timelineOpened: Boolean,
       timelineWidth: Int,
       onTimelineOpenChange: Boolean => Unit,
       onTimelineWidthChange: Int => Unit,
       onStateChange: (String, Option[String]) => Unit,
+      onScrollPositionChange: (String, Double, Double) => Unit,
       canClipSelection: Boolean,
       onClipSelection: SelectionCapture => Unit
   )
@@ -219,6 +233,8 @@ object BrowserShell {
     val resizeInFlightRef = useRef(false)
     val pendingResizeRef = useRef(false)
     val pendingSelectionCaptureRef = useRef(Option.empty[String])
+    val pendingScrollRestoreRef =
+      useRef(Option.empty[PendingScrollRestore])
     val editingRef = useRef(false)
     val windowTitleRef = useRef(windowTitle(initialUrl, props.model.title))
     val toolbarRef = useRef[html.Element](null)
@@ -439,6 +455,33 @@ object BrowserShell {
             handleFailure("Browser command failed")(throwable)
         }
 
+    def restoreScrollPosition(x: Double, y: Double): Unit =
+      tauri.core
+        .invoke[Unit](
+          "browser_restore_scroll",
+          jso(
+            contentLabel = props.contentLabel,
+            x = x,
+            y = y
+          )
+        )
+        .toFuture
+        .failed
+        .foreach(handleFailure("Couldn't restore the browser scroll position"))
+
+    def restorePendingScroll(state: BrowserViewStateJson): Unit =
+      pendingScrollRestoreRef.current.foreach { pending =>
+        val url = applyStateUrl(state.url)
+        if (!state.is_loading && url == pending.url) {
+          pendingScrollRestoreRef.current = None
+          dom.window.requestAnimationFrame(_ =>
+            dom.window.requestAnimationFrame(_ =>
+              restoreScrollPosition(pending.x, pending.y)
+            )
+          )
+        }
+      }
+
     def submitAddressBar(): Unit =
       resolveAddressBarInput(draftUrl) match {
         case Some(url) =>
@@ -452,13 +495,15 @@ object BrowserShell {
           setError(Some(props.text.BrowserShell_invalidUrl))
       }
 
-    def navigateToTrail(url: String): Unit = {
-      setActualUrl(url)
+    def navigateToTrail(request: BrowserTrail.NavigationRequest): Unit = {
+      pendingScrollRestoreRef.current =
+        Some(PendingScrollRestore(request.url, request.scrollX, request.scrollY))
+      setActualUrl(request.url)
       clearSelectionState()
-      setDraftUrl(url)
+      setDraftUrl(request.url)
       setLoading(true)
       setError(None)
-      invokeBrowserCommand("browser_navigate", jso(url = url))
+      invokeBrowserCommand("browser_navigate", jso(url = request.url))
     }
 
     useEffect(
@@ -535,6 +580,7 @@ object BrowserShell {
                     windowTitleRef,
                     props.onStateChange
                   )
+                  restorePendingScroll(payload)
                 })
           )
           .toFuture
@@ -573,6 +619,45 @@ object BrowserShell {
         }
       },
       Seq(props.contentLabel)
+    )
+
+    useEffect(
+      () => {
+        var unlistenScrollState: Option[js.Function0[Unit]] = None
+        var disposed = false
+
+        tauri.event
+          .listen[ScrollStateEventJson](
+            "browser-scroll-state",
+            event =>
+              Option(event.payload)
+                .filter(payload =>
+                  payload.content_label == props.contentLabel &&
+                    payload.url == actualUrl
+                )
+                .foreach(payload =>
+                  props.onScrollPositionChange(payload.url, payload.x, payload.y)
+                )
+          )
+          .toFuture
+          .onComplete {
+            case Success(unlistenFn) =>
+              if (disposed)
+                unlistenFn()
+              else
+                unlistenScrollState = Some(unlistenFn)
+            case Failure(throwable) =>
+              handleFailure("Couldn't subscribe to browser scroll events")(
+                throwable
+              )
+          }
+
+        () => {
+          disposed = true
+          unlistenScrollState.foreach(_())
+        }
+      },
+      Seq(props.contentLabel, actualUrl)
     )
 
     useEffect(

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-browser-scroll-state"
+description = "Enables the browser_scroll_state command without any pre-configured scope."
+commands.allow = ["browser_scroll_state"]
+
+[[permission]]
+identifier = "deny-browser-scroll-state"
+description = "Denies the browser_scroll_state command without any pre-configured scope."
+commands.deny = ["browser_scroll_state"]

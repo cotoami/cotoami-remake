@@ -13,6 +13,7 @@
   },
   "permissions": [
     "allow-browser-selection-state",
-    "allow-browser-selection-capture"
+    "allow-browser-selection-capture",
+    "allow-browser-scroll-state"
   ]
 }

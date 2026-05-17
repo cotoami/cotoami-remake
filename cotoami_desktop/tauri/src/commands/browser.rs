@@ -16,6 +16,7 @@ use super::error::Error;
 const BROWSER_STATE_EVENT: &str = "browser-state";
 const BROWSER_SELECTION_STATE_EVENT: &str = "browser-selection-state";
 const BROWSER_SELECTION_CAPTURE_EVENT: &str = "browser-selection-capture";
+const BROWSER_SCROLL_STATE_EVENT: &str = "browser-scroll-state";
 const BROWSER_SHELL_QUERY_KEY: &str = "browserShell";
 const BROWSER_SHELL_QUERY_VALUE: &str = "1";
 const BLANK_BROWSER_PATH: &str = "browser-blank.html";
@@ -78,6 +79,14 @@ pub struct BrowserSelectionCapturePayload {
     selected_html: String,
     has_selection: bool,
     rect: Option<SelectionRect>,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct BrowserScrollStatePayload {
+    content_label: String,
+    url: String,
+    x: f64,
+    y: f64,
 }
 
 impl BrowserRegistry {
@@ -170,7 +179,7 @@ fn set_blank_browser_theme(webview: &tauri::Webview, theme: &str) -> Result<(), 
     Ok(())
 }
 
-fn browser_selection_script(content_label: &str) -> String {
+fn page_initialization_script(content_label: &str) -> String {
     let content_label = serde_json::to_string(content_label)
         .expect("serializing browser content label to JavaScript must succeed");
     let logomark_svg =
@@ -184,6 +193,7 @@ fn browser_selection_script(content_label: &str) -> String {
   const contentLabel = {content_label};
   const cotoamiLogomark = {logomark_svg};
   let scheduled = false;
+  let scrollScheduled = false;
   let postMessageIpcPreferred = false;
   let clipButton = null;
 
@@ -363,13 +373,32 @@ fn browser_selection_script(content_label: &str) -> String {
     window.requestAnimationFrame(reportSelectionState);
   }}
 
+  function reportScrollState() {{
+    scrollScheduled = false;
+    invoke("browser_scroll_state", {{ payload: {{
+      content_label: contentLabel,
+      url: window.location.href,
+      x: window.scrollX || window.pageXOffset || 0,
+      y: window.scrollY || window.pageYOffset || 0
+    }} }});
+  }}
+
+  function scheduleScrollState() {{
+    if (scrollScheduled) return;
+    scrollScheduled = true;
+    window.requestAnimationFrame(reportScrollState);
+  }}
+
   document.addEventListener("selectionchange", scheduleSelectionState, true);
   document.addEventListener("mouseup", scheduleSelectionState, true);
   document.addEventListener("keyup", event => {{
     if (event.key === "Escape") clearSelectionState();
     else scheduleSelectionState();
   }}, true);
-  window.addEventListener("scroll", clearSelectionState, true);
+  window.addEventListener("scroll", function () {{
+    clearSelectionState();
+    scheduleScrollState();
+  }}, true);
   window.addEventListener("resize", clearSelectionState, true);
   window.addEventListener("blur", clearSelectionState, true);
   window.addEventListener("__cotoami_clip_overlay", event => {{
@@ -425,11 +454,36 @@ fn dispatch_selection_clip_overlay(
     Ok(())
 }
 
+fn dispatch_scroll_restore(webview: &tauri::Webview, x: f64, y: f64) -> Result<(), Error> {
+    if !x.is_finite() || !y.is_finite() {
+        return Err(Error::new(
+            "invalid-scroll-position",
+            "Scroll position must be finite.",
+        ));
+    }
+    webview.eval(&format!(
+        "window.scrollTo({}, {});",
+        x.max(0.0),
+        y.max(0.0)
+    ))?;
+    Ok(())
+}
+
 fn validate_selection_payload(webview: &Webview, content_label: &str) -> Result<(), Error> {
     if !content_label.starts_with("browser-content-") || webview.label() != content_label {
         return Err(Error::new(
             "invalid-browser-selection-source",
             "Invalid browser selection source.",
+        ));
+    }
+    Ok(())
+}
+
+fn validate_scroll_payload(webview: &Webview, content_label: &str) -> Result<(), Error> {
+    if !content_label.starts_with("browser-content-") || webview.label() != content_label {
+        return Err(Error::new(
+            "invalid-browser-scroll-source",
+            "Invalid browser scroll source.",
         ));
     }
     Ok(())
@@ -672,7 +726,7 @@ pub fn browser_attach(
 
         window.add_child(
             tauri::webview::WebviewBuilder::new(&content_label, webview_url)
-                .initialization_script(browser_selection_script(&content_label))
+                .initialization_script(page_initialization_script(&content_label))
                 .on_page_load(move |_webview, payload| {
                     browser_registry_for_page_load.upsert(
                         &content_label_for_page_load,
@@ -813,6 +867,19 @@ pub fn browser_selection_capture(
 }
 
 #[tauri::command]
+pub fn browser_scroll_state(
+    webview: Webview,
+    app_handle: AppHandle,
+    payload: BrowserScrollStatePayload,
+) -> Result<(), Error> {
+    validate_scroll_payload(&webview, &payload.content_label)?;
+    if let Err(e) = app_handle.emit(BROWSER_SCROLL_STATE_EVENT, payload) {
+        error!("failed to emit browser scroll state: reason={e}");
+    }
+    Ok(())
+}
+
+#[tauri::command]
 pub fn browser_request_selection_capture(
     app_handle: AppHandle,
     content_label: String,
@@ -832,6 +899,17 @@ pub fn browser_set_selection_clip_overlay(
 ) -> Result<(), Error> {
     let webview = browser_webview(&app_handle, &content_label)?;
     dispatch_selection_clip_overlay(&webview, visible, &label, rect.as_ref())
+}
+
+#[tauri::command]
+pub fn browser_restore_scroll(
+    app_handle: AppHandle,
+    content_label: String,
+    x: f64,
+    y: f64,
+) -> Result<(), Error> {
+    let webview = browser_webview(&app_handle, &content_label)?;
+    dispatch_scroll_restore(&webview, x, y)
 }
 
 #[tauri::command]

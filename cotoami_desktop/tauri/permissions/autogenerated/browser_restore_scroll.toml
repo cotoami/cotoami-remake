@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-browser-restore-scroll"
+description = "Enables the browser_restore_scroll command without any pre-configured scope."
+commands.allow = ["browser_restore_scroll"]
+
+[[permission]]
+identifier = "deny-browser-restore-scroll"
+description = "Denies the browser_restore_scroll command without any pre-configured scope."
+commands.deny = ["browser_restore_scroll"]

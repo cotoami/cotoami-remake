@@ -20,7 +20,9 @@ object BrowserTrail {
       path: String,
       faviconUrl: String,
       firstVisited: Int,
-      lastVisited: Int
+      lastVisited: Int,
+      scrollX: Double = 0,
+      scrollY: Double = 0
   ) {
     def label: String =
       title.map(_.trim).filter(_.nonEmpty).getOrElse(host)
@@ -91,6 +93,22 @@ object BrowserTrail {
       else
         copy(entries = entries.filterNot(_.url == entry.url))
 
+    def saveScrollPosition(url: String, x: Double, y: Double): Model =
+      parse(url) match {
+        case Some(parsed) =>
+          entries.indexWhere(_.url == parsed.url) match {
+            case -1 => this
+            case index =>
+              copy(entries =
+                entries.updated(
+                  index,
+                  entries(index).copy(scrollX = x, scrollY = y)
+                )
+              )
+          }
+        case None => this
+      }
+
     def entryForUrl(url: String): Option[Entry] =
       parse(url).flatMap(parsed =>
         entries.find(_.url == parsed.url)
@@ -101,13 +119,19 @@ object BrowserTrail {
 
   object Msg {
     case class EntryDeleted(entry: Entry, level: Int) extends Msg
+    case class ScrollPositionChanged(url: String, x: Double, y: Double)
+        extends Msg
   }
 
   def update(msg: Msg, model: Model): (Model, Cmd[Msg]) =
     msg match {
       case Msg.EntryDeleted(entry, level) =>
         (model.deleteEntry(entry, level), Cmd.none)
+      case Msg.ScrollPositionChanged(url, x, y) =>
+        (model.saveScrollPosition(url, x, y), Cmd.none)
     }
+
+  case class NavigationRequest(url: String, scrollX: Double, scrollY: Double)
 
   def view(
       model: Model,
@@ -115,7 +139,7 @@ object BrowserTrail {
       paneTitle: String,
       emptyText: String,
       onClose: () => Unit,
-      onNavigate: String => Unit,
+      onNavigate: NavigationRequest => Unit,
       dispatch: Msg => Unit
   ): ReactElement = {
     val currentEntry = model.entryForUrl(currentUrl)
@@ -159,7 +183,11 @@ object BrowserTrail {
             `type` := "button",
             title := entry.url,
             onMouseDown := (e => e.preventDefault()),
-            onClick := (_ => onNavigate(entry.url))
+            onClick := (_ =>
+              onNavigate(
+                NavigationRequest(entry.url, entry.scrollX, entry.scrollY)
+              )
+            )
           )(
             span(className := "browser-trail-favicon")(
               materialSymbol("language"),

@@ -59,6 +59,7 @@
     "allow-browser-set-blank-theme",
     "allow-browser-request-selection-capture",
     "allow-browser-set-selection-clip-overlay",
+    "allow-browser-restore-scroll",
     "allow-browser-reload",
     "allow-browser-go-back",
     "allow-browser-go-forward",
