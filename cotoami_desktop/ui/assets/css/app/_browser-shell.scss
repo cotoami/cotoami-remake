@@ -81,6 +81,10 @@ div.browser-shell {
       .material-symbols.loading {
         animation: browser-shell-spin 1.1s linear infinite;
       }
+
+      &.browser-downloads-button.busy {
+        color: var(--primary);
+      }
     }
 
     .browser-trail-menu {
@@ -145,6 +149,11 @@ div.browser-shell {
           background: var(--browser-tool-hover-background);
           color: var(--contrast);
         }
+
+        &:disabled {
+          cursor: default;
+          opacity: 1;
+        }
       }
 
       &.level-2 > button.browser-trail-open {
@@ -192,6 +201,10 @@ div.browser-shell {
         border-radius: 3px;
         background: #fff;
         object-fit: contain;
+      }
+
+      .material-symbols.loading {
+        animation: browser-shell-spin 1.1s linear infinite;
       }
     }
 
@@ -245,6 +258,18 @@ div.browser-shell {
       color: color-mix(in srgb, var(--muted-color) 74%, var(--background-color));
       font-size: 0.76rem;
       font-weight: 400;
+    }
+
+    .browser-download-entry.failed {
+      .browser-trail-title,
+      .browser-trail-url,
+      .browser-download-icon {
+        color: var(--del-color);
+      }
+    }
+
+    .browser-download-entry.finished .browser-download-icon {
+      color: var(--ins-color);
     }
 
     form.browser-address-bar {
@@ -462,6 +487,11 @@ div.browser-shell {
           background: var(--browser-tool-hover-background);
           color: var(--contrast);
         }
+
+        &:disabled {
+          cursor: default;
+          opacity: 1;
+        }
       }
 
       &.level-2 > button.browser-trail-open {
@@ -509,6 +539,10 @@ div.browser-shell {
         border-radius: 3px;
         background: #fff;
         object-fit: contain;
+      }
+
+      .material-symbols.loading {
+        animation: browser-shell-spin 1.1s linear infinite;
       }
     }
 
@@ -566,6 +600,18 @@ div.browser-shell {
       color: color-mix(in srgb, var(--muted-color) 74%, var(--background-color));
       font-size: 0.76rem;
       font-weight: 400;
+    }
+
+    .browser-download-entry.failed {
+      .browser-trail-title,
+      .browser-trail-url,
+      .browser-download-icon {
+        color: var(--del-color);
+      }
+    }
+
+    .browser-download-entry.finished .browser-download-icon {
+      color: var(--ins-color);
     }
 
     .browser-webview-slot {

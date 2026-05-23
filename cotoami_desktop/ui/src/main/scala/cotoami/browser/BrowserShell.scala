@@ -107,6 +107,10 @@ object BrowserShell {
           () => Unit,
           BrowserTrail.NavigationRequest => Unit
       ) => ReactElement,
+      downloads: (() => Unit) => ReactElement,
+      downloadsVisible: Boolean,
+      downloadsBusy: Boolean,
+      downloadsOpenRequest: Int,
       timelineOpened: Boolean,
       timelineWidth: Int,
       onTimelineOpenChange: Boolean => Unit,
@@ -229,6 +233,7 @@ object BrowserShell {
     val (_, setSelectionStateRaw) =
       useState(Option.empty[SelectionState])
     val (trailOpen, setTrailOpenRaw) = useState(false)
+    val (downloadsOpen, setDownloadsOpenRaw) = useState(false)
     val browserAttachedRef = useRef(false)
     val resizeInFlightRef = useRef(false)
     val pendingResizeRef = useRef(false)
@@ -296,6 +301,9 @@ object BrowserShell {
 
     def setTrailOpen(value: Boolean): Unit =
       setTrailOpenRaw(_ => value)
+
+    def setDownloadsOpen(value: Boolean): Unit =
+      setDownloadsOpenRaw(_ => value)
 
     def setToolbarHeight(height: Double): Unit =
       setToolbarHeightRaw(current =>
@@ -772,9 +780,30 @@ object BrowserShell {
         props.contentLabel,
         toolbarHeight,
         trailOpen,
+        downloadsOpen,
         props.timelineOpened,
         props.timelineWidth
       )
+    )
+
+    useEffect(
+      () => {
+        if (!props.downloadsVisible)
+          setDownloadsOpen(false)
+        () => ()
+      },
+      Seq(props.downloadsVisible)
+    )
+
+    useEffect(
+      () => {
+        if (props.downloadsOpenRequest > 0 && props.downloadsVisible) {
+          setTrailOpen(false)
+          setDownloadsOpen(true)
+        }
+        () => ()
+      },
+      Seq(props.downloadsOpenRequest, props.downloadsVisible)
     )
 
     useEffect(
@@ -826,6 +855,7 @@ object BrowserShell {
       Seq(
         props.contentLabel,
         trailOpen,
+        downloadsOpen,
         props.timelineOpened,
         props.timelineWidth
       )
@@ -887,7 +917,7 @@ object BrowserShell {
       ).getOrElse(browserWebviewSlot)
 
     val browserSurfaceContent =
-      if (trailOpen)
+      if (trailOpen || downloadsOpen)
         SplitPane(
           vertical = true,
           initialPrimarySize = DefaultTrailWidth,
@@ -897,7 +927,12 @@ object BrowserShell {
           onResizeEnd = Some(() => resizeBrowserView()),
           primary = SplitPane.Primary.Props(
             className = Some("browser-trail-sidebar")
-          )(props.trail(actualUrl, () => setTrailOpen(false), navigateToTrail)),
+          )(
+            if (downloadsOpen)
+              props.downloads(() => setDownloadsOpen(false))
+            else
+              props.trail(actualUrl, () => setTrailOpen(false), navigateToTrail)
+          ),
           secondary = SplitPane.Secondary.Props(
             className = Some("browser-trail-secondary")
           )(browserContent)
@@ -950,9 +985,35 @@ object BrowserShell {
                 ),
                 `type` := "button",
                 title := props.text.BrowserShell_trail,
-                onClick := (_ => setTrailOpen(!trailOpen))
+                onClick := (_ => {
+                  setDownloadsOpen(false)
+                  setTrailOpen(!trailOpen)
+                })
               )(materialSymbol("route"))
-            )
+            ),
+            Option.when(props.downloadsVisible) {
+              button(
+                className := optionalClasses(
+                  Seq(
+                    ("browser-action", true),
+                    ("browser-downloads-button", true),
+                    ("active", downloadsOpen),
+                    ("busy", props.downloadsBusy)
+                  )
+                ),
+                `type` := "button",
+                title := props.text.BrowserShell_downloads,
+                onClick := (_ => {
+                  setTrailOpen(false)
+                  setDownloadsOpen(!downloadsOpen)
+                })
+              )(
+                materialSymbol(
+                  if (props.downloadsBusy) "progress_activity" else "download",
+                  if (props.downloadsBusy) "loading" else ""
+                )
+              )
+            }
           ),
           form(
             className := "browser-address-bar",

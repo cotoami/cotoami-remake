@@ -226,6 +226,11 @@ trait Text {
   val BrowserShell_reload: String
   val BrowserShell_trail: String
   val BrowserShell_trailEmpty: String
+  val BrowserShell_downloads: String
+  val BrowserShell_downloadsEmpty: String
+  val BrowserShell_downloadStatusDownloading: String
+  val BrowserShell_downloadStatusFinished: String
+  val BrowserShell_downloadStatusFailed: String
   val BrowserShell_addressPlaceholder: String
   val BrowserShell_go: String
   val BrowserShell_loadingPage: String

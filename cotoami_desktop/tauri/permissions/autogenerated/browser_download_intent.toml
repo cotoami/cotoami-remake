@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-browser-download-intent"
+description = "Enables the browser_download_intent command without any pre-configured scope."
+commands.allow = ["browser_download_intent"]
+
+[[permission]]
+identifier = "deny-browser-download-intent"
+description = "Denies the browser_download_intent command without any pre-configured scope."
+commands.deny = ["browser_download_intent"]

@@ -1,5 +1,7 @@
 use std::{
     collections::HashMap,
+    path::{Path, PathBuf},
+    process::Command,
     sync::{
         atomic::{AtomicU64, Ordering},
         Arc,
@@ -17,6 +19,8 @@ const BROWSER_STATE_EVENT: &str = "browser-state";
 const BROWSER_SELECTION_STATE_EVENT: &str = "browser-selection-state";
 const BROWSER_SELECTION_CAPTURE_EVENT: &str = "browser-selection-capture";
 const BROWSER_SCROLL_STATE_EVENT: &str = "browser-scroll-state";
+const BROWSER_DOWNLOAD_STARTED_EVENT: &str = "browser-download-started";
+const BROWSER_DOWNLOAD_FINISHED_EVENT: &str = "browser-download-finished";
 const BROWSER_SHELL_QUERY_KEY: &str = "browserShell";
 const BROWSER_SHELL_QUERY_VALUE: &str = "1";
 const BLANK_BROWSER_PATH: &str = "browser-blank.html";
@@ -25,10 +29,13 @@ const COTOAMI_LOGOMARK_SVG: &str =
     include_str!("../../../ui/assets/static/images/logo/logomark.svg");
 
 static BROWSER_WINDOW_COUNTER: AtomicU64 = AtomicU64::new(1);
+static BROWSER_DOWNLOAD_COUNTER: AtomicU64 = AtomicU64::new(1);
 
 #[derive(Clone, Default)]
 pub struct BrowserRegistry {
     inner: Arc<Mutex<HashMap<String, BrowserSnapshot>>>,
+    downloads: Arc<Mutex<HashMap<String, Vec<PendingDownload>>>>,
+    download_intents: Arc<Mutex<HashMap<String, Vec<DownloadIntent>>>>,
 }
 
 #[derive(Clone, Default)]
@@ -36,6 +43,18 @@ struct BrowserSnapshot {
     url: Option<String>,
     title: Option<String>,
     is_loading: bool,
+}
+
+#[derive(Clone)]
+struct PendingDownload {
+    id: String,
+    path: PathBuf,
+}
+
+#[derive(Clone)]
+struct DownloadIntent {
+    url: String,
+    download: Option<String>,
 }
 
 #[derive(Clone, Serialize)]
@@ -89,6 +108,32 @@ pub struct BrowserScrollStatePayload {
     y: f64,
 }
 
+#[derive(Clone, Deserialize, Serialize)]
+pub struct BrowserDownloadIntentPayload {
+    content_label: String,
+    url: String,
+    download: Option<String>,
+}
+
+#[derive(Clone, Serialize)]
+struct BrowserDownloadStartedPayload {
+    content_label: String,
+    id: String,
+    url: String,
+    source_url: String,
+    path: String,
+    filename: String,
+}
+
+#[derive(Clone, Serialize)]
+struct BrowserDownloadFinishedPayload {
+    content_label: String,
+    id: String,
+    url: String,
+    path: String,
+    success: bool,
+}
+
 impl BrowserRegistry {
     fn upsert(
         &self,
@@ -123,6 +168,54 @@ impl BrowserRegistry {
             .cloned()
             .unwrap_or_default()
     }
+
+    fn push_download(&self, content_label: &str, url: &str, download: PendingDownload) {
+        let mut downloads = self.downloads.lock();
+        downloads
+            .entry(download_key(content_label, url))
+            .or_default()
+            .push(download);
+    }
+
+    fn pop_download(&self, content_label: &str, url: &str) -> Option<PendingDownload> {
+        let key = download_key(content_label, url);
+        let mut downloads = self.downloads.lock();
+        let pending = downloads.get_mut(&key).and_then(|items| {
+            if items.is_empty() {
+                None
+            } else {
+                Some(items.remove(0))
+            }
+        });
+        if downloads.get(&key).is_some_and(Vec::is_empty) {
+            downloads.remove(&key);
+        }
+        pending
+    }
+
+    fn push_download_intent(&self, payload: BrowserDownloadIntentPayload) {
+        let mut intents = self.download_intents.lock();
+        intents
+            .entry(payload.content_label)
+            .or_default()
+            .push(DownloadIntent {
+                url: payload.url,
+                download: payload.download,
+            });
+    }
+
+    fn pop_download_intent(&self, content_label: &str) -> Option<DownloadIntent> {
+        let mut intents = self.download_intents.lock();
+        let intent = intents.get_mut(content_label).and_then(|items| items.pop());
+        if intents.get(content_label).is_some_and(Vec::is_empty) {
+            intents.remove(content_label);
+        }
+        intent
+    }
+}
+
+fn download_key(content_label: &str, url: &str) -> String {
+    format!("{content_label}\n{url}")
 }
 
 fn parse_browser_url(url: &str) -> Result<tauri::Url, Error> {
@@ -150,6 +243,73 @@ fn state_url(url: &tauri::Url) -> String {
     } else {
         url.to_string()
     }
+}
+
+fn suggested_download_filename(url: &tauri::Url) -> String {
+    url.path_segments()
+        .and_then(|segments| segments.rev().find(|segment| !segment.is_empty()))
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .map(ToOwned::to_owned)
+        .unwrap_or_else(|| "download".to_string())
+}
+
+fn valid_download_filename(filename: &str) -> Option<String> {
+    let filename = filename.trim();
+    if filename.is_empty() {
+        return None;
+    }
+    Path::new(filename)
+        .file_name()
+        .and_then(|name| name.to_str())
+        .map(str::trim)
+        .filter(|name| !name.is_empty() && *name != "." && *name != "..")
+        .map(ToOwned::to_owned)
+}
+
+fn filename_from_download_intent(intent: Option<&DownloadIntent>) -> Option<String> {
+    intent
+        .and_then(|intent| intent.download.as_deref().and_then(valid_download_filename))
+        .or_else(|| {
+            intent.and_then(|intent| {
+                tauri::Url::parse(&intent.url)
+                    .ok()
+                    .map(|url| suggested_download_filename(&url))
+                    .and_then(|filename| valid_download_filename(&filename))
+            })
+        })
+}
+
+fn unique_download_path(download_dir: &Path, filename: &str) -> PathBuf {
+    let candidate = download_dir.join(filename);
+    if !candidate.exists() {
+        return candidate;
+    }
+
+    let path = Path::new(filename);
+    let stem = path
+        .file_stem()
+        .map(|stem| stem.to_string_lossy().into_owned())
+        .filter(|stem| !stem.is_empty())
+        .unwrap_or_else(|| "download".to_string());
+    let extension = path.extension().map(|extension| extension.to_string_lossy());
+
+    for index in 1.. {
+        let filename = extension
+            .as_ref()
+            .map(|extension| format!("{stem} ({index}).{extension}"))
+            .unwrap_or_else(|| format!("{stem} ({index})"));
+        let candidate = download_dir.join(filename);
+        if !candidate.exists() {
+            return candidate;
+        }
+    }
+
+    unreachable!("download filename search should always find an unused name")
+}
+
+fn path_string(path: &Path) -> String {
+    path.to_string_lossy().into_owned()
 }
 
 fn blank_browser_path(theme: Option<&str>) -> String {
@@ -182,8 +342,8 @@ fn set_blank_theme(webview: &tauri::Webview, theme: &str) -> Result<(), Error> {
 fn page_initialization_script(content_label: &str) -> String {
     let content_label = serde_json::to_string(content_label)
         .expect("serializing browser content label to JavaScript must succeed");
-    let logomark_svg =
-        serde_json::to_string(COTOAMI_LOGOMARK_SVG).expect("serializing Cotoami logomark SVG must succeed");
+    let logomark_svg = serde_json::to_string(COTOAMI_LOGOMARK_SVG)
+        .expect("serializing Cotoami logomark SVG must succeed");
     format!(
         r#"
 (function () {{
@@ -276,6 +436,35 @@ fn page_initialization_script(content_label: &str) -> String {
     if (!link || !shouldNavigateTargetedLink(link, event)) return;
     event.preventDefault();
     window.location.href = link.href;
+  }}
+
+  function closestHttpLink(start) {{
+    let element = start;
+    while (element && element !== document) {{
+      if (
+        element.nodeType === Node.ELEMENT_NODE &&
+        element.matches &&
+        element.matches("a[href], area[href]")
+      ) {{
+        try {{
+          const url = new URL(element.href, window.location.href);
+          if (url.protocol === "http:" || url.protocol === "https:") return element;
+        }} catch (_) {{}}
+      }}
+      element = element.parentElement || element.parentNode;
+    }}
+    return null;
+  }}
+
+  function reportDownloadIntent(event) {{
+    if (event.defaultPrevented || !isPlainPrimaryClick(event)) return;
+    const link = closestHttpLink(event.target);
+    if (!link) return;
+    invoke("browser_download_intent", {{ payload: {{
+      content_label: contentLabel,
+      url: link.href,
+      download: link.getAttribute("download") || null
+    }} }});
   }}
 
   function selectedRange() {{
@@ -432,6 +621,7 @@ fn page_initialization_script(content_label: &str) -> String {
 
   document.addEventListener("selectionchange", scheduleSelectionState, true);
   document.addEventListener("mouseup", scheduleSelectionState, true);
+  document.addEventListener("click", reportDownloadIntent, true);
   document.addEventListener("click", navigateTargetedLink, true);
   document.addEventListener("keyup", event => {{
     if (event.key === "Escape") clearSelectionState();
@@ -487,8 +677,7 @@ fn dispatch_selection_clip_overlay(
     label: &str,
     rect: Option<&SelectionRect>,
 ) -> Result<(), Error> {
-    let label =
-        serde_json::to_string(label).expect("serializing browser clip label must succeed");
+    let label = serde_json::to_string(label).expect("serializing browser clip label must succeed");
     let rect = serde_json::to_string(&rect).expect("serializing browser clip rect must succeed");
     webview.eval(&format!(
         r#"window.dispatchEvent(new CustomEvent("__cotoami_clip_overlay", {{ detail: {{ visible: {visible}, label: {label}, rect: {rect} }} }}));"#
@@ -503,11 +692,7 @@ fn dispatch_scroll_restore(webview: &tauri::Webview, x: f64, y: f64) -> Result<(
             "Scroll position must be finite.",
         ));
     }
-    webview.eval(&format!(
-        "window.scrollTo({}, {});",
-        x.max(0.0),
-        y.max(0.0)
-    ))?;
+    webview.eval(&format!("window.scrollTo({}, {});", x.max(0.0), y.max(0.0)))?;
     Ok(())
 }
 
@@ -701,6 +886,54 @@ fn emit_browser_state(
     Ok(state)
 }
 
+fn emit_download_started(
+    app_handle: &AppHandle,
+    content_label: &str,
+    id: &str,
+    url: &tauri::Url,
+    source_url: &str,
+    path: &Path,
+) {
+    if let Err(e) = app_handle.emit(
+        BROWSER_DOWNLOAD_STARTED_EVENT,
+        BrowserDownloadStartedPayload {
+            content_label: content_label.to_string(),
+            id: id.to_string(),
+            url: url.to_string(),
+            source_url: source_url.to_string(),
+            path: path_string(path),
+            filename: path
+                .file_name()
+                .map(|name| name.to_string_lossy().into_owned())
+                .unwrap_or_else(|| suggested_download_filename(url)),
+        },
+    ) {
+        error!("failed to emit browser download started: reason={e}");
+    }
+}
+
+fn emit_download_finished(
+    app_handle: &AppHandle,
+    content_label: &str,
+    id: &str,
+    url: &tauri::Url,
+    path: &Path,
+    success: bool,
+) {
+    if let Err(e) = app_handle.emit(
+        BROWSER_DOWNLOAD_FINISHED_EVENT,
+        BrowserDownloadFinishedPayload {
+            content_label: content_label.to_string(),
+            id: id.to_string(),
+            url: url.to_string(),
+            path: path_string(path),
+            success,
+        },
+    ) {
+        error!("failed to emit browser download finished: reason={e}");
+    }
+}
+
 #[tauri::command]
 pub fn open_browser_window(
     app_handle: AppHandle,
@@ -758,12 +991,15 @@ pub fn browser_attach(
         let browser_registry = registry.inner().clone();
         let browser_registry_for_page_load = browser_registry.clone();
         let browser_registry_for_title = browser_registry.clone();
+        let browser_registry_for_download = browser_registry.clone();
         let app_for_page_load = app_handle.clone();
         let app_for_title = app_handle.clone();
         let app_for_new_window = app_handle.clone();
+        let app_for_download = app_handle.clone();
         let content_label_for_page_load = content_label.clone();
         let content_label_for_title = content_label.clone();
         let content_label_for_new_window = content_label.clone();
+        let content_label_for_download = content_label.clone();
         let shell_label_for_page_load = shell_label.clone();
         let shell_label_for_title = shell_label.clone();
 
@@ -816,6 +1052,71 @@ pub fn browser_attach(
                         }
                     }
                     tauri::webview::NewWindowResponse::Deny
+                })
+                .on_download(move |_webview, event| match event {
+                    tauri::webview::DownloadEvent::Requested { url, destination } => {
+                        let intent =
+                            browser_registry_for_download.pop_download_intent(&content_label_for_download);
+                        let source_url = intent
+                            .as_ref()
+                            .map(|intent| intent.url.as_str())
+                            .unwrap_or_else(|| url.as_str())
+                            .to_string();
+                        let filename = filename_from_download_intent(intent.as_ref())
+                            .unwrap_or_else(|| suggested_download_filename(&url));
+                        let Ok(download_dir) = app_for_download.path().download_dir() else {
+                            return false;
+                        };
+                        let path = unique_download_path(&download_dir, &filename);
+                        let id = format!(
+                            "browser-download-{}",
+                            BROWSER_DOWNLOAD_COUNTER.fetch_add(1, Ordering::Relaxed)
+                        );
+                        *destination = path.clone();
+                        browser_registry_for_download.push_download(
+                            &content_label_for_download,
+                            url.as_str(),
+                            PendingDownload {
+                                id: id.clone(),
+                                path: path.clone(),
+                            },
+                        );
+                        emit_download_started(
+                            &app_for_download,
+                            &content_label_for_download,
+                            &id,
+                            &url,
+                            &source_url,
+                            &path,
+                        );
+                        true
+                    }
+                    tauri::webview::DownloadEvent::Finished { url, path, success } => {
+                        let pending = browser_registry_for_download
+                            .pop_download(&content_label_for_download, url.as_str());
+                        let fallback_path = path.as_deref();
+                        match (pending, fallback_path) {
+                            (Some(pending), _) => emit_download_finished(
+                                &app_for_download,
+                                &content_label_for_download,
+                                &pending.id,
+                                &url,
+                                &pending.path,
+                                success,
+                            ),
+                            (None, Some(path)) => emit_download_finished(
+                                &app_for_download,
+                                &content_label_for_download,
+                                "",
+                                &url,
+                                path,
+                                success,
+                            ),
+                            (None, None) => {}
+                        }
+                        true
+                    }
+                    _ => true,
                 }),
             tauri::LogicalPosition::new(x.max(0.0), y.max(0.0)),
             tauri::LogicalSize::new(width.max(1.0), height.max(1.0)),
@@ -919,6 +1220,17 @@ pub fn browser_scroll_state(
 }
 
 #[tauri::command]
+pub fn browser_download_intent(
+    webview: Webview,
+    registry: tauri::State<'_, BrowserRegistry>,
+    payload: BrowserDownloadIntentPayload,
+) -> Result<(), Error> {
+    validate_scroll_payload(&webview, &payload.content_label)?;
+    registry.push_download_intent(payload);
+    Ok(())
+}
+
+#[tauri::command]
 pub fn browser_request_selection_capture(
     app_handle: AppHandle,
     content_label: String,
@@ -949,6 +1261,40 @@ pub fn browser_restore_scroll(
 ) -> Result<(), Error> {
     let webview = content_webview(&app_handle, &content_label)?;
     dispatch_scroll_restore(&webview, x, y)
+}
+
+#[tauri::command]
+pub fn browser_reveal_downloaded_file(path: String) -> Result<(), Error> {
+    let path = PathBuf::from(path);
+    if !path.is_absolute() {
+        return Err(Error::new(
+            "invalid-download-path",
+            "Downloaded file path must be absolute.",
+        ));
+    }
+
+    #[cfg(target_os = "macos")]
+    let status = Command::new("open").arg("-R").arg(&path).status();
+
+    #[cfg(target_os = "windows")]
+    let status = Command::new("explorer")
+        .arg(format!("/select,{}", path_string(&path)))
+        .status();
+
+    #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
+    let status = Command::new("xdg-open")
+        .arg(path.parent().unwrap_or_else(|| Path::new("/")))
+        .status();
+
+    match status {
+        Ok(status) if status.success() => Ok(()),
+        Ok(status) => Err(Error::system_error(format!(
+            "Couldn't reveal downloaded file: {status}"
+        ))),
+        Err(e) => Err(Error::system_error(format!(
+            "Couldn't reveal downloaded file: {e}"
+        ))),
+    }
 }
 
 #[tauri::command]

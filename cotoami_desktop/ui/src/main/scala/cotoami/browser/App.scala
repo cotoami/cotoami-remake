@@ -2,6 +2,7 @@ package cotoami.browser
 
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
+import scala.scalajs.js.Thenable.Implicits._
 import scala.util.chaining._
 
 import cats.effect.IO
@@ -37,6 +38,8 @@ object App {
 
   private val DatabaseFocusEvent = "browser-database-focus"
   private val ThemeEvent = "browser-theme"
+  private val BrowserDownloadStartedEvent = "browser-download-started"
+  private val BrowserDownloadFinishedEvent = "browser-download-finished"
 
   case class BrowserDatabaseFocus(
       databaseFolder: String,
@@ -56,7 +59,27 @@ object App {
     val theme: String = js.native
   }
 
+  @js.native
+  trait BrowserDownloadStartedJson extends js.Object {
+    val content_label: String = js.native
+    val id: String = js.native
+    val url: String = js.native
+    val source_url: String = js.native
+    val path: String = js.native
+    val filename: String = js.native
+  }
+
+  @js.native
+  trait BrowserDownloadFinishedJson extends js.Object {
+    val content_label: String = js.native
+    val id: String = js.native
+    val url: String = js.native
+    val path: String = js.native
+    val success: Boolean = js.native
+  }
+
   case class Model(
+      contentLabel: String,
       url: String,
       title: Option[String],
       databaseFolder: Option[String],
@@ -64,6 +87,8 @@ object App {
       app: CotoamiModel,
       cotonomaSelect: CotonomaSelect.Model,
       trail: BrowserTrail.Model,
+      downloads: BrowserDownloads.Model,
+      downloadsOpenRequest: Int,
       pendingFocus: Option[BrowserDatabaseFocus],
       currentFocus: Option[BrowserDatabaseFocus]
   )
@@ -78,6 +103,7 @@ object App {
     case class BrowserSelectionClipped(capture: BrowserShell.SelectionCapture)
         extends Msg
     case class BrowserTrailMsg(msg: BrowserTrail.Msg) extends Msg
+    case class BrowserDownloadsMsg(msg: BrowserDownloads.Msg) extends Msg
     case class SystemInfoFetched(result: Either[Unit, SystemInfoJson])
         extends Msg
     case class UiStateRestored(uiState: Option[UiState]) extends Msg
@@ -169,6 +195,7 @@ object App {
     )
     (
       Model(
+        contentLabel = props.contentLabel,
         url = props.initialUrl.getOrElse(""),
         title = None,
         databaseFolder = props.databaseFolder,
@@ -176,6 +203,8 @@ object App {
         app = app,
         cotonomaSelect = CotonomaSelect.Model(),
         trail = BrowserTrail.Model(),
+        downloads = BrowserDownloads.Model(),
+        downloadsOpenRequest = 0,
         pendingFocus = props.initialFocus,
         currentFocus = None
       ),
@@ -214,6 +243,23 @@ object App {
       case Msg.BrowserTrailMsg(msg) =>
         val (trail, cmd) = BrowserTrail.update(msg, model.trail)
         (model.copy(trail = trail), cmd.map(Msg.BrowserTrailMsg.apply))
+
+      case Msg.BrowserDownloadsMsg(msg) =>
+        val (downloads, cmd) = BrowserDownloads.update(msg, model.downloads)
+        val downloadsOpenRequest =
+          msg match {
+            case _: BrowserDownloads.Msg.DownloadStarted =>
+              model.downloadsOpenRequest + 1
+            case _ =>
+              model.downloadsOpenRequest
+          }
+        (
+          model.copy(
+            downloads = downloads,
+            downloadsOpenRequest = downloadsOpenRequest
+          ),
+          cmd.map(Msg.BrowserDownloadsMsg.apply)
+        )
 
       case Msg.SystemInfoFetched(Right(info)) =>
         (model.copy(app = model.app.setSystemInfo(info)), Cmd.none)
@@ -496,6 +542,18 @@ object App {
             onNavigate = onNavigate,
             dispatch = msg => dispatch(Msg.BrowserTrailMsg(msg))
           ),
+        downloads = onClose =>
+          BrowserDownloads.view(
+            model = model.downloads,
+            paneTitle = model.app.i18n.text.BrowserShell_downloads,
+            emptyText = model.app.i18n.text.BrowserShell_downloadsEmpty,
+            deleteTitle = model.app.i18n.text.Delete,
+            onClose = onClose,
+            dispatch = msg => dispatch(Msg.BrowserDownloadsMsg(msg))
+          ),
+        downloadsVisible = model.downloads.nonEmpty,
+        downloadsBusy = model.downloads.downloading,
+        downloadsOpenRequest = model.downloadsOpenRequest,
         timelineOpened = timelineOpened,
         timelineWidth = timelineWidth,
         onTimelineOpenChange = open =>
@@ -526,6 +584,66 @@ object App {
     ).combine(
       tauri.listen[BrowserThemeJson](ThemeEvent)
         .map(payload => Msg.ThemeChanged(payload.theme))
+    ).combine(
+      Sub.fromCallback[Msg](s"$BrowserDownloadStartedEvent-${model.contentLabel}") {
+        dispatch =>
+          IO
+            .fromFuture(
+              IO(
+                tauri.event
+                  .listen[BrowserDownloadStartedJson](
+                    BrowserDownloadStartedEvent,
+                    event =>
+                      Option(event.payload)
+                        .filter(_.content_label == model.contentLabel)
+                        .foreach(payload =>
+                          dispatch(
+                            Msg.BrowserDownloadsMsg(
+                              BrowserDownloads.Msg.DownloadStarted(
+                                payload.id,
+                                payload.source_url,
+                                payload.path,
+                                payload.filename
+                              )
+                            )
+                          )
+                        )
+                  )
+                  .toFuture
+              )
+            )
+            .map(unlisten => IO(unlisten()))
+      }
+    ).combine(
+      Sub.fromCallback[Msg](s"$BrowserDownloadFinishedEvent-${model.contentLabel}") {
+        dispatch =>
+          IO
+            .fromFuture(
+              IO(
+                tauri.event
+                  .listen[BrowserDownloadFinishedJson](
+                    BrowserDownloadFinishedEvent,
+                    event =>
+                      Option(event.payload)
+                        .filter(_.content_label == model.contentLabel)
+                        .foreach(payload =>
+                          dispatch(
+                            Msg.BrowserDownloadsMsg(
+                              BrowserDownloads.Msg.DownloadFinished(
+                                payload.id,
+                                payload.url,
+                                payload.path,
+                                payload.success
+                              )
+                            )
+                          )
+                        )
+                  )
+                  .toFuture
+              )
+            )
+            .map(unlisten => IO(unlisten()))
+      }
     )
 
   private def databaseFocusSubscription(model: Model): Sub[Msg] =

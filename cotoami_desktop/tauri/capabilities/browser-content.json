@@ -14,6 +14,7 @@
   "permissions": [
     "allow-browser-selection-state",
     "allow-browser-selection-capture",
-    "allow-browser-scroll-state"
+    "allow-browser-scroll-state",
+    "allow-browser-download-intent"
   ]
 }
