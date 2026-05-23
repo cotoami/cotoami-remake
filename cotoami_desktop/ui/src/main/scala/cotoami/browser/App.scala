@@ -2,7 +2,6 @@ package cotoami.browser
 
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
-import scala.scalajs.js.Thenable.Implicits._
 import scala.util.chaining._
 
 import cats.effect.IO
@@ -27,11 +26,7 @@ import cotoami.backend.{
 }
 import cotoami.models.{Cotonoma, I18n, Id, Node, UiState}
 import cotoami.repository.Root
-import cotoami.subparts.{
-  SectionFlowInput,
-  SectionGeomap,
-  SectionTimeline
-}
+import cotoami.subparts.{SectionFlowInput, SectionGeomap, SectionTimeline}
 import cotoami.updates.{Changelog, DatabaseFocus}
 
 object App {
@@ -567,8 +562,7 @@ object App {
         onStateChange =
           (url, title) => dispatch(Msg.BrowserStateChanged(url, title)),
         onScrollPositionChange =
-          (url, x, y) =>
-            dispatch(Msg.BrowserScrollPositionChanged(url, x, y)),
+          (url, x, y) => dispatch(Msg.BrowserScrollPositionChanged(url, x, y)),
         canClipSelection =
           model.databaseFolder.isDefined && model.app.repo.canPostCoto,
         onClipSelection =
@@ -585,64 +579,66 @@ object App {
       tauri.listen[BrowserThemeJson](ThemeEvent)
         .map(payload => Msg.ThemeChanged(payload.theme))
     ).combine(
-      Sub.fromCallback[Msg](s"$BrowserDownloadStartedEvent-${model.contentLabel}") {
-        dispatch =>
-          IO
-            .fromFuture(
-              IO(
-                tauri.event
-                  .listen[BrowserDownloadStartedJson](
-                    BrowserDownloadStartedEvent,
-                    event =>
-                      Option(event.payload)
-                        .filter(_.content_label == model.contentLabel)
-                        .foreach(payload =>
-                          dispatch(
-                            Msg.BrowserDownloadsMsg(
-                              BrowserDownloads.Msg.DownloadStarted(
-                                payload.id,
-                                payload.source_url,
-                                payload.path,
-                                payload.filename
-                              )
+      Sub.fromCallback[Msg](
+        s"$BrowserDownloadStartedEvent-${model.contentLabel}"
+      ) { dispatch =>
+        IO
+          .fromFuture(
+            IO(
+              tauri.event
+                .listen[BrowserDownloadStartedJson](
+                  BrowserDownloadStartedEvent,
+                  event =>
+                    Option(event.payload)
+                      .filter(_.content_label == model.contentLabel)
+                      .foreach(payload =>
+                        dispatch(
+                          Msg.BrowserDownloadsMsg(
+                            BrowserDownloads.Msg.DownloadStarted(
+                              payload.id,
+                              payload.source_url,
+                              payload.path,
+                              payload.filename
                             )
                           )
                         )
-                  )
-                  .toFuture
-              )
+                      )
+                )
+                .toFuture
             )
-            .map(unlisten => IO(unlisten()))
+          )
+          .map(unlisten => IO(unlisten()))
       }
     ).combine(
-      Sub.fromCallback[Msg](s"$BrowserDownloadFinishedEvent-${model.contentLabel}") {
-        dispatch =>
-          IO
-            .fromFuture(
-              IO(
-                tauri.event
-                  .listen[BrowserDownloadFinishedJson](
-                    BrowserDownloadFinishedEvent,
-                    event =>
-                      Option(event.payload)
-                        .filter(_.content_label == model.contentLabel)
-                        .foreach(payload =>
-                          dispatch(
-                            Msg.BrowserDownloadsMsg(
-                              BrowserDownloads.Msg.DownloadFinished(
-                                payload.id,
-                                payload.url,
-                                payload.path,
-                                payload.success
-                              )
+      Sub.fromCallback[Msg](
+        s"$BrowserDownloadFinishedEvent-${model.contentLabel}"
+      ) { dispatch =>
+        IO
+          .fromFuture(
+            IO(
+              tauri.event
+                .listen[BrowserDownloadFinishedJson](
+                  BrowserDownloadFinishedEvent,
+                  event =>
+                    Option(event.payload)
+                      .filter(_.content_label == model.contentLabel)
+                      .foreach(payload =>
+                        dispatch(
+                          Msg.BrowserDownloadsMsg(
+                            BrowserDownloads.Msg.DownloadFinished(
+                              payload.id,
+                              payload.url,
+                              payload.path,
+                              payload.success
                             )
                           )
                         )
-                  )
-                  .toFuture
-              )
+                      )
+                )
+                .toFuture
             )
-            .map(unlisten => IO(unlisten()))
+          )
+          .map(unlisten => IO(unlisten()))
       }
     )
 
