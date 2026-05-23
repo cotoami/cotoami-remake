@@ -7,7 +7,7 @@ import marubinotto.optionalClasses
 import marubinotto.components.{materialSymbol, shiftToolButton, toolButton}
 
 import cotoami.{Context, Into, Model, Msg => AppMsg}
-import cotoami.models.{Cotonoma, Node, UiState}
+import cotoami.models.{Cotonoma, Id, Node, UiState}
 import cotoami.repository.Root
 import cotoami.subparts.modeless.ModelessGeomap
 import cotoami.subparts.modeless.ModelessNodeProfile
@@ -152,7 +152,7 @@ object AppHeader {
           cotoami.browser.openBlankInNewWindow(
             Some(context.i18n.locale.toLanguageTag()),
             context.databaseFolder,
-            context.repo.nodes.focusedId.map(_.uuid),
+            browserFocusedNodeId(context.repo).map(_.uuid),
             context.repo.cotonomas.focusedId.map(_.uuid),
             context.uiState.map(_.theme)
           )
@@ -179,6 +179,9 @@ object AppHeader {
         })
       )
     )
+
+  private[subparts] def browserFocusedNodeId(repo: Root): Option[Id[Node]] =
+    repo.nodes.focusedId.orElse(repo.nodes.selfId)
 
   private def buttonGeomap(uiState: UiState)(using
       context: Context,
