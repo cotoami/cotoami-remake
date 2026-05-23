@@ -237,6 +237,47 @@ fn page_initialization_script(content_label: &str) -> String {
     }} catch (_) {{}}
   }}
 
+  function closestTargetedLink(start) {{
+    let element = start;
+    while (element && element !== document) {{
+      if (
+        element.nodeType === Node.ELEMENT_NODE &&
+        element.matches &&
+        element.matches("a[href][target], area[href][target]")
+      ) {{
+        return element;
+      }}
+      element = element.parentElement || element.parentNode;
+    }}
+    return null;
+  }}
+
+  function isPlainPrimaryClick(event) {{
+    return event.button === 0 &&
+      !event.metaKey &&
+      !event.ctrlKey &&
+      !event.shiftKey &&
+      !event.altKey;
+  }}
+
+  function shouldNavigateTargetedLink(link, event) {{
+    if (event.defaultPrevented || !isPlainPrimaryClick(event)) return false;
+    if (link.hasAttribute("download")) return false;
+    try {{
+      const url = new URL(link.href, window.location.href);
+      return url.protocol === "http:" || url.protocol === "https:";
+    }} catch (_) {{
+      return false;
+    }}
+  }}
+
+  function navigateTargetedLink(event) {{
+    const link = closestTargetedLink(event.target);
+    if (!link || !shouldNavigateTargetedLink(link, event)) return;
+    event.preventDefault();
+    window.location.href = link.href;
+  }}
+
   function selectedRange() {{
     const selection = window.getSelection && window.getSelection();
     if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return null;
@@ -391,6 +432,7 @@ fn page_initialization_script(content_label: &str) -> String {
 
   document.addEventListener("selectionchange", scheduleSelectionState, true);
   document.addEventListener("mouseup", scheduleSelectionState, true);
+  document.addEventListener("click", navigateTargetedLink, true);
   document.addEventListener("keyup", event => {{
     if (event.key === "Escape") clearSelectionState();
     else scheduleSelectionState();
@@ -721,6 +763,7 @@ pub fn browser_attach(
         let app_for_new_window = app_handle.clone();
         let content_label_for_page_load = content_label.clone();
         let content_label_for_title = content_label.clone();
+        let content_label_for_new_window = content_label.clone();
         let shell_label_for_page_load = shell_label.clone();
         let shell_label_for_title = shell_label.clone();
 
@@ -766,15 +809,11 @@ pub fn browser_attach(
                 })
                 .on_new_window(move |url, _features| {
                     if matches!(url.scheme(), "http" | "https") {
-                        let _ = open_browser_window_internal(
-                            &app_for_new_window,
-                            Some(&url),
-                            None,
-                            None,
-                            None,
-                            None,
-                            None,
-                        );
+                        if let Some(webview) =
+                            app_for_new_window.get_webview(&content_label_for_new_window)
+                        {
+                            let _ = webview.navigate(url);
+                        }
                     }
                     tauri::webview::NewWindowResponse::Deny
                 }),
