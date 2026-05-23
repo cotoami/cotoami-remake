@@ -26,6 +26,7 @@ import cotoami.backend.{
 }
 import cotoami.models.{Cotonoma, I18n, Id, Node, UiState}
 import cotoami.repository.Root
+import cotoami.subparts.EditorCoto.CotoForm
 import cotoami.subparts.{SectionFlowInput, SectionGeomap, SectionTimeline}
 import cotoami.updates.{Changelog, DatabaseFocus}
 
@@ -96,6 +97,8 @@ object App {
     case class BrowserScrollPositionChanged(url: String, x: Double, y: Double)
         extends Msg
     case class BrowserSelectionClipped(capture: BrowserShell.SelectionCapture)
+        extends Msg
+    case class BrowserSelectionPosted(capture: BrowserShell.SelectionCapture)
         extends Msg
     case class BrowserTrailMsg(msg: BrowserTrail.Msg) extends Msg
     case class BrowserDownloadsMsg(msg: BrowserDownloads.Msg) extends Msg
@@ -234,6 +237,9 @@ object App {
 
       case Msg.BrowserSelectionClipped(capture) =>
         clipSelectionToDraft(capture, model)
+
+      case Msg.BrowserSelectionPosted(capture) =>
+        postSelection(capture, model)
 
       case Msg.BrowserTrailMsg(msg) =>
         val (trail, cmd) = BrowserTrail.update(msg, model.trail)
@@ -453,6 +459,39 @@ object App {
     )
   }
 
+  private def postSelection(
+      capture: BrowserShell.SelectionCapture,
+      model: Model
+  ): (Model, Cmd[Msg]) = {
+    val content = WebClipMarkdown.fromSelection(
+      capture.selectedHtml,
+      capture.selectedText,
+      WebClipMarkdown.Source(capture.title, capture.url)
+    )
+    val flowInput = model.app.flowInput.copy(
+      form = CotoForm.Model(contentInput = content),
+      folded = false,
+      focused = false,
+      interacting = false,
+      posting = false
+    )
+    given Context = model.app.copy(flowInput = flowInput)
+    val (updatedFlowInput, geomap, waitingPosts, cmd) =
+      SectionFlowInput.update(
+        SectionFlowInput.Msg.Post,
+        flowInput,
+        model.app.timeline.waitingPosts,
+        persistDraft = Some(false)
+      )
+    val timeline = model.app.timeline.copy(waitingPosts = waitingPosts)
+    val app = model.app.copy(
+      flowInput = updatedFlowInput,
+      geomap = geomap,
+      timeline = timeline
+    )
+    (model.copy(app = app), cmd.map(Msg.AppMsg.apply))
+  }
+
   private def focusCotonoma(
       model: Model,
       cotonoma: Cotonoma,
@@ -566,7 +605,9 @@ object App {
         canClipSelection =
           model.databaseFolder.isDefined && model.app.repo.canPostCoto,
         onClipSelection =
-          capture => dispatch(Msg.BrowserSelectionClipped(capture))
+          capture => dispatch(Msg.BrowserSelectionClipped(capture)),
+        onPostSelection =
+          capture => dispatch(Msg.BrowserSelectionPosted(capture))
       )
     )
   }

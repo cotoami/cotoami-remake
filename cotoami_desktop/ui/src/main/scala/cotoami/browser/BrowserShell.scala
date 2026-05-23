@@ -77,6 +77,7 @@ object BrowserShell {
   trait SelectionCaptureEventJson extends js.Object {
     val content_label: String = js.native
     val request_id: js.UndefOr[String] = js.native
+    val action: js.UndefOr[String] = js.native
     val url: String = js.native
     val title: js.UndefOr[String] = js.native
     val selected_text: String = js.native
@@ -91,7 +92,8 @@ object BrowserShell {
       url: String,
       title: Option[String],
       selectedText: String,
-      selectedHtml: String
+      selectedHtml: String,
+      action: String
   )
   private case class PendingScrollRestore(url: String, x: Double, y: Double)
 
@@ -118,7 +120,8 @@ object BrowserShell {
       onStateChange: (String, Option[String]) => Unit,
       onScrollPositionChange: (String, Double, Double) => Unit,
       canClipSelection: Boolean,
-      onClipSelection: SelectionCapture => Unit
+      onClipSelection: SelectionCapture => Unit,
+      onPostSelection: SelectionCapture => Unit
   )
 
   private def normalizeUrl(input: String): Option[String] = {
@@ -276,7 +279,8 @@ object BrowserShell {
           jso(
             contentLabel = props.contentLabel,
             visible = visible,
-            label = props.text.BrowserShell_clipSelection,
+            clipLabel = props.text.BrowserShell_clipSelection,
+            postLabel = props.text.Post,
             rect = rect
               .map(rect =>
                 jso(
@@ -736,14 +740,17 @@ object BrowserShell {
                       !payload.selected_text.trim.isEmpty
                     ) {
                       clearSelectionState()
-                      props.onClipSelection(
-                        SelectionCapture(
-                          payload.url,
-                          optionString(payload.title),
-                          payload.selected_text,
-                          payload.selected_html
-                        )
+                      val capture = SelectionCapture(
+                        payload.url,
+                        optionString(payload.title),
+                        payload.selected_text,
+                        payload.selected_html,
+                        payload.action.toOption.getOrElse("clip")
                       )
+                      capture.action match {
+                        case "post" => props.onPostSelection(capture)
+                        case _      => props.onClipSelection(capture)
+                      }
                     } else
                       clearSelectionState()
                   }

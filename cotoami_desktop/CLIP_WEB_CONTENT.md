@@ -52,17 +52,17 @@ The injected script therefore nudges Tauri's command bridge to use Wry's native 
 
 This keeps the selection bridge quiet on strict websites while still using Tauri commands and capability checks.
 
-## Clip Button Rendering
+## Selection Overlay Rendering
 
-The shell decides whether the button is allowed, then calls:
+The shell decides whether the overlay is allowed, then calls:
 
 ```rust
 browser_set_selection_clip_overlay
 ```
 
-That command dispatches an event into the content webview. The injected script shows or hides the button at the selection rect.
+That command dispatches an event into the content webview. The injected script shows or hides the Clip/Post overlay at the selection rect.
 
-The button label is localized with `BrowserShell_clipSelection`. The icon is the Cotoami `logomark.svg`, embedded as inline SVG markup in the injected button. It is not loaded with an `<img src="data:...">` because some sites reject `data:` images through their Content Security Policy.
+The Clip label is localized with `BrowserShell_clipSelection`, and the Post label reuses the existing `Post` text. The icon is the Cotoami `logomark.svg`, embedded as inline SVG markup in the injected Clip button. It is not loaded with an `<img src="data:...">` because some sites reject `data:` images through their Content Security Policy.
 
 ## Capture Flow
 
@@ -75,13 +75,13 @@ The high-level flow is:
    - clipping is allowed in the current app context;
    - the URL is current, not stale;
    - the selection has a rect.
-5. `BrowserShell` calls `browser_set_selection_clip_overlay` to show the button inside the content webview.
-6. The user clicks `Clip`.
-7. The content script sends `browser_selection_capture` with selected text, selected HTML, title, URL, and rect.
+5. `BrowserShell` calls `browser_set_selection_clip_overlay` to show the overlay inside the content webview.
+6. The user clicks `Clip` or `Post`.
+7. The content script sends `browser_selection_capture` with the action, selected text, selected HTML, title, URL, and rect.
 8. Rust validates and emits `browser-selection-capture`.
-9. `cotoami.browser.App` converts the captured content to Markdown and replaces the flow draft.
+9. `cotoami.browser.App` converts the captured content to Markdown, then either replaces the flow draft (`Clip`) or posts directly to the current cotonoma (`Post`).
 
-The shell also hides or invalidates the button on deselection, navigation, reload, stale URL, scroll/resize/blur, Escape, no database, or no posting permission.
+The shell also hides or invalidates the overlay on deselection, navigation, reload, stale URL, scroll/resize/blur, Escape, no database, or no posting permission.
 
 ## Markdown Conversion
 

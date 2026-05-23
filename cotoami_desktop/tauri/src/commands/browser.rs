@@ -92,6 +92,7 @@ pub struct BrowserSelectionStatePayload {
 pub struct BrowserSelectionCapturePayload {
     content_label: String,
     request_id: Option<String>,
+    action: Option<String>,
     url: String,
     title: Option<String>,
     selected_text: String,
@@ -340,322 +341,14 @@ fn set_blank_theme(webview: &tauri::Webview, theme: &str) -> Result<(), Error> {
 }
 
 fn page_initialization_script(content_label: &str) -> String {
+    let installer = include_str!("browser_page.js");
     let content_label = serde_json::to_string(content_label)
         .expect("serializing browser content label to JavaScript must succeed");
     let logomark_svg = serde_json::to_string(COTOAMI_LOGOMARK_SVG)
         .expect("serializing Cotoami logomark SVG must succeed");
     format!(
-        r#"
-(function () {{
-  if (window.__cotoamiSelectionClipInstalled) return;
-  window.__cotoamiSelectionClipInstalled = true;
-
-  const contentLabel = {content_label};
-  const cotoamiLogomark = {logomark_svg};
-  let scheduled = false;
-  let scrollScheduled = false;
-  let postMessageIpcPreferred = false;
-  let clipButton = null;
-
-  function preferPostMessageIpc() {{
-    if (postMessageIpcPreferred) return;
-    postMessageIpcPreferred = true;
-
-    const originalFetch = window.fetch;
-    const originalWarn = console.warn;
-    window.fetch = function (resource, options) {{
-      const url = String(resource && resource.url ? resource.url : resource);
-      if (url.startsWith("ipc://localhost/")) {{
-        return Promise.reject(new Error("Cotoami browser selection uses native IPC."));
-      }}
-      return originalFetch.call(this, resource, options);
-    }};
-    console.warn = function (message, error) {{
-      if (
-        typeof message === "string" &&
-        message.indexOf("IPC custom protocol failed") !== -1 &&
-        error &&
-        error.message === "Cotoami browser selection uses native IPC."
-      ) {{
-        return;
-      }}
-      return originalWarn.apply(this, arguments);
-    }};
-
-    window.setTimeout(function () {{
-      window.fetch = originalFetch;
-      console.warn = originalWarn;
-    }}, 1000);
-  }}
-
-  function invoke(command, args) {{
-    try {{
-      if (window.__TAURI_INTERNALS__ && window.__TAURI_INTERNALS__.invoke) {{
-        preferPostMessageIpc();
-        window.__TAURI_INTERNALS__.invoke(command, args).catch(function () {{}});
-      }}
-    }} catch (_) {{}}
-  }}
-
-  function closestTargetedLink(start) {{
-    let element = start;
-    while (element && element !== document) {{
-      if (
-        element.nodeType === Node.ELEMENT_NODE &&
-        element.matches &&
-        element.matches("a[href][target], area[href][target]")
-      ) {{
-        return element;
-      }}
-      element = element.parentElement || element.parentNode;
-    }}
-    return null;
-  }}
-
-  function isPlainPrimaryClick(event) {{
-    return event.button === 0 &&
-      !event.metaKey &&
-      !event.ctrlKey &&
-      !event.shiftKey &&
-      !event.altKey;
-  }}
-
-  function shouldNavigateTargetedLink(link, event) {{
-    if (event.defaultPrevented || !isPlainPrimaryClick(event)) return false;
-    if (link.hasAttribute("download")) return false;
-    try {{
-      const url = new URL(link.href, window.location.href);
-      return url.protocol === "http:" || url.protocol === "https:";
-    }} catch (_) {{
-      return false;
-    }}
-  }}
-
-  function navigateTargetedLink(event) {{
-    const link = closestTargetedLink(event.target);
-    if (!link || !shouldNavigateTargetedLink(link, event)) return;
-    event.preventDefault();
-    window.location.href = link.href;
-  }}
-
-  function closestHttpLink(start) {{
-    let element = start;
-    while (element && element !== document) {{
-      if (
-        element.nodeType === Node.ELEMENT_NODE &&
-        element.matches &&
-        element.matches("a[href], area[href]")
-      ) {{
-        try {{
-          const url = new URL(element.href, window.location.href);
-          if (url.protocol === "http:" || url.protocol === "https:") return element;
-        }} catch (_) {{}}
-      }}
-      element = element.parentElement || element.parentNode;
-    }}
-    return null;
-  }}
-
-  function reportDownloadIntent(event) {{
-    if (event.defaultPrevented || !isPlainPrimaryClick(event)) return;
-    const link = closestHttpLink(event.target);
-    if (!link) return;
-    invoke("browser_download_intent", {{ payload: {{
-      content_label: contentLabel,
-      url: link.href,
-      download: link.getAttribute("download") || null
-    }} }});
-  }}
-
-  function selectedRange() {{
-    const selection = window.getSelection && window.getSelection();
-    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return null;
-    const text = selection.toString();
-    if (!text || !text.trim()) return null;
-    return selection.getRangeAt(0);
-  }}
-
-  function usefulRect(range) {{
-    const rects = Array.from(range.getClientRects ? range.getClientRects() : []);
-    const rect = rects.find(r => r.width > 0 && r.height > 0) ||
-      (range.getBoundingClientRect && range.getBoundingClientRect());
-    if (!rect || rect.width <= 0 || rect.height <= 0) return null;
-    return {{
-      x: rect.left,
-      y: rect.top,
-      width: rect.width,
-      height: rect.height
-    }};
-  }}
-
-  function selectionHtml(range) {{
-    const container = document.createElement("div");
-    container.appendChild(range.cloneContents());
-    return container.innerHTML;
-  }}
-
-  function ensureClipButton() {{
-    if (clipButton) return clipButton;
-    clipButton = document.createElement("button");
-    clipButton.type = "button";
-    clipButton.setAttribute("aria-label", "Clip");
-    clipButton.style.cssText = [
-      "position:fixed",
-      "z-index:2147483647",
-      "display:none",
-      "align-items:center",
-      "gap:6px",
-      "height:34px",
-      "padding:0 10px",
-      "border:1px solid rgba(0,0,0,.18)",
-      "border-radius:8px",
-      "background:#fff",
-      "color:#202124",
-      "box-shadow:0 8px 24px rgba(0,0,0,.22)",
-      "font:600 13px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif",
-      "line-height:1",
-      "cursor:pointer",
-      "user-select:none"
-    ].join(";");
-    const icon = document.createElement("span");
-    icon.setAttribute("aria-hidden", "true");
-    icon.style.cssText = "display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;line-height:0;";
-    icon.innerHTML = cotoamiLogomark;
-    const svg = icon.querySelector("svg");
-    if (svg) {{
-      svg.removeAttribute("width");
-      svg.removeAttribute("height");
-      svg.style.width = "18px";
-      svg.style.height = "18px";
-      svg.style.display = "block";
-    }}
-    const label = document.createElement("span");
-    label.dataset.cotoamiClipLabel = "";
-    label.textContent = "Clip";
-    clipButton.appendChild(icon);
-    clipButton.appendChild(label);
-    clipButton.addEventListener("mousedown", function (event) {{
-      event.preventDefault();
-      event.stopPropagation();
-    }}, true);
-    clipButton.addEventListener("click", function (event) {{
-      event.preventDefault();
-      event.stopPropagation();
-      window.dispatchEvent(new CustomEvent("__cotoami_clip_capture_request", {{
-        detail: {{ requestId: null }}
-      }}));
-    }}, true);
-    return clipButton;
-  }}
-
-  function hideClipButton() {{
-    if (clipButton) clipButton.style.display = "none";
-  }}
-
-  function showClipButton(rect, label) {{
-    if (!rect) {{
-      hideClipButton();
-      return;
-    }}
-    const button = ensureClipButton();
-    const labelElement = button.querySelector("[data-cotoami-clip-label]");
-    const displayLabel = label || "Clip";
-    button.setAttribute("aria-label", displayLabel);
-    button.title = displayLabel;
-    if (labelElement) labelElement.textContent = displayLabel;
-    if (!button.isConnected) {{
-      const parent = document.documentElement || document.body;
-      parent.appendChild(button);
-    }}
-    button.style.left = Math.max(4, rect.x) + "px";
-    button.style.top = Math.max(4, rect.y - 42) + "px";
-    button.style.display = "inline-flex";
-  }}
-
-  function clearSelectionState() {{
-    hideClipButton();
-    invoke("browser_selection_state", {{ payload: {{
-      content_label: contentLabel,
-      url: window.location.href,
-      has_selection: false
-    }} }});
-  }}
-
-  function reportSelectionState() {{
-    scheduled = false;
-    const range = selectedRange();
-    const rect = range && usefulRect(range);
-    if (!range || !rect) {{
-      clearSelectionState();
-      return;
-    }}
-    invoke("browser_selection_state", {{ payload: {{
-      content_label: contentLabel,
-      url: window.location.href,
-      has_selection: true,
-      rect
-    }} }});
-  }}
-
-  function scheduleSelectionState() {{
-    if (scheduled) return;
-    scheduled = true;
-    window.requestAnimationFrame(reportSelectionState);
-  }}
-
-  function reportScrollState() {{
-    scrollScheduled = false;
-    invoke("browser_scroll_state", {{ payload: {{
-      content_label: contentLabel,
-      url: window.location.href,
-      x: window.scrollX || window.pageXOffset || 0,
-      y: window.scrollY || window.pageYOffset || 0
-    }} }});
-  }}
-
-  function scheduleScrollState() {{
-    if (scrollScheduled) return;
-    scrollScheduled = true;
-    window.requestAnimationFrame(reportScrollState);
-  }}
-
-  document.addEventListener("selectionchange", scheduleSelectionState, true);
-  document.addEventListener("mouseup", scheduleSelectionState, true);
-  document.addEventListener("click", reportDownloadIntent, true);
-  document.addEventListener("click", navigateTargetedLink, true);
-  document.addEventListener("keyup", event => {{
-    if (event.key === "Escape") clearSelectionState();
-    else scheduleSelectionState();
-  }}, true);
-  window.addEventListener("scroll", function () {{
-    clearSelectionState();
-    scheduleScrollState();
-  }}, true);
-  window.addEventListener("resize", clearSelectionState, true);
-  window.addEventListener("blur", clearSelectionState, true);
-  window.addEventListener("__cotoami_clip_overlay", event => {{
-    const detail = event.detail || {{}};
-    if (detail.visible) showClipButton(detail.rect, detail.label);
-    else hideClipButton();
-  }}, true);
-  window.addEventListener("__cotoami_clip_capture_request", event => {{
-    const requestId = event.detail && event.detail.requestId;
-    const range = selectedRange();
-    const rect = range && usefulRect(range);
-    const selection = window.getSelection && window.getSelection();
-    invoke("browser_selection_capture", {{ payload: {{
-      content_label: contentLabel,
-      request_id: requestId,
-      url: window.location.href,
-      title: document.title || "",
-      selected_text: selection ? selection.toString() : "",
-      selected_html: range ? selectionHtml(range) : "",
-      has_selection: Boolean(range && rect),
-      rect
-    }} }});
-  }}, true);
-}})();
-"#
+        r#"{installer}
+window.__cotoamiInstallBrowserPage({{ contentLabel: {content_label}, logomarkSvg: {logomark_svg} }});"#
     )
 }
 
@@ -674,13 +367,17 @@ fn dispatch_selection_capture_request(
 fn dispatch_selection_clip_overlay(
     webview: &tauri::Webview,
     visible: bool,
-    label: &str,
+    clip_label: &str,
+    post_label: &str,
     rect: Option<&SelectionRect>,
 ) -> Result<(), Error> {
-    let label = serde_json::to_string(label).expect("serializing browser clip label must succeed");
+    let clip_label =
+        serde_json::to_string(clip_label).expect("serializing browser clip label must succeed");
+    let post_label =
+        serde_json::to_string(post_label).expect("serializing browser post label must succeed");
     let rect = serde_json::to_string(&rect).expect("serializing browser clip rect must succeed");
     webview.eval(&format!(
-        r#"window.dispatchEvent(new CustomEvent("__cotoami_clip_overlay", {{ detail: {{ visible: {visible}, label: {label}, rect: {rect} }} }}));"#
+        r#"window.dispatchEvent(new CustomEvent("__cotoami_clip_overlay", {{ detail: {{ visible: {visible}, labels: {{ clip: {clip_label}, post: {post_label} }}, rect: {rect} }} }}));"#
     ))?;
     Ok(())
 }
@@ -1245,11 +942,12 @@ pub fn browser_set_selection_clip_overlay(
     app_handle: AppHandle,
     content_label: String,
     visible: bool,
-    label: String,
+    clip_label: String,
+    post_label: String,
     rect: Option<SelectionRect>,
 ) -> Result<(), Error> {
     let webview = content_webview(&app_handle, &content_label)?;
-    dispatch_selection_clip_overlay(&webview, visible, &label, rect.as_ref())
+    dispatch_selection_clip_overlay(&webview, visible, &clip_label, &post_label, rect.as_ref())
 }
 
 #[tauri::command]
