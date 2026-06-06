@@ -237,6 +237,8 @@ trait Text {
   val BrowserShell_pageReady: String
   val BrowserShell_invalidUrl: String
   val BrowserShell_clipSelection: String
+  val BrowserShell_openInWindow: String
+  val BrowserShell_close: String
 }
 
 object Text {

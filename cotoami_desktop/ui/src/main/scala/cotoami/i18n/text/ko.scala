@@ -298,4 +298,6 @@ object ko extends Text {
   val BrowserShell_invalidUrl =
     "유효한 http:// 또는 https:// URL을 입력해 주세요."
   val BrowserShell_clipSelection = "클립"
+  val BrowserShell_openInWindow = "창에서 열기"
+  val BrowserShell_close = "닫기"
 }

@@ -28,6 +28,10 @@ import cotoami.i18n.Text
 
 object BrowserShell {
 
+  enum Mode {
+    case Standalone, Inline
+  }
+
   final val TimelinePaneName = "BrowserTimeline"
   final val DefaultTimelineWidth = 380
   private val DefaultTrailWidth = 340
@@ -100,7 +104,9 @@ object BrowserShell {
   case class Props(
       contentLabel: String,
       initialUrl: Option[String],
-      model: App.Model,
+      app: cotoami.Model,
+      title: Option[String],
+      mode: Mode,
       text: Text,
       timeline: Option[ReactElement],
       cotonomaSelect: Option[ReactElement],
@@ -121,7 +127,9 @@ object BrowserShell {
       onScrollPositionChange: (String, Double, Double) => Unit,
       canClipSelection: Boolean,
       onClipSelection: SelectionCapture => Unit,
-      onPostSelection: SelectionCapture => Unit
+      onPostSelection: SelectionCapture => Unit,
+      onOpenAsWindow: Option[() => Unit],
+      onClose: Option[() => Unit]
   )
 
   private def normalizeUrl(input: String): Option[String] = {
@@ -208,6 +216,7 @@ object BrowserShell {
       setLoading: Boolean => Unit,
       editingRef: ReactRef[Boolean],
       currentWindowTitleRef: ReactRef[String],
+      updateWindowTitle: Boolean,
       onStateChange: (String, Option[String]) => Unit
   ): Unit = {
     val title = optionString(state.title)
@@ -218,7 +227,7 @@ object BrowserShell {
     setTitle(title)
     setLoading(state.is_loading)
     val nextWindowTitle = windowTitle(url, title)
-    if (currentWindowTitleRef.current != nextWindowTitle) {
+    if (updateWindowTitle && currentWindowTitleRef.current != nextWindowTitle) {
       currentWindowTitleRef.current = nextWindowTitle
       tauri.window.getCurrentWindow().setTitle(nextWindowTitle)
       ()
@@ -230,7 +239,7 @@ object BrowserShell {
     val initialUrl = props.initialUrl.getOrElse("")
     val (actualUrl, setActualUrlRaw) = useState(initialUrl)
     val (draftUrl, setDraftUrlRaw) = useState(initialUrl)
-    val (_, setTitleRaw) = useState(props.model.title)
+    val (_, setTitleRaw) = useState(props.title)
     val (loading, setLoadingRaw) = useState(props.initialUrl.nonEmpty)
     val (error, setErrorRaw) = useState(Option.empty[String])
     val (_, setSelectionStateRaw) =
@@ -244,12 +253,13 @@ object BrowserShell {
     val pendingScrollRestoreRef =
       useRef(Option.empty[PendingScrollRestore])
     val editingRef = useRef(false)
-    val windowTitleRef = useRef(windowTitle(initialUrl, props.model.title))
+    val windowTitleRef = useRef(windowTitle(initialUrl, props.title))
     val toolbarRef = useRef[html.Element](null)
     val webviewSlotRef = useRef[html.Element](null)
     val windowViewportInsetTopRef = useRef(0.0)
     val (toolbarHeight, setToolbarHeightRaw) = useState(ToolbarHeight)
-    val currentTheme = props.model.app.uiState.map(_.theme).getOrElse("dark")
+    val currentTheme = props.app.uiState.map(_.theme).getOrElse("dark")
+    val standalone = props.mode == Mode.Standalone
 
     def setActualUrl(url: String): Unit =
       setActualUrlRaw(_ => url)
@@ -387,6 +397,7 @@ object BrowserShell {
                 setLoading,
                 editingRef,
                 windowTitleRef,
+                standalone,
                 props.onStateChange
               )
               if (pendingResizeRef.current) {
@@ -436,6 +447,7 @@ object BrowserShell {
               setLoading,
               editingRef,
               windowTitleRef,
+              standalone,
               props.onStateChange
             )
             resizeBrowserView()
@@ -461,6 +473,7 @@ object BrowserShell {
               setLoading,
               editingRef,
               windowTitleRef,
+              standalone,
               props.onStateChange
             )
           case Failure(throwable) =>
@@ -590,6 +603,7 @@ object BrowserShell {
                     setLoading,
                     editingRef,
                     windowTitleRef,
+                    standalone,
                     props.onStateChange
                   )
                   restorePendingScroll(payload)
@@ -1020,7 +1034,24 @@ object BrowserShell {
                   if (props.downloadsBusy) "loading" else ""
                 )
               )
-            }
+            },
+            props.onOpenAsWindow.map(open =>
+              button(
+                className := "browser-action open-as-window",
+                `type` := "button",
+                title := props.text.BrowserShell_openInWindow,
+                disabled := actualUrl.isBlank(),
+                onClick := (_ => open())
+              )(materialSymbol("open_in_new"))
+            ),
+            props.onClose.map(close =>
+              button(
+                className := "browser-action close-browser",
+                `type` := "button",
+                title := props.text.BrowserShell_close,
+                onClick := (_ => close())
+              )(materialSymbol("close"))
+            )
           ),
           form(
             className := "browser-address-bar",

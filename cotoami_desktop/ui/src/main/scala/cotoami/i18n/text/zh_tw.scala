@@ -297,4 +297,6 @@ object zh_tw extends Text {
   val BrowserShell_pageReady = "頁面已就緒。"
   val BrowserShell_invalidUrl = "請輸入有效的 http:// 或 https:// URL。"
   val BrowserShell_clipSelection = "剪藏"
+  val BrowserShell_openInWindow = "在視窗中開啟"
+  val BrowserShell_close = "關閉"
 }

@@ -562,7 +562,9 @@ object App {
       BrowserShell.Props(
         contentLabel = props.contentLabel,
         initialUrl = props.initialUrl,
-        model = model,
+        app = model.app,
+        title = model.title,
+        mode = BrowserShell.Mode.Standalone,
         text = model.app.i18n.text,
         timeline = cotoTimeline.timeline,
         cotonomaSelect = cotoTimeline.cotonomaSelect,
@@ -607,7 +609,9 @@ object App {
         onClipSelection =
           capture => dispatch(Msg.BrowserSelectionClipped(capture)),
         onPostSelection =
-          capture => dispatch(Msg.BrowserSelectionPosted(capture))
+          capture => dispatch(Msg.BrowserSelectionPosted(capture)),
+        onOpenAsWindow = None,
+        onClose = None
       )
     )
   }

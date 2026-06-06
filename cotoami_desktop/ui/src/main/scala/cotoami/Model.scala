@@ -69,6 +69,7 @@ case class Model(
     navCotonomas: NavCotonomas.Model = NavCotonomas.Model(),
     nodeTools: SectionNodeTools.Model = SectionNodeTools.Model(),
     search: PaneSearch.Model = PaneSearch.Model(),
+    stockBrowser: PaneStock.BrowserModel = PaneStock.BrowserModel(),
     flowInput: SectionFlowInput.Model,
     timeline: SectionTimeline.Model = SectionTimeline.Model(),
     traversals: SectionTraversals.Model = SectionTraversals.Model(),

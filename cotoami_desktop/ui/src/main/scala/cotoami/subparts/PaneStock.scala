@@ -12,8 +12,15 @@ import marubinotto.optionalClasses
 import marubinotto.fui.{Browser, Cmd}
 import marubinotto.components.{toolButton, ScrollArea, SplitPane}
 
+import cotoami.browser.{
+  BrowserDownloads,
+  BrowserShell,
+  BrowserTrail,
+  WebClipMarkdown
+}
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Geolocation, UiState}
+import cotoami.subparts.EditorCoto.CotoForm
 import cotoami.subparts.modeless.ModelessGeomap
 import cotoami.updates
 
@@ -22,9 +29,19 @@ object PaneStock {
   final val PaneId = "stock-pane"
   final val PaneName = "PaneStock"
   final val DefaultWidth = 650
+  final val BrowserContentLabel = "main-inline-browser"
 
   final val PaneMapName = "PaneMap"
   final val PaneMapDefaultSize = 400
+
+  case class BrowserModel(
+      opened: Boolean = false,
+      url: String = "",
+      title: Option[String] = None,
+      trail: BrowserTrail.Model = BrowserTrail.Model(),
+      downloads: BrowserDownloads.Model = BrowserDownloads.Model(),
+      downloadsOpenRequest: Int = 0
+  )
 
   def currentWidth: Double = dom.document.getElementById(PaneId) match {
     case element: HTMLElement => element.offsetWidth
@@ -46,6 +63,19 @@ object PaneStock {
     case class SetMapOrientation(vertical: Boolean) extends Msg
     case class FocusGeolocation(location: Geolocation) extends Msg
     case object DisplayGeolocationInFocus extends Msg
+    case class OpenBrowser(url: String) extends Msg
+    case object CloseBrowser extends Msg
+    case object OpenBrowserAsWindow extends Msg
+    case class BrowserStateChanged(url: String, title: Option[String])
+        extends Msg
+    case class BrowserScrollPositionChanged(url: String, x: Double, y: Double)
+        extends Msg
+    case class BrowserSelectionClipped(capture: BrowserShell.SelectionCapture)
+        extends Msg
+    case class BrowserSelectionPosted(capture: BrowserShell.SelectionCapture)
+        extends Msg
+    case class BrowserTrailMsg(msg: BrowserTrail.Msg) extends Msg
+    case class BrowserDownloadsMsg(msg: BrowserDownloads.Msg) extends Msg
   }
 
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
@@ -97,7 +127,151 @@ object PaneStock {
               }
           )
           .getOrElse((model, Cmd.none))
+
+      case Msg.OpenBrowser(url) =>
+        model
+          .modify(_.stockBrowser)
+          .using(
+            _.copy(
+              opened = true,
+              url = url,
+              title = None
+            )
+          )
+          .pipe(updates.uiState(_.setPaneOpen(PaneName, true)))
+
+      case Msg.CloseBrowser =>
+        (
+          model.modify(_.stockBrowser).setTo(BrowserModel()),
+          Cmd.none
+        )
+
+      case Msg.OpenBrowserAsWindow =>
+        model.stockBrowser.url.trim match {
+          case url if url.nonEmpty =>
+            cotoami.browser.openUrlInNewWindow(
+              url,
+              Some(model.i18n.locale.toLanguageTag()),
+              model.databaseFolder,
+              model.repo.nodes.focusedId.map(_.uuid),
+              model.repo.cotonomas.focusedId.map(_.uuid),
+              model.uiState.map(_.theme)
+            )
+            update(Msg.CloseBrowser, model)
+          case _ =>
+            (model, Cmd.none)
+        }
+
+      case Msg.BrowserStateChanged(url, title) =>
+        (
+          model.modify(_.stockBrowser).using(browser =>
+            browser.copy(
+              url = url,
+              title = title,
+              trail = browser.trail.remember(url, title)
+            )
+          ),
+          Cmd.none
+        )
+
+      case Msg.BrowserScrollPositionChanged(url, x, y) =>
+        (
+          model.modify(_.stockBrowser.trail).using(
+            _.saveScrollPosition(url, x, y)
+          ),
+          Cmd.none
+        )
+
+      case Msg.BrowserSelectionClipped(capture) =>
+        clipSelectionToDraft(capture, model)
+
+      case Msg.BrowserSelectionPosted(capture) =>
+        postSelection(capture, model)
+
+      case Msg.BrowserTrailMsg(submsg) =>
+        val (trail, cmd) = BrowserTrail.update(submsg, model.stockBrowser.trail)
+        (
+          model.modify(_.stockBrowser.trail).setTo(trail),
+          cmd.map(msg => Msg.BrowserTrailMsg(msg).into)
+        )
+
+      case Msg.BrowserDownloadsMsg(submsg) =>
+        val (downloads, cmd) =
+          BrowserDownloads.update(submsg, model.stockBrowser.downloads)
+        val downloadsOpenRequest =
+          submsg match {
+            case _: BrowserDownloads.Msg.DownloadStarted =>
+              model.stockBrowser.downloadsOpenRequest + 1
+            case _ =>
+              model.stockBrowser.downloadsOpenRequest
+          }
+        (
+          model.modify(_.stockBrowser).using(
+            _.copy(
+              downloads = downloads,
+              downloadsOpenRequest = downloadsOpenRequest
+            )
+          ),
+          cmd.map(msg => Msg.BrowserDownloadsMsg(msg).into)
+        )
     }
+
+  private def clipSelectionToDraft(
+      capture: BrowserShell.SelectionCapture,
+      model: Model
+  ): (Model, Cmd[AppMsg]) = {
+    val content = WebClipMarkdown.fromSelection(
+      capture.selectedHtml,
+      capture.selectedText,
+      WebClipMarkdown.Source(capture.title, capture.url)
+    )
+    given Context = model
+    val (flowInput, geomap, waitingPosts, cmd) =
+      SectionFlowInput.update(
+        SectionFlowInput.Msg.ReplaceCotoDraft(content, preview = true),
+        model.flowInput,
+        model.timeline.waitingPosts
+      )
+    val timeline = model.timeline.copy(waitingPosts = waitingPosts)
+    (
+      model.copy(flowInput = flowInput, geomap = geomap, timeline = timeline),
+      cmd
+    )
+  }
+
+  private def postSelection(
+      capture: BrowserShell.SelectionCapture,
+      model: Model
+  ): (Model, Cmd[AppMsg]) = {
+    val content = WebClipMarkdown.fromSelection(
+      capture.selectedHtml,
+      capture.selectedText,
+      WebClipMarkdown.Source(capture.title, capture.url)
+    )
+    val flowInput = model.flowInput.copy(
+      form = CotoForm.Model(contentInput = content),
+      folded = false,
+      focused = false,
+      interacting = false,
+      posting = false
+    )
+    given Context = model.copy(flowInput = flowInput)
+    val (updatedFlowInput, geomap, waitingPosts, cmd) =
+      SectionFlowInput.update(
+        SectionFlowInput.Msg.Post,
+        flowInput,
+        model.timeline.waitingPosts
+      )
+    val timeline = model.timeline.copy(waitingPosts = waitingPosts)
+    (
+      model.copy(
+        flowInput = updatedFlowInput,
+        geomap = geomap,
+        timeline = timeline
+      ),
+      cmd
+    )
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // View
@@ -122,12 +296,75 @@ object PaneStock {
             divMap(model, uiState)
           ),
           secondary = SplitPane.Secondary.Props()(
-            sectionCotoGraph(model, uiState)
+            stockMainContent(model, uiState)
           )
           // Re-create the component on orientation change
         ).withKey(uiState.mapVertical.toString())
       else
-        sectionCotoGraph(model, uiState)
+        stockMainContent(model, uiState)
+    )
+
+  private def stockMainContent(
+      model: Model,
+      uiState: UiState
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    if (model.stockBrowser.opened)
+      inlineBrowser(model)
+    else
+      sectionCotoGraph(model, uiState)
+
+  private def inlineBrowser(
+      model: Model
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    BrowserShell.component(
+      BrowserShell.Props(
+        contentLabel = BrowserContentLabel,
+        initialUrl = Option(model.stockBrowser.url).filter(_.nonEmpty),
+        app = model,
+        title = model.stockBrowser.title,
+        mode = BrowserShell.Mode.Inline,
+        text = context.i18n.text,
+        timeline = None,
+        cotonomaSelect = None,
+        trail = (currentUrl, onClose, onNavigate) =>
+          BrowserTrail.view(
+            model = model.stockBrowser.trail,
+            currentUrl = currentUrl,
+            paneTitle = context.i18n.text.BrowserShell_trail,
+            emptyText = context.i18n.text.BrowserShell_trailEmpty,
+            onClose = onClose,
+            onNavigate = onNavigate,
+            dispatch = msg => dispatch(Msg.BrowserTrailMsg(msg))
+          ),
+        downloads = onClose =>
+          BrowserDownloads.view(
+            model = model.stockBrowser.downloads,
+            paneTitle = context.i18n.text.BrowserShell_downloads,
+            emptyText = context.i18n.text.BrowserShell_downloadsEmpty,
+            deleteTitle = context.i18n.text.Delete,
+            onClose = onClose,
+            dispatch = msg => dispatch(Msg.BrowserDownloadsMsg(msg))
+          ),
+        downloadsVisible = model.stockBrowser.downloads.nonEmpty,
+        downloadsBusy = model.stockBrowser.downloads.downloading,
+        downloadsOpenRequest = model.stockBrowser.downloadsOpenRequest,
+        timelineOpened = false,
+        timelineWidth = BrowserShell.DefaultTimelineWidth,
+        onTimelineOpenChange = _ => (),
+        onTimelineWidthChange = _ => (),
+        onStateChange =
+          (url, title) => dispatch(Msg.BrowserStateChanged(url, title)),
+        onScrollPositionChange =
+          (url, x, y) => dispatch(Msg.BrowserScrollPositionChanged(url, x, y)),
+        canClipSelection =
+          context.databaseFolder.isDefined && context.repo.canPostCoto,
+        onClipSelection =
+          capture => dispatch(Msg.BrowserSelectionClipped(capture)),
+        onPostSelection =
+          capture => dispatch(Msg.BrowserSelectionPosted(capture)),
+        onOpenAsWindow = Some(() => dispatch(Msg.OpenBrowserAsWindow)),
+        onClose = Some(() => dispatch(Msg.CloseBrowser))
+      )
     )
 
   private def divMap(model: Model, uiState: UiState)(using

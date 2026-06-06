@@ -296,4 +296,6 @@ object ja extends Text {
   val BrowserShell_invalidUrl =
     "有効な http:// または https:// の URL を入力してください。"
   val BrowserShell_clipSelection = "クリップ"
+  val BrowserShell_openInWindow = "ウィンドウで開く"
+  val BrowserShell_close = "閉じる"
 }

@@ -297,4 +297,6 @@ object en extends Text {
   val BrowserShell_pageReady = "Page ready."
   val BrowserShell_invalidUrl = "Enter a valid http:// or https:// URL."
   val BrowserShell_clipSelection = "Clip"
+  val BrowserShell_openInWindow = "Open in Window"
+  val BrowserShell_close = "Close"
 }

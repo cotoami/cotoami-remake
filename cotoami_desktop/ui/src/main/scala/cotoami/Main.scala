@@ -19,6 +19,7 @@ import marubinotto.fui._
 import marubinotto.libs.tauri
 
 import cotoami.backend._
+import cotoami.browser.BrowserDownloads
 import cotoami.browser.App as BrowserApp
 import cotoami.repository._
 import cotoami.models._
@@ -641,6 +642,7 @@ object Main {
     listenToBackendMessages <+>
       listenToBackendChanges(model) <+>
       listenToBackendEvents <+>
+      inlineBrowserDownloads(model) <+>
       appUpdateProgress(model)
 
   private def listenToBackendMessages: Sub[Msg] =
@@ -657,6 +659,79 @@ object Main {
   private def listenToBackendEvents: Sub[Msg] =
     tauri.listen[LocalNodeEventJson]("backend-event")
       .map(Msg.BackendEvent.apply)
+
+  private def inlineBrowserDownloads(model: Model): Sub[Msg] =
+    if (!model.stockBrowser.opened)
+      Sub.Empty
+    else
+      Sub.fromCallback[Msg](
+        s"browser-download-started-${PaneStock.BrowserContentLabel}"
+      ) { dispatch =>
+        IO
+          .fromFuture(
+            IO(
+              tauri.event
+                .listen[BrowserApp.BrowserDownloadStartedJson](
+                  "browser-download-started",
+                  event =>
+                    Option(event.payload)
+                      .filter(
+                        _.content_label == PaneStock.BrowserContentLabel
+                      )
+                      .foreach(payload =>
+                        dispatch(
+                          Msg.PaneStockMsg(
+                            PaneStock.Msg.BrowserDownloadsMsg(
+                              BrowserDownloads.Msg.DownloadStarted(
+                                payload.id,
+                                payload.source_url,
+                                payload.path,
+                                payload.filename
+                              )
+                            )
+                          )
+                        )
+                      )
+                )
+                .toFuture
+            )
+          )
+          .map(unlisten => IO(unlisten()))
+      } <+>
+        Sub.fromCallback[Msg](
+          s"browser-download-finished-${PaneStock.BrowserContentLabel}"
+        ) { dispatch =>
+          IO
+            .fromFuture(
+              IO(
+                tauri.event
+                  .listen[BrowserApp.BrowserDownloadFinishedJson](
+                    "browser-download-finished",
+                    event =>
+                      Option(event.payload)
+                        .filter(
+                          _.content_label == PaneStock.BrowserContentLabel
+                        )
+                        .foreach(payload =>
+                          dispatch(
+                            Msg.PaneStockMsg(
+                              PaneStock.Msg.BrowserDownloadsMsg(
+                                BrowserDownloads.Msg.DownloadFinished(
+                                  payload.id,
+                                  payload.url,
+                                  payload.path,
+                                  payload.success
+                                )
+                              )
+                            )
+                          )
+                        )
+                  )
+                  .toFuture
+              )
+            )
+            .map(unlisten => IO(unlisten()))
+        }
 
   private def appUpdateProgress(model: Model): Sub[Msg] =
     model.modalStack.get[Modal.AppUpdate]
