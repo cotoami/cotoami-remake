@@ -129,7 +129,7 @@ object PaneStock {
           .getOrElse((model, Cmd.none))
 
       case Msg.OpenBrowser(url) =>
-        model
+        val browserOpened = model
           .modify(_.stockBrowser)
           .using(
             _.copy(
@@ -138,7 +138,12 @@ object PaneStock {
               title = None
             )
           )
-          .pipe(updates.uiState(_.setPaneOpen(PaneName, true)))
+        browserOpened.uiState
+          .map(AppMain.update(AppMain.Msg.SetPaneStockOpen(true)))
+          .map { case (uiState, cmd) =>
+            (browserOpened.copy(uiState = Some(uiState)), cmd)
+          }
+          .getOrElse((browserOpened, Cmd.none))
 
       case Msg.CloseBrowser =>
         (
