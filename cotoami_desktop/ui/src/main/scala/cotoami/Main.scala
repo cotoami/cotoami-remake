@@ -562,9 +562,16 @@ object Main {
       }
 
       case Msg.SectionTraversalsMsg(submsg) => {
+        val stockBrowser =
+          submsg match {
+            case _: SectionTraversals.Msg.OpenTraversal =>
+              PaneStock.BrowserModel()
+            case _ =>
+              model.stockBrowser
+          }
         val (traversals, cmd) =
           SectionTraversals.update(submsg, model.traversals)
-        (model.copy(traversals = traversals), cmd)
+        (model.copy(traversals = traversals, stockBrowser = stockBrowser), cmd)
       }
 
       case Msg.SectionGeomapMsg(submsg) => {
