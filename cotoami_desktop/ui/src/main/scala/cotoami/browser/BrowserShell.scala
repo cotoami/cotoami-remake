@@ -1047,27 +1047,7 @@ object BrowserShell {
                   if (props.downloadsBusy) "loading" else ""
                 )
               )
-            },
-            props.onOpenAsWindow.map(open =>
-              button(
-                className := "browser-action open-as-window",
-                `type` := "button",
-                title := props.text.BrowserShell_openInWindow,
-                disabled := actualUrl.isBlank(),
-                onClick := (_ => open())
-              )(materialSymbol("open_in_new"))
-            ),
-            props.onClose.map(close =>
-              button(
-                className := "browser-action close-browser",
-                `type` := "button",
-                title := props.text.BrowserShell_close,
-                onClick := (_ => {
-                  closeBrowserView()
-                  close()
-                })
-              )(materialSymbol("close"))
-            )
+            }
           ),
           form(
             className := "browser-address-bar",
@@ -1101,6 +1081,31 @@ object BrowserShell {
               onMouseDown := (e => e.preventDefault())
             )(materialSymbol("arrow_outward"))
           ),
+          Option
+            .when(props.onOpenAsWindow.nonEmpty || props.onClose.nonEmpty) {
+              div(className := "browser-actions browser-window-actions")(
+                props.onOpenAsWindow.map(open =>
+                  button(
+                    className := "browser-action open-as-window",
+                    `type` := "button",
+                    title := props.text.BrowserShell_openInWindow,
+                    disabled := actualUrl.isBlank(),
+                    onClick := (_ => open())
+                  )(materialSymbol("open_in_new"))
+                ),
+                props.onClose.map(close =>
+                  button(
+                    className := "browser-action close-browser",
+                    `type` := "button",
+                    title := props.text.BrowserShell_close,
+                    onClick := (_ => {
+                      closeBrowserView()
+                      close()
+                    })
+                  )(materialSymbol("close"))
+                )
+              )
+            },
           Option.when(props.timeline.nonEmpty && !props.timelineOpened) {
             button(
               className := "browser-action cotoami-timeline-toggle",
