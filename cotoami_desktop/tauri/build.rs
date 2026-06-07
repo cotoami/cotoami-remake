@@ -6,6 +6,7 @@ fn main() {
                 "open_browser_window",
                 "browser_attach",
                 "browser_resize",
+                "browser_close",
                 "browser_navigate",
                 "browser_set_blank_theme",
                 "browser_selection_state",

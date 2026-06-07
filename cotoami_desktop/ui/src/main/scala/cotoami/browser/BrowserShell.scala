@@ -480,6 +480,19 @@ object BrowserShell {
             handleFailure("Browser command failed")(throwable)
         }
 
+    def closeBrowserView(): Unit =
+      if (browserAttachedRef.current) {
+        browserAttachedRef.current = false
+        tauri.core
+          .invoke[Unit](
+            "browser_close",
+            jso(contentLabel = props.contentLabel)
+          )
+          .toFuture
+          .failed
+          .foreach(handleFailure("Couldn't close the browser view"))
+      }
+
     def restoreScrollPosition(x: Double, y: Double): Unit =
       tauri.core
         .invoke[Unit](
@@ -635,7 +648,7 @@ object BrowserShell {
 
         () => {
           disposed = true
-          browserAttachedRef.current = false
+          closeBrowserView()
           resizeInFlightRef.current = false
           pendingResizeRef.current = false
           resizeAnimationFrameId.foreach(dom.window.cancelAnimationFrame)
@@ -1049,7 +1062,10 @@ object BrowserShell {
                 className := "browser-action close-browser",
                 `type` := "button",
                 title := props.text.BrowserShell_close,
-                onClick := (_ => close())
+                onClick := (_ => {
+                  closeBrowserView()
+                  close()
+                })
               )(materialSymbol("close"))
             )
           ),

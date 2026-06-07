@@ -29,7 +29,7 @@ object PaneStock {
   final val PaneId = "stock-pane"
   final val PaneName = "PaneStock"
   final val DefaultWidth = 650
-  final val BrowserContentLabel = "main-inline-browser"
+  final val BrowserContentLabel = "browser-content-main-inline"
 
   final val PaneMapName = "PaneMap"
   final val PaneMapDefaultSize = 400

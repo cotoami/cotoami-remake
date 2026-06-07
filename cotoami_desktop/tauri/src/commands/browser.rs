@@ -170,6 +170,15 @@ impl BrowserRegistry {
             .unwrap_or_default()
     }
 
+    fn remove(&self, content_label: &str) {
+        self.inner.lock().remove(content_label);
+        self.download_intents.lock().remove(content_label);
+        let key_prefix = format!("{content_label}\n");
+        self.downloads
+            .lock()
+            .retain(|key, _| !key.starts_with(&key_prefix));
+    }
+
     fn push_download(&self, content_label: &str, url: &str, download: PendingDownload) {
         let mut downloads = self.downloads.lock();
         downloads
@@ -848,6 +857,19 @@ pub fn browser_resize(
         window.label(),
         &content_label,
     )
+}
+
+#[tauri::command]
+pub fn browser_close(
+    app_handle: AppHandle,
+    registry: tauri::State<'_, BrowserRegistry>,
+    content_label: String,
+) -> Result<(), Error> {
+    if let Some(webview) = app_handle.get_webview(&content_label) {
+        webview.close()?;
+    }
+    registry.remove(&content_label);
+    Ok(())
 }
 
 #[tauri::command]
