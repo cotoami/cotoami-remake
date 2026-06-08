@@ -590,6 +590,9 @@ object App {
         downloadsVisible = model.downloads.nonEmpty,
         downloadsBusy = model.downloads.downloading,
         downloadsOpenRequest = model.downloadsOpenRequest,
+        nativeDetachRequest = 0,
+        nativeAttachRequest = 0,
+        initialScrollPosition = None,
         timelineOpened = timelineOpened,
         timelineWidth = timelineWidth,
         onTimelineOpenChange = open =>

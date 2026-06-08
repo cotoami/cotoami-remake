@@ -100,6 +100,7 @@ object BrowserShell {
       action: String
   )
   private case class PendingScrollRestore(url: String, x: Double, y: Double)
+  case class InitialScrollPosition(x: Double, y: Double)
 
   case class Props(
       contentLabel: String,
@@ -119,6 +120,9 @@ object BrowserShell {
       downloadsVisible: Boolean,
       downloadsBusy: Boolean,
       downloadsOpenRequest: Int,
+      nativeDetachRequest: Int,
+      nativeAttachRequest: Int,
+      initialScrollPosition: Option[InitialScrollPosition],
       timelineOpened: Boolean,
       timelineWidth: Int,
       onTimelineOpenChange: Boolean => Unit,
@@ -439,6 +443,12 @@ object BrowserShell {
           case Success(state) =>
             browserAttachedRef.current = true
             setError(None)
+            val stateUrl = applyStateUrl(state.url)
+            if (initialUrl.nonEmpty && stateUrl == initialUrl)
+              props.initialScrollPosition.foreach(scroll =>
+                pendingScrollRestoreRef.current =
+                  Some(PendingScrollRestore(stateUrl, scroll.x, scroll.y))
+              )
             applyState(
               state,
               setActualUrl,
@@ -450,6 +460,7 @@ object BrowserShell {
               standalone,
               props.onStateChange
             )
+            restorePendingScroll(state)
             resizeBrowserView()
           case Failure(throwable) =>
             handleFailure("Couldn't open the browser view")(throwable)
@@ -565,6 +576,26 @@ object BrowserShell {
         }
       },
       Seq.empty
+    )
+
+    useEffect(
+      () => {
+        if (props.nativeDetachRequest > 0)
+          closeBrowserView()
+        () => ()
+      },
+      Seq(props.nativeDetachRequest)
+    )
+
+    useEffect(
+      () => {
+        if (props.nativeAttachRequest > 0 && !browserAttachedRef.current)
+          refreshWindowViewportInset {
+            attachBrowserView()
+          }
+        () => ()
+      },
+      Seq(props.nativeAttachRequest)
     )
 
     useEffect(

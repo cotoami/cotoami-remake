@@ -6,9 +6,12 @@
 use cotoami_desktop::commands;
 use log::LevelFilter;
 #[allow(unused_imports)]
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 use tauri_plugin_log::{Target, TargetKind};
 use tauri_plugin_window_state::StateFlags;
+
+const MAIN_WINDOW_CLOSE_REQUESTED_EVENT: &str = "main-window-close-requested";
+const MAIN_WINDOW_REOPENED_EVENT: &str = "main-window-reopened";
 
 fn main() {
     #[allow(unused_variables)]
@@ -41,6 +44,7 @@ fn main() {
             // keep it running in the background
             #[cfg(target_os = "macos")]
             tauri::WindowEvent::CloseRequested { api, .. } if window.label() == "main" => {
+                let _ = window.emit(MAIN_WINDOW_CLOSE_REQUESTED_EVENT, ());
                 window.hide().unwrap();
                 api.prevent_close();
             }
@@ -84,6 +88,7 @@ fn main() {
             tauri::RunEvent::Reopen { .. } => {
                 if let Some(window) = app.get_webview_window("main") {
                     window.show().unwrap();
+                    let _ = window.emit(MAIN_WINDOW_REOPENED_EVENT, ());
                 }
             }
             _ => {}

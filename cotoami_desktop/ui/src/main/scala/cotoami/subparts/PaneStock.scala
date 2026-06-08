@@ -40,7 +40,9 @@ object PaneStock {
       title: Option[String] = None,
       trail: BrowserTrail.Model = BrowserTrail.Model(),
       downloads: BrowserDownloads.Model = BrowserDownloads.Model(),
-      downloadsOpenRequest: Int = 0
+      downloadsOpenRequest: Int = 0,
+      nativeDetachRequest: Int = 0,
+      nativeAttachRequest: Int = 0
   )
 
   def currentWidth: Double = dom.document.getElementById(PaneId) match {
@@ -65,6 +67,8 @@ object PaneStock {
     case object DisplayGeolocationInFocus extends Msg
     case class OpenBrowser(url: String) extends Msg
     case object CloseBrowser extends Msg
+    case object DetachNativeBrowser extends Msg
+    case object AttachNativeBrowser extends Msg
     case object OpenBrowserAsWindow extends Msg
     case class BrowserStateChanged(url: String, title: Option[String])
         extends Msg
@@ -148,6 +152,22 @@ object PaneStock {
       case Msg.CloseBrowser =>
         (
           model.modify(_.stockBrowser).setTo(BrowserModel()),
+          Cmd.none
+        )
+
+      case Msg.DetachNativeBrowser =>
+        (
+          model.modify(_.stockBrowser).using(browser =>
+            browser.copy(nativeDetachRequest = browser.nativeDetachRequest + 1)
+          ),
+          Cmd.none
+        )
+
+      case Msg.AttachNativeBrowser =>
+        (
+          model.modify(_.stockBrowser).using(browser =>
+            browser.copy(nativeAttachRequest = browser.nativeAttachRequest + 1)
+          ),
           Cmd.none
         )
 
@@ -353,6 +373,13 @@ object PaneStock {
         downloadsVisible = model.stockBrowser.downloads.nonEmpty,
         downloadsBusy = model.stockBrowser.downloads.downloading,
         downloadsOpenRequest = model.stockBrowser.downloadsOpenRequest,
+        nativeDetachRequest = model.stockBrowser.nativeDetachRequest,
+        nativeAttachRequest = model.stockBrowser.nativeAttachRequest,
+        initialScrollPosition =
+          model.stockBrowser.trail.entryForUrl(model.stockBrowser.url)
+            .map(entry =>
+              BrowserShell.InitialScrollPosition(entry.scrollX, entry.scrollY)
+            ),
         timelineOpened = false,
         timelineWidth = BrowserShell.DefaultTimelineWidth,
         onTimelineOpenChange = _ => (),

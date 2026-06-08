@@ -649,6 +649,7 @@ object Main {
     listenToBackendMessages <+>
       listenToBackendChanges(model) <+>
       listenToBackendEvents <+>
+      inlineBrowserMainWindowLifecycle(model) <+>
       inlineBrowserDownloads(model) <+>
       appUpdateProgress(model)
 
@@ -666,6 +667,23 @@ object Main {
   private def listenToBackendEvents: Sub[Msg] =
     tauri.listen[LocalNodeEventJson]("backend-event")
       .map(Msg.BackendEvent.apply)
+
+  private def inlineBrowserMainWindowLifecycle(model: Model): Sub[Msg] =
+    if (!model.stockBrowser.opened)
+      Sub.Empty
+    else
+      tauri.listen[Unit](
+        "main-window-close-requested",
+        Some("main-window-close-requested-inline-browser")
+      ).map(_ =>
+        Msg.PaneStockMsg(PaneStock.Msg.DetachNativeBrowser)
+      ) <+>
+        tauri.listen[Unit](
+          "main-window-reopened",
+          Some("main-window-reopened-inline-browser")
+        ).map(_ =>
+          Msg.PaneStockMsg(PaneStock.Msg.AttachNativeBrowser)
+        )
 
   private def inlineBrowserDownloads(model: Model): Sub[Msg] =
     if (!model.stockBrowser.opened)
