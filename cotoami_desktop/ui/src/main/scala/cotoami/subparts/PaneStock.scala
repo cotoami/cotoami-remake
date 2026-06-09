@@ -41,6 +41,7 @@ object PaneStock {
       trail: BrowserTrail.Model = BrowserTrail.Model(),
       downloads: BrowserDownloads.Model = BrowserDownloads.Model(),
       downloadsOpenRequest: Int = 0,
+      navigationRequest: Int = 0,
       nativeDetachRequest: Int = 0,
       nativeAttachRequest: Int = 0
   )
@@ -135,11 +136,14 @@ object PaneStock {
       case Msg.OpenBrowser(url) =>
         val browserOpened = model
           .modify(_.stockBrowser)
-          .using(
-            _.copy(
+          .using(browser =>
+            browser.copy(
               opened = true,
               url = url,
-              title = None
+              title = None,
+              navigationRequest =
+                if (browser.opened) browser.navigationRequest + 1
+                else browser.navigationRequest
             )
           )
         browserOpened.uiState
@@ -373,6 +377,7 @@ object PaneStock {
         downloadsVisible = model.stockBrowser.downloads.nonEmpty,
         downloadsBusy = model.stockBrowser.downloads.downloading,
         downloadsOpenRequest = model.stockBrowser.downloadsOpenRequest,
+        navigationRequest = model.stockBrowser.navigationRequest,
         nativeDetachRequest = model.stockBrowser.nativeDetachRequest,
         nativeAttachRequest = model.stockBrowser.nativeAttachRequest,
         initialScrollPosition =

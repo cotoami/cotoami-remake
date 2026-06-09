@@ -120,6 +120,7 @@ object BrowserShell {
       downloadsVisible: Boolean,
       downloadsBusy: Boolean,
       downloadsOpenRequest: Int,
+      navigationRequest: Int,
       nativeDetachRequest: Int,
       nativeAttachRequest: Int,
       initialScrollPosition: Option[InitialScrollPosition],
@@ -554,6 +555,24 @@ object BrowserShell {
       setError(None)
       invokeBrowserCommand("browser_navigate", jso(url = request.url))
     }
+
+    useEffect(
+      () => {
+        props.initialUrl
+          .filter(url => props.navigationRequest > 0 && url.nonEmpty)
+          .filter(tauri.isSupportedBrowserUrl)
+          .foreach(url => {
+            setActualUrl(url)
+            clearSelectionState()
+            setDraftUrl(url)
+            setLoading(true)
+            setError(None)
+            invokeBrowserCommand("browser_navigate", jso(url = url))
+          })
+        () => ()
+      },
+      Seq(props.navigationRequest)
+    )
 
     useEffect(
       () => {

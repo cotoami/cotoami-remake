@@ -590,6 +590,7 @@ object App {
         downloadsVisible = model.downloads.nonEmpty,
         downloadsBusy = model.downloads.downloading,
         downloadsOpenRequest = model.downloadsOpenRequest,
+        navigationRequest = 0,
         nativeDetachRequest = 0,
         nativeAttachRequest = 0,
         initialScrollPosition = None,
