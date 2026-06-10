@@ -12,6 +12,9 @@ import slinky.web.html._
 
 import marubinotto.optionalClasses
 
+import cotoami.Context
+import cotoami.subparts.PaneStock
+
 object ModelessDialogFrame {
 
   object Defaults {
@@ -44,6 +47,51 @@ object ModelessDialogFrame {
       minHeight: Double
   )
   private case class PanelBounds(width: Double, height: Double)
+  case class PlacementBounds(left: Double, top: Double, width: Double, height: Double) {
+    def right: Double = left + width
+    def bottom: Double = top + height
+  }
+
+  private def viewportBounds: PlacementBounds =
+    PlacementBounds(
+      left = 0.0,
+      top = 0.0,
+      width = dom.window.innerWidth.toDouble,
+      height = dom.window.innerHeight.toDouble
+    )
+
+  def activePlacementBounds(using context: Context): PlacementBounds =
+    context.uiState match {
+      case Some(uiState)
+          if context.stockBrowser.opened &&
+            uiState.paneOpened(PaneStock.PaneName) =>
+        dom.document.getElementById(PaneStock.PaneId) match {
+          case stock: dom.Element =>
+            val stockRect = stock.getBoundingClientRect()
+            val viewport = viewportBounds
+            val measured =
+              if (stockRect.left <= viewport.left && stockRect.right < viewport.right)
+                PlacementBounds(
+                  left = stockRect.right,
+                  top = viewport.top,
+                  width = viewport.right - stockRect.right,
+                  height = viewport.height
+                )
+              else if (stockRect.left > viewport.left && stockRect.right >= viewport.right)
+                PlacementBounds(
+                  left = viewport.left,
+                  top = viewport.top,
+                  width = stockRect.left - viewport.left,
+                  height = viewport.height
+                )
+              else
+                viewport
+            if (measured.width > 0.0 && measured.height > 0.0) measured
+            else viewport
+          case _ => viewportBounds
+        }
+      case _ => viewportBounds
+    }
 
   private def panelBoundsOf(panelRef: ReactRef[html.Div]): PanelBounds =
     PanelBounds(
@@ -51,12 +99,16 @@ object ModelessDialogFrame {
       height = Option(panelRef.current).map(_.offsetHeight.toDouble).getOrElse(0.0)
     )
 
-  private def clampPosition(position: Position, bounds: PanelBounds): Position = {
-    val maxLeft = (dom.window.innerWidth - bounds.width).max(0.0)
-    val maxTop = (dom.window.innerHeight - bounds.height).max(0.0)
+  private def clampPosition(
+      position: Position,
+      bounds: PanelBounds,
+      placement: PlacementBounds
+  ): Position = {
+    val maxLeft = (placement.right - bounds.width).max(placement.left)
+    val maxTop = (placement.bottom - bounds.height).max(placement.top)
     Position(
-      position.left.max(0.0).min(maxLeft),
-      position.top.max(0.0).min(maxTop)
+      position.left.max(placement.left).min(maxLeft),
+      position.top.max(placement.top).min(maxTop)
     )
   }
 
@@ -72,17 +124,23 @@ object ModelessDialogFrame {
   private def clampSize(
       position: Position,
       bounds: PanelBounds,
-      minimum: MinimumSize
+      minimum: MinimumSize,
+      placement: PlacementBounds
   ): PanelBounds = {
-    val maxWidth = (dom.window.innerWidth - position.left).max(0.0)
-    val maxHeight = (dom.window.innerHeight - position.top).max(0.0)
+    val maxWidth = (placement.right - position.left).max(0.0)
+    val maxHeight = (placement.bottom - position.top).max(0.0)
     PanelBounds(
       width = bounds.width.max(minimum.width.min(maxWidth)).min(maxWidth),
       height = bounds.height.max(minimum.height.min(maxHeight)).min(maxHeight)
     )
   }
 
-  private def resizedRect(state: ResizeState, mouseX: Double, mouseY: Double): (
+  private def resizedRect(
+      state: ResizeState,
+      mouseX: Double,
+      mouseY: Double,
+      placement: PlacementBounds
+  ): (
       Position,
       PanelBounds
   ) = {
@@ -92,28 +150,32 @@ object ModelessDialogFrame {
     val bottom = state.top + state.height
     state.corner match {
       case ResizeCorner.TopLeft =>
-        val left = (state.left + dx).max(0.0).min(right - state.minWidth)
-        val top = (state.top + dy).max(0.0).min(bottom - state.minHeight)
+        val left =
+          (state.left + dx).max(placement.left).min(right - state.minWidth)
+        val top =
+          (state.top + dy).max(placement.top).min(bottom - state.minHeight)
         (Position(left, top), PanelBounds(right - left, bottom - top))
       case ResizeCorner.TopRight =>
         val newRight = (right + dx)
           .max(state.left + state.minWidth)
-          .min(dom.window.innerWidth.toDouble)
-        val top = (state.top + dy).max(0.0).min(bottom - state.minHeight)
+          .min(placement.right)
+        val top =
+          (state.top + dy).max(placement.top).min(bottom - state.minHeight)
         (Position(state.left, top), PanelBounds(newRight - state.left, bottom - top))
       case ResizeCorner.BottomLeft =>
-        val left = (state.left + dx).max(0.0).min(right - state.minWidth)
+        val left =
+          (state.left + dx).max(placement.left).min(right - state.minWidth)
         val newBottom = (bottom + dy)
           .max(state.top + state.minHeight)
-          .min(dom.window.innerHeight.toDouble)
+          .min(placement.bottom)
         (Position(left, state.top), PanelBounds(right - left, newBottom - state.top))
       case ResizeCorner.BottomRight =>
         val newRight = (right + dx)
           .max(state.left + state.minWidth)
-          .min(dom.window.innerWidth.toDouble)
+          .min(placement.right)
         val newBottom = (bottom + dy)
           .max(state.top + state.minHeight)
-          .min(dom.window.innerHeight.toDouble)
+          .min(placement.bottom)
         (
           Position(state.left, state.top),
           PanelBounds(newRight - state.left, newBottom - state.top)
@@ -121,13 +183,17 @@ object ModelessDialogFrame {
     }
   }
 
-  private def centerPosition(bounds: PanelBounds): Position =
+  private def centerPosition(
+      bounds: PanelBounds,
+      placement: PlacementBounds
+  ): Position =
     clampPosition(
       Position(
-        left = (dom.window.innerWidth - bounds.width) / 2.0,
-        top = (dom.window.innerHeight - bounds.height) / 2.0
+        left = placement.left + (placement.width - bounds.width) / 2.0,
+        top = placement.top + (placement.height - bounds.height) / 2.0
       ),
-      bounds
+      bounds,
+      placement
     )
 
   case class Props(
@@ -140,6 +206,7 @@ object ModelessDialogFrame {
       lockMeasuredSize: Boolean = true,
       initialWidth: String = Defaults.Width,
       initialHeight: String = Defaults.Height,
+      placementBounds: () => PlacementBounds = () => viewportBounds,
       error: Option[String] = None
   )(children: ReactElement*) {
     def body: Seq[ReactElement] = children
@@ -156,7 +223,7 @@ object ModelessDialogFrame {
       initialWidth: String = Defaults.Width,
       initialHeight: String = Defaults.Height,
       error: Option[String] = None
-  )(children: ReactElement*): ReactElement =
+  )(children: ReactElement*)(using context: Context): ReactElement =
     component(
       Props(
         dialogClasses,
@@ -168,6 +235,7 @@ object ModelessDialogFrame {
         lockMeasuredSize,
         initialWidth,
         initialHeight,
+        () => activePlacementBounds,
         error
       )(children*)
     )
@@ -181,11 +249,14 @@ object ModelessDialogFrame {
     val (size, setSize) =
       useState(Option.empty[PanelBounds])
 
+    val currentPlacementBounds: PlacementBounds =
+      props.placementBounds()
+
     val onMouseMove: js.Function1[dom.MouseEvent, Unit] = useCallback(
       (e: dom.MouseEvent) => {
         resizeRef.current.foreach { resize =>
           val (newPosition, newSize) =
-            resizedRect(resize, e.clientX, e.clientY)
+            resizedRect(resize, e.clientX, e.clientY, props.placementBounds())
           setPosition(_ => Some(newPosition))
           setSize(_ => Some(newSize))
         }
@@ -198,7 +269,8 @@ object ModelessDialogFrame {
                     drag.left + e.clientX - drag.mouseX,
                     drag.top + e.clientY - drag.mouseY
                   ),
-                  size.getOrElse(panelBoundsOf(panelRef))
+                  size.getOrElse(panelBoundsOf(panelRef)),
+                  props.placementBounds()
                 )
               )
             )
@@ -234,7 +306,7 @@ object ModelessDialogFrame {
         if (position.isEmpty) {
           val bounds = panelBoundsOf(panelRef)
           if (bounds.width > 0.0 && bounds.height > 0.0) {
-            setPosition(_ => Some(centerPosition(bounds)))
+            setPosition(_ => Some(centerPosition(bounds, props.placementBounds())))
             Option.when(props.lockMeasuredSize) {
               setSize(_ => Some(bounds))
             }
@@ -251,15 +323,20 @@ object ModelessDialogFrame {
             val minimum = minimumSizeOf(panelRef)
             val currentSize = size.getOrElse(panelBoundsOf(panelRef))
             if (currentSize.width > 0.0 && currentSize.height > 0.0) {
+              val placement = props.placementBounds()
               Option.when(props.lockMeasuredSize) {
                 setSize(_ => Some(currentSize))
               }
               position.foreach { currentPosition =>
                 val clampedPosition =
-                  clampPosition(currentPosition, currentSize)
+                  clampPosition(currentPosition, currentSize, placement)
                 val clampedSize =
-                  clampSize(clampedPosition, currentSize, minimum)
-                setPosition(_ => Some(clampPosition(clampedPosition, clampedSize)))
+                  if (props.resizable)
+                    clampSize(clampedPosition, currentSize, minimum, placement)
+                  else currentSize
+                setPosition(_ =>
+                  Some(clampPosition(clampedPosition, clampedSize, placement))
+                )
                 Option.when(props.lockMeasuredSize) {
                   setSize(_ => Some(clampedSize))
                 }
@@ -276,7 +353,12 @@ object ModelessDialogFrame {
         position.map(_.left).getOrElse(0.0),
         position.map(_.top).getOrElse(0.0),
         size.map(_.width).getOrElse(0.0),
-        size.map(_.height).getOrElse(0.0)
+        size.map(_.height).getOrElse(0.0),
+        currentPlacementBounds.left,
+        currentPlacementBounds.top,
+        currentPlacementBounds.width,
+        currentPlacementBounds.height,
+        props.resizable
       )
     )
 

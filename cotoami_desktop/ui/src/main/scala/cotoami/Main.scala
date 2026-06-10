@@ -404,14 +404,17 @@ object Main {
       case Msg.ModelessCotoMsg(submsg) =>
         ModelessCoto.update(submsg, model.modeless.cotos).pipe {
           case (dialogs, dialogId, cmd) =>
-            (
+            val nextModel =
               dialogId.map(id =>
                 ModelessDialogOrder(
                   model.modify(_.modeless.cotos).setTo(dialogs),
                   id,
                   ModelessCoto.dialogOrderAction(submsg)
                 )
-              ).getOrElse(model.modify(_.modeless.cotos).setTo(dialogs)),
+              ).getOrElse(model.modify(_.modeless.cotos).setTo(dialogs))
+            prepareModelessPlacement(
+              nextModel,
+              ModelessCoto.dialogOrderAction(submsg),
               cmd
             )
         }
@@ -419,7 +422,7 @@ object Main {
       case Msg.ModelessEditCotoMsg(submsg) =>
         ModelessEditCoto.update(submsg, model.modeless.editCoto).pipe {
           case (dialog, geomap, cmd) =>
-            (
+            prepareModelessPlacement(
               ModelessDialogOrder(
                 model
                   .modify(_.modeless.editCoto).setTo(dialog)
@@ -427,6 +430,7 @@ object Main {
                 ModelessEditCoto.DialogId,
                 ModelessEditCoto.dialogOrderAction(submsg)
               ),
+              ModelessEditCoto.dialogOrderAction(submsg),
               cmd
             )
         }
@@ -434,7 +438,7 @@ object Main {
       case Msg.ModelessGeomapMsg(submsg) =>
         ModelessGeomap.update(submsg, model.modeless.geomap).pipe {
           case (dialog, cmd) =>
-            (
+            prepareModelessPlacement(
               ModelessDialogOrder(
                 (submsg match {
                   case ModelessGeomap.Msg.Open =>
@@ -447,6 +451,7 @@ object Main {
                 ModelessGeomap.DialogId,
                 ModelessGeomap.dialogOrderAction(submsg)
               ),
+              ModelessGeomap.dialogOrderAction(submsg),
               cmd
             )
         }
@@ -454,7 +459,7 @@ object Main {
       case Msg.ModelessNewCotoMsg(submsg) =>
         ModelessNewCoto.update(submsg, model.modeless.newCoto).pipe {
           case (dialog, geomap, cmd) =>
-            (
+            prepareModelessPlacement(
               ModelessDialogOrder(
                 model
                   .modify(_.modeless.newCoto).setTo(dialog)
@@ -462,6 +467,7 @@ object Main {
                 ModelessNewCoto.DialogId,
                 ModelessNewCoto.dialogOrderAction(submsg)
               ),
+              ModelessNewCoto.dialogOrderAction(submsg),
               cmd
             )
         }
@@ -469,7 +475,7 @@ object Main {
       case Msg.ModelessNodeProfileMsg(submsg) =>
         ModelessNodeProfile.update(submsg, model.modeless.nodeProfile).pipe {
           case (dialog, nodes, cmd) =>
-            (
+            prepareModelessPlacement(
               ModelessDialogOrder(
                 model
                   .modify(_.modeless.nodeProfile).setTo(dialog)
@@ -477,6 +483,7 @@ object Main {
                 ModelessNodeProfile.DialogId,
                 ModelessNodeProfile.dialogOrderAction(submsg)
               ),
+              ModelessNodeProfile.dialogOrderAction(submsg),
               cmd
             )
         }
@@ -484,7 +491,7 @@ object Main {
       case Msg.ModelessSubcotoMsg(submsg) =>
         ModelessSubcoto.update(submsg, model.modeless.subcoto).pipe {
           case (dialog, geomap, cmd) =>
-            (
+            prepareModelessPlacement(
               ModelessDialogOrder(
                 model
                   .modify(_.modeless.subcoto).setTo(dialog)
@@ -492,6 +499,7 @@ object Main {
                 ModelessSubcoto.DialogId,
                 ModelessSubcoto.dialogOrderAction(submsg)
               ),
+              ModelessSubcoto.dialogOrderAction(submsg),
               cmd
             )
         }
@@ -635,6 +643,29 @@ object Main {
         (model, Browser.pushUrl(Route.index.url(())))
     }
   }
+
+  private def prepareModelessPlacement(
+      model: Model,
+      action: Option[ModelessDialogOrder.Action],
+      cmd: Cmd[Msg]
+  ): (Model, Cmd[Msg]) =
+    if (action.contains(ModelessDialogOrder.Action.Focus))
+      model.uiState
+        .filter(uiState =>
+          model.stockBrowser.opened &&
+            uiState.paneOpened(PaneStock.PaneName) &&
+            !uiState.paneOpened(PaneFlow.PaneName)
+        )
+        .map(uiState => AppMain.update(AppMain.Msg.SetPaneFlowOpen(true))(uiState))
+        .map { case (uiState, unfoldCmd) =>
+          (
+            model.copy(uiState = Some(uiState)),
+            cmd ++ unfoldCmd
+          )
+        }
+        .getOrElse((model, cmd))
+    else
+      (model, cmd)
 
   // https://github.com/tauri-apps/tauri/issues/1564
   private def showAppWindow: Cmd.One[Msg] =
