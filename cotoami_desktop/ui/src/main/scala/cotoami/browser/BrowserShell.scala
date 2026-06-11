@@ -253,6 +253,7 @@ object BrowserShell {
     val (trailOpen, setTrailOpenRaw) = useState(false)
     val (downloadsOpen, setDownloadsOpenRaw) = useState(false)
     val browserAttachedRef = useRef(false)
+    val browserClosingRef = useRef(false)
     val resizeInFlightRef = useRef(false)
     val pendingResizeRef = useRef(false)
     val pendingSelectionCaptureRef = useRef(Option.empty[String])
@@ -444,6 +445,7 @@ object BrowserShell {
         .onComplete {
           case Success(state) =>
             browserAttachedRef.current = true
+            browserClosingRef.current = false
             setError(None)
             val stateUrl = applyStateUrl(state.url)
             if (initialUrl.nonEmpty && stateUrl == initialUrl)
@@ -493,9 +495,10 @@ object BrowserShell {
             handleFailure("Browser command failed")(throwable)
         }
 
-    def closeBrowserView(): Unit =
-      if (browserAttachedRef.current) {
+    def closeBrowserView(reportFailure: Boolean = true): Unit =
+      if (browserAttachedRef.current && !browserClosingRef.current) {
         browserAttachedRef.current = false
+        browserClosingRef.current = true
         tauri.core
           .invoke[Unit](
             "browser_close",
@@ -503,7 +506,12 @@ object BrowserShell {
           )
           .toFuture
           .failed
-          .foreach(handleFailure("Couldn't close the browser view"))
+          .foreach(throwable =>
+            if (reportFailure) {
+              browserClosingRef.current = false
+              handleFailure("Couldn't close the browser view")(throwable)
+            }
+          )
       }
 
     def restoreScrollPosition(x: Double, y: Double): Unit =
@@ -616,6 +624,22 @@ object BrowserShell {
         () => ()
       },
       Seq(props.nativeAttachRequest)
+    )
+
+    useEffect(
+      () => {
+        val closeOnUnload: js.Function1[dom.Event, Unit] =
+          (_: dom.Event) => closeBrowserView(reportFailure = false)
+
+        dom.window.addEventListener("pagehide", closeOnUnload)
+        dom.window.addEventListener("beforeunload", closeOnUnload)
+
+        () => {
+          dom.window.removeEventListener("pagehide", closeOnUnload)
+          dom.window.removeEventListener("beforeunload", closeOnUnload)
+        }
+      },
+      Seq(props.contentLabel)
     )
 
     useEffect(
