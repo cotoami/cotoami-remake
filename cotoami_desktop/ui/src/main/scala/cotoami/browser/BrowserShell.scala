@@ -108,6 +108,7 @@ object BrowserShell {
       app: cotoami.Model,
       title: Option[String],
       mode: Mode,
+      layoutKey: String,
       text: Text,
       timeline: Option[ReactElement],
       cotonomaSelect: Option[ReactElement],
@@ -862,6 +863,7 @@ object BrowserShell {
       },
       Seq(
         props.contentLabel,
+        props.layoutKey,
         toolbarHeight,
         trailOpen,
         downloadsOpen,

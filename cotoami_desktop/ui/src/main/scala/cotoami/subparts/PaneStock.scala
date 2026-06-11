@@ -338,12 +338,13 @@ object PaneStock {
       uiState: UiState
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     if (model.stockBrowser.opened)
-      inlineBrowser(model)
+      inlineBrowser(model, uiState)
     else
       sectionCotoGraph(model, uiState)
 
   private def inlineBrowser(
-      model: Model
+      model: Model,
+      uiState: UiState
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     BrowserShell.component(
       BrowserShell.Props(
@@ -352,6 +353,8 @@ object PaneStock {
         app = model,
         title = model.stockBrowser.title,
         mode = BrowserShell.Mode.Inline,
+        layoutKey =
+          if (uiState.reverseMainPanes) "main-reversed" else "main-normal",
         text = context.i18n.text,
         timeline = None,
         cotonomaSelect = None,

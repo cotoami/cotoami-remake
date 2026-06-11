@@ -565,6 +565,7 @@ object App {
         app = model.app,
         title = model.title,
         mode = BrowserShell.Mode.Standalone,
+        layoutKey = "standalone",
         text = model.app.i18n.text,
         timeline = cotoTimeline.timeline,
         cotonomaSelect = cotoTimeline.cotonomaSelect,
