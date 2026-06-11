@@ -70,22 +70,20 @@ object ModelessDialogFrame {
             val stockRect = stock.getBoundingClientRect()
             val viewport = viewportBounds
             val measured =
-              if (stockRect.left <= viewport.left && stockRect.right < viewport.right)
+              if (uiState.reverseMainPanes)
                 PlacementBounds(
                   left = stockRect.right,
                   top = viewport.top,
                   width = viewport.right - stockRect.right,
                   height = viewport.height
                 )
-              else if (stockRect.left > viewport.left && stockRect.right >= viewport.right)
+              else
                 PlacementBounds(
                   left = viewport.left,
                   top = viewport.top,
                   width = stockRect.left - viewport.left,
                   height = viewport.height
                 )
-              else
-                viewport
             if (measured.width > 0.0 && measured.height > 0.0) measured
             else viewport
           case _ => viewportBounds
