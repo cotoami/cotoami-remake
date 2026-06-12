@@ -29,7 +29,7 @@ object PaneStock {
   final val PaneId = "stock-pane"
   final val PaneName = "PaneStock"
   final val DefaultWidth = 650
-  final val BrowserContentLabel = "browser-content-main-inline"
+  final val BrowserContentLabel = "browser-content-main-embedded"
 
   final val PaneMapName = "PaneMap"
   final val PaneMapDefaultSize = 400
@@ -338,11 +338,11 @@ object PaneStock {
       uiState: UiState
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     if (model.stockBrowser.opened)
-      inlineBrowser(model, uiState)
+      embeddedBrowser(model, uiState)
     else
       sectionCotoGraph(model, uiState)
 
-  private def inlineBrowser(
+  private def embeddedBrowser(
       model: Model,
       uiState: UiState
   )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
@@ -352,7 +352,7 @@ object PaneStock {
         initialUrl = Option(model.stockBrowser.url).filter(_.nonEmpty),
         app = model,
         title = model.stockBrowser.title,
-        mode = BrowserShell.Mode.Inline,
+        mode = BrowserShell.Mode.Embedded,
         layoutKey =
           if (uiState.reverseMainPanes) "main-reversed" else "main-normal",
         text = context.i18n.text,

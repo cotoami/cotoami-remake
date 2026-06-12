@@ -29,7 +29,7 @@ import cotoami.i18n.Text
 object BrowserShell {
 
   enum Mode {
-    case Standalone, Inline
+    case Standalone, Embedded
   }
 
   final val TimelinePaneName = "BrowserTimeline"
