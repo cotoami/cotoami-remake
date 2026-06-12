@@ -7,7 +7,7 @@ import marubinotto.optionalClasses
 import marubinotto.components.{materialSymbol, shiftToolButton, toolButton}
 
 import cotoami.{Context, Into, Model, Msg => AppMsg}
-import cotoami.models.{Cotonoma, Id, Node, UiState}
+import cotoami.models.{Cotonoma, Node, UiState}
 import cotoami.repository.Root
 import cotoami.subparts.modeless.ModelessGeomap
 import cotoami.subparts.modeless.ModelessNodeProfile
@@ -144,19 +144,14 @@ object AppHeader {
           span(className := "count")(context.repo.cotos.selectedIds.size)
         )
       },
-      toolButton(
-        classes = "open-browser",
-        symbol = "language",
-        tip = Some(context.i18n.text.OpenBrowser),
-        onClick = _ =>
-          cotoami.browser.openBlankInNewWindow(
-            Some(context.i18n.locale.toLanguageTag()),
-            context.databaseFolder,
-            browserFocusedNodeId(context.repo).map(_.uuid),
-            context.repo.cotonomas.focusedId.map(_.uuid),
-            context.uiState.map(_.theme)
-          )
-      ),
+      Option.when(!context.stockBrowser.opened) {
+        toolButton(
+          classes = "open-browser",
+          symbol = "language",
+          tip = Some(context.i18n.text.OpenBrowser),
+          onClick = _ => dispatch(PaneStock.Msg.OpenBrowser(""))
+        )
+      },
       buttonGeomap(uiState),
       toolButton(
         classes = "swap-pane",
@@ -179,9 +174,6 @@ object AppHeader {
         })
       )
     )
-
-  private[subparts] def browserFocusedNodeId(repo: Root): Option[Id[Node]] =
-    repo.nodes.focusedId.orElse(repo.nodes.selfId)
 
   private def buttonGeomap(uiState: UiState)(using
       context: Context,
