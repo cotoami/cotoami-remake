@@ -39,6 +39,7 @@ trait Text {
   val OpenMap: String
   val CloseMap: String
   val OpenBrowser: String
+  val CloseBrowser: String
   val SwapPane: String
   val LightMode: String
   val DarkMode: String

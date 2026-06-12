@@ -42,6 +42,7 @@ object zh_cn extends Text {
   val OpenMap = "打开地图"
   val CloseMap = "关闭地图"
   val OpenBrowser = "打开浏览器"
+  val CloseBrowser = "关闭浏览器"
   val SwapPane = "交换面板"
   val LightMode = "浅色模式"
   val DarkMode = "深色模式"

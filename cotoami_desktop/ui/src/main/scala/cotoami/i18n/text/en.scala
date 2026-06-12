@@ -42,6 +42,7 @@ object en extends Text {
   val OpenMap = "Open Map"
   val CloseMap = "Close Map"
   val OpenBrowser = "Open Browser"
+  val CloseBrowser = "Close Browser"
   val SwapPane = "Swap Pane"
   val LightMode = "Light Mode"
   val DarkMode = "Dark Mode"

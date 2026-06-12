@@ -144,14 +144,25 @@ object AppHeader {
           span(className := "count")(context.repo.cotos.selectedIds.size)
         )
       },
-      Option.when(!context.stockBrowser.opened) {
-        toolButton(
-          classes = "open-browser",
-          symbol = "language",
-          tip = Some(context.i18n.text.OpenBrowser),
-          onClick = _ => dispatch(PaneStock.Msg.OpenBrowser(""))
-        )
-      },
+      toolButton(
+        classes = optionalClasses(
+          Seq(
+            ("open-browser", true),
+            ("toggle-browser", true),
+            ("opened", context.stockBrowser.opened)
+          )
+        ),
+        symbol = "language",
+        tip = Some(
+          if (context.stockBrowser.opened) context.i18n.text.CloseBrowser
+          else context.i18n.text.OpenBrowser
+        ),
+        onClick = _ =>
+          if (context.stockBrowser.opened)
+            dispatch(PaneStock.Msg.CloseBrowser)
+          else
+            dispatch(PaneStock.Msg.OpenBrowser(""))
+      ),
       buttonGeomap(uiState),
       toolButton(
         classes = "swap-pane",

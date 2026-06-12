@@ -42,6 +42,7 @@ object ja extends Text {
   val OpenMap = "地図を開く"
   val CloseMap = "地図を閉じる"
   val OpenBrowser = "ブラウザを開く"
+  val CloseBrowser = "ブラウザを閉じる"
   val SwapPane = "左右入れ替え"
   val LightMode = "ライトモード"
   val DarkMode = "ダークモード"
