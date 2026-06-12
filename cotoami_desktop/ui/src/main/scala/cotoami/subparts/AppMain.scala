@@ -167,7 +167,9 @@ object AppMain {
             dispatch(Msg.SetPaneStockOpen(true))
           }
         )(
-          Option.when(flowOpened)(stockPaneToggle),
+          Option.when(flowOpened && !model.stockBrowser.opened)(
+            stockPaneToggle
+          ),
           PaneStock(model, uiState)
         )
       ).withKey(paneStateAsString(uiState))
