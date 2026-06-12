@@ -254,7 +254,7 @@ object ModelessDialogFrame {
       (e: dom.MouseEvent) => {
         resizeRef.current.foreach { resize =>
           val (newPosition, newSize) =
-            resizedRect(resize, e.clientX, e.clientY, props.placementBounds())
+            resizedRect(resize, e.clientX, e.clientY, currentPlacementBounds)
           setPosition(_ => Some(newPosition))
           setSize(_ => Some(newSize))
         }
@@ -268,14 +268,21 @@ object ModelessDialogFrame {
                     drag.top + e.clientY - drag.mouseY
                   ),
                   size.getOrElse(panelBoundsOf(panelRef)),
-                  props.placementBounds()
+                  currentPlacementBounds
                 )
               )
             )
           }
         }
       },
-      Seq(size.map(_.width).getOrElse(0.0), size.map(_.height).getOrElse(0.0))
+      Seq(
+        size.map(_.width).getOrElse(0.0),
+        size.map(_.height).getOrElse(0.0),
+        currentPlacementBounds.left,
+        currentPlacementBounds.top,
+        currentPlacementBounds.width,
+        currentPlacementBounds.height
+      )
     )
 
     val onMouseUp: js.Function1[dom.MouseEvent, Unit] = useCallback(
@@ -296,7 +303,7 @@ object ModelessDialogFrame {
           dom.document.removeEventListener("mouseup", onMouseUp)
         }
       },
-      Seq()
+      Seq(onMouseMove, onMouseUp)
     )
 
     useEffect(
