@@ -5,12 +5,14 @@
 
 use cotoami_desktop::commands;
 use log::LevelFilter;
-#[allow(unused_imports)]
+#[cfg(target_os = "macos")]
 use tauri::{Emitter, Manager};
 use tauri_plugin_log::{Target, TargetKind};
 use tauri_plugin_window_state::StateFlags;
 
+#[cfg(target_os = "macos")]
 const MAIN_WINDOW_CLOSE_REQUESTED_EVENT: &str = "main-window-close-requested";
+#[cfg(target_os = "macos")]
 const MAIN_WINDOW_REOPENED_EVENT: &str = "main-window-reopened";
 
 fn main() {
