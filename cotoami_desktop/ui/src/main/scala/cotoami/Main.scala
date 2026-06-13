@@ -720,74 +720,11 @@ object Main {
     if (!model.stockBrowser.opened)
       Sub.Empty
     else
-      Sub.fromCallback[Msg](
-        s"browser-download-started-${PaneStock.BrowserContentLabel}"
-      ) { dispatch =>
-        IO
-          .fromFuture(
-            IO(
-              tauri.event
-                .listen[BrowserApp.BrowserDownloadStartedJson](
-                  "browser-download-started",
-                  event =>
-                    Option(event.payload)
-                      .filter(
-                        _.content_label == PaneStock.BrowserContentLabel
-                      )
-                      .foreach(payload =>
-                        dispatch(
-                          Msg.PaneStockMsg(
-                            PaneStock.Msg.BrowserDownloadsMsg(
-                              BrowserDownloads.Msg.DownloadStarted(
-                                payload.id,
-                                payload.source_url,
-                                payload.path,
-                                payload.filename
-                              )
-                            )
-                          )
-                        )
-                      )
-                )
-                .toFuture
-            )
-          )
-          .map(unlisten => IO(unlisten()))
-      } <+>
-        Sub.fromCallback[Msg](
-          s"browser-download-finished-${PaneStock.BrowserContentLabel}"
-        ) { dispatch =>
-          IO
-            .fromFuture(
-              IO(
-                tauri.event
-                  .listen[BrowserApp.BrowserDownloadFinishedJson](
-                    "browser-download-finished",
-                    event =>
-                      Option(event.payload)
-                        .filter(
-                          _.content_label == PaneStock.BrowserContentLabel
-                        )
-                        .foreach(payload =>
-                          dispatch(
-                            Msg.PaneStockMsg(
-                              PaneStock.Msg.BrowserDownloadsMsg(
-                                BrowserDownloads.Msg.DownloadFinished(
-                                  payload.id,
-                                  payload.url,
-                                  payload.path,
-                                  payload.success
-                                )
-                              )
-                            )
-                          )
-                        )
-                  )
-                  .toFuture
-              )
-            )
-            .map(unlisten => IO(unlisten()))
-        }
+      BrowserDownloads
+        .subscriptions(PaneStock.BrowserContentLabel)
+        .map(msg =>
+          Msg.PaneStockMsg(PaneStock.Msg.BrowserDownloadsMsg(msg))
+        )
 
   private def appUpdateProgress(model: Model): Sub[Msg] =
     model.modalStack.get[Modal.AppUpdate]

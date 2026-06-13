@@ -34,8 +34,6 @@ object App {
 
   private val DatabaseFocusEvent = "browser-database-focus"
   private val ThemeEvent = "browser-theme"
-  private val BrowserDownloadStartedEvent = "browser-download-started"
-  private val BrowserDownloadFinishedEvent = "browser-download-finished"
 
   case class BrowserDatabaseFocus(
       databaseFolder: String,
@@ -46,25 +44,6 @@ object App {
   @js.native
   trait BrowserThemeJson extends js.Object {
     val theme: String = js.native
-  }
-
-  @js.native
-  trait BrowserDownloadStartedJson extends js.Object {
-    val content_label: String = js.native
-    val id: String = js.native
-    val url: String = js.native
-    val source_url: String = js.native
-    val path: String = js.native
-    val filename: String = js.native
-  }
-
-  @js.native
-  trait BrowserDownloadFinishedJson extends js.Object {
-    val content_label: String = js.native
-    val id: String = js.native
-    val url: String = js.native
-    val path: String = js.native
-    val success: Boolean = js.native
   }
 
   case class Model(
@@ -615,68 +594,9 @@ object App {
           .map(payload => Msg.ThemeChanged(payload.theme))
       )
       .combine(
-        Sub.fromCallback[Msg](
-          s"$BrowserDownloadStartedEvent-${model.contentLabel}"
-        ) { dispatch =>
-          IO
-            .fromFuture(
-              IO(
-                tauri.event
-                  .listen[BrowserDownloadStartedJson](
-                    BrowserDownloadStartedEvent,
-                    event =>
-                      Option(event.payload)
-                        .filter(_.content_label == model.contentLabel)
-                        .foreach(payload =>
-                          dispatch(
-                            Msg.BrowserDownloadsMsg(
-                              BrowserDownloads.Msg.DownloadStarted(
-                                payload.id,
-                                payload.source_url,
-                                payload.path,
-                                payload.filename
-                              )
-                            )
-                          )
-                        )
-                  )
-                  .toFuture
-              )
-            )
-            .map(unlisten => IO(unlisten()))
-        }
-      )
-      .combine(
-        Sub.fromCallback[Msg](
-          s"$BrowserDownloadFinishedEvent-${model.contentLabel}"
-        ) { dispatch =>
-          IO
-            .fromFuture(
-              IO(
-                tauri.event
-                  .listen[BrowserDownloadFinishedJson](
-                    BrowserDownloadFinishedEvent,
-                    event =>
-                      Option(event.payload)
-                        .filter(_.content_label == model.contentLabel)
-                        .foreach(payload =>
-                          dispatch(
-                            Msg.BrowserDownloadsMsg(
-                              BrowserDownloads.Msg.DownloadFinished(
-                                payload.id,
-                                payload.url,
-                                payload.path,
-                                payload.success
-                              )
-                            )
-                          )
-                        )
-                  )
-                  .toFuture
-              )
-            )
-            .map(unlisten => IO(unlisten()))
-        }
+        BrowserDownloads
+          .subscriptions(model.contentLabel)
+          .map(Msg.BrowserDownloadsMsg.apply)
       )
 
   private def propsFromUrl(url: URL): Option[Props] = {
