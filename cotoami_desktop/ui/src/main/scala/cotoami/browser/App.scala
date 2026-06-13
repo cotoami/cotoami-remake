@@ -44,13 +44,6 @@ object App {
   )
 
   @js.native
-  trait BrowserDatabaseFocusJson extends js.Object {
-    val databaseFolder: String = js.native
-    val focusedNodeId: js.UndefOr[String] = js.native
-    val focusedCotonomaId: js.UndefOr[String] = js.native
-  }
-
-  @js.native
   trait BrowserThemeJson extends js.Object {
     val theme: String = js.native
   }
@@ -107,7 +100,6 @@ object App {
     case class UiStateRestored(uiState: Option[UiState]) extends Msg
     case class DatabaseOpened(result: Either[ErrorJson, DatabaseInfo])
         extends Msg
-    case class DatabaseFocusChanged(focus: BrowserDatabaseFocus) extends Msg
     case class ThemeChanged(theme: String) extends Msg
     case class BackendChange(log: ChangelogEntryJson) extends Msg
     case class AppMsg(msg: cotoami.Msg) extends Msg
@@ -289,13 +281,6 @@ object App {
       case Msg.DatabaseOpened(Left(_)) =>
         (model, Cmd.none)
 
-      case Msg.DatabaseFocusChanged(focus)
-          if model.databaseFolder.contains(focus.databaseFolder) =>
-        applyFocus(model.copy(pendingFocus = Some(focus)), focus)
-
-      case Msg.DatabaseFocusChanged(_) =>
-        (model, Cmd.none)
-
       case Msg.ThemeChanged(theme) =>
         updateUiState(model, _.copy(theme = theme)).pipe { case (model, cmd) =>
           (model, Browser.setHtmlTheme[Msg](theme) ++ cmd)
@@ -418,7 +403,7 @@ object App {
           .pipe { case (app, cmd) =>
             (
               nextModel.copy(app = app, cotonomaSelect = select),
-              nextCmd ++ (cmd ++ emitDatabaseFocus(app)).map(Msg.AppMsg.apply)
+              nextCmd ++ cmd.map(Msg.AppMsg.apply)
             )
           }
       case None =>
@@ -512,7 +497,7 @@ object App {
             app = app,
             cotonomaSelect = cotonomaSelect
           ),
-          (cmd ++ emitDatabaseFocus(app)).map(Msg.AppMsg.apply)
+          cmd.map(Msg.AppMsg.apply)
         )
       }
   }
@@ -622,91 +607,76 @@ object App {
   }
 
   private def subscriptions(model: Model): Sub[Msg] =
-    databaseFocusSubscription(model).combine(
-      tauri.listen[ChangelogEntryJson]("backend-change")
-        .map(Msg.BackendChange.apply)
-    ).combine(
-      tauri.listen[BrowserThemeJson](ThemeEvent)
-        .map(payload => Msg.ThemeChanged(payload.theme))
-    ).combine(
-      Sub.fromCallback[Msg](
-        s"$BrowserDownloadStartedEvent-${model.contentLabel}"
-      ) { dispatch =>
-        IO
-          .fromFuture(
-            IO(
-              tauri.event
-                .listen[BrowserDownloadStartedJson](
-                  BrowserDownloadStartedEvent,
-                  event =>
-                    Option(event.payload)
-                      .filter(_.content_label == model.contentLabel)
-                      .foreach(payload =>
-                        dispatch(
-                          Msg.BrowserDownloadsMsg(
-                            BrowserDownloads.Msg.DownloadStarted(
-                              payload.id,
-                              payload.source_url,
-                              payload.path,
-                              payload.filename
+    tauri.listen[ChangelogEntryJson]("backend-change")
+      .map(Msg.BackendChange.apply)
+      .combine(
+        tauri.listen[BrowserThemeJson](ThemeEvent)
+          .map(payload => Msg.ThemeChanged(payload.theme))
+      )
+      .combine(
+        Sub.fromCallback[Msg](
+          s"$BrowserDownloadStartedEvent-${model.contentLabel}"
+        ) { dispatch =>
+          IO
+            .fromFuture(
+              IO(
+                tauri.event
+                  .listen[BrowserDownloadStartedJson](
+                    BrowserDownloadStartedEvent,
+                    event =>
+                      Option(event.payload)
+                        .filter(_.content_label == model.contentLabel)
+                        .foreach(payload =>
+                          dispatch(
+                            Msg.BrowserDownloadsMsg(
+                              BrowserDownloads.Msg.DownloadStarted(
+                                payload.id,
+                                payload.source_url,
+                                payload.path,
+                                payload.filename
+                              )
                             )
                           )
                         )
-                      )
-                )
-                .toFuture
-            )
-          )
-          .map(unlisten => IO(unlisten()))
-      }
-    ).combine(
-      Sub.fromCallback[Msg](
-        s"$BrowserDownloadFinishedEvent-${model.contentLabel}"
-      ) { dispatch =>
-        IO
-          .fromFuture(
-            IO(
-              tauri.event
-                .listen[BrowserDownloadFinishedJson](
-                  BrowserDownloadFinishedEvent,
-                  event =>
-                    Option(event.payload)
-                      .filter(_.content_label == model.contentLabel)
-                      .foreach(payload =>
-                        dispatch(
-                          Msg.BrowserDownloadsMsg(
-                            BrowserDownloads.Msg.DownloadFinished(
-                              payload.id,
-                              payload.url,
-                              payload.path,
-                              payload.success
-                            )
-                          )
-                        )
-                      )
-                )
-                .toFuture
-            )
-          )
-          .map(unlisten => IO(unlisten()))
-      }
-    )
-
-  private def databaseFocusSubscription(model: Model): Sub[Msg] =
-    model.databaseFolder
-      .map(_ =>
-        tauri.listen[BrowserDatabaseFocusJson](DatabaseFocusEvent)
-          .map(payload =>
-            Msg.DatabaseFocusChanged(
-              BrowserDatabaseFocus(
-                payload.databaseFolder,
-                payload.focusedNodeId.toOption.map(Id[Node](_)),
-                payload.focusedCotonomaId.toOption.map(Id[Cotonoma](_))
+                  )
+                  .toFuture
               )
             )
-          )
+            .map(unlisten => IO(unlisten()))
+        }
       )
-      .getOrElse(Sub.Empty)
+      .combine(
+        Sub.fromCallback[Msg](
+          s"$BrowserDownloadFinishedEvent-${model.contentLabel}"
+        ) { dispatch =>
+          IO
+            .fromFuture(
+              IO(
+                tauri.event
+                  .listen[BrowserDownloadFinishedJson](
+                    BrowserDownloadFinishedEvent,
+                    event =>
+                      Option(event.payload)
+                        .filter(_.content_label == model.contentLabel)
+                        .foreach(payload =>
+                          dispatch(
+                            Msg.BrowserDownloadsMsg(
+                              BrowserDownloads.Msg.DownloadFinished(
+                                payload.id,
+                                payload.url,
+                                payload.path,
+                                payload.success
+                              )
+                            )
+                          )
+                        )
+                  )
+                  .toFuture
+              )
+            )
+            .map(unlisten => IO(unlisten()))
+        }
+      )
 
   private def propsFromUrl(url: URL): Option[Props] = {
     val params = queryParams(url)
