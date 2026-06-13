@@ -148,5 +148,5 @@ object WebClipMarkdown {
       .replace("\n", " ")
 
   private def escapeUrl(url: String): String =
-    url.replace(")", "%29").replace(" ", "%20")
+    url.replace("(", "%28").replace(")", "%29").replace(" ", "%20")
 }
