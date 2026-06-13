@@ -263,6 +263,8 @@ object BrowserShell {
     val (downloadsOpen, setDownloadsOpenRaw) = useState(false)
     val browserAttachedRef = useRef(false)
     val browserClosingRef = useRef(false)
+    val browserAttachPendingRef = useRef(false)
+    val browserMountedRef = useRef(true)
     val browserSuppressedRef = useRef(props.nativeSuppressed)
     val resizeInFlightRef = useRef(false)
     val pendingResizeRef = useRef(false)
@@ -448,7 +450,12 @@ object BrowserShell {
       )
 
     def attachBrowserView(): Unit =
-      if (!browserSuppressedRef.current)
+      if (!browserMountedRef.current)
+        ()
+      else if (browserClosingRef.current)
+        browserAttachPendingRef.current = true
+      else if (!browserSuppressedRef.current && !browserAttachedRef.current) {
+        browserAttachPendingRef.current = false
         tauri.core
           .invoke[BrowserViewStateJson](
             "browser_attach",
@@ -490,6 +497,16 @@ object BrowserShell {
             case Failure(throwable) =>
               handleFailure("Couldn't open the browser view")(throwable)
           }
+      }
+
+    def attachPendingBrowserView(): Unit =
+      if (browserAttachPendingRef.current) {
+        browserAttachPendingRef.current = false
+        if (browserMountedRef.current && !browserSuppressedRef.current)
+          refreshWindowViewportInset {
+            attachBrowserView()
+          }
+      }
 
     def invokeBrowserCommand(command: String, args: js.Object = jso()): Unit =
       tauri.core
@@ -528,13 +545,15 @@ object BrowserShell {
             jso(contentLabel = props.contentLabel)
           )
           .toFuture
-          .failed
-          .foreach(throwable =>
-            if (reportFailure) {
+          .onComplete {
+            case Success(_) =>
               browserClosingRef.current = false
-              handleFailure("Couldn't close the browser view")(throwable)
-            }
-          )
+              attachPendingBrowserView()
+            case Failure(throwable) =>
+              browserClosingRef.current = false
+              if (reportFailure)
+                handleFailure("Couldn't close the browser view")(throwable)
+          }
       }
 
     def restoreScrollPosition(x: Double, y: Double): Unit =
@@ -686,6 +705,7 @@ object BrowserShell {
 
     useEffect(
       () => {
+        browserMountedRef.current = true
         var unlisten: Option[js.Function0[Unit]] = None
         var disposed = false
         var resizeAnimationFrameId: Option[Int] = None
@@ -768,6 +788,8 @@ object BrowserShell {
 
         () => {
           disposed = true
+          browserMountedRef.current = false
+          browserAttachPendingRef.current = false
           closeBrowserView()
           resizeInFlightRef.current = false
           pendingResizeRef.current = false
