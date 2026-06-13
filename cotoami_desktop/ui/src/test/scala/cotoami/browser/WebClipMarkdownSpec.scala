@@ -30,12 +30,25 @@ class WebClipMarkdownSpec extends AnyFunSuite {
     val link = WebClipMarkdown.sourceLink(
       WebClipMarkdown.Source(
         Some("A [tricky] title\nwith newline"),
-        "https://example.com/a path/paren)"
+        "https://example.com/a path/(paren)"
       )
     )
 
     assert(
-      link == "[A \\[tricky\\] title with newline](https://example.com/a%20path/paren%29)"
+      link == "[A \\[tricky\\] title with newline](https://example.com/a%20path/%28paren%29)"
+    )
+  }
+
+  test("escapes source URLs with balanced parentheses") {
+    val link = WebClipMarkdown.sourceLink(
+      WebClipMarkdown.Source(
+        Some("William Adams (samurai) - Wikipedia"),
+        "https://en.wikipedia.org/wiki/William_Adams_(samurai)"
+      )
+    )
+
+    assert(
+      link == "[William Adams (samurai) - Wikipedia](https://en.wikipedia.org/wiki/William_Adams_%28samurai%29)"
     )
   }
 

@@ -42,6 +42,7 @@ object ja extends Text {
   val OpenMap = "地図を開く"
   val CloseMap = "地図を閉じる"
   val OpenBrowser = "ブラウザを開く"
+  val CloseBrowser = "ブラウザを閉じる"
   val SwapPane = "左右入れ替え"
   val LightMode = "ライトモード"
   val DarkMode = "ダークモード"
@@ -296,4 +297,6 @@ object ja extends Text {
   val BrowserShell_invalidUrl =
     "有効な http:// または https:// の URL を入力してください。"
   val BrowserShell_clipSelection = "クリップ"
+  val BrowserShell_openInWindow = "ウィンドウで開く"
+  val BrowserShell_close = "閉じる"
 }

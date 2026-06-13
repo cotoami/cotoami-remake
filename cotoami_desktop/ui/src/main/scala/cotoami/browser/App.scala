@@ -14,6 +14,11 @@ import slinky.core.facade.ReactElement
 import slinky.web.ReactDOMClient
 import slinky.web.html._
 
+import io.circe.{Decoder, Encoder}
+import io.circe.generic.semiauto._
+import io.circe.parser.decode
+import io.circe.syntax._
+
 import marubinotto.fui.{Browser, Cmd, Program, Sub}
 import marubinotto.libs.tauri
 
@@ -34,8 +39,14 @@ object App {
 
   private val DatabaseFocusEvent = "browser-database-focus"
   private val ThemeEvent = "browser-theme"
-  private val BrowserDownloadStartedEvent = "browser-download-started"
-  private val BrowserDownloadFinishedEvent = "browser-download-finished"
+  private val InitialStateStorageKeyPrefix = "browser-initial-state"
+
+  case class BrowserInitialState(trail: BrowserTrail.Model)
+
+  implicit val browserInitialStateEncoder: Encoder[BrowserInitialState] =
+    deriveEncoder
+  implicit val browserInitialStateDecoder: Decoder[BrowserInitialState] =
+    deriveDecoder
 
   case class BrowserDatabaseFocus(
       databaseFolder: String,
@@ -44,34 +55,8 @@ object App {
   )
 
   @js.native
-  trait BrowserDatabaseFocusJson extends js.Object {
-    val databaseFolder: String = js.native
-    val focusedNodeId: js.UndefOr[String] = js.native
-    val focusedCotonomaId: js.UndefOr[String] = js.native
-  }
-
-  @js.native
   trait BrowserThemeJson extends js.Object {
     val theme: String = js.native
-  }
-
-  @js.native
-  trait BrowserDownloadStartedJson extends js.Object {
-    val content_label: String = js.native
-    val id: String = js.native
-    val url: String = js.native
-    val source_url: String = js.native
-    val path: String = js.native
-    val filename: String = js.native
-  }
-
-  @js.native
-  trait BrowserDownloadFinishedJson extends js.Object {
-    val content_label: String = js.native
-    val id: String = js.native
-    val url: String = js.native
-    val path: String = js.native
-    val success: Boolean = js.native
   }
 
   case class Model(
@@ -107,7 +92,6 @@ object App {
     case class UiStateRestored(uiState: Option[UiState]) extends Msg
     case class DatabaseOpened(result: Either[ErrorJson, DatabaseInfo])
         extends Msg
-    case class DatabaseFocusChanged(focus: BrowserDatabaseFocus) extends Msg
     case class ThemeChanged(theme: String) extends Msg
     case class BackendChange(log: ChangelogEntryJson) extends Msg
     case class AppMsg(msg: cotoami.Msg) extends Msg
@@ -121,7 +105,8 @@ object App {
       databaseFolder: Option[String],
       focusedNodeId: Option[String],
       focusedCotonomaId: Option[String],
-      theme: Option[String]
+      theme: Option[String],
+      initialStateKey: Option[String]
   ) {
     def initialFocus: Option[BrowserDatabaseFocus] =
       databaseFolder.map(folder =>
@@ -178,9 +163,46 @@ object App {
       None
     })
 
+  def storeInitialState(trail: BrowserTrail.Model): Option[String] =
+    try {
+      val nonce = (js.Math.random() * 1000000000).toInt
+      val key =
+        s"$InitialStateStorageKeyPrefix-${js.Date.now()}-${nonce}"
+      dom.window.localStorage.setItem(
+        key,
+        BrowserInitialState(trail).asJson.noSpaces
+      )
+      Some(key)
+    } catch {
+      case error: Throwable =>
+        println(s"Couldn't store browser initial state: ${error.toString()}")
+        None
+    }
+
+  private def restoreInitialState(key: String): Option[BrowserInitialState] =
+    try {
+      val storage = dom.window.localStorage
+      val value = Option(storage.getItem(key))
+      storage.removeItem(key)
+      value.flatMap(json =>
+        decode[BrowserInitialState](json) match {
+          case Right(state) => Some(state)
+          case Left(error) =>
+            println(s"Invalid browser initial state: ${error.toString()}")
+            None
+        }
+      )
+    } catch {
+      case error: Throwable =>
+        println(s"Couldn't restore browser initial state: ${error.toString()}")
+        None
+    }
+
   private def init(props: Props)(url: URL): (Model, Cmd[Msg]) = {
     val i18n = props.locale.map(I18n.fromBcp47).getOrElse(I18n())
     val initialTheme = props.theme.getOrElse(UiState.DefaultTheme)
+    val initialState =
+      props.initialStateKey.flatMap(restoreInitialState)
     val (flowInput, flowInputCmd) =
       SectionFlowInput.init(persistDraft = false)
     val app = CotoamiModel(
@@ -200,7 +222,7 @@ object App {
         initialTheme = props.theme,
         app = app,
         cotonomaSelect = CotonomaSelect.Model(),
-        trail = BrowserTrail.Model(),
+        trail = initialState.map(_.trail).getOrElse(BrowserTrail.Model()),
         downloads = BrowserDownloads.Model(),
         downloadsOpenRequest = 0,
         pendingFocus = props.initialFocus,
@@ -287,13 +309,6 @@ object App {
       }
 
       case Msg.DatabaseOpened(Left(_)) =>
-        (model, Cmd.none)
-
-      case Msg.DatabaseFocusChanged(focus)
-          if model.databaseFolder.contains(focus.databaseFolder) =>
-        applyFocus(model.copy(pendingFocus = Some(focus)), focus)
-
-      case Msg.DatabaseFocusChanged(_) =>
         (model, Cmd.none)
 
       case Msg.ThemeChanged(theme) =>
@@ -418,7 +433,7 @@ object App {
           .pipe { case (app, cmd) =>
             (
               nextModel.copy(app = app, cotonomaSelect = select),
-              nextCmd ++ (cmd ++ emitDatabaseFocus(app)).map(Msg.AppMsg.apply)
+              nextCmd ++ cmd.map(Msg.AppMsg.apply)
             )
           }
       case None =>
@@ -512,7 +527,7 @@ object App {
             app = app,
             cotonomaSelect = cotonomaSelect
           ),
-          (cmd ++ emitDatabaseFocus(app)).map(Msg.AppMsg.apply)
+          cmd.map(Msg.AppMsg.apply)
         )
       }
   }
@@ -562,7 +577,10 @@ object App {
       BrowserShell.Props(
         contentLabel = props.contentLabel,
         initialUrl = props.initialUrl,
-        model = model,
+        app = model.app,
+        title = model.title,
+        mode = BrowserShell.Mode.Standalone,
+        layoutKey = "standalone",
         text = model.app.i18n.text,
         timeline = cotoTimeline.timeline,
         cotonomaSelect = cotoTimeline.cotonomaSelect,
@@ -588,6 +606,11 @@ object App {
         downloadsVisible = model.downloads.nonEmpty,
         downloadsBusy = model.downloads.downloading,
         downloadsOpenRequest = model.downloadsOpenRequest,
+        navigationRequest = 0,
+        nativeDetachRequest = 0,
+        nativeAttachRequest = 0,
+        nativeSuppressed = false,
+        initialScrollPosition = None,
         timelineOpened = timelineOpened,
         timelineWidth = timelineWidth,
         onTimelineOpenChange = open =>
@@ -607,97 +630,25 @@ object App {
         onClipSelection =
           capture => dispatch(Msg.BrowserSelectionClipped(capture)),
         onPostSelection =
-          capture => dispatch(Msg.BrowserSelectionPosted(capture))
+          capture => dispatch(Msg.BrowserSelectionPosted(capture)),
+        onOpenAsWindow = None,
+        onClose = None
       )
     )
   }
 
   private def subscriptions(model: Model): Sub[Msg] =
-    databaseFocusSubscription(model).combine(
-      tauri.listen[ChangelogEntryJson]("backend-change")
-        .map(Msg.BackendChange.apply)
-    ).combine(
-      tauri.listen[BrowserThemeJson](ThemeEvent)
-        .map(payload => Msg.ThemeChanged(payload.theme))
-    ).combine(
-      Sub.fromCallback[Msg](
-        s"$BrowserDownloadStartedEvent-${model.contentLabel}"
-      ) { dispatch =>
-        IO
-          .fromFuture(
-            IO(
-              tauri.event
-                .listen[BrowserDownloadStartedJson](
-                  BrowserDownloadStartedEvent,
-                  event =>
-                    Option(event.payload)
-                      .filter(_.content_label == model.contentLabel)
-                      .foreach(payload =>
-                        dispatch(
-                          Msg.BrowserDownloadsMsg(
-                            BrowserDownloads.Msg.DownloadStarted(
-                              payload.id,
-                              payload.source_url,
-                              payload.path,
-                              payload.filename
-                            )
-                          )
-                        )
-                      )
-                )
-                .toFuture
-            )
-          )
-          .map(unlisten => IO(unlisten()))
-      }
-    ).combine(
-      Sub.fromCallback[Msg](
-        s"$BrowserDownloadFinishedEvent-${model.contentLabel}"
-      ) { dispatch =>
-        IO
-          .fromFuture(
-            IO(
-              tauri.event
-                .listen[BrowserDownloadFinishedJson](
-                  BrowserDownloadFinishedEvent,
-                  event =>
-                    Option(event.payload)
-                      .filter(_.content_label == model.contentLabel)
-                      .foreach(payload =>
-                        dispatch(
-                          Msg.BrowserDownloadsMsg(
-                            BrowserDownloads.Msg.DownloadFinished(
-                              payload.id,
-                              payload.url,
-                              payload.path,
-                              payload.success
-                            )
-                          )
-                        )
-                      )
-                )
-                .toFuture
-            )
-          )
-          .map(unlisten => IO(unlisten()))
-      }
-    )
-
-  private def databaseFocusSubscription(model: Model): Sub[Msg] =
-    model.databaseFolder
-      .map(_ =>
-        tauri.listen[BrowserDatabaseFocusJson](DatabaseFocusEvent)
-          .map(payload =>
-            Msg.DatabaseFocusChanged(
-              BrowserDatabaseFocus(
-                payload.databaseFolder,
-                payload.focusedNodeId.toOption.map(Id[Node](_)),
-                payload.focusedCotonomaId.toOption.map(Id[Cotonoma](_))
-              )
-            )
-          )
+    tauri.listen[ChangelogEntryJson]("backend-change")
+      .map(Msg.BackendChange.apply)
+      .combine(
+        tauri.listen[BrowserThemeJson](ThemeEvent)
+          .map(payload => Msg.ThemeChanged(payload.theme))
       )
-      .getOrElse(Sub.Empty)
+      .combine(
+        BrowserDownloads
+          .subscriptions(model.contentLabel)
+          .map(Msg.BrowserDownloadsMsg.apply)
+      )
 
   private def propsFromUrl(url: URL): Option[Props] = {
     val params = queryParams(url)
@@ -712,7 +663,8 @@ object App {
       params.get("databaseFolder"),
       params.get("focusedNodeId"),
       params.get("focusedCotonomaId"),
-      params.get("theme")
+      params.get("theme"),
+      params.get("initialStateKey")
     )
   }
 

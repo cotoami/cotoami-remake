@@ -28,6 +28,7 @@ trait Context {
   def repo: Root
   def geomap: SectionGeomap.Model
   def modeless: ModelessState
+  def stockBrowser: PaneStock.BrowserModel
 
   // Synchronously convert a device file path to an URL that can be loaded by the webview.
   def resolveResource(path: String): Option[String] = {
@@ -69,6 +70,7 @@ case class Model(
     navCotonomas: NavCotonomas.Model = NavCotonomas.Model(),
     nodeTools: SectionNodeTools.Model = SectionNodeTools.Model(),
     search: PaneSearch.Model = PaneSearch.Model(),
+    stockBrowser: PaneStock.BrowserModel = PaneStock.BrowserModel(),
     flowInput: SectionFlowInput.Model,
     timeline: SectionTimeline.Model = SectionTimeline.Model(),
     traversals: SectionTraversals.Model = SectionTraversals.Model(),
@@ -125,6 +127,14 @@ case class ModelessState(
     nodeProfile: Option[ModelessNodeProfile.Model] = None,
     subcoto: Option[ModelessSubcoto.Model] = None
 ) {
+  def nonEmpty: Boolean =
+    cotos.nonEmpty ||
+      editCoto.nonEmpty ||
+      geomap.nonEmpty ||
+      newCoto.nonEmpty ||
+      nodeProfile.nonEmpty ||
+      subcoto.nonEmpty
+
   def isOpen(dialogId: ModelessDialogId): Boolean =
     dialogId match {
       case ModelessDialogId.CotoDetails(instanceId) =>

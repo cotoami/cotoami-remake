@@ -42,6 +42,7 @@ object de extends Text {
   val OpenMap = "Karte öffnen"
   val CloseMap = "Karte schließen"
   val OpenBrowser = "Browser öffnen"
+  val CloseBrowser = "Browser schließen"
   val SwapPane = "Bereiche tauschen"
   val LightMode = "Heller Modus"
   val DarkMode = "Dunkler Modus"
@@ -300,4 +301,6 @@ object de extends Text {
   val BrowserShell_invalidUrl =
     "Geben Sie eine gültige http://- oder https://-URL ein."
   val BrowserShell_clipSelection = "Clip"
+  val BrowserShell_openInWindow = "Open in Window"
+  val BrowserShell_close = "Close"
 }

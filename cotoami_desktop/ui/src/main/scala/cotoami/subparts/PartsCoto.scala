@@ -120,7 +120,12 @@ object PartsCoto {
             sectionCotonomaLinkLabel(cotonoma),
             sectionCotonomaContent(coto)
           )
-        case None => sectionCotoContent(coto, collapsibleContentOpened)
+        case None =>
+          sectionCotoContent(
+            coto,
+            collapsibleContentOpened,
+            Some(url => dispatch(PaneStock.Msg.OpenBrowser(url)))
+          )
       }
     )
 
@@ -184,17 +189,26 @@ object PartsCoto {
 
   private def sectionCotoContent(
       cotoContent: CotoContent,
-      collapsibleContentOpened: Boolean
+      collapsibleContentOpened: Boolean,
+      onBrowserUrl: Option[String => Unit] = None
   )(using context: Context): ReactElement =
     section(className := "coto-content")(
       cotoContent.mediaUrl.map(sectionMediaContent),
       cotoContent.summary.map(summary => {
         CollapsibleContent(
           summary = summary,
-          details = sectionTextContent(cotoContent.content),
+          details = sectionTextContent(
+            cotoContent.content,
+            onBrowserUrl
+          ),
           opened = collapsibleContentOpened
         ): ReactElement
-      }).getOrElse(sectionTextContent(cotoContent.content))
+      }).getOrElse(
+        sectionTextContent(
+          cotoContent.content,
+          onBrowserUrl
+        )
+      )
     )
 
   def sectionCotonomaContent(cotoContent: CotoContent)(using
@@ -259,6 +273,12 @@ object PartsCoto {
   def sectionTextContent(content: Option[String])(using
       context: Context
   ): ReactElement =
+    sectionTextContent(content, None)
+
+  private def sectionTextContent(
+      content: Option[String],
+      onBrowserUrl: Option[String => Unit]
+  )(using context: Context): ReactElement =
     section(className := "text-content")(
       Markdown(
         remarkPlugins = Seq(
@@ -272,7 +292,7 @@ object PartsCoto {
             jso(languages = lowlight.all, detect = false)
           )
         ),
-        components = markdownComponents
+        components = markdownComponents(onBrowserUrl)
       )(content)
     )
 
@@ -285,7 +305,9 @@ object PartsCoto {
     val title: js.UndefOr[String] = js.native
   }
 
-  private def markdownComponents(using context: Context) = js.Dynamic
+  private def markdownComponents(onBrowserUrl: Option[String => Unit])(using
+      context: Context
+  ) = js.Dynamic
     .literal(
       a = ((props: MarkdownAnchorProps) => {
         val href = props.href.getOrElse("")
@@ -305,14 +327,18 @@ object PartsCoto {
             if (isPlainLeftClick && tauri.isSupportedBrowserUrl(href)) {
               e.preventDefault()
               e.stopPropagation()
-              cotoami.browser.openUrlInBrowser(
-                href,
-                Some(context.i18n.locale.toLanguageTag()),
-                context.databaseFolder,
-                context.repo.nodes.focusedId.map(_.uuid),
-                context.repo.cotonomas.focusedId.map(_.uuid),
-                context.uiState.map(_.theme)
-              )
+              onBrowserUrl match {
+                case Some(open) => open(href)
+                case None =>
+                  cotoami.browser.openUrlInBrowser(
+                    href,
+                    Some(context.i18n.locale.toLanguageTag()),
+                    context.databaseFolder,
+                    context.repo.nodes.focusedId.map(_.uuid),
+                    context.repo.cotonomas.focusedId.map(_.uuid),
+                    context.uiState.map(_.theme)
+                  )
+              }
             }
           }): js.Function1[js.Dynamic, Unit]
         )

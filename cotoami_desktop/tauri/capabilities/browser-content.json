@@ -15,6 +15,7 @@
     "allow-browser-selection-state",
     "allow-browser-selection-capture",
     "allow-browser-scroll-state",
+    "allow-browser-history-state",
     "allow-browser-download-intent"
   ]
 }

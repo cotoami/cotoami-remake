@@ -42,6 +42,7 @@ object zh_cn extends Text {
   val OpenMap = "打开地图"
   val CloseMap = "关闭地图"
   val OpenBrowser = "打开浏览器"
+  val CloseBrowser = "关闭浏览器"
   val SwapPane = "交换面板"
   val LightMode = "浅色模式"
   val DarkMode = "深色模式"
@@ -297,4 +298,6 @@ object zh_cn extends Text {
   val BrowserShell_pageReady = "页面已就绪。"
   val BrowserShell_invalidUrl = "请输入有效的 http:// 或 https:// URL。"
   val BrowserShell_clipSelection = "剪藏"
+  val BrowserShell_openInWindow = "在窗口中打开"
+  val BrowserShell_close = "关闭"
 }

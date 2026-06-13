@@ -36,6 +36,12 @@ div.browser-shell {
       flex-shrink: 0;
     }
 
+    .browser-window-actions {
+      margin-left: 0.1rem;
+      padding-left: 0.3rem;
+      border-left: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
+    }
+
     .browser-trail-tool {
       position: relative;
       display: inline-flex;

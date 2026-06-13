@@ -5,9 +5,11 @@
 
     let scheduled = false;
     let scrollScheduled = false;
+    let historyScheduled = false;
     let postMessageIpcPreferred = false;
     let clipOverlay = null;
     let clipActionInFlight = false;
+    const historyStorageKey = "__cotoamiBrowserHistory:" + contentLabel;
 
     // Tauri sometimes tries custom-protocol IPC before postMessage IPC.
     // Suppress the expected custom-protocol warning for selection plumbing.
@@ -51,6 +53,120 @@
           window.__TAURI_INTERNALS__.invoke(command, args).catch(function () {});
         }
       } catch (_) {}
+    }
+
+    function readHistoryState() {
+      try {
+        const parsed = JSON.parse(
+          window.sessionStorage.getItem(historyStorageKey) || "null"
+        );
+        if (
+          parsed &&
+          Array.isArray(parsed.entries) &&
+          Number.isInteger(parsed.index)
+        ) {
+          return {
+            entries: parsed.entries.filter(function (entry) {
+              return typeof entry === "string" && entry.length > 0;
+            }),
+            index: parsed.index,
+          };
+        }
+      } catch (_) {}
+      return { entries: [], index: -1 };
+    }
+
+    function writeHistoryState(state) {
+      try {
+        window.sessionStorage.setItem(historyStorageKey, JSON.stringify(state));
+      } catch (_) {}
+    }
+
+    function currentHistoryUrl() {
+      return window.location.href;
+    }
+
+    function clampHistoryIndex(state) {
+      if (state.entries.length === 0) {
+        state.index = -1;
+      } else {
+        state.index = Math.max(0, Math.min(state.index, state.entries.length - 1));
+      }
+      return state;
+    }
+
+    function noteHistoryEntry(url, replace) {
+      const state = clampHistoryIndex(readHistoryState());
+      const existingIndex = state.entries.indexOf(url);
+      if (existingIndex !== -1) {
+        state.index = existingIndex;
+      } else if (replace && state.index >= 0) {
+        state.entries[state.index] = url;
+      } else {
+        const keepUntil = state.index >= 0 ? state.index + 1 : state.entries.length;
+        state.entries = state.entries.slice(0, keepUntil);
+        state.entries.push(url);
+        state.index = state.entries.length - 1;
+      }
+      writeHistoryState(clampHistoryIndex(state));
+      scheduleHistoryState();
+    }
+
+    function reportHistoryState() {
+      historyScheduled = false;
+      const state = clampHistoryIndex(readHistoryState());
+      const historyLength = Math.max(0, window.history ? window.history.length || 0 : 0);
+      const canGoBack = state.index > 0 || historyLength > 1;
+      const canGoForward = state.index >= 0 && state.index < state.entries.length - 1;
+      invoke("browser_history_state", {
+        payload: {
+          content_label: contentLabel,
+          can_go_back: canGoBack,
+          can_go_forward: canGoForward,
+        },
+      });
+    }
+
+    function scheduleHistoryState() {
+      if (historyScheduled) return;
+      historyScheduled = true;
+      window.setTimeout(reportHistoryState, 0);
+    }
+
+    function installHistoryTracker() {
+      noteHistoryEntry(currentHistoryUrl(), false);
+
+      const originalPushState = window.history && window.history.pushState;
+      const originalReplaceState = window.history && window.history.replaceState;
+      if (originalPushState) {
+        window.history.pushState = function () {
+          const result = originalPushState.apply(this, arguments);
+          noteHistoryEntry(currentHistoryUrl(), false);
+          return result;
+        };
+      }
+      if (originalReplaceState) {
+        window.history.replaceState = function () {
+          const result = originalReplaceState.apply(this, arguments);
+          noteHistoryEntry(currentHistoryUrl(), true);
+          return result;
+        };
+      }
+      window.addEventListener(
+        "popstate",
+        function () {
+          noteHistoryEntry(currentHistoryUrl(), false);
+        },
+        true
+      );
+      window.__cotoamiBrowserHistoryState = function () {
+        const state = clampHistoryIndex(readHistoryState());
+        return {
+          canGoBack: state.index > 0 || (window.history && window.history.length > 1),
+          canGoForward: state.index >= 0 && state.index < state.entries.length - 1,
+        };
+      };
+      scheduleHistoryState();
     }
 
     function isPlainPrimaryClick(event) {
@@ -415,5 +531,6 @@
       },
       true
     );
+    installHistoryTracker();
   };
 })();

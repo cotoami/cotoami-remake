@@ -123,7 +123,8 @@ div.app>header {
         }
       }
 
-      button.toggle-geomap {
+      button.toggle-geomap,
+      button.toggle-browser {
         &.opened {
           opacity: 1;
 

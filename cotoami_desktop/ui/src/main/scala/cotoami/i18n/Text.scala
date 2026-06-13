@@ -39,6 +39,7 @@ trait Text {
   val OpenMap: String
   val CloseMap: String
   val OpenBrowser: String
+  val CloseBrowser: String
   val SwapPane: String
   val LightMode: String
   val DarkMode: String
@@ -237,6 +238,8 @@ trait Text {
   val BrowserShell_pageReady: String
   val BrowserShell_invalidUrl: String
   val BrowserShell_clipSelection: String
+  val BrowserShell_openInWindow: String
+  val BrowserShell_close: String
 }
 
 object Text {

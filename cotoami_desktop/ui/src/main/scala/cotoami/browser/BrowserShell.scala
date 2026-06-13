@@ -28,6 +28,10 @@ import cotoami.i18n.Text
 
 object BrowserShell {
 
+  enum Mode {
+    case Standalone, Embedded
+  }
+
   final val TimelinePaneName = "BrowserTimeline"
   final val DefaultTimelineWidth = 380
   private val DefaultTrailWidth = 340
@@ -42,6 +46,8 @@ object BrowserShell {
     val url: String = js.native
     val title: js.UndefOr[String] = js.native
     val is_loading: Boolean = js.native
+    val can_go_back: Boolean = js.native
+    val can_go_forward: Boolean = js.native
   }
 
   @js.native
@@ -96,11 +102,15 @@ object BrowserShell {
       action: String
   )
   private case class PendingScrollRestore(url: String, x: Double, y: Double)
+  case class InitialScrollPosition(x: Double, y: Double)
 
   case class Props(
       contentLabel: String,
       initialUrl: Option[String],
-      model: App.Model,
+      app: cotoami.Model,
+      title: Option[String],
+      mode: Mode,
+      layoutKey: String,
       text: Text,
       timeline: Option[ReactElement],
       cotonomaSelect: Option[ReactElement],
@@ -113,6 +123,11 @@ object BrowserShell {
       downloadsVisible: Boolean,
       downloadsBusy: Boolean,
       downloadsOpenRequest: Int,
+      navigationRequest: Int,
+      nativeDetachRequest: Int,
+      nativeAttachRequest: Int,
+      nativeSuppressed: Boolean,
+      initialScrollPosition: Option[InitialScrollPosition],
       timelineOpened: Boolean,
       timelineWidth: Int,
       onTimelineOpenChange: Boolean => Unit,
@@ -121,7 +136,9 @@ object BrowserShell {
       onScrollPositionChange: (String, Double, Double) => Unit,
       canClipSelection: Boolean,
       onClipSelection: SelectionCapture => Unit,
-      onPostSelection: SelectionCapture => Unit
+      onPostSelection: SelectionCapture => Unit,
+      onOpenAsWindow: Option[() => Unit],
+      onClose: Option[() => Unit]
   )
 
   private def normalizeUrl(input: String): Option[String] = {
@@ -206,8 +223,11 @@ object BrowserShell {
       setDraftUrl: String => Unit,
       setTitle: Option[String] => Unit,
       setLoading: Boolean => Unit,
+      setCanGoBack: Boolean => Unit,
+      setCanGoForward: Boolean => Unit,
       editingRef: ReactRef[Boolean],
       currentWindowTitleRef: ReactRef[String],
+      updateWindowTitle: Boolean,
       onStateChange: (String, Option[String]) => Unit
   ): Unit = {
     val title = optionString(state.title)
@@ -217,8 +237,10 @@ object BrowserShell {
       setDraftUrl(url)
     setTitle(title)
     setLoading(state.is_loading)
+    setCanGoBack(state.can_go_back)
+    setCanGoForward(state.can_go_forward)
     val nextWindowTitle = windowTitle(url, title)
-    if (currentWindowTitleRef.current != nextWindowTitle) {
+    if (updateWindowTitle && currentWindowTitleRef.current != nextWindowTitle) {
       currentWindowTitleRef.current = nextWindowTitle
       tauri.window.getCurrentWindow().setTitle(nextWindowTitle)
       ()
@@ -230,26 +252,33 @@ object BrowserShell {
     val initialUrl = props.initialUrl.getOrElse("")
     val (actualUrl, setActualUrlRaw) = useState(initialUrl)
     val (draftUrl, setDraftUrlRaw) = useState(initialUrl)
-    val (_, setTitleRaw) = useState(props.model.title)
+    val (_, setTitleRaw) = useState(props.title)
     val (loading, setLoadingRaw) = useState(props.initialUrl.nonEmpty)
+    val (canGoBack, setCanGoBackRaw) = useState(false)
+    val (canGoForward, setCanGoForwardRaw) = useState(false)
     val (error, setErrorRaw) = useState(Option.empty[String])
     val (_, setSelectionStateRaw) =
       useState(Option.empty[SelectionState])
     val (trailOpen, setTrailOpenRaw) = useState(false)
     val (downloadsOpen, setDownloadsOpenRaw) = useState(false)
     val browserAttachedRef = useRef(false)
+    val browserClosingRef = useRef(false)
+    val browserAttachPendingRef = useRef(false)
+    val browserMountedRef = useRef(true)
+    val browserSuppressedRef = useRef(props.nativeSuppressed)
     val resizeInFlightRef = useRef(false)
     val pendingResizeRef = useRef(false)
     val pendingSelectionCaptureRef = useRef(Option.empty[String])
     val pendingScrollRestoreRef =
       useRef(Option.empty[PendingScrollRestore])
     val editingRef = useRef(false)
-    val windowTitleRef = useRef(windowTitle(initialUrl, props.model.title))
+    val windowTitleRef = useRef(windowTitle(initialUrl, props.title))
     val toolbarRef = useRef[html.Element](null)
     val webviewSlotRef = useRef[html.Element](null)
     val windowViewportInsetTopRef = useRef(0.0)
     val (toolbarHeight, setToolbarHeightRaw) = useState(ToolbarHeight)
-    val currentTheme = props.model.app.uiState.map(_.theme).getOrElse("dark")
+    val currentTheme = props.app.uiState.map(_.theme).getOrElse("dark")
+    val standalone = props.mode == Mode.Standalone
 
     def setActualUrl(url: String): Unit =
       setActualUrlRaw(_ => url)
@@ -262,6 +291,12 @@ object BrowserShell {
 
     def setLoading(value: Boolean): Unit =
       setLoadingRaw(_ => value)
+
+    def setCanGoBack(value: Boolean): Unit =
+      setCanGoBackRaw(_ => value)
+
+    def setCanGoForward(value: Boolean): Unit =
+      setCanGoForwardRaw(_ => value)
 
     def setError(value: Option[String]): Unit =
       setErrorRaw(_ => value)
@@ -385,8 +420,11 @@ object BrowserShell {
                 setDraftUrl,
                 setTitle,
                 setLoading,
+                setCanGoBack,
+                setCanGoForward,
                 editingRef,
                 windowTitleRef,
+                standalone,
                 props.onStateChange
               )
               if (pendingResizeRef.current) {
@@ -412,36 +450,63 @@ object BrowserShell {
       )
 
     def attachBrowserView(): Unit =
-      tauri.core
-        .invoke[BrowserViewStateJson](
-          "browser_attach",
-          js.Object.assign(
-            browserBoundsArgs,
-            jso(
-              initialUrl = props.initialUrl.orUndefined,
-              theme = currentTheme
+      if (!browserMountedRef.current)
+        ()
+      else if (browserClosingRef.current)
+        browserAttachPendingRef.current = true
+      else if (!browserSuppressedRef.current && !browserAttachedRef.current) {
+        browserAttachPendingRef.current = false
+        tauri.core
+          .invoke[BrowserViewStateJson](
+            "browser_attach",
+            js.Object.assign(
+              browserBoundsArgs,
+              jso(
+                initialUrl = props.initialUrl.orUndefined,
+                theme = currentTheme
+              )
             )
           )
-        )
-        .toFuture
-        .onComplete {
-          case Success(state) =>
-            browserAttachedRef.current = true
-            setError(None)
-            applyState(
-              state,
-              setActualUrl,
-              setDraftUrl,
-              setTitle,
-              setLoading,
-              editingRef,
-              windowTitleRef,
-              props.onStateChange
-            )
-            resizeBrowserView()
-          case Failure(throwable) =>
-            handleFailure("Couldn't open the browser view")(throwable)
-        }
+          .toFuture
+          .onComplete {
+            case Success(state) =>
+              browserAttachedRef.current = true
+              browserClosingRef.current = false
+              setError(None)
+              val stateUrl = applyStateUrl(state.url)
+              if (initialUrl.nonEmpty && stateUrl == initialUrl)
+                props.initialScrollPosition.foreach(scroll =>
+                  pendingScrollRestoreRef.current =
+                    Some(PendingScrollRestore(stateUrl, scroll.x, scroll.y))
+                )
+              applyState(
+                state,
+                setActualUrl,
+                setDraftUrl,
+                setTitle,
+                setLoading,
+                setCanGoBack,
+                setCanGoForward,
+                editingRef,
+                windowTitleRef,
+                standalone,
+                props.onStateChange
+              )
+              restorePendingScroll(state)
+              resizeBrowserView()
+            case Failure(throwable) =>
+              handleFailure("Couldn't open the browser view")(throwable)
+          }
+      }
+
+    def attachPendingBrowserView(): Unit =
+      if (browserAttachPendingRef.current) {
+        browserAttachPendingRef.current = false
+        if (browserMountedRef.current && !browserSuppressedRef.current)
+          refreshWindowViewportInset {
+            attachBrowserView()
+          }
+      }
 
     def invokeBrowserCommand(command: String, args: js.Object = jso()): Unit =
       tauri.core
@@ -459,13 +524,37 @@ object BrowserShell {
               setDraftUrl,
               setTitle,
               setLoading,
+              setCanGoBack,
+              setCanGoForward,
               editingRef,
               windowTitleRef,
+              standalone,
               props.onStateChange
             )
           case Failure(throwable) =>
             handleFailure("Browser command failed")(throwable)
         }
+
+    def closeBrowserView(reportFailure: Boolean = true): Unit =
+      if (browserAttachedRef.current && !browserClosingRef.current) {
+        browserAttachedRef.current = false
+        browserClosingRef.current = true
+        tauri.core
+          .invoke[Unit](
+            "browser_close",
+            jso(contentLabel = props.contentLabel)
+          )
+          .toFuture
+          .onComplete {
+            case Success(_) =>
+              browserClosingRef.current = false
+              attachPendingBrowserView()
+            case Failure(throwable) =>
+              browserClosingRef.current = false
+              if (reportFailure)
+                handleFailure("Couldn't close the browser view")(throwable)
+          }
+      }
 
     def restoreScrollPosition(x: Double, y: Double): Unit =
       tauri.core
@@ -520,6 +609,24 @@ object BrowserShell {
 
     useEffect(
       () => {
+        props.initialUrl
+          .filter(url => props.navigationRequest > 0 && url.nonEmpty)
+          .filter(tauri.isSupportedBrowserUrl)
+          .foreach(url => {
+            setActualUrl(url)
+            clearSelectionState()
+            setDraftUrl(url)
+            setLoading(true)
+            setError(None)
+            invokeBrowserCommand("browser_navigate", jso(url = url))
+          })
+        () => ()
+      },
+      Seq(props.navigationRequest)
+    )
+
+    useEffect(
+      () => {
         val toolbar = toolbarRef.current
         if (toolbar == null) () => ()
         else {
@@ -543,6 +650,62 @@ object BrowserShell {
 
     useEffect(
       () => {
+        if (props.nativeDetachRequest > 0)
+          closeBrowserView()
+        () => ()
+      },
+      Seq(props.nativeDetachRequest)
+    )
+
+    useEffect(
+      () => {
+        if (
+          props.nativeAttachRequest > 0 &&
+          !props.nativeSuppressed &&
+          !browserAttachedRef.current
+        )
+          refreshWindowViewportInset {
+            attachBrowserView()
+          }
+        () => ()
+      },
+      Seq(props.nativeAttachRequest)
+    )
+
+    useEffect(
+      () => {
+        val wasSuppressed = browserSuppressedRef.current
+        browserSuppressedRef.current = props.nativeSuppressed
+        if (props.nativeSuppressed)
+          closeBrowserView()
+        else if (wasSuppressed && !browserAttachedRef.current)
+          refreshWindowViewportInset {
+            attachBrowserView()
+          }
+        () => ()
+      },
+      Seq(props.nativeSuppressed)
+    )
+
+    useEffect(
+      () => {
+        val closeOnUnload: js.Function1[dom.Event, Unit] =
+          (_: dom.Event) => closeBrowserView(reportFailure = false)
+
+        dom.window.addEventListener("pagehide", closeOnUnload)
+        dom.window.addEventListener("beforeunload", closeOnUnload)
+
+        () => {
+          dom.window.removeEventListener("pagehide", closeOnUnload)
+          dom.window.removeEventListener("beforeunload", closeOnUnload)
+        }
+      },
+      Seq(props.contentLabel)
+    )
+
+    useEffect(
+      () => {
+        browserMountedRef.current = true
         var unlisten: Option[js.Function0[Unit]] = None
         var disposed = false
         var resizeAnimationFrameId: Option[Int] = None
@@ -588,8 +751,11 @@ object BrowserShell {
                     setDraftUrl,
                     setTitle,
                     setLoading,
+                    setCanGoBack,
+                    setCanGoForward,
                     editingRef,
                     windowTitleRef,
+                    standalone,
                     props.onStateChange
                   )
                   restorePendingScroll(payload)
@@ -602,9 +768,10 @@ object BrowserShell {
                 unlistenFn()
               else {
                 unlisten = Some(unlistenFn)
-                refreshWindowViewportInset {
-                  attachBrowserView()
-                }
+                if (!props.nativeSuppressed)
+                  refreshWindowViewportInset {
+                    attachBrowserView()
+                  }
               }
             case Failure(throwable) =>
               handleFailure("Couldn't subscribe to browser events")(throwable)
@@ -621,7 +788,9 @@ object BrowserShell {
 
         () => {
           disposed = true
-          browserAttachedRef.current = false
+          browserMountedRef.current = false
+          browserAttachPendingRef.current = false
+          closeBrowserView()
           resizeInFlightRef.current = false
           pendingResizeRef.current = false
           resizeAnimationFrameId.foreach(dom.window.cancelAnimationFrame)
@@ -785,6 +954,7 @@ object BrowserShell {
       },
       Seq(
         props.contentLabel,
+        props.layoutKey,
         toolbarHeight,
         trailOpen,
         downloadsOpen,
@@ -955,6 +1125,7 @@ object BrowserShell {
               className := "browser-action",
               `type` := "button",
               title := props.text.Back,
+              disabled := !canGoBack,
               onClick := (_ => {
                 invokeBrowserCommand("browser_go_back")
               })
@@ -963,6 +1134,7 @@ object BrowserShell {
               className := "browser-action",
               `type` := "button",
               title := props.text.BrowserShell_forward,
+              disabled := !canGoForward,
               onClick := (_ => {
                 invokeBrowserCommand("browser_go_forward")
               })
@@ -1054,6 +1226,31 @@ object BrowserShell {
               onMouseDown := (e => e.preventDefault())
             )(materialSymbol("arrow_outward"))
           ),
+          Option
+            .when(props.onOpenAsWindow.nonEmpty || props.onClose.nonEmpty) {
+              div(className := "browser-actions browser-window-actions")(
+                props.onOpenAsWindow.map(open =>
+                  button(
+                    className := "browser-action open-as-window",
+                    `type` := "button",
+                    title := props.text.BrowserShell_openInWindow,
+                    disabled := actualUrl.isBlank(),
+                    onClick := (_ => open())
+                  )(materialSymbol("open_in_new"))
+                ),
+                props.onClose.map(close =>
+                  button(
+                    className := "browser-action close-browser",
+                    `type` := "button",
+                    title := props.text.BrowserShell_close,
+                    onClick := (_ => {
+                      closeBrowserView()
+                      close()
+                    })
+                  )(materialSymbol("close"))
+                )
+              )
+            },
           Option.when(props.timeline.nonEmpty && !props.timelineOpened) {
             button(
               className := "browser-action cotoami-timeline-toggle",

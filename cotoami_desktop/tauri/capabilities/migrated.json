@@ -55,6 +55,7 @@
     "allow-open-browser-window",
     "allow-browser-attach",
     "allow-browser-resize",
+    "allow-browser-close",
     "allow-browser-navigate",
     "allow-browser-set-blank-theme",
     "allow-browser-request-selection-capture",

@@ -43,6 +43,17 @@ struct BrowserSnapshot {
     url: Option<String>,
     title: Option<String>,
     is_loading: bool,
+    can_go_back: bool,
+    can_go_forward: bool,
+    history_entries: Vec<String>,
+    history_index: Option<usize>,
+    pending_history_navigation: Option<PendingHistoryNavigation>,
+}
+
+#[derive(Clone, Copy)]
+enum PendingHistoryNavigation {
+    Back,
+    Forward,
 }
 
 #[derive(Clone)]
@@ -62,6 +73,8 @@ pub struct BrowserViewState {
     url: String,
     title: Option<String>,
     is_loading: bool,
+    can_go_back: bool,
+    can_go_forward: bool,
 }
 
 #[derive(Clone, Serialize)]
@@ -70,6 +83,8 @@ struct BrowserStatePayload {
     url: String,
     title: Option<String>,
     is_loading: bool,
+    can_go_back: bool,
+    can_go_forward: bool,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -116,6 +131,13 @@ pub struct BrowserDownloadIntentPayload {
     download: Option<String>,
 }
 
+#[derive(Clone, Deserialize, Serialize)]
+pub struct BrowserHistoryStatePayload {
+    content_label: String,
+    can_go_back: bool,
+    can_go_forward: bool,
+}
+
 #[derive(Clone, Serialize)]
 struct BrowserDownloadStartedPayload {
     content_label: String,
@@ -145,11 +167,11 @@ impl BrowserRegistry {
     ) {
         let mut inner = self.inner.lock();
         let entry = inner.entry(content_label.to_string()).or_default();
-        let url_changed = url
-            .as_deref()
-            .zip(entry.url.as_deref())
-            .is_some_and(|(next, current)| next != current);
+        let url_changed = url.as_deref() != entry.url.as_deref();
         if let Some(url) = url {
+            if url_changed {
+                entry.apply_history_url(&url);
+            }
             entry.url = Some(url);
         }
         if let Some(title) = title {
@@ -162,12 +184,39 @@ impl BrowserRegistry {
         }
     }
 
+    fn update_history_state(&self, content_label: &str, can_go_back: bool, can_go_forward: bool) {
+        let mut inner = self.inner.lock();
+        let entry = inner.entry(content_label.to_string()).or_default();
+        entry.update_history_availability();
+        entry.can_go_back = entry.can_go_back || can_go_back;
+        entry.can_go_forward = entry.can_go_forward || can_go_forward;
+    }
+
+    fn set_pending_history_navigation(
+        &self,
+        content_label: &str,
+        navigation: PendingHistoryNavigation,
+    ) {
+        let mut inner = self.inner.lock();
+        let entry = inner.entry(content_label.to_string()).or_default();
+        entry.pending_history_navigation = Some(navigation);
+    }
+
     fn snapshot(&self, content_label: &str) -> BrowserSnapshot {
         self.inner
             .lock()
             .get(content_label)
             .cloned()
             .unwrap_or_default()
+    }
+
+    fn remove(&self, content_label: &str) {
+        self.inner.lock().remove(content_label);
+        self.download_intents.lock().remove(content_label);
+        let key_prefix = format!("{content_label}\n");
+        self.downloads
+            .lock()
+            .retain(|key, _| !key.starts_with(&key_prefix));
     }
 
     fn push_download(&self, content_label: &str, url: &str, download: PendingDownload) {
@@ -212,6 +261,78 @@ impl BrowserRegistry {
             intents.remove(content_label);
         }
         intent
+    }
+}
+
+impl BrowserSnapshot {
+    fn apply_history_url(&mut self, url: &str) {
+        if url.is_empty() {
+            return;
+        }
+
+        match self.pending_history_navigation.take() {
+            Some(PendingHistoryNavigation::Back) => {
+                self.history_index = self.history_index.and_then(|index| index.checked_sub(1));
+                self.align_history_index(url);
+            }
+            Some(PendingHistoryNavigation::Forward) => {
+                if let Some(index) = self.history_index {
+                    if index + 1 < self.history_entries.len() {
+                        self.history_index = Some(index + 1);
+                    }
+                }
+                self.align_history_index(url);
+            }
+            None => {
+                if self
+                    .history_index
+                    .and_then(|index| self.history_entries.get(index))
+                    .is_some_and(|current| current == url)
+                {
+                    self.update_history_availability();
+                    return;
+                }
+
+                let keep_until = self
+                    .history_index
+                    .map(|index| index + 1)
+                    .unwrap_or(self.history_entries.len());
+                self.history_entries.truncate(keep_until);
+                self.history_entries.push(url.to_string());
+                self.history_index = Some(self.history_entries.len() - 1);
+            }
+        }
+
+        self.update_history_availability();
+    }
+
+    fn align_history_index(&mut self, url: &str) {
+        if self
+            .history_index
+            .and_then(|index| self.history_entries.get(index))
+            .is_some_and(|current| current == url)
+        {
+            return;
+        }
+
+        if let Some(index) = self.history_entries.iter().position(|entry| entry == url) {
+            self.history_index = Some(index);
+        } else {
+            let keep_until = self
+                .history_index
+                .map(|index| index + 1)
+                .unwrap_or(self.history_entries.len());
+            self.history_entries.truncate(keep_until);
+            self.history_entries.push(url.to_string());
+            self.history_index = Some(self.history_entries.len() - 1);
+        }
+    }
+
+    fn update_history_availability(&mut self) {
+        let index = self.history_index.unwrap_or(0);
+        self.can_go_back = self.history_index.is_some_and(|index| index > 0);
+        self.can_go_forward =
+            self.history_index.is_some() && index + 1 < self.history_entries.len();
     }
 }
 
@@ -293,7 +414,9 @@ fn unique_download_path(download_dir: &Path, filename: &str) -> PathBuf {
         .map(|stem| stem.to_string_lossy().into_owned())
         .filter(|stem| !stem.is_empty())
         .unwrap_or_else(|| "download".to_string());
-    let extension = path.extension().map(|extension| extension.to_string_lossy());
+    let extension = path
+        .extension()
+        .map(|extension| extension.to_string_lossy());
 
     for index in 1.. {
         let filename = extension
@@ -456,6 +579,7 @@ fn shell_path(
     focused_node_id: Option<&str>,
     focused_cotonoma_id: Option<&str>,
     theme: Option<&str>,
+    initial_state_key: Option<&str>,
 ) -> String {
     let mut params = tauri::Url::parse("https://browser-shell.local/")
         .expect("static browser shell URL must be valid");
@@ -481,6 +605,11 @@ fn shell_path(
     if let Some(theme) = theme.filter(|theme| !theme.is_empty()) {
         query_pairs.append_pair("theme", theme);
     }
+    if let Some(initial_state_key) =
+        initial_state_key.filter(|key| !key.is_empty())
+    {
+        query_pairs.append_pair("initialStateKey", initial_state_key);
+    }
     drop(query_pairs);
     format!("index.html?{}", params.query().unwrap_or_default())
 }
@@ -493,6 +622,7 @@ fn open_browser_window_internal(
     focused_node_id: Option<&str>,
     focused_cotonoma_id: Option<&str>,
     theme: Option<&str>,
+    initial_state_key: Option<&str>,
 ) -> Result<(), Error> {
     let (shell_label, content_label) = next_labels();
     tauri::WebviewWindowBuilder::new(
@@ -507,6 +637,7 @@ fn open_browser_window_internal(
                 focused_node_id,
                 focused_cotonoma_id,
                 theme,
+                initial_state_key,
             )
             .into(),
         ),
@@ -560,6 +691,8 @@ fn emit_browser_state(
             .unwrap_or_else(|| webview.url().map(|url| url.to_string()).unwrap_or_default()),
         title: snapshot.title,
         is_loading: snapshot.is_loading,
+        can_go_back: snapshot.can_go_back,
+        can_go_forward: snapshot.can_go_forward,
     };
 
     if let Some(window) = app_handle.get_webview_window(shell_label) {
@@ -573,6 +706,8 @@ fn emit_browser_state(
             url: state.url.clone(),
             title: state.title.clone(),
             is_loading: state.is_loading,
+            can_go_back: state.can_go_back,
+            can_go_forward: state.can_go_forward,
         },
     ) {
         error!(
@@ -640,6 +775,7 @@ pub fn open_browser_window(
     focused_node_id: Option<String>,
     focused_cotonoma_id: Option<String>,
     theme: Option<String>,
+    initial_state_key: Option<String>,
 ) -> Result<(), Error> {
     let url = parse_optional_browser_url(url.as_deref())?;
     open_browser_window_internal(
@@ -650,6 +786,7 @@ pub fn open_browser_window(
         focused_node_id.as_deref(),
         focused_cotonoma_id.as_deref(),
         theme.as_deref(),
+        initial_state_key.as_deref(),
     )
 }
 
@@ -752,8 +889,8 @@ pub fn browser_attach(
                 })
                 .on_download(move |_webview, event| match event {
                     tauri::webview::DownloadEvent::Requested { url, destination } => {
-                        let intent =
-                            browser_registry_for_download.pop_download_intent(&content_label_for_download);
+                        let intent = browser_registry_for_download
+                            .pop_download_intent(&content_label_for_download);
                         let source_url = intent
                             .as_ref()
                             .map(|intent| intent.url.as_str())
@@ -851,6 +988,19 @@ pub fn browser_resize(
 }
 
 #[tauri::command]
+pub fn browser_close(
+    app_handle: AppHandle,
+    registry: tauri::State<'_, BrowserRegistry>,
+    content_label: String,
+) -> Result<(), Error> {
+    if let Some(webview) = app_handle.get_webview(&content_label) {
+        webview.close()?;
+    }
+    registry.remove(&content_label);
+    Ok(())
+}
+
+#[tauri::command]
 pub fn browser_navigate(
     app_handle: AppHandle,
     registry: tauri::State<'_, BrowserRegistry>,
@@ -924,6 +1074,29 @@ pub fn browser_download_intent(
 ) -> Result<(), Error> {
     validate_scroll_payload(&webview, &payload.content_label)?;
     registry.push_download_intent(payload);
+    Ok(())
+}
+
+#[tauri::command]
+pub fn browser_history_state(
+    webview: Webview,
+    app_handle: AppHandle,
+    registry: tauri::State<'_, BrowserRegistry>,
+    payload: BrowserHistoryStatePayload,
+) -> Result<(), Error> {
+    validate_scroll_payload(&webview, &payload.content_label)?;
+    registry.update_history_state(
+        &payload.content_label,
+        payload.can_go_back,
+        payload.can_go_forward,
+    );
+    let shell_label = webview.window().label().to_string();
+    let _ = emit_browser_state(
+        &app_handle,
+        registry.inner(),
+        &shell_label,
+        &payload.content_label,
+    )?;
     Ok(())
 }
 
@@ -1018,6 +1191,7 @@ pub fn browser_go_back(
     let webview = content_webview(&app_handle, &content_label)?;
     let shell_label = webview.window().label().to_string();
 
+    registry.set_pending_history_navigation(&content_label, PendingHistoryNavigation::Back);
     webview.eval("window.history.back();")?;
 
     emit_browser_state(&app_handle, registry.inner(), &shell_label, &content_label)
@@ -1032,6 +1206,7 @@ pub fn browser_go_forward(
     let webview = content_webview(&app_handle, &content_label)?;
     let shell_label = webview.window().label().to_string();
 
+    registry.set_pending_history_navigation(&content_label, PendingHistoryNavigation::Forward);
     webview.eval("window.history.forward();")?;
 
     emit_browser_state(&app_handle, registry.inner(), &shell_label, &content_label)
