@@ -124,6 +124,7 @@ object BrowserShell {
       navigationRequest: Int,
       nativeDetachRequest: Int,
       nativeAttachRequest: Int,
+      nativeSuppressed: Boolean,
       initialScrollPosition: Option[InitialScrollPosition],
       timelineOpened: Boolean,
       timelineWidth: Int,
@@ -254,6 +255,7 @@ object BrowserShell {
     val (downloadsOpen, setDownloadsOpenRaw) = useState(false)
     val browserAttachedRef = useRef(false)
     val browserClosingRef = useRef(false)
+    val browserSuppressedRef = useRef(props.nativeSuppressed)
     val resizeInFlightRef = useRef(false)
     val pendingResizeRef = useRef(false)
     val pendingSelectionCaptureRef = useRef(Option.empty[String])
@@ -430,45 +432,46 @@ object BrowserShell {
       )
 
     def attachBrowserView(): Unit =
-      tauri.core
-        .invoke[BrowserViewStateJson](
-          "browser_attach",
-          js.Object.assign(
-            browserBoundsArgs,
-            jso(
-              initialUrl = props.initialUrl.orUndefined,
-              theme = currentTheme
+      if (!browserSuppressedRef.current)
+        tauri.core
+          .invoke[BrowserViewStateJson](
+            "browser_attach",
+            js.Object.assign(
+              browserBoundsArgs,
+              jso(
+                initialUrl = props.initialUrl.orUndefined,
+                theme = currentTheme
+              )
             )
           )
-        )
-        .toFuture
-        .onComplete {
-          case Success(state) =>
-            browserAttachedRef.current = true
-            browserClosingRef.current = false
-            setError(None)
-            val stateUrl = applyStateUrl(state.url)
-            if (initialUrl.nonEmpty && stateUrl == initialUrl)
-              props.initialScrollPosition.foreach(scroll =>
-                pendingScrollRestoreRef.current =
-                  Some(PendingScrollRestore(stateUrl, scroll.x, scroll.y))
+          .toFuture
+          .onComplete {
+            case Success(state) =>
+              browserAttachedRef.current = true
+              browserClosingRef.current = false
+              setError(None)
+              val stateUrl = applyStateUrl(state.url)
+              if (initialUrl.nonEmpty && stateUrl == initialUrl)
+                props.initialScrollPosition.foreach(scroll =>
+                  pendingScrollRestoreRef.current =
+                    Some(PendingScrollRestore(stateUrl, scroll.x, scroll.y))
+                )
+              applyState(
+                state,
+                setActualUrl,
+                setDraftUrl,
+                setTitle,
+                setLoading,
+                editingRef,
+                windowTitleRef,
+                standalone,
+                props.onStateChange
               )
-            applyState(
-              state,
-              setActualUrl,
-              setDraftUrl,
-              setTitle,
-              setLoading,
-              editingRef,
-              windowTitleRef,
-              standalone,
-              props.onStateChange
-            )
-            restorePendingScroll(state)
-            resizeBrowserView()
-          case Failure(throwable) =>
-            handleFailure("Couldn't open the browser view")(throwable)
-        }
+              restorePendingScroll(state)
+              resizeBrowserView()
+            case Failure(throwable) =>
+              handleFailure("Couldn't open the browser view")(throwable)
+          }
 
     def invokeBrowserCommand(command: String, args: js.Object = jso()): Unit =
       tauri.core
@@ -617,13 +620,32 @@ object BrowserShell {
 
     useEffect(
       () => {
-        if (props.nativeAttachRequest > 0 && !browserAttachedRef.current)
+        if (
+          props.nativeAttachRequest > 0 &&
+          !props.nativeSuppressed &&
+          !browserAttachedRef.current
+        )
           refreshWindowViewportInset {
             attachBrowserView()
           }
         () => ()
       },
       Seq(props.nativeAttachRequest)
+    )
+
+    useEffect(
+      () => {
+        val wasSuppressed = browserSuppressedRef.current
+        browserSuppressedRef.current = props.nativeSuppressed
+        if (props.nativeSuppressed)
+          closeBrowserView()
+        else if (wasSuppressed && !browserAttachedRef.current)
+          refreshWindowViewportInset {
+            attachBrowserView()
+          }
+        () => ()
+      },
+      Seq(props.nativeSuppressed)
     )
 
     useEffect(
@@ -704,9 +726,10 @@ object BrowserShell {
                 unlistenFn()
               else {
                 unlisten = Some(unlistenFn)
-                refreshWindowViewportInset {
-                  attachBrowserView()
-                }
+                if (!props.nativeSuppressed)
+                  refreshWindowViewportInset {
+                    attachBrowserView()
+                  }
               }
             case Failure(throwable) =>
               handleFailure("Couldn't subscribe to browser events")(throwable)

@@ -579,6 +579,7 @@ object App {
         navigationRequest = 0,
         nativeDetachRequest = 0,
         nativeAttachRequest = 0,
+        nativeSuppressed = false,
         initialScrollPosition = None,
         timelineOpened = timelineOpened,
         timelineWidth = timelineWidth,

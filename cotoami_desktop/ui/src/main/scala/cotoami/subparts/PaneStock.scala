@@ -383,6 +383,7 @@ object PaneStock {
         navigationRequest = model.stockBrowser.navigationRequest,
         nativeDetachRequest = model.stockBrowser.nativeDetachRequest,
         nativeAttachRequest = model.stockBrowser.nativeAttachRequest,
+        nativeSuppressed = model.modalStack.top.isDefined,
         initialScrollPosition =
           model.stockBrowser.trail.entryForUrl(model.stockBrowser.url)
             .map(entry =>
