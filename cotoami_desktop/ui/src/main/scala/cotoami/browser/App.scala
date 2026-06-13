@@ -14,6 +14,11 @@ import slinky.core.facade.ReactElement
 import slinky.web.ReactDOMClient
 import slinky.web.html._
 
+import io.circe.{Decoder, Encoder}
+import io.circe.generic.semiauto._
+import io.circe.parser.decode
+import io.circe.syntax._
+
 import marubinotto.fui.{Browser, Cmd, Program, Sub}
 import marubinotto.libs.tauri
 
@@ -34,6 +39,14 @@ object App {
 
   private val DatabaseFocusEvent = "browser-database-focus"
   private val ThemeEvent = "browser-theme"
+  private val InitialStateStorageKeyPrefix = "browser-initial-state"
+
+  case class BrowserInitialState(trail: BrowserTrail.Model)
+
+  implicit val browserInitialStateEncoder: Encoder[BrowserInitialState] =
+    deriveEncoder
+  implicit val browserInitialStateDecoder: Decoder[BrowserInitialState] =
+    deriveDecoder
 
   case class BrowserDatabaseFocus(
       databaseFolder: String,
@@ -92,7 +105,8 @@ object App {
       databaseFolder: Option[String],
       focusedNodeId: Option[String],
       focusedCotonomaId: Option[String],
-      theme: Option[String]
+      theme: Option[String],
+      initialStateKey: Option[String]
   ) {
     def initialFocus: Option[BrowserDatabaseFocus] =
       databaseFolder.map(folder =>
@@ -149,9 +163,46 @@ object App {
       None
     })
 
+  def storeInitialState(trail: BrowserTrail.Model): Option[String] =
+    try {
+      val nonce = (js.Math.random() * 1000000000).toInt
+      val key =
+        s"$InitialStateStorageKeyPrefix-${js.Date.now()}-${nonce}"
+      dom.window.localStorage.setItem(
+        key,
+        BrowserInitialState(trail).asJson.noSpaces
+      )
+      Some(key)
+    } catch {
+      case error: Throwable =>
+        println(s"Couldn't store browser initial state: ${error.toString()}")
+        None
+    }
+
+  private def restoreInitialState(key: String): Option[BrowserInitialState] =
+    try {
+      val storage = dom.window.localStorage
+      val value = Option(storage.getItem(key))
+      storage.removeItem(key)
+      value.flatMap(json =>
+        decode[BrowserInitialState](json) match {
+          case Right(state) => Some(state)
+          case Left(error) =>
+            println(s"Invalid browser initial state: ${error.toString()}")
+            None
+        }
+      )
+    } catch {
+      case error: Throwable =>
+        println(s"Couldn't restore browser initial state: ${error.toString()}")
+        None
+    }
+
   private def init(props: Props)(url: URL): (Model, Cmd[Msg]) = {
     val i18n = props.locale.map(I18n.fromBcp47).getOrElse(I18n())
     val initialTheme = props.theme.getOrElse(UiState.DefaultTheme)
+    val initialState =
+      props.initialStateKey.flatMap(restoreInitialState)
     val (flowInput, flowInputCmd) =
       SectionFlowInput.init(persistDraft = false)
     val app = CotoamiModel(
@@ -171,7 +222,7 @@ object App {
         initialTheme = props.theme,
         app = app,
         cotonomaSelect = CotonomaSelect.Model(),
-        trail = BrowserTrail.Model(),
+        trail = initialState.map(_.trail).getOrElse(BrowserTrail.Model()),
         downloads = BrowserDownloads.Model(),
         downloadsOpenRequest = 0,
         pendingFocus = props.initialFocus,
@@ -612,7 +663,8 @@ object App {
       params.get("databaseFolder"),
       params.get("focusedNodeId"),
       params.get("focusedCotonomaId"),
-      params.get("theme")
+      params.get("theme"),
+      params.get("initialStateKey")
     )
   }
 

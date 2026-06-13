@@ -40,7 +40,8 @@ package object browser {
       databaseFolder: Option[String] = None,
       focusedNodeId: Option[String] = None,
       focusedCotonomaId: Option[String] = None,
-      theme: Option[String] = None
+      theme: Option[String] = None,
+      initialStateKey: Option[String] = None
   ): Unit =
     if (tauri.isSupportedBrowserUrl(url)) {
       currentBrowserShellContentLabel match {
@@ -60,7 +61,8 @@ package object browser {
             databaseFolder,
             focusedNodeId,
             focusedCotonomaId,
-            theme
+            theme,
+            initialStateKey
           )
       }
     }
@@ -70,7 +72,8 @@ package object browser {
       databaseFolder: Option[String] = None,
       focusedNodeId: Option[String] = None,
       focusedCotonomaId: Option[String] = None,
-      theme: Option[String] = None
+      theme: Option[String] = None,
+      initialStateKey: Option[String] = None
   ): Unit =
     openUrlInNewWindow(
       None,
@@ -78,7 +81,8 @@ package object browser {
       databaseFolder,
       focusedNodeId,
       focusedCotonomaId,
-      theme
+      theme,
+      initialStateKey
     )
 
   def openUrlInNewWindow(
@@ -87,7 +91,8 @@ package object browser {
       databaseFolder: Option[String] = None,
       focusedNodeId: Option[String] = None,
       focusedCotonomaId: Option[String] = None,
-      theme: Option[String] = None
+      theme: Option[String] = None,
+      initialStateKey: Option[String] = None
   ): Unit =
     if (tauri.isSupportedBrowserUrl(url))
       openUrlInNewWindow(
@@ -96,7 +101,8 @@ package object browser {
         databaseFolder,
         focusedNodeId,
         focusedCotonomaId,
-        theme
+        theme,
+        initialStateKey
       )
 
   private def openUrlInNewWindow(
@@ -105,7 +111,8 @@ package object browser {
       databaseFolder: Option[String],
       focusedNodeId: Option[String],
       focusedCotonomaId: Option[String],
-      theme: Option[String]
+      theme: Option[String],
+      initialStateKey: Option[String]
   ): Unit = {
     tauri.core.invoke[Unit](
       "open_browser_window",
@@ -115,7 +122,8 @@ package object browser {
         databaseFolder = databaseFolder.orUndefined,
         focusedNodeId = focusedNodeId.orUndefined,
         focusedCotonomaId = focusedCotonomaId.orUndefined,
-        theme = theme.orUndefined
+        theme = theme.orUndefined,
+        initialStateKey = initialStateKey.orUndefined
       )
     )
     ()

@@ -178,13 +178,16 @@ object PaneStock {
       case Msg.OpenBrowserAsWindow =>
         model.stockBrowser.url.trim match {
           case url if url.nonEmpty =>
+            val initialStateKey =
+              cotoami.browser.App.storeInitialState(model.stockBrowser.trail)
             cotoami.browser.openUrlInNewWindow(
               url,
               Some(model.i18n.locale.toLanguageTag()),
               model.databaseFolder,
               model.repo.nodes.focusedId.map(_.uuid),
               model.repo.cotonomas.focusedId.map(_.uuid),
-              model.uiState.map(_.theme)
+              model.uiState.map(_.theme),
+              initialStateKey
             )
             update(Msg.CloseBrowser, model)
           case _ =>

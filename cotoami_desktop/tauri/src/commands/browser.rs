@@ -579,6 +579,7 @@ fn shell_path(
     focused_node_id: Option<&str>,
     focused_cotonoma_id: Option<&str>,
     theme: Option<&str>,
+    initial_state_key: Option<&str>,
 ) -> String {
     let mut params = tauri::Url::parse("https://browser-shell.local/")
         .expect("static browser shell URL must be valid");
@@ -604,6 +605,11 @@ fn shell_path(
     if let Some(theme) = theme.filter(|theme| !theme.is_empty()) {
         query_pairs.append_pair("theme", theme);
     }
+    if let Some(initial_state_key) =
+        initial_state_key.filter(|key| !key.is_empty())
+    {
+        query_pairs.append_pair("initialStateKey", initial_state_key);
+    }
     drop(query_pairs);
     format!("index.html?{}", params.query().unwrap_or_default())
 }
@@ -616,6 +622,7 @@ fn open_browser_window_internal(
     focused_node_id: Option<&str>,
     focused_cotonoma_id: Option<&str>,
     theme: Option<&str>,
+    initial_state_key: Option<&str>,
 ) -> Result<(), Error> {
     let (shell_label, content_label) = next_labels();
     tauri::WebviewWindowBuilder::new(
@@ -630,6 +637,7 @@ fn open_browser_window_internal(
                 focused_node_id,
                 focused_cotonoma_id,
                 theme,
+                initial_state_key,
             )
             .into(),
         ),
@@ -767,6 +775,7 @@ pub fn open_browser_window(
     focused_node_id: Option<String>,
     focused_cotonoma_id: Option<String>,
     theme: Option<String>,
+    initial_state_key: Option<String>,
 ) -> Result<(), Error> {
     let url = parse_optional_browser_url(url.as_deref())?;
     open_browser_window_internal(
@@ -777,6 +786,7 @@ pub fn open_browser_window(
         focused_node_id.as_deref(),
         focused_cotonoma_id.as_deref(),
         theme.as_deref(),
+        initial_state_key.as_deref(),
     )
 }
 

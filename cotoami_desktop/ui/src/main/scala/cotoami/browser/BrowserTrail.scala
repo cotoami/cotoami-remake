@@ -6,6 +6,9 @@ import org.scalajs.dom.URL
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
+import io.circe.{Decoder, Encoder}
+import io.circe.generic.semiauto._
+
 import marubinotto.optionalClasses
 import marubinotto.components.materialSymbol
 import marubinotto.fui.Cmd
@@ -114,6 +117,11 @@ object BrowserTrail {
         entries.find(_.url == parsed.url)
       )
   }
+
+  implicit val entryEncoder: Encoder[Entry] = deriveEncoder
+  implicit val entryDecoder: Decoder[Entry] = deriveDecoder
+  implicit val modelEncoder: Encoder[Model] = deriveEncoder
+  implicit val modelDecoder: Decoder[Model] = deriveDecoder
 
   sealed trait Msg
 
