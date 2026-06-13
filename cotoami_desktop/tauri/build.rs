@@ -12,6 +12,7 @@ fn main() {
                 "browser_selection_state",
                 "browser_selection_capture",
                 "browser_scroll_state",
+                "browser_history_state",
                 "browser_request_selection_capture",
                 "browser_set_selection_clip_overlay",
                 "browser_restore_scroll",

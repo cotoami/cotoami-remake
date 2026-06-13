@@ -46,6 +46,8 @@ object BrowserShell {
     val url: String = js.native
     val title: js.UndefOr[String] = js.native
     val is_loading: Boolean = js.native
+    val can_go_back: Boolean = js.native
+    val can_go_forward: Boolean = js.native
   }
 
   @js.native
@@ -221,6 +223,8 @@ object BrowserShell {
       setDraftUrl: String => Unit,
       setTitle: Option[String] => Unit,
       setLoading: Boolean => Unit,
+      setCanGoBack: Boolean => Unit,
+      setCanGoForward: Boolean => Unit,
       editingRef: ReactRef[Boolean],
       currentWindowTitleRef: ReactRef[String],
       updateWindowTitle: Boolean,
@@ -233,6 +237,8 @@ object BrowserShell {
       setDraftUrl(url)
     setTitle(title)
     setLoading(state.is_loading)
+    setCanGoBack(state.can_go_back)
+    setCanGoForward(state.can_go_forward)
     val nextWindowTitle = windowTitle(url, title)
     if (updateWindowTitle && currentWindowTitleRef.current != nextWindowTitle) {
       currentWindowTitleRef.current = nextWindowTitle
@@ -248,6 +254,8 @@ object BrowserShell {
     val (draftUrl, setDraftUrlRaw) = useState(initialUrl)
     val (_, setTitleRaw) = useState(props.title)
     val (loading, setLoadingRaw) = useState(props.initialUrl.nonEmpty)
+    val (canGoBack, setCanGoBackRaw) = useState(false)
+    val (canGoForward, setCanGoForwardRaw) = useState(false)
     val (error, setErrorRaw) = useState(Option.empty[String])
     val (_, setSelectionStateRaw) =
       useState(Option.empty[SelectionState])
@@ -281,6 +289,12 @@ object BrowserShell {
 
     def setLoading(value: Boolean): Unit =
       setLoadingRaw(_ => value)
+
+    def setCanGoBack(value: Boolean): Unit =
+      setCanGoBackRaw(_ => value)
+
+    def setCanGoForward(value: Boolean): Unit =
+      setCanGoForwardRaw(_ => value)
 
     def setError(value: Option[String]): Unit =
       setErrorRaw(_ => value)
@@ -404,6 +418,8 @@ object BrowserShell {
                 setDraftUrl,
                 setTitle,
                 setLoading,
+                setCanGoBack,
+                setCanGoForward,
                 editingRef,
                 windowTitleRef,
                 standalone,
@@ -462,6 +478,8 @@ object BrowserShell {
                 setDraftUrl,
                 setTitle,
                 setLoading,
+                setCanGoBack,
+                setCanGoForward,
                 editingRef,
                 windowTitleRef,
                 standalone,
@@ -489,6 +507,8 @@ object BrowserShell {
               setDraftUrl,
               setTitle,
               setLoading,
+              setCanGoBack,
+              setCanGoForward,
               editingRef,
               windowTitleRef,
               standalone,
@@ -711,6 +731,8 @@ object BrowserShell {
                     setDraftUrl,
                     setTitle,
                     setLoading,
+                    setCanGoBack,
+                    setCanGoForward,
                     editingRef,
                     windowTitleRef,
                     standalone,
@@ -1081,6 +1103,7 @@ object BrowserShell {
               className := "browser-action",
               `type` := "button",
               title := props.text.Back,
+              disabled := !canGoBack,
               onClick := (_ => {
                 invokeBrowserCommand("browser_go_back")
               })
@@ -1089,6 +1112,7 @@ object BrowserShell {
               className := "browser-action",
               `type` := "button",
               title := props.text.BrowserShell_forward,
+              disabled := !canGoForward,
               onClick := (_ => {
                 invokeBrowserCommand("browser_go_forward")
               })

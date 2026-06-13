@@ -62,6 +62,7 @@ fn main() {
             commands::browser::browser_selection_capture,
             commands::browser::browser_scroll_state,
             commands::browser::browser_download_intent,
+            commands::browser::browser_history_state,
             commands::browser::browser_request_selection_capture,
             commands::browser::browser_set_selection_clip_overlay,
             commands::browser::browser_restore_scroll,
