@@ -1,0 +1,16 @@
+[package]
+authors = ["Daisuke Morita <daisuke.marubinotto@gmail.com>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+name = "cotoami_node_test_basic_plugin"
+rust-version = "1.88"
+version = "0.1.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+cotoami_plugin_api = { path = "../../../../plugin_api" }
+extism-pdk = "1.4.1"
+
+[workspace]
