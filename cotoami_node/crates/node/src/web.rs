@@ -90,7 +90,10 @@ pub(super) fn router(config: Arc<ServerConfig>, node_state: NodeState) -> Router
         .layer(Extension(config))
         .layer(Extension(node_state.clone()))
         .layer(TraceLayer::new_for_http())
-        .layer(TimeoutLayer::new(Duration::from_secs(10)))
+        .layer(TimeoutLayer::with_status_code(
+            StatusCode::REQUEST_TIMEOUT,
+            Duration::from_secs(10),
+        ))
         .with_state(node_state)
 }
 
