@@ -115,20 +115,25 @@ pub(crate) fn recently_inserted<'a, Conn: ReadConn>(
     page_index: i64,
 ) -> impl Operation<Conn, Page<Coto>> + 'a {
     read_op(move |conn| {
-        super::paginate(conn, page_size, page_index, || {
-            let mut query = cotos::table.into_boxed();
-            if only_cotonomas {
-                query = query.filter(cotos::is_cotonoma.eq(true));
-            }
-            match scope {
-                Some(Either::Left(node_id)) => query.filter(cotos::node_id.eq(node_id)),
-                Some(Either::Right(posted_in_ids)) => {
-                    query.filter(cotos::posted_in_id.eq_any(posted_in_ids))
+        super::paginate(
+            conn,
+            page_size,
+            page_index,
+            || {
+                let mut query = cotos::table.into_boxed();
+                if only_cotonomas {
+                    query = query.filter(cotos::is_cotonoma.eq(true));
                 }
-                None => query,
-            }
-            .order(cotos::created_at.desc())
-        })
+                match scope {
+                    Some(Either::Left(node_id)) => query.filter(cotos::node_id.eq(node_id)),
+                    Some(Either::Right(posted_in_ids)) => {
+                        query.filter(cotos::posted_in_id.eq_any(posted_in_ids))
+                    }
+                    None => query,
+                }
+            },
+            |query| query.order(cotos::created_at.desc()),
+        )
     })
 }
 
@@ -369,51 +374,60 @@ pub(crate) fn full_text_search<'a, Conn: ReadConn>(
             search_trigram_index(conn, query, scope, only_cotonomas, page_size, page_index)
         } else {
             use crate::schema::cotos_fts::dsl::*;
-            super::paginate(conn, page_size, page_index, move || {
-                // https://sqlite.org/fts5.html#full_text_query_syntax
-                let fts_query = query
-                    .split_ascii_whitespace()
-                    .map(to_fts_phrase)
-                    .collect::<Vec<_>>()
-                    .join(" AND ");
+            super::paginate(
+                conn,
+                page_size,
+                page_index,
+                move || {
+                    // https://sqlite.org/fts5.html#full_text_query_syntax
+                    let fts_query = query
+                        .split_ascii_whitespace()
+                        .map(to_fts_phrase)
+                        .collect::<Vec<_>>()
+                        .join(" AND ");
 
-                let mut query = cotos_fts
-                    .select((
-                        uuid,
-                        rowid,
-                        node_id,
-                        posted_in_id,
-                        posted_by_id,
-                        content,
-                        summary,
-                        media_content,
-                        media_type,
-                        is_cotonoma,
-                        longitude,
-                        latitude,
-                        datetime_start,
-                        datetime_end,
-                        repost_of_id,
-                        reposted_in_ids,
-                        created_at,
-                        updated_at,
-                    ))
-                    .filter(whole_row.eq(fts_query))
-                    .into_boxed();
-                match scope {
-                    Some(Either::Left(filter_node_id)) => {
-                        query = query.filter(node_id.eq(filter_node_id));
+                    let mut query = cotos_fts
+                        .filter(whole_row.eq(fts_query))
+                        .into_boxed();
+                    match scope {
+                        Some(Either::Left(filter_node_id)) => {
+                            query = query.filter(node_id.eq(filter_node_id));
+                        }
+                        Some(Either::Right(posted_in_ids)) => {
+                            query = query.filter(posted_in_id.eq_any(posted_in_ids));
+                        }
+                        None => (),
                     }
-                    Some(Either::Right(posted_in_ids)) => {
-                        query = query.filter(posted_in_id.eq_any(posted_in_ids));
+                    if only_cotonomas {
+                        query = query.filter(is_cotonoma.eq(true));
                     }
-                    None => (),
-                }
-                if only_cotonomas {
-                    query = query.filter(is_cotonoma.eq(true));
-                }
-                query.order((is_cotonoma.desc(), rank.asc(), created_at.desc()))
-            })
+                    query
+                },
+                |query| {
+                    query
+                        .select((
+                            uuid,
+                            rowid,
+                            node_id,
+                            posted_in_id,
+                            posted_by_id,
+                            content,
+                            summary,
+                            media_content,
+                            media_type,
+                            is_cotonoma,
+                            longitude,
+                            latitude,
+                            datetime_start,
+                            datetime_end,
+                            repost_of_id,
+                            reposted_in_ids,
+                            created_at,
+                            updated_at,
+                        ))
+                        .order((is_cotonoma.desc(), rank.asc(), created_at.desc()))
+                },
+            )
         }
     })
 }
@@ -447,44 +461,53 @@ fn search_trigram_index<'a>(
     }
     let query = subqueries.join(" AND ");
 
-    super::paginate(conn, page_size, page_index, || {
-        let mut query = cotos_fts_trigram
-            .select((
-                uuid,
-                rowid,
-                node_id,
-                posted_in_id,
-                posted_by_id,
-                content,
-                summary,
-                media_content,
-                media_type,
-                is_cotonoma,
-                longitude,
-                latitude,
-                datetime_start,
-                datetime_end,
-                repost_of_id,
-                reposted_in_ids,
-                created_at,
-                updated_at,
-            ))
-            .filter(whole_row.eq(&query))
-            .into_boxed();
-        match scope {
-            Some(Either::Left(filter_node_id)) => {
-                query = query.filter(node_id.eq(filter_node_id));
+    super::paginate(
+        conn,
+        page_size,
+        page_index,
+        || {
+            let mut query = cotos_fts_trigram
+                .filter(whole_row.eq(&query))
+                .into_boxed();
+            match scope {
+                Some(Either::Left(filter_node_id)) => {
+                    query = query.filter(node_id.eq(filter_node_id));
+                }
+                Some(Either::Right(posted_in_ids)) => {
+                    query = query.filter(posted_in_id.eq_any(posted_in_ids));
+                }
+                None => (),
             }
-            Some(Either::Right(posted_in_ids)) => {
-                query = query.filter(posted_in_id.eq_any(posted_in_ids));
+            if only_cotonomas {
+                query = query.filter(is_cotonoma.eq(true));
             }
-            None => (),
-        }
-        if only_cotonomas {
-            query = query.filter(is_cotonoma.eq(true));
-        }
-        query.order((is_cotonoma.desc(), rank.asc(), created_at.desc()))
-    })
+            query
+        },
+        |query| {
+            query
+                .select((
+                    uuid,
+                    rowid,
+                    node_id,
+                    posted_in_id,
+                    posted_by_id,
+                    content,
+                    summary,
+                    media_content,
+                    media_type,
+                    is_cotonoma,
+                    longitude,
+                    latitude,
+                    datetime_start,
+                    datetime_end,
+                    repost_of_id,
+                    reposted_in_ids,
+                    created_at,
+                    updated_at,
+                ))
+                .order((is_cotonoma.desc(), rank.asc(), created_at.desc()))
+        },
+    )
     .with_context(|| format!("Error processing FTS query: [{query}]"))
 }
 

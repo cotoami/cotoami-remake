@@ -240,19 +240,27 @@ pub(crate) fn recently_updated<Conn: ReadConn>(
     page_index: i64,
 ) -> impl Operation<Conn, Page<Cotonoma>> + '_ {
     read_op(move |conn| {
-        super::paginate(conn, page_size, page_index, || {
-            let mut query = cotonomas::table.into_boxed();
-            if let Some(id) = node_id {
-                query = query.filter(cotonomas::node_id.eq(id));
-            }
-            query.order((
-                cotonomas::updated_at.desc(),
-                // When a cotonoma is posted, the `updated_at` of it (sub) and the
-                // cotonoma it has been posted to (super) become the same. In that case,
-                // the posted cotonoma should precede in a recent list.
-                cotonomas::created_at.desc(),
-            ))
-        })
+        super::paginate(
+            conn,
+            page_size,
+            page_index,
+            || {
+                let mut query = cotonomas::table.into_boxed();
+                if let Some(id) = node_id {
+                    query = query.filter(cotonomas::node_id.eq(id));
+                }
+                query
+            },
+            |query| {
+                query.order((
+                    cotonomas::updated_at.desc(),
+                    // When a cotonoma is posted, the `updated_at` of it (sub) and the
+                    // cotonoma it has been posted to (super) become the same. In that case,
+                    // the posted cotonoma should precede in a recent list.
+                    cotonomas::created_at.desc(),
+                ))
+            },
+        )
     })
 }
 
@@ -273,16 +281,22 @@ pub(crate) fn subs<Conn: ReadConn>(
 ) -> impl Operation<Conn, Page<Cotonoma>> + '_ {
     composite_op::<Conn, _, _>(move |ctx| {
         // Recently updated cotonoma-cotos including reposts.
-        let cotonoma_cotos: Page<Coto> =
-            super::paginate(ctx.conn().read(), page_size, page_index, || {
+        let cotonoma_cotos: Page<Coto> = super::paginate(
+            ctx.conn().read(),
+            page_size,
+            page_index,
+            || {
                 cotos::table
                     .filter(cotos::is_cotonoma.eq(true))
                     .filter(cotos::posted_in_id.eq(id))
-                    // For reposted cotonoma-cotos, `updated_at` of each coto
-                    // should be synced with the original coto in order for
-                    // this query to work expectedly.
-                    .order(cotos::updated_at.desc())
-            })?;
+            },
+            |query| {
+                // For reposted cotonoma-cotos, `updated_at` of each coto should
+                // be synced with the original coto in order for this query to
+                // work expectedly.
+                query.order(cotos::updated_at.desc())
+            },
+        )?;
 
         // Collect the coto IDs of the sub cotonomas.
         // There are two kinds of sub cotonoma: "originally posted" and "reposted".

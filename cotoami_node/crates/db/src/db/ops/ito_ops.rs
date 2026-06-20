@@ -75,13 +75,19 @@ pub(crate) fn recent<'a, Conn: ReadConn>(
     page_index: i64,
 ) -> impl Operation<Conn, Page<Ito>> + 'a {
     read_op(move |conn| {
-        super::paginate(conn, page_size, page_index, || {
-            let mut query = itos::table.into_boxed();
-            if let Some(node_id) = node_id {
-                query = query.filter(itos::node_id.eq(node_id));
-            }
-            query.order(itos::created_at.desc())
-        })
+        super::paginate(
+            conn,
+            page_size,
+            page_index,
+            || {
+                let mut query = itos::table.into_boxed();
+                if let Some(node_id) = node_id {
+                    query = query.filter(itos::node_id.eq(node_id));
+                }
+                query
+            },
+            |query| query.order(itos::created_at.desc()),
+        )
     })
 }
 

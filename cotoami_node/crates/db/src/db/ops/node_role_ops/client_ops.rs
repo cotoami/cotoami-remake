@@ -67,15 +67,20 @@ pub(crate) fn recent_pairs<'a, Conn: ReadConn>(
     page_index: i64,
 ) -> impl Operation<Conn, Page<(ClientNode, Node)>> + 'a {
     read_op(move |conn| {
-        ops::paginate(conn, page_size, page_index, || {
-            client_nodes::table
-                .inner_join(nodes::table)
-                .select((ClientNode::as_select(), Node::as_select()))
-                .order((
-                    client_nodes::last_session_created_at.desc(),
-                    client_nodes::created_at.desc(),
-                ))
-        })
+        ops::paginate(
+            conn,
+            page_size,
+            page_index,
+            || client_nodes::table.inner_join(nodes::table),
+            |query| {
+                query
+                    .select((ClientNode::as_select(), Node::as_select()))
+                    .order((
+                        client_nodes::last_session_created_at.desc(),
+                        client_nodes::created_at.desc(),
+                    ))
+            },
+        )
     })
 }
 

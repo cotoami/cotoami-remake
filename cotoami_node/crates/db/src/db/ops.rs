@@ -77,20 +77,23 @@ where
 /// `query_builder` to create a same query multiple times. It will be possibly
 /// called twice, one is to fetch rows and another is to count the total.
 /// <https://github.com/diesel-rs/diesel/issues/1698>
-fn paginate<'a, R, F, Q>(
+fn paginate<'a, R, FilterBuilder, FilterQuery, RowsBuilder, RowsQuery>(
     conn: &mut SqliteConnection,
     page_size: i64,
     page_index: i64,
-    query_builder: F,
+    filter_builder: FilterBuilder,
+    rows_query_builder: RowsBuilder,
 ) -> Result<Page<R>>
 where
-    F: Fn() -> Q,
-    Q: LimitDsl + SelectDsl<CountStar>,
-    <Q as LimitDsl>::Output: OffsetDsl,
-    <<Q as LimitDsl>::Output as OffsetDsl>::Output: LoadQuery<'a, SqliteConnection, R>,
-    <Q as SelectDsl<CountStar>>::Output: LoadQuery<'a, SqliteConnection, i64>,
+    FilterBuilder: Fn() -> FilterQuery,
+    RowsBuilder: Fn(FilterQuery) -> RowsQuery,
+    FilterQuery: SelectDsl<CountStar>,
+    RowsQuery: LimitDsl,
+    <RowsQuery as LimitDsl>::Output: OffsetDsl,
+    <<RowsQuery as LimitDsl>::Output as OffsetDsl>::Output: LoadQuery<'a, SqliteConnection, R>,
+    <FilterQuery as SelectDsl<CountStar>>::Output: LoadQuery<'a, SqliteConnection, i64>,
 {
-    let rows = query_builder()
+    let rows = rows_query_builder(filter_builder())
         .limit(page_size)
         .offset(page_index * page_size)
         .load::<R>(conn)?;
@@ -99,7 +102,7 @@ where
     let total_rows = if page_index == 0 && count_rows < page_size {
         count_rows
     } else {
-        query_builder()
+        filter_builder()
             .select(diesel::dsl::count_star())
             .get_result(conn)?
     };
