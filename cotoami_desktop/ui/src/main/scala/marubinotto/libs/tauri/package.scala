@@ -10,19 +10,16 @@ import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import org.scalajs.dom.URL
 
 import cats.effect.{IO, Resource}
+import cats.effect.std.{Dispatcher, Queue}
+import fs2.Stream
 
-import marubinotto.fui.{toCmd, Cmd, Sub}
+import marubinotto.fui.{Cmd, Sub}
 
 package object tauri {
 
   // To distinguish a normal backend error from a system error during command invocation,
   // which will be returned as a string from Tauri, a backend error must be defined as an Object.
   def invokeCommand[T, E <: js.Object](
-      command: String,
-      args: js.Object = js.Dynamic.literal()
-  ): Cmd.One[Either[E, T]] = invokeCommandIO[T, E](command, args).toCmd
-
-  def invokeCommandIO[T, E <: js.Object](
       command: String,
       args: js.Object = js.Dynamic.literal()
   ): IO[Either[E, T]] =
@@ -55,17 +52,33 @@ package object tauri {
     }
 
   def listen[T](event: String, id: Option[String] = None): Sub[T] =
-    Sub.fromResource[T](id.getOrElse(s"listen-${event}")) { dispatch =>
-      Resource.make(
-        IO
-          .fromFuture(
+    Sub.Impl(id.getOrElse(s"listen-${event}"), eventStream[T](event))
+
+  def listenEvalMap[T, U](event: String, id: Option[String] = None)(
+      decode: T => IO[U]
+  ): Sub[U] =
+    Sub.Impl(
+      id.getOrElse(s"listen-${event}"),
+      eventStream[T](event).evalMap(decode)
+    )
+
+  private def eventStream[T](event: String): Stream[IO, T] =
+    Stream.resource(Dispatcher.sequential[IO]).flatMap { dispatcher =>
+      Stream.eval(Queue.unbounded[IO, T]).flatMap { queue =>
+        val listener = Resource.make(
+          IO.fromFuture(
             IO(
-              tauri.event
-                .listen(event, (e: tauri.event.Event[T]) => dispatch(e.payload))
-                .toFuture
+              tauri.event.listen[T](
+                event,
+                e => dispatcher.unsafeRunAndForget(queue.offer(e.payload))
+              ).toFuture
             )
           )
-      )(unlisten => IO(unlisten())).map(_ => ())
+        )(unlisten => IO(unlisten()))
+        Stream.resource(listener).flatMap(_ =>
+          Stream.fromQueueUnterminated(queue)
+        )
+      }
     }
 
   def selectSingleDirectory(

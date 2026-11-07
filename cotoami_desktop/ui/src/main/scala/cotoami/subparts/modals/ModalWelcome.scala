@@ -65,7 +65,7 @@ object ModalWelcome {
               folderName = folderName
             )
           )
-          .map(Msg.NewFolderValidation(_).into)
+          .map(Msg.NewFolderValidation(_).into).toCmd
       else
         Cmd.none
 
@@ -78,7 +78,7 @@ object ModalWelcome {
               folder = databaseFolder
             )
           )
-          .map(Msg.DatabaseFolderValidation(_).into)
+          .map(Msg.DatabaseFolderValidation(_).into).toCmd
       else
         Cmd.none
 

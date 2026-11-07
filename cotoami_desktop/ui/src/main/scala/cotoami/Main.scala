@@ -710,11 +710,11 @@ object Main {
   // https://github.com/tauri-apps/tauri/issues/1564
   private def showAppWindow: Cmd.One[Msg] =
     tauri.invokeCommand("show_window")
-      .map(Msg.AppWindowShown.apply)
+      .map(Msg.AppWindowShown.apply).toCmd
 
   private def connectToServers: Cmd.One[Msg] =
     tauri.invokeCommand("connect_to_servers")
-      .map(Msg.ServerConnectionsInitialized.apply)
+      .map(Msg.ServerConnectionsInitialized.apply).toCmd
 
   def subscriptions(model: Model): Sub[Msg] =
     listenToBackendMessages <+>

@@ -11,7 +11,7 @@ import cotoami.models._
 object Commands {
 
   def send[T](command: js.Object): IO[Either[ErrorJson, T]] =
-    tauri.invokeCommandIO(
+    tauri.invokeCommand(
       "node_command",
       js.Dynamic.literal(command = command)
     ).map((e: Either[ErrorJson, String]) =>

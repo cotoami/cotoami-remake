@@ -20,7 +20,7 @@ trait SystemInfoJson extends js.Object {
 
 object SystemInfoJson {
   def fetch(): IO[Either[Unit, SystemInfoJson]] =
-    tauri.invokeCommandIO("system_info")
+    tauri.invokeCommand("system_info")
 
   def debug(info: SystemInfoJson): String = {
     val recent_databases = info.recent_databases.map(x => (x.name, x.folder))

@@ -170,9 +170,7 @@ object SectionFlowInput {
           case model =>
             default.copy(
               _1 = model,
-              _4 = (
-                model.restore
-              ) ++
+              _4 = model.restore ++
                 Browser.send(
                   SectionTimeline.Msg.SetOnlyCotonomas(false).into
                 )
@@ -200,9 +198,7 @@ object SectionFlowInput {
           model.copy(focused = false, interacting = false).clear
         default.copy(
           _1 = cleared,
-          _4 = (
-            ModelessNewCoto.open(form)
-          ) ++
+          _4 = ModelessNewCoto.open(form) ++
             cleared.save
         )
 
@@ -328,9 +324,7 @@ object SectionFlowInput {
                 form.mediaBlob.map(blob => (blob, blob.`type`)),
                 cotonoma
               ),
-              _4 = (
-                postCoto(postId, form, cotonoma.id)
-              ) ++
+              _4 = postCoto(postId, form, cotonoma.id) ++
                 model.save
             )
           }

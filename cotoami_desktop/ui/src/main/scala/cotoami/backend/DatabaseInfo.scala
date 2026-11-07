@@ -42,7 +42,7 @@ object DatabaseInfo {
       .flatMap(_.traverse(DatabaseInfo.decode))
 
   def newOwnerPassword: IO[Either[ErrorJson, String]] =
-    tauri.invokeCommandIO("new_owner_password")
+    tauri.invokeCommand("new_owner_password")
 }
 
 @js.native
@@ -60,7 +60,7 @@ object DatabaseInfoJson {
       folderName: String
   ): IO[Either[ErrorJson, DatabaseInfoJson]] =
     tauri
-      .invokeCommandIO(
+      .invokeCommand(
         "create_database",
         js.Dynamic
           .literal(
@@ -75,7 +75,7 @@ object DatabaseInfoJson {
       ownerPassword: Option[String] = None
   ): IO[Either[ErrorJson, DatabaseInfoJson]] =
     tauri
-      .invokeCommandIO(
+      .invokeCommand(
         "open_database",
         js.Dynamic
           .literal(

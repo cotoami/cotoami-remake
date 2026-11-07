@@ -59,7 +59,7 @@ object InitialDatasetJson {
       parentId: Option[Id[Node]]
   ): IO[Either[ErrorJson, InitialDatasetJson]] =
     tauri
-      .invokeCommandIO(
+      .invokeCommand(
         "operate_as",
         js.Dynamic.literal(
           parentId = parentId.map(_.uuid).getOrElse(null)

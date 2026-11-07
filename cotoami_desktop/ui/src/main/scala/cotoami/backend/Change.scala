@@ -182,9 +182,7 @@ object ChangelogEntry {
   // evalMap decodes serially, retaining the order of backend changes. A bad
   // payload becomes a message so the app can reload without losing the stream.
   def subscription: Sub[Either[Throwable, ChangelogEntry]] =
-    Sub.toMap(tauri.listen[ChangelogEntryJson]("backend-change"))
-      .foldLeft[Sub[Either[Throwable, ChangelogEntry]]](Sub.Empty) {
-        case (acc, (id, stream)) =>
-          acc.combine(Sub.Impl(id, stream.evalMap(log => decode(log).attempt)))
-      }
+    tauri.listenEvalMap[ChangelogEntryJson, Either[Throwable, ChangelogEntry]](
+      "backend-change"
+    )(log => decode(log).attempt)
 }
