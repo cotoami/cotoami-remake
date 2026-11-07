@@ -123,3 +123,68 @@ object ChangeJson {
     val last_change_number: Double = js.native
   }
 }
+
+/** Media is decoded before a change reaches the synchronous update loop. */
+case class ChangelogEntry(serialNumber: Double, change: DecodedChange)
+
+enum DecodedChange {
+  case CreateCoto(coto: cotoami.models.Coto)
+  case CreateCotonoma(pair: (cotoami.models.Cotonoma, cotoami.models.Coto))
+  case UpsertNode(node: cotoami.models.Node)
+  case CreateNode(
+      node: cotoami.models.Node,
+      root: Option[(cotoami.models.Cotonoma, cotoami.models.Coto)]
+  )
+  case SetNodeIcon(
+      nodeId: cotoami.models.Id[cotoami.models.Node],
+      icon: org.scalajs.dom.Blob
+  )
+  case Other(json: ChangeJson)
+}
+
+object ChangelogEntry {
+  import cats.effect.IO
+  import cats.syntax.all.*
+  import cotoami.models.{Id, Node}
+  import marubinotto.fui.Sub
+  import marubinotto.libs.tauri
+
+  def decode(log: ChangelogEntryJson): IO[ChangelogEntry] = IO.defer {
+    val change = log.change
+    val decoded = change.CreateCoto.toOption.map(json =>
+      CotoBackend.toModel(json).map(DecodedChange.CreateCoto.apply)
+    ).orElse(
+      change.CreateCotonoma.toOption.map(pair =>
+        CotonomaBackend.decodePair(pair).map(DecodedChange.CreateCotonoma.apply)
+      )
+    ).orElse(
+      change.UpsertNode.toOption.map(json =>
+        NodeBackend.toModel(json).map(DecodedChange.UpsertNode.apply)
+      )
+    ).orElse(
+      change.CreateNode.toOption.map(json =>
+        (
+          NodeBackend.toModel(json.node),
+          Nullable.toOption(json.root).traverse(CotonomaBackend.decodePair)
+        )
+          .mapN(DecodedChange.CreateNode.apply)
+      )
+    ).orElse(
+      change.SetNodeIcon.toOption.map(json =>
+        Node.decodeBase64Icon(json.icon).map(icon =>
+          DecodedChange.SetNodeIcon(Id(json.node_id), icon)
+        )
+      )
+    ).getOrElse(IO.pure(DecodedChange.Other(change)))
+    decoded.map(ChangelogEntry(log.serial_number, _))
+  }
+
+  // evalMap decodes serially, retaining the order of backend changes. A bad
+  // payload becomes a message so the app can reload without losing the stream.
+  def subscription: Sub[Either[Throwable, ChangelogEntry]] =
+    Sub.toMap(tauri.listen[ChangelogEntryJson]("backend-change"))
+      .foldLeft[Sub[Either[Throwable, ChangelogEntry]]](Sub.Empty) {
+        case (acc, (id, stream)) =>
+          acc.combine(Sub.Impl(id, stream.evalMap(log => decode(log).attempt)))
+      }
+}

@@ -1,8 +1,9 @@
 package cotoami.backend
 
+import cats.effect.IO
+
 import scala.scalajs.js
 
-import marubinotto.fui.Cmd
 import marubinotto.facade.Nullable
 
 import cotoami.models.{Coto, Id, Ito, Node}
@@ -22,7 +23,7 @@ trait ItoJson extends js.Object {
 }
 
 object ItoJson {
-  def fetch(id: Id[Ito]): Cmd.One[Either[ErrorJson, ItoJson]] =
+  def fetch(id: Id[Ito]): IO[Either[ErrorJson, ItoJson]] =
     Commands.send(Commands.Ito(id))
 
   def create(
@@ -31,7 +32,7 @@ object ItoJson {
       description: Option[String],
       details: Option[String],
       order: Option[Int]
-  ): Cmd.One[Either[ErrorJson, ItoJson]] =
+  ): IO[Either[ErrorJson, ItoJson]] =
     Commands.send(
       Commands.CreateIto(
         sourceId,
@@ -46,22 +47,22 @@ object ItoJson {
       id: Id[Ito],
       description: Option[Option[String]],
       details: Option[Option[String]]
-  ): Cmd.One[Either[ErrorJson, ItoJson]] =
+  ): IO[Either[ErrorJson, ItoJson]] =
     Commands.send(Commands.EditIto(id, description, details))
 
-  def delete(id: Id[Ito]): Cmd.One[Either[ErrorJson, String]] =
+  def delete(id: Id[Ito]): IO[Either[ErrorJson, String]] =
     Commands.send(Commands.DeleteIto(id))
 
   def fetchSiblings(
       cotoId: Id[Coto],
       nodeId: Option[Id[Node]]
-  ): Cmd.One[Either[ErrorJson, js.Array[ItoJson]]] =
+  ): IO[Either[ErrorJson, js.Array[ItoJson]]] =
     Commands.send(Commands.SiblingItos(cotoId, nodeId))
 
   def changeOrder(
       id: Id[Ito],
       newOrder: Int
-  ): Cmd.One[Either[ErrorJson, ItoJson]] =
+  ): IO[Either[ErrorJson, ItoJson]] =
     Commands.send(Commands.ChangeItoOrder(id, newOrder))
 }
 
@@ -82,14 +83,14 @@ object ItoBackend {
 
   def fetch(
       id: Id[Ito]
-  ): Cmd.One[Either[ErrorJson, Ito]] =
+  ): IO[Either[ErrorJson, Ito]] =
     ItoJson.fetch(id).map(_.map(toModel))
 
   def edit(
       id: Id[Ito],
       description: Option[Option[String]],
       details: Option[Option[String]]
-  ): Cmd.One[Either[ErrorJson, Ito]] =
+  ): IO[Either[ErrorJson, Ito]] =
     ItoJson.edit(id, description, details).map(_.map(toModel))
 
   def create(
@@ -98,7 +99,7 @@ object ItoBackend {
       description: Option[String],
       details: Option[String],
       order: Option[Int]
-  ): Cmd.One[Either[ErrorJson, Ito]] =
+  ): IO[Either[ErrorJson, Ito]] =
     ItoJson.create(
       sourceId,
       targetId,
@@ -107,18 +108,18 @@ object ItoBackend {
       order
     ).map(_.map(toModel))
 
-  def delete(id: Id[Ito]): Cmd.One[Either[ErrorJson, Id[Ito]]] =
+  def delete(id: Id[Ito]): IO[Either[ErrorJson, Id[Ito]]] =
     ItoJson.delete(id).map(_.map(Id(_)))
 
   def fetchSiblings(
       cotoId: Id[Coto],
       nodeId: Option[Id[Node]]
-  ): Cmd.One[Either[ErrorJson, js.Array[Ito]]] =
+  ): IO[Either[ErrorJson, js.Array[Ito]]] =
     ItoJson.fetchSiblings(cotoId, nodeId).map(_.map(_.map(toModel)))
 
   def changeOrder(
       id: Id[Ito],
       newOrder: Int
-  ): Cmd.One[Either[ErrorJson, Ito]] =
+  ): IO[Either[ErrorJson, Ito]] =
     ItoJson.changeOrder(id, newOrder).map(_.map(toModel))
 }

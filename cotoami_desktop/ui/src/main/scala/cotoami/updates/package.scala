@@ -14,7 +14,7 @@ package object updates {
     (model, cmd ++ createCmd(model))
   }
 
-  def uiState(update: UiState => UiState)(model: Model): (Model, Cmd.One[Msg]) =
+  def uiState(update: UiState => UiState)(model: Model): (Model, Cmd[Msg]) =
     model.uiState
       .map(update(_).pipe { case state =>
         (model.copy(uiState = Some(state)), state.save)

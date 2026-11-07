@@ -20,17 +20,13 @@ import cotoami.backend.InitialDataset
 
 case class Nodes(
     map: Map[Id[Node], Node] = Map.empty,
-
     // Local: the node that the app has originally opened.
     localId: Option[Id[Node]] = None,
-
     // Self: the node currently being treated as the local node.
     // This node can be changed via the "Switch Node" feature.
     selfSettings: Option[LocalNode] = None,
-
     // Focus: the node being browsed.
     focusedId: Option[Id[Node]] = None,
-
     // Remote nodes
     servers: Servers = Servers(),
     parents: Parents = Parents(),
@@ -152,7 +148,7 @@ case class Nodes(
 
   def current: Option[Node] = focused.orElse(self)
 
-  def setIcon(id: Id[Node], icon: String): Nodes =
+  def setIcon(id: Id[Node], icon: org.scalajs.dom.Blob): Nodes =
     this.modify(_.map.index(id)).using(_.setIcon(icon))
 
   def rename(id: Id[Node], name: String): Nodes =

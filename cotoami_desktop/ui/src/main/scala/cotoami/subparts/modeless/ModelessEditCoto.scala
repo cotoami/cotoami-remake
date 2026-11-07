@@ -6,7 +6,8 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import marubinotto.Validation
-import marubinotto.fui.{Browser, Cmd}
+import cats.effect.IO
+import marubinotto.fui.{toCmd, Browser, Cmd}
 import marubinotto.components.materialSymbol
 
 import cotoami.{Context, Into, Msg => AppMsg}
@@ -66,10 +67,11 @@ object ModelessEditCoto {
     def save(cotonomas: Cotonomas): (Model, Cmd.One[AppMsg]) =
       (
         copy(saving = true),
-        if (original.isCotonoma) saveCotonoma(cotonomas) else saveCoto
+        (if (original.isCotonoma) saveCotonoma(cotonomas) else saveCoto)
+          .map(Msg.Saved(_).into).toCmd
       )
 
-    private def saveCoto: Cmd.One[AppMsg] =
+    private def saveCoto: IO[Either[ErrorJson, Coto]] =
       if (cotoFormEdited)
         CotoBackend.edit(
           original.id,
@@ -78,15 +80,20 @@ object ModelessEditCoto {
           diffMediaContent,
           diffGeolocation,
           diffDateTimeRange
-        ).map(Msg.Saved(_).into)
+        )
       else
-        Browser.send(Msg.Saved(Right(original)).into)
+        IO.pure(Right(original))
 
-    private def saveCotonoma(cotonomas: Cotonomas): Cmd.One[AppMsg] =
+    private def saveCotonoma(
+        cotonomas: Cotonomas
+    ): IO[Either[ErrorJson, Coto]] =
       (cotonomaForm.edited, cotonomas.asCotonoma(original)) match {
         case (true, Some(cotonoma)) =>
           CotonomaBackend.rename(cotonoma.id, cotonomaForm.name)
-            .flatMap(_ => saveCoto)
+            .flatMap {
+              case Right(_)    => saveCoto
+              case Left(error) => IO.pure(Left(error))
+            }
         case _ => saveCoto
       }
   }

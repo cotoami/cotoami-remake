@@ -1,6 +1,6 @@
 package cotoami.subparts.modals
 
-import scala.util.{Failure, Success}
+import cats.effect.IO
 import scala.util.chaining._
 import scala.scalajs.js
 import org.scalajs.dom
@@ -10,7 +10,7 @@ import slinky.core.facade.ReactElement
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
-import marubinotto.fui.{Browser, Cmd}
+import marubinotto.fui.{toCmd, Browser, Cmd}
 import marubinotto.components.FixedAspectCrop
 import marubinotto.components.FixedAspectCrop.Area
 
@@ -48,7 +48,7 @@ object ModalNodeIcon {
 
   object Msg {
     case class ImageInput(image: dom.Blob) extends Msg
-    case object CropStarted extends Msg
+    case class CropRequested(imageUrl: String, area: Area) extends Msg
     case class ImageCropped(result: Either[Throwable, dom.Blob]) extends Msg
     case object Save extends Msg
     case class Saved(result: Either[ErrorJson, Node]) extends Msg
@@ -64,8 +64,12 @@ object ModalNodeIcon {
           model.copy(sourceImage = Some(image, dom.URL.createObjectURL(image)))
         )
 
-      case Msg.CropStarted =>
-        default.copy(_1 = model.copy(cropping = true))
+      case Msg.CropRequested(imageUrl, area) =>
+        default.copy(
+          _1 = model.copy(cropping = true),
+          _3 = FixedAspectCrop.getCroppedImg(imageUrl, area).attempt
+            .map(Msg.ImageCropped(_).into).toCmd
+        )
 
       case Msg.ImageCropped(Right(image)) =>
         default.copy(_1 =
@@ -86,11 +90,14 @@ object ModalNodeIcon {
               case Right(base64) =>
                 NodeBackend.setLocalNodeIcon(base64).map(Msg.Saved(_).into)
               case Left(e) =>
-                cotoami.error(
-                  "Icon encoding error.",
-                  Some(js.JSON.stringify(e))
+                IO.pure(
+                  AppMsg.AddMessage(
+                    cotoami.models.SystemMessages.Error,
+                    "Icon encoding error.",
+                    Some(js.JSON.stringify(e))
+                  )
                 )
-            }
+            }.toCmd
           ).getOrElse(Cmd.none)
         )
 
@@ -160,8 +167,6 @@ object ModalNodeIcon {
     )
 
   object SectionCrop {
-    // https://github.com/scala-js/scala-js-macrotask-executor
-    import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
     case class Props(
         imageUrl: String,
@@ -188,19 +193,9 @@ object ModalNodeIcon {
           crop = crop,
           onCropChange = setCrop,
           aspect = Some(1.0),
-          onCropComplete =
-            Some((_: Area, croppedAreaPixels: Area) => {
-              props.dispatch(Msg.CropStarted)
-              FixedAspectCrop.getCroppedImg(
-                props.imageUrl,
-                croppedAreaPixels
-              ).onComplete {
-                case Success(blob) =>
-                  props.dispatch(Msg.ImageCropped(Right(blob)))
-                case Failure(t) =>
-                  props.dispatch(Msg.ImageCropped(Left(t)))
-              }
-            })
+          onCropComplete = Some((_: Area, croppedAreaPixels: Area) => {
+            props.dispatch(Msg.CropRequested(props.imageUrl, croppedAreaPixels))
+          })
         )
       )
     }

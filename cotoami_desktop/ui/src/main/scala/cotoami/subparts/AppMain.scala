@@ -72,10 +72,8 @@ object AppMain {
       .pipe { state =>
         (
           state,
-          Cmd.Batch(
-            state.save,
-            resizeWindow(name, open, state).toNone
-          )
+          state.save ++
+            resizeWindow(name, open, state)
         )
       }
   }
@@ -84,7 +82,7 @@ object AppMain {
       name: String,
       open: Boolean,
       uiState: UiState
-  ): Cmd.One[Either[Throwable, Unit]] = {
+  ): Cmd[Nothing] = {
     val foldedPaneWidth = 16
     val deltaWidth: Double = (name, open) match {
       case (PaneFlow.PaneName, true) =>
@@ -98,7 +96,11 @@ object AppMain {
       case _ => 0
     }
     if (deltaWidth != 0)
-      tauri.resizeWindow(deltaWidth, 0).pipe(Cmd.fromFuture)
+      Cmd.exec(
+        cats.effect.IO.fromFuture(
+          cats.effect.IO(tauri.resizeWindow(deltaWidth, 0))
+        ).attempt
+      )
     else
       Cmd.none
   }
@@ -123,7 +125,7 @@ object AppMain {
         ),
         resizable = flowOpened && stockOpened,
         className = Some("main"),
-        onPrimarySizeChanged = Some((newSize) =>
+        onPrimarySizeChanged = Some(newSize =>
           dispatch(AppMsg.ResizePane(PaneFlow.PaneName, newSize))
         ),
         primary = SplitPane.Primary.Props(

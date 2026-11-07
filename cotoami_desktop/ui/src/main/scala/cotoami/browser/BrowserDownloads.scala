@@ -4,7 +4,7 @@ import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => jso}
 import scala.util.chaining._
 
-import cats.effect.IO
+import cats.effect.{IO, Resource}
 
 import slinky.core.facade.ReactElement
 import slinky.web.html._
@@ -57,13 +57,23 @@ object BrowserDownloads {
     def nonEmpty: Boolean = entries.nonEmpty
     def downloading: Boolean = entries.exists(_.status == Status.Downloading)
 
-    def started(id: String, url: String, path: String, filename: String): Model =
+    def started(
+        id: String,
+        url: String,
+        path: String,
+        filename: String
+    ): Model =
       copy(
         entries = Entry(id, url, filename, path, nextStarted) +: entries,
         nextStarted = nextStarted + 1
       )
 
-    def finished(id: String, url: String, path: String, success: Boolean): Model = {
+    def finished(
+        id: String,
+        url: String,
+        path: String,
+        success: Boolean
+    ): Model = {
       val status = if (success) Status.Finished else Status.Failed
       val index =
         entries.indexWhere(entry =>
@@ -132,51 +142,25 @@ object BrowserDownloads {
     }
 
   def subscriptions(contentLabel: String): Sub[Msg] =
-    Sub.fromCallback[Msg](s"$DownloadStartedEvent-${contentLabel}") {
+    Sub.fromResource[Msg](s"$DownloadStartedEvent-${contentLabel}") {
       dispatch =>
-        IO
-          .fromFuture(
-            IO(
-              tauri.event
-                .listen[DownloadStartedJson](
-                  DownloadStartedEvent,
-                  event =>
-                    Option(event.payload)
-                      .filter(_.content_label == contentLabel)
-                      .foreach(payload =>
-                        dispatch(
-                          Msg.DownloadStarted(
-                            payload.id,
-                            payload.source_url,
-                            payload.path,
-                            payload.filename
-                          )
-                        )
-                      )
-                )
-                .toFuture
-            )
-          )
-          .map(unlisten => IO(unlisten()))
-    }.combine(
-      Sub.fromCallback[Msg](s"$DownloadFinishedEvent-${contentLabel}") {
-        dispatch =>
+        Resource.make(
           IO
             .fromFuture(
               IO(
                 tauri.event
-                  .listen[DownloadFinishedJson](
-                    DownloadFinishedEvent,
+                  .listen[DownloadStartedJson](
+                    DownloadStartedEvent,
                     event =>
                       Option(event.payload)
                         .filter(_.content_label == contentLabel)
                         .foreach(payload =>
                           dispatch(
-                            Msg.DownloadFinished(
+                            Msg.DownloadStarted(
                               payload.id,
-                              payload.url,
+                              payload.source_url,
                               payload.path,
-                              payload.success
+                              payload.filename
                             )
                           )
                         )
@@ -184,7 +168,35 @@ object BrowserDownloads {
                   .toFuture
               )
             )
-            .map(unlisten => IO(unlisten()))
+        )(unlisten => IO(unlisten())).map(_ => ())
+    }.combine(
+      Sub.fromResource[Msg](s"$DownloadFinishedEvent-${contentLabel}") {
+        dispatch =>
+          Resource.make(
+            IO
+              .fromFuture(
+                IO(
+                  tauri.event
+                    .listen[DownloadFinishedJson](
+                      DownloadFinishedEvent,
+                      event =>
+                        Option(event.payload)
+                          .filter(_.content_label == contentLabel)
+                          .foreach(payload =>
+                            dispatch(
+                              Msg.DownloadFinished(
+                                payload.id,
+                                payload.url,
+                                payload.path,
+                                payload.success
+                              )
+                            )
+                          )
+                    )
+                    .toFuture
+                )
+              )
+          )(unlisten => IO(unlisten())).map(_ => ())
       }
     )
 

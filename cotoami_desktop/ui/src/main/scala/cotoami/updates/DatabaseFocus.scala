@@ -1,5 +1,6 @@
 package cotoami.updates
 
+import marubinotto.fui.toCmd
 import scala.util.chaining._
 import com.softwaremill.quicklens._
 
@@ -10,7 +11,7 @@ import cotoami.backend.CotonomaDetails
 
 object DatabaseFocus {
 
-  def node(nodeId: Option[Id[Node]])(model: Model): (Model, Cmd.Batch[Msg]) =
+  def node(nodeId: Option[Id[Node]])(model: Model): (Model, Cmd[Msg]) =
     model
       .modify(_.repo).using(_.focusNode(nodeId))
       .modify(_.search).using(_.clear)
@@ -27,19 +28,17 @@ object DatabaseFocus {
             timeline = timeline,
             geomap = geomap
           ),
-          Cmd.Batch(
-            fetchRecentCotonomas,
-            timelineCmd,
-            model.repo.fetchGraph,
+          fetchRecentCotonomas ++
+            timelineCmd ++
+            model.repo.fetchGraph ++
             geomapCmd
-          )
         )
       }
 
   def cotonoma(
       nodeId: Option[Id[Node]],
       cotonomaId: Id[Cotonoma]
-  )(model: Model): (Model, Cmd.Batch[Msg]) = {
+  )(model: Model): (Model, Cmd[Msg]) = {
     val shouldRecentFetchCotonomas =
       // the focused node is changed
       nodeId != model.repo.nodes.focusedId ||
@@ -63,13 +62,11 @@ object DatabaseFocus {
             navCotonomas = navCotonomas,
             timeline = timeline
           ),
-          Cmd.Batch(
-            CotonomaDetails.fetch(cotonomaId)
-              .map(Msg.FocusedCotonomaDetailsFetched.apply),
-            fetchRecentCotonomas,
-            timelineCmd,
+          CotonomaDetails.fetch(cotonomaId).toCmd
+            .map(Msg.FocusedCotonomaDetailsFetched.apply) ++
+            fetchRecentCotonomas ++
+            timelineCmd ++
             model.repo.fetchGraph
-          )
         )
       }
   }
@@ -77,7 +74,7 @@ object DatabaseFocus {
   def coto(
       cotoId: Id[Coto],
       moveTo: Boolean
-  )(model: Model): (Model, Cmd.One[Msg]) = {
+  )(model: Model): (Model, Cmd[Msg]) = {
     model
       .modify(_.repo.cotos).using(_.focus(cotoId))
       .pipe { model =>

@@ -1,78 +1,88 @@
 package cotoami.updates
 
+import marubinotto.fui.toCmd
 import scala.util.chaining._
 import com.softwaremill.quicklens._
 
 import marubinotto.fui.{Browser, Cmd}
-import marubinotto.facade.Nullable
 
 import cotoami.{Model, Msg}
 import cotoami.models._
 import cotoami.repository._
 import cotoami.backend.{
   ChangeJson,
-  ChangelogEntryJson,
-  CotoBackend,
+  ChangelogEntry,
   CotoDetails,
-  CotoJson,
   CotonomaBackend,
-  CotonomaJson,
+  DecodedChange,
   ItoBackend,
-  NodeBackend,
   NodeDetails
 }
 import cotoami.subparts.SectionPins
 
 object Changelog {
 
-  def apply(log: ChangelogEntryJson, model: Model): (Model, Cmd[Msg]) = {
+  def apply(log: ChangelogEntry, model: Model): (Model, Cmd[Msg]) = {
     val expectedNumber = model.repo.lastChangeNumber + 1
-    if (log.serial_number == expectedNumber)
+    if (log.serialNumber == expectedNumber)
       applyChange(log.change, model)
-        .modify(_._1.repo.lastChangeNumber).setTo(log.serial_number)
+        .modify(_._1.repo.lastChangeNumber).setTo(log.serialNumber)
     else
       (
         model.info(
           s"Unexpected change number (expected: ${expectedNumber})",
-          Some(log.serial_number.toString())
+          Some(log.serialNumber.toString())
         ),
         Browser.send(Msg.ReloadRepository)
       )
   }
 
   private def applyChange(
+      change: DecodedChange,
+      model: Model
+  ): (Model, Cmd[Msg]) =
+    change match {
+      case DecodedChange.CreateCoto(coto)     => createCoto(coto, model)
+      case DecodedChange.CreateCotonoma(pair) => createCotonoma(pair, model)
+      case DecodedChange.UpsertNode(node)     =>
+        (model.modify(_.repo.nodes).using(_.put(node)), Cmd.none)
+      case DecodedChange.CreateNode(node, root) =>
+        val updated = model.modify(_.repo.nodes).using(_.put(node))
+        root.map(createCotonoma(_, updated)).getOrElse((updated, Cmd.none))
+      case DecodedChange.SetNodeIcon(nodeId, icon) =>
+        (
+          model.modify(_.repo.nodes).using(_.setIcon(nodeId, icon))
+            .modify(_.geomap).using(_.refreshMarkers),
+          Cmd.none
+        )
+      case DecodedChange.Other(json) => applyOtherChange(json, model)
+    }
+
+  private def applyOtherChange(
       change: ChangeJson,
       model: Model
   ): (Model, Cmd[Msg]) =
     // Handle changes in order of assumed their frequency:
-    change.CreateCoto.toOption.map(createCoto(_, model))
-      .orElse(change.CreateCotonoma.toOption.map(createCotonoma(_, model)))
-      .orElse(
-        change.CreateIto.toOption.map { json =>
-          val ito = ItoBackend.toModel(json)
-          if (model.repo.itos.hasDuplicateOrder(ito))
-            (
-              model,
-              Cmd.Batch(
-                Root.fetchGraphFromCoto(ito.targetCotoId),
-                // Insertion: refresh sibling itos if there's an order duplication.
-                Root.fetchSiblingItoGroup(ito.sourceCotoId, ito.nodeId)
-              )
-            )
-          else
-            (
-              model.modify(_.repo.itos).using(_.put(ito)),
-              Cmd.Batch(
-                Root.fetchGraphFromCoto(ito.targetCotoId),
-                if (model.repo.isPin(ito))
-                  // Scroll to the just added pin
-                  Browser.send(SectionPins.Msg.ScrollToPin(ito).into)
-                else
-                  Cmd.none
-              )
-            )
-        }
-      )
+    change.CreateIto.toOption.map { json =>
+      val ito = ItoBackend.toModel(json)
+      if (model.repo.itos.hasDuplicateOrder(ito))
+        (
+          model,
+          Root.fetchGraphFromCoto(ito.targetCotoId) ++
+            // Insertion: refresh sibling itos if there's an order duplication.
+            Root.fetchSiblingItoGroup(ito.sourceCotoId, ito.nodeId)
+        )
+      else
+        (
+          model.modify(_.repo.itos).using(_.put(ito)),
+          Root.fetchGraphFromCoto(ito.targetCotoId) ++
+            (if (model.repo.isPin(ito))
+               // Scroll to the just added pin
+               Browser.send(SectionPins.Msg.ScrollToPin(ito).into)
+             else
+               Cmd.none)
+        )
+    }
       .orElse(
         change.DeleteIto.toOption.map { json =>
           val itoId: Id[Ito] = Id(json.ito_id)
@@ -126,9 +136,7 @@ object Changelog {
         }
       )
       .orElse(
-        change.Promote.toOption.map(json =>
-          (model, promote(Id(json.coto_id)))
-        )
+        change.Promote.toOption.map(json => (model, promote(Id(json.coto_id))))
       )
       .orElse(
         change.PromoteCoto.toOption.map(json =>
@@ -136,46 +144,16 @@ object Changelog {
         )
       )
       .orElse(
-        change.UpsertNode.toOption.map { json =>
-          val node = NodeBackend.toModel(json)
-          (model.modify(_.repo.nodes).using(_.put(node)), Cmd.none)
-        }
-      )
-      .orElse(
-        change.CreateNode.toOption.map { json =>
-          model.modify(_.repo.nodes).using(
-            _.put(NodeBackend.toModel(json.node))
-          ).pipe { updatedModel =>
-            Nullable.toOption(json.root)
-              .map(createCotonoma(_, updatedModel))
-              .getOrElse((updatedModel, Cmd.none))
-          }
-        }
-      )
-      .orElse(
         change.RenameNode.toOption.map(json =>
           (model, updateNode(Id(json.node_id)))
         )
       )
-      .orElse(
-        change.SetNodeIcon.toOption.map { json =>
-          (
-            model
-              .modify(_.repo.nodes).using(
-                _.setIcon(Id(json.node_id), json.icon)
-              )
-              .modify(_.geomap).using(_.refreshMarkers),
-            Cmd.none
-          )
-        }
-      )
       .getOrElse((model, Cmd.none))
 
   private def createCoto(
-      cotoJson: CotoJson,
+      coto: Coto,
       model: Model
   ): (Model, Cmd[Msg]) = {
-    val coto = CotoBackend.toModel(cotoJson)
 
     // Post it to the timeline
     val timeline =
@@ -214,19 +192,18 @@ object Changelog {
   }
 
   private def createCotonoma(
-      jsonPair: (CotonomaJson, CotoJson),
+      pair: (Cotonoma, Coto),
       model: Model
   ): (Model, Cmd[Msg]) = {
-    val cotonoma = CotonomaBackend.toModel(jsonPair._1)
-    val coto = CotoBackend.toModel(jsonPair._2)
+    val (cotonoma, coto) = pair
     model
       .modify(_.repo.cotonomas).using(_.post(cotonoma, coto))
-      .pipe(createCoto(jsonPair._2, _))
+      .pipe(createCoto(coto, _))
   }
 
   def touchCotonoma(id: Option[Id[Cotonoma]], updatedAtUtcIso: String)(
       model: Model
-  ): (Model, Cmd.One[Msg]) = {
+  ): (Model, Cmd[Msg]) = {
     id.map(id =>
       model.repo.touchCotonoma(id, updatedAtUtcIso).pipe { case (repo, cmd) =>
         (model.copy(repo = repo), cmd)
@@ -235,37 +212,29 @@ object Changelog {
   }
 
   private def updateNode(id: Id[Node]): Cmd.One[Msg] =
-    NodeDetails.fetch(id).map(Msg.NodeUpdated(_))
+    NodeDetails.fetch(id).toCmd.map(Msg.NodeUpdated(_))
 
   private def updateCoto(id: Id[Coto]): Cmd.One[Msg] =
-    CotoDetails.fetch(id).map(Msg.CotoUpdated(_))
+    CotoDetails.fetch(id).toCmd.map(Msg.CotoUpdated(_))
 
   private def promote(id: Id[Coto]): Cmd.One[Msg] =
-    CotonomaBackend.fetchByCotoId(id).map(Msg.Promoted(_))
+    CotonomaBackend.fetchByCotoId(id).toCmd.map(Msg.Promoted(_))
 
   private def deleteCoto(
       cotoId: Id[Coto],
       model: Model
-  ): (Model, Cmd.Batch[Msg]) =
+  ): (Model, Cmd[Msg]) =
     (
       model.modify(_.repo).using(_.deleteCoto(cotoId)),
-      Cmd.Batch(
-        // Update the original coto if it's a repost
-        model.repo.cotos.get(cotoId).flatMap(_.repostOfId)
-          .map(updateCoto)
-          .getOrElse(Cmd.none),
-
-        // UnfocusCotonoma if the deleted coto is the current cotonoma
-        if (model.repo.isCurrentCotonoma(cotoId))
-          Browser.send(Msg.UnfocusCotonoma)
-        else
-          Cmd.none,
-
-        // If the coto was posted by others, update othersLastPostedAt
-        if (!model.repo.postedBySelf(cotoId))
-          Root.fetchOthersLastPostedAt
-        else
-          Cmd.none
-      )
+      // Update the original coto if it's a repost.
+      model.repo.cotos.get(cotoId).flatMap(_.repostOfId)
+        .map(updateCoto)
+        .getOrElse(Cmd.none) ++
+        (if (model.repo.isCurrentCotonoma(cotoId))
+           Browser.send(Msg.UnfocusCotonoma)
+         else Cmd.none) ++
+        (if (!model.repo.postedBySelf(cotoId))
+           Root.fetchOthersLastPostedAt
+         else Cmd.none)
     )
 }

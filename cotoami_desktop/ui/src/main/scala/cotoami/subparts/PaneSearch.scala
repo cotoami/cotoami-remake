@@ -1,5 +1,8 @@
 package cotoami.subparts
 
+import marubinotto.fui.toCmd
+import scala.concurrent.duration.DurationInt
+
 import scala.util.chaining._
 
 import slinky.core.facade.ReactElement
@@ -26,17 +29,13 @@ object PaneSearch {
 
   case class Model(
       queryInput: String = "",
-
       // To clear the uncontrolled input value by incrementing this key
       queryInputKey: Int = 0,
-
       // To avoid rendering old results unintentionally
       fetchNumber: Int = 0,
-
       // Search results
       executedQuery: Option[String] = None,
       cotoIds: PaginatedIds[Coto] = PaginatedIds(),
-
       // State
       imeActive: Boolean = false,
       loading: Boolean = false
@@ -59,8 +58,7 @@ object PaneSearch {
           (copy(queryInput = query), Cmd.none)
         else
           copy(queryInput = query)
-            .fetchFirst
-            .modify(_._2).using(_.debounce("PaneSearch.query", 200))
+            .fetchFirst(debounce = true)
       }
 
     def clear: Model =
@@ -73,12 +71,14 @@ object PaneSearch {
         loading = false
       )
 
-    def fetchFirst: (Model, Cmd.One[AppMsg]) =
+    def fetchFirst: (Model, Cmd[AppMsg]) = fetchFirst(debounce = false)
+
+    private def fetchFirst(debounce: Boolean): (Model, Cmd[AppMsg]) =
       fetching.pipe { model =>
-        (model, fetch(queryInput, 0, model.fetchNumber))
+        (model, fetch(queryInput, 0, model.fetchNumber, debounce))
       }
 
-    def fetchMore: (Model, Cmd.One[AppMsg]) =
+    def fetchMore: (Model, Cmd[AppMsg]) =
       if (loading)
         (this, Cmd.none)
       else
@@ -175,16 +175,18 @@ object PaneSearch {
   private def fetch(
       query: String,
       pageIndex: Double,
-      fetchNumber: Int
-  ): Cmd.One[AppMsg] =
-    if (!query.isBlank())
-      PaginatedCotos.search(
+      fetchNumber: Int,
+      debounce: Boolean = false
+  ): Cmd[AppMsg] =
+    if (!query.isBlank()) {
+      val cmd = PaginatedCotos.search(
         query,
         Scope.All,
         false,
         pageIndex
-      ).map(Msg.Fetched(fetchNumber, query, _).into)
-    else
+      ).toCmd.map(Msg.Fetched(fetchNumber, query, _).into)
+      if (debounce) cmd.debounce("PaneSearch.query", 200.millis) else cmd
+    } else
       Cmd.none
 
   /////////////////////////////////////////////////////////////////////////////

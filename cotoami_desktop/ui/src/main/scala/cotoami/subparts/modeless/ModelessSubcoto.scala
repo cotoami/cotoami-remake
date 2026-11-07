@@ -1,5 +1,6 @@
 package cotoami.subparts.modeless
 
+import marubinotto.fui.toCmd
 import scala.util.chaining._
 
 import slinky.core.facade.{Fragment, ReactElement}
@@ -32,7 +33,7 @@ object ModelessSubcoto {
     def readyToPost: Boolean =
       !posting && postTo.isDefined && cotoForm.hasValidContents
 
-    def post: (Model, Cmd.One[AppMsg]) =
+    def post: (Model, Cmd[AppMsg]) =
       (
         copy(posting = true),
         postTo
@@ -42,7 +43,7 @@ object ModelessSubcoto {
               cotoForm.toBackendInput,
               target.cotonoma.id,
               order
-            )
+            ).toCmd
           )
           .getOrElse(Cmd.none)
           .map(Msg.Posted(_).into)
@@ -62,7 +63,7 @@ object ModelessSubcoto {
       var targetCotonomaIds =
         repo.cotonomas.getByCotoId(sourceCotoId) match {
           case Some(sourceCotonoma) =>
-            ((sourceCotonoma.id +: postedInIds) ++ repo.currentCotonomaId)
+            (sourceCotonoma.id +: postedInIds) ++ repo.currentCotonomaId
           case None =>
             repo.currentCotonomaId match {
               case Some(current) =>
@@ -105,7 +106,8 @@ object ModelessSubcoto {
     case object Focus extends Msg
     case object Close extends Msg
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
-    case class TargetCotonomaSelected(dest: Option[ExistingCotonoma]) extends Msg
+    case class TargetCotonomaSelected(dest: Option[ExistingCotonoma])
+        extends Msg
     case object Post extends Msg
     case class Posted(result: Either[ErrorJson, (Coto, Ito)]) extends Msg
   }

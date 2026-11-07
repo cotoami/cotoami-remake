@@ -1,5 +1,6 @@
 package cotoami.subparts.modeless
 
+import marubinotto.fui.toCmd
 import scala.util.chaining._
 import com.softwaremill.quicklens._
 import slinky.core.facade.ReactElement
@@ -10,7 +11,7 @@ import marubinotto.fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ChildNode, Id, Node}
 import cotoami.backend.{ChildNodeBackend, ChildNodeInput, ErrorJson}
-import cotoami.subparts.forms.{FieldEdit, fieldEditable}
+import cotoami.subparts.forms.{fieldEditable, FieldEdit}
 import cotoami.subparts.PartsNode
 
 object SectionAsChild {
@@ -40,7 +41,7 @@ object SectionAsChild {
     def save: (Model, Cmd[AppMsg]) =
       (
         copy(saving = true),
-        ChildNodeBackend.edit(nodeId, childInput.toJson)
+        ChildNodeBackend.edit(nodeId, childInput.toJson).toCmd
           .map(Msg.Saved(_).into)
       )
   }
@@ -52,7 +53,7 @@ object SectionAsChild {
       if (!context.repo.nodes.isSelf(nodeId))
         (
           Model(nodeId, loading = true),
-          ChildNodeBackend.fetch(nodeId)
+          ChildNodeBackend.fetch(nodeId).toCmd
             .map(Msg.ChildNodeFetched(_).into)
         )
       else

@@ -1,5 +1,6 @@
 package cotoami.subparts
 
+import marubinotto.fui.toCmd
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
@@ -39,7 +40,7 @@ object SectionNodeTools {
       case Msg.SetSyncDisabled(id, disable) =>
         (
           model.copy(togglingSync = true),
-          ServerNodeBackend.edit(id, Some(disable), None, None)
+          ServerNodeBackend.edit(id, Some(disable), None, None).toCmd
             .map(Msg.SyncToggled(_).into)
         )
 
@@ -48,7 +49,7 @@ object SectionNodeTools {
           model.copy(togglingSync = false),
           result match {
             case Right(_) => Cmd.none
-            case Left(e) => cotoami.error("Failed to disable parent sync.", e)
+            case Left(e)  => cotoami.error("Failed to disable parent sync.", e)
           }
         )
     }

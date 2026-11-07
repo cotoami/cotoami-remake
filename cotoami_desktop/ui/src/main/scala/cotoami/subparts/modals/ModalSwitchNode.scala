@@ -1,5 +1,7 @@
 package cotoami.subparts.modals
 
+import marubinotto.fui.toCmd
+
 import scala.util.chaining._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
@@ -55,7 +57,7 @@ object ModalSwitchNode {
             Option.when(!context.repo.nodes.isLocal(model.switchingTo.id))(
               model.switchingTo.id
             )
-          ).map(Msg.Switched(_).into)
+          ).toCmd.map(Msg.Switched(_).into)
         )
 
       case Msg.Switched(Right(dataset)) =>

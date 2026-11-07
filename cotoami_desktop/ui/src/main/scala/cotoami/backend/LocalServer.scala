@@ -1,8 +1,8 @@
 package cotoami.backend
 
+import cats.effect.IO
 import scala.scalajs.js
 
-import marubinotto.fui.Cmd
 import marubinotto.facade.Nullable
 
 case class LocalServer(
@@ -16,7 +16,7 @@ case class LocalServer(
 }
 
 object LocalServer {
-  def fetch: Cmd.One[Either[ErrorJson, LocalServer]] =
+  def fetch: IO[Either[ErrorJson, LocalServer]] =
     LocalServerJson.fetch.map(_.map(new LocalServer(_)))
 }
 
@@ -27,7 +27,7 @@ trait LocalServerJson extends js.Object {
 }
 
 object LocalServerJson {
-  def fetch: Cmd.One[Either[ErrorJson, LocalServerJson]] =
+  def fetch: IO[Either[ErrorJson, LocalServerJson]] =
     Commands.send(Commands.LocalServer)
 }
 

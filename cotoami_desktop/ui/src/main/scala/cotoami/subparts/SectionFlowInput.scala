@@ -1,5 +1,6 @@
 package cotoami.subparts
 
+import marubinotto.fui.toCmd
 import scala.util.chaining._
 import scala.annotation.unused
 import scala.scalajs.js
@@ -85,21 +86,23 @@ object SectionFlowInput {
         folded = !focused
       )
 
-    def save: Cmd.One[AppMsg] =
+    def save: Cmd[AppMsg] =
       if (persistDraft)
         form match {
           case form: CotoForm.Model =>
-            Browser.setLocalStorage(DraftStorageKey, form.contentInput)
+            Cmd.exec(
+              Browser.setLocalStorage(DraftStorageKey, form.contentInput)
+            )
           case _ => Cmd.none
         }
       else
         Cmd.none
 
-    def restore: Cmd.One[AppMsg] =
+    def restore: Cmd[AppMsg] =
       if (persistDraft)
         form match {
           case form: CotoForm.Model =>
-            Browser.getLocalStorage(DraftStorageKey).map(
+            Browser.getLocalStorage(DraftStorageKey).toCmd.map(
               Msg.ContentRestored(_).into
             )
           case _ => Cmd.none
@@ -108,7 +111,7 @@ object SectionFlowInput {
         Cmd.none
   }
 
-  def init(persistDraft: Boolean = true): (Model, Cmd.One[AppMsg]) = {
+  def init(persistDraft: Boolean = true): (Model, Cmd[AppMsg]) = {
     val model = Model(persistDraft = persistDraft)
     (model, model.restore)
   }
@@ -167,12 +170,12 @@ object SectionFlowInput {
           case model =>
             default.copy(
               _1 = model,
-              _4 = Cmd.Batch(
-                model.restore,
+              _4 = (
+                model.restore
+              ) ++
                 Browser.send(
                   SectionTimeline.Msg.SetOnlyCotonomas(false).into
                 )
-              )
             )
         }
 
@@ -197,7 +200,10 @@ object SectionFlowInput {
           model.copy(focused = false, interacting = false).clear
         default.copy(
           _1 = cleared,
-          _4 = Cmd.Batch(ModelessNewCoto.open(form), cleared.save)
+          _4 = (
+            ModelessNewCoto.open(form)
+          ) ++
+            cleared.save
         )
 
       case (Msg.CotoFormMsg(submsg), cotoForm: CotoForm.Model, _) => {
@@ -319,13 +325,13 @@ object SectionFlowInput {
                 postId,
                 form.content,
                 form.summary,
-                form.mediaBase64,
+                form.mediaBlob.map(blob => (blob, blob.`type`)),
                 cotonoma
               ),
-              _4 = Cmd.Batch(
-                postCoto(postId, form, cotonoma.id),
+              _4 = (
+                postCoto(postId, form, cotonoma.id)
+              ) ++
                 model.save
-              )
             )
           }
       }
@@ -387,7 +393,7 @@ object SectionFlowInput {
       form: CotoForm.Model,
       postTo: Id[Cotonoma]
   ): Cmd.One[AppMsg] =
-    CotoBackend.post(form.toBackendInput, postTo)
+    CotoBackend.post(form.toBackendInput, postTo).toCmd
       .map(Msg.CotoPosted(postId, _).into)
 
   private def postCotonoma(
@@ -395,7 +401,7 @@ object SectionFlowInput {
       form: CotonomaForm.Model,
       postTo: Id[Cotonoma]
   ): Cmd.One[AppMsg] =
-    CotonomaBackend.post(form.name, None, None, postTo)
+    CotonomaBackend.post(form.name, None, None, postTo).toCmd
       .map(Msg.CotonomaPosted(postId, _).into)
 
   /////////////////////////////////////////////////////////////////////////////

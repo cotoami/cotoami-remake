@@ -7,7 +7,8 @@ import slinky.web.html._
 
 import marubinotto.optionalClasses
 import marubinotto.fui.Cmd
-import marubinotto.fui.Cmd.One.pure
+import cats.effect.IO
+import marubinotto.fui.toCmd
 import marubinotto.Validation
 import marubinotto.components.{materialSymbol, SplitPane}
 
@@ -47,15 +48,15 @@ object ModalPromote {
     def promote: (Model, Cmd.One[AppMsg]) =
       (
         copy(promoting = true),
-        updateCoto.flatMap(_ match {
+        updateCoto.flatMap {
           case Right(coto) => CotoBackend.promote(coto.id)
-          case Left(e)     => pure(Left(e))
-        }).map(Msg.Promoted(_).into)
+          case Left(e)     => IO.pure(Left(e))
+        }.map(Msg.Promoted(_).into).toCmd
       )
 
-    private def updateCoto: Cmd.One[Either[ErrorJson, Coto]] =
+    private def updateCoto: IO[Either[ErrorJson, Coto]] =
       (diffName, diffContent) match {
-        case (None, None) => pure(Right(original))
+        case (None, None)    => IO.pure(Right(original))
         case (name, content) =>
           CotoBackend.edit(original.id, content, name, None, None, None)
       }

@@ -6,7 +6,8 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import marubinotto.fui.Cmd
-import marubinotto.fui.Cmd.One.pure
+import cats.effect.IO
+import marubinotto.fui.toCmd
 import marubinotto.Validation
 import marubinotto.components.{materialSymbol, ScrollArea}
 
@@ -42,20 +43,20 @@ object ModalNewIto {
     def readyToConnect: Boolean = !validate.failed && !connecting
 
     def connect(repo: Root): (Model, Cmd.One[AppMsg]) = {
-      val acc: Cmd.One[Either[ErrorJson, Seq[Ito]]] = pure(Right(Seq.empty))
+      val acc: IO[Either[ErrorJson, Seq[Ito]]] = IO.pure(Right(Seq.empty))
       val cmd = repo.cotos.selectedIds
         .foldLeft(acc) { (cmd, selectedId) =>
-          cmd.flatMap(_ match {
+          cmd.flatMap {
             case Right(itos) => {
               if (alreadyConnected(selectedId, repo.itos))
-                pure(Right(itos))
+                IO.pure(Right(itos))
               else
                 createIto(selectedId).map(_.map(itos :+ _))
             }
-            case Left(e) => pure(Left(e))
-          })
+            case Left(e) => IO.pure(Left(e))
+          }
         }
-        .map(Msg.Connected(_).into)
+        .map(Msg.Connected(_).into).toCmd
       (copy(connecting = true), cmd)
     }
 
@@ -67,7 +68,7 @@ object ModalNewIto {
 
     private def createIto(
         selectedId: Id[Coto]
-    ): Cmd.One[Either[ErrorJson, Ito]] =
+    ): IO[Either[ErrorJson, Ito]] =
       ItoBackend.create(
         if (toSelection) cotoId else selectedId,
         if (toSelection) selectedId else cotoId,

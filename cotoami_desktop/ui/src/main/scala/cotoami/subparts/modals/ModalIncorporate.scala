@@ -1,5 +1,6 @@
 package cotoami.subparts.modals
 
+import marubinotto.fui.toCmd
 import scala.util.chaining._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
@@ -22,15 +23,12 @@ object ModalIncorporate {
 
   case class Model(
       error: Option[String] = None,
-
       // form
       nodeUrlInput: String = "",
       passwordInput: String = "",
-
       // connect
       connecting: Boolean = false,
       nodeSession: Option[ClientNodeSession] = None,
-
       // incorporate
       incorporating: Boolean = false
   ) {
@@ -50,7 +48,7 @@ object ModalIncorporate {
     def connect: (Model, Cmd.One[AppMsg]) =
       (
         copy(connecting = true, error = None),
-        ClientNodeSession.logIntoServer(nodeUrl, password)
+        ClientNodeSession.logIntoServer(nodeUrl, password).toCmd
           .map(Msg.Connected(_).into)
       )
 
@@ -59,7 +57,7 @@ object ModalIncorporate {
     def incorporate: (Model, Cmd.One[AppMsg]) =
       (
         copy(incorporating = true, error = None),
-        ServerBackend.addServer(nodeUrl, password)
+        ServerBackend.addServer(nodeUrl, password).toCmd
           .map(Msg.Incorporated(_).into)
       )
 
@@ -201,7 +199,6 @@ object ModalIncorporate {
           inputErrors = Some(model.validateNodeUrl),
           onInput = (input => dispatch(Msg.NodeUrlInput(input)))
         ),
-
         // Password
         fieldInput(
           name = context.i18n.text.Password,
@@ -209,7 +206,6 @@ object ModalIncorporate {
           inputValue = model.passwordInput,
           onInput = (input => dispatch(Msg.PasswordInput(input)))
         ),
-
         // Preview
         div(className := "buttons")(
           button(
@@ -239,7 +235,6 @@ object ModalIncorporate {
             .map(section(className := "node-description")(_))
         }
       ),
-
       // Incorporate button
       div(className := "buttons")(
         button(

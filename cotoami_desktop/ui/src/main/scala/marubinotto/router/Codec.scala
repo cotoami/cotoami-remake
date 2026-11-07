@@ -1,7 +1,5 @@
 package marubinotto.router
 
-import scala.util.Try
-
 trait Codec[A] {
   def encode(value: A): Option[String]
   def decode(value: Option[String]): Option[A]
@@ -16,19 +14,19 @@ object Codec {
   given intCodec: Codec[Int] with {
     override def encode(value: Int): Option[String] = Some(value.toString)
     override def decode(value: Option[String]): Option[Int] =
-      value.flatMap(s => Try(s.toInt).toOption)
+      value.flatMap(_.toIntOption)
   }
 
   given longCodec: Codec[Long] with {
     override def encode(value: Long): Option[String] = Some(value.toString)
     override def decode(value: Option[String]): Option[Long] =
-      value.flatMap(s => Try(s.toLong).toOption)
+      value.flatMap(_.toLongOption)
   }
 
   given doubleCodec: Codec[Double] with {
     override def encode(value: Double): Option[String] = Some(value.toString)
     override def decode(value: Option[String]): Option[Double] =
-      value.flatMap(s => Try(s.toDouble).toOption)
+      value.flatMap(_.toDoubleOption)
   }
 
   given booleanCodec: Codec[Boolean] with {

@@ -154,12 +154,10 @@ object SectionTraversals {
       case Msg.OpenTraversal(start) =>
         (
           model.openTraversal(start),
-          Cmd.Batch(
-            Browser.send(AppMain.Msg.SetPaneStockOpen(true).into),
-            context.repo.lazyFetchGraphFrom(start),
-            // Reload the start coto with its parents.
+          Browser.send(AppMain.Msg.SetPaneStockOpen(true).into) ++
+            context.repo.lazyFetchGraphFrom(start) ++
+// Reload the start coto with its parents.
             Root.fetchCotoDetails(start)
-          )
         )
 
       case Msg.CloseTraversal(traversalIndex) =>
@@ -169,7 +167,7 @@ object SectionTraversals {
         (
           model.step(traversalIndex, stepIndex, step),
           // scroll to the new step
-          Cmd.Batch(
+          (
             scrollAfterRender { _ =>
               dom.document.getElementById(
                 stepElementId(traversalIndex, Some(stepIndex))
@@ -179,8 +177,8 @@ object SectionTraversals {
                   true
                 case _ => false
               }
-            },
-            context.repo.lazyFetchGraphFrom(step)
+            } ++
+              context.repo.lazyFetchGraphFrom(step)
           )
         )
 

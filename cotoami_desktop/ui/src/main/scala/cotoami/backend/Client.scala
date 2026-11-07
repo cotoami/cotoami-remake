@@ -1,8 +1,10 @@
 package cotoami.backend
 
+import cats.effect.IO
+import cats.syntax.all.*
+
 import scala.scalajs.js
 
-import marubinotto.fui.Cmd
 import marubinotto.facade.Nullable
 
 import cotoami.models.{ActiveClient, ClientNode, Id, Node, Page}
@@ -17,25 +19,25 @@ trait ClientNodeJson extends js.Object {
 }
 
 object ClientNodeJson {
-  def fetch(id: Id[Node]): Cmd.One[Either[ErrorJson, ClientNodeJson]] =
+  def fetch(id: Id[Node]): IO[Either[ErrorJson, ClientNodeJson]] =
     Commands.send(Commands.ClientNode(id))
 
   def fetchRecent(
       pageIndex: Double,
       pageSize: Option[Double] = None
-  ): Cmd.One[Either[ErrorJson, PageJson[ClientNodeJson]]] =
+  ): IO[Either[ErrorJson, PageJson[ClientNodeJson]]] =
     Commands.send(Commands.RecentClients(pageIndex, pageSize))
 
   def add(
       nodeId: Id[Node],
       asChild: Option[ChildNodeInputJson]
-  ): Cmd.One[Either[ErrorJson, ClientAddedJson]] =
+  ): IO[Either[ErrorJson, ClientAddedJson]] =
     Commands.send(Commands.AddClient(nodeId, asChild))
 
   def edit(
       id: Id[Node],
       disabled: Option[Boolean]
-  ): Cmd.One[Either[ErrorJson, ClientNodeJson]] =
+  ): IO[Either[ErrorJson, ClientNodeJson]] =
     Commands.send(Commands.EditClient(id, disabled))
 }
 
@@ -50,30 +52,30 @@ object ClientNodeBackend {
         Nullable.toOption(json.last_session_created_at)
     )
 
-  def fetch(id: Id[Node]): Cmd.One[Either[ErrorJson, ClientNode]] =
+  def fetch(id: Id[Node]): IO[Either[ErrorJson, ClientNode]] =
     ClientNodeJson.fetch(id).map(_.map(toModel))
 
   def fetchRecent(
       pageIndex: Double,
       pageSize: Option[Double] = None
-  ): Cmd.One[Either[ErrorJson, Page[ClientNode]]] =
+  ): IO[Either[ErrorJson, Page[ClientNode]]] =
     ClientNodeJson.fetchRecent(pageIndex, pageSize)
       .map(_.map(PageBackend.toModel(_, toModel)))
 
   def add(
       nodeId: Id[Node],
       asChild: Option[ChildNodeInputJson]
-  ): Cmd.One[Either[ErrorJson, ClientAdded]] =
+  ): IO[Either[ErrorJson, ClientAdded]] =
     ClientNodeJson.add(nodeId, asChild)
-      .map(_.map(ClientAdded(_)))
+      .flatMap(_.traverse(ClientAdded.decode))
 
-  def resetPassword(id: Id[Node]): Cmd.One[Either[ErrorJson, String]] =
+  def resetPassword(id: Id[Node]): IO[Either[ErrorJson, String]] =
     Commands.send(Commands.ResetClientPassword(id))
 
   def edit(
       id: Id[Node],
       disabled: Option[Boolean]
-  ): Cmd.One[Either[ErrorJson, ClientNode]] =
+  ): IO[Either[ErrorJson, ClientNode]] =
     ClientNodeJson.edit(id, disabled).map(_.map(toModel))
 }
 
@@ -84,10 +86,10 @@ trait ClientAddedJson extends js.Object {
   val node: NodeJson = js.native
 }
 
-case class ClientAdded(json: ClientAddedJson) {
+case class ClientAdded(json: ClientAddedJson, node: Node) {
   def password: String = json.password
   def client: ClientNode = ClientNodeBackend.toModel(json.client)
-  def node: Node = NodeBackend.toModel(json.node)
+
 }
 
 @js.native
@@ -102,4 +104,11 @@ object ActiveClientBackend {
       nodeId = Id(json.node_id),
       remoteAddr = json.remote_addr
     )
+}
+
+object ClientAdded {
+  def decode(json: ClientAddedJson): IO[ClientAdded] =
+    for {
+      node <- NodeBackend.toModel(json.node)
+    } yield ClientAdded(json, node)
 }

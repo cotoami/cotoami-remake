@@ -1,39 +1,48 @@
 package cotoami.backend
 
+import cats.effect.IO
+import cats.syntax.all.*
+
 import scala.scalajs.js
 
-import marubinotto.fui.Cmd
 import marubinotto.facade.Nullable
 import marubinotto.libs.tauri
 
 import cotoami.models.{Id, Node}
 
-case class DatabaseInfo(json: DatabaseInfoJson) {
+case class DatabaseInfo(
+    json: DatabaseInfoJson,
+    initialDataset: InitialDataset
+) {
   def folder: String = json.folder
   def localNodeId: Id[Node] = Id(json.local_node_id)
-  def initialDataset: InitialDataset = InitialDataset(json.initial_dataset)
   def newOwnerPassword: Option[String] =
     Nullable.toOption(json.new_owner_password)
 }
 
 object DatabaseInfo {
+  def decode(json: DatabaseInfoJson): IO[DatabaseInfo] =
+    for {
+      initialDataset <- InitialDataset.decode(json.initial_dataset)
+    } yield DatabaseInfo(json, initialDataset)
+
   def createDatabase(
       databaseName: String,
       baseFolder: String,
       folderName: String
-  ): Cmd.One[Either[ErrorJson, DatabaseInfo]] =
+  ): IO[Either[ErrorJson, DatabaseInfo]] =
     DatabaseInfoJson.createDatabase(databaseName, baseFolder, folderName)
-      .map(_.map(DatabaseInfo(_)))
+      .flatMap(_.traverse(DatabaseInfo.decode))
 
   def openDatabase(
       folder: String,
       ownerPassword: Option[String] = None
-  ): Cmd.One[Either[ErrorJson, DatabaseInfo]] =
+  ): IO[Either[ErrorJson, DatabaseInfo]] =
     DatabaseInfoJson.openDatabase(folder, ownerPassword)
-      .map(_.map(DatabaseInfo(_)))
+      .flatMap(_.traverse(DatabaseInfo.decode))
 
-  def newOwnerPassword: Cmd.One[Either[ErrorJson, String]] =
-    tauri.invokeCommand("new_owner_password")
+  def newOwnerPassword: IO[Either[ErrorJson, String]] =
+    tauri.invokeCommandIO("new_owner_password")
 }
 
 @js.native
@@ -49,9 +58,9 @@ object DatabaseInfoJson {
       databaseName: String,
       baseFolder: String,
       folderName: String
-  ): Cmd.One[Either[ErrorJson, DatabaseInfoJson]] =
+  ): IO[Either[ErrorJson, DatabaseInfoJson]] =
     tauri
-      .invokeCommand(
+      .invokeCommandIO(
         "create_database",
         js.Dynamic
           .literal(
@@ -64,9 +73,9 @@ object DatabaseInfoJson {
   def openDatabase(
       folder: String,
       ownerPassword: Option[String] = None
-  ): Cmd.One[Either[ErrorJson, DatabaseInfoJson]] =
+  ): IO[Either[ErrorJson, DatabaseInfoJson]] =
     tauri
-      .invokeCommand(
+      .invokeCommandIO(
         "open_database",
         js.Dynamic
           .literal(

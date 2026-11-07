@@ -1,27 +1,36 @@
 package cotoami.backend
 
+import cats.effect.IO
+import cats.syntax.all.*
+
 import scala.scalajs.js
-import marubinotto.fui.Cmd
 
 import cotoami.models.{Coto, GeoBounds, Scope}
 
-case class GeolocatedCotos(json: GeolocatedCotosJson) {
-  def cotos: js.Array[Coto] = json.cotos.map(CotoBackend.toModel(_))
-  def relatedData: CotosRelatedData = CotosRelatedData(json.related_data)
-}
+case class GeolocatedCotos(
+    json: GeolocatedCotosJson,
+    cotos: js.Array[Coto],
+    relatedData: CotosRelatedData
+)
 
 object GeolocatedCotos {
+  def decode(json: GeolocatedCotosJson): IO[GeolocatedCotos] =
+    for {
+      cotos <- decodeArray(json.cotos)(CotoBackend.toModel)
+      relatedData <- CotosRelatedData.decode(json.related_data)
+    } yield GeolocatedCotos(json, cotos, relatedData)
+
   def fetch(
       scope: Scope
-  ): Cmd.One[Either[ErrorJson, GeolocatedCotos]] =
+  ): IO[Either[ErrorJson, GeolocatedCotos]] =
     GeolocatedCotosJson.fetch(scope)
-      .map(_.map(GeolocatedCotos(_)))
+      .flatMap(_.traverse(GeolocatedCotos.decode))
 
   def inGeoBounds(
       bounds: GeoBounds
-  ): Cmd.One[Either[ErrorJson, GeolocatedCotos]] =
+  ): IO[Either[ErrorJson, GeolocatedCotos]] =
     GeolocatedCotosJson.inGeoBounds(bounds)
-      .map(_.map(GeolocatedCotos(_)))
+      .flatMap(_.traverse(GeolocatedCotos.decode))
 }
 
 @js.native
@@ -33,11 +42,11 @@ trait GeolocatedCotosJson extends js.Object {
 object GeolocatedCotosJson {
   def fetch(
       scope: Scope
-  ): Cmd.One[Either[ErrorJson, GeolocatedCotosJson]] =
+  ): IO[Either[ErrorJson, GeolocatedCotosJson]] =
     Commands.send(Commands.GeolocatedCotos(scope))
 
   def inGeoBounds(
       bounds: GeoBounds
-  ): Cmd.One[Either[ErrorJson, GeolocatedCotosJson]] =
+  ): IO[Either[ErrorJson, GeolocatedCotosJson]] =
     Commands.send(Commands.CotosInGeoBounds(bounds))
 }

@@ -1,9 +1,12 @@
 package cotoami.backend
 
+import cats.effect.IO
+import cats.syntax.all.*
+
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => jso}
 
-import marubinotto.fui.{Browser, Cmd}
+import marubinotto.fui.Browser
 import marubinotto.facade.Nullable
 
 import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Id, Ito}
@@ -49,7 +52,7 @@ object CotoJson {
   def post(
       input: CotoInput,
       postTo: Id[Cotonoma]
-  ): Cmd.One[Either[ErrorJson, CotoJson]] =
+  ): IO[Either[ErrorJson, CotoJson]] =
     Commands.send(Commands.PostCoto(input, postTo))
 
   def edit(
@@ -59,7 +62,7 @@ object CotoJson {
       mediaContent: Option[Option[(String, String)]],
       location: Option[Option[Geolocation]],
       timeRange: Option[Option[DateTimeRange]]
-  ): Cmd.One[Either[ErrorJson, CotoJson]] =
+  ): IO[Either[ErrorJson, CotoJson]] =
     Commands.send(
       Commands.EditCoto(
         id,
@@ -73,16 +76,16 @@ object CotoJson {
 
   def promote(
       id: Id[Coto]
-  ): Cmd.One[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
+  ): IO[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
     Commands.send(Commands.Promote(id))
 
-  def delete(id: Id[Coto]): Cmd.One[Either[ErrorJson, String]] =
+  def delete(id: Id[Coto]): IO[Either[ErrorJson, String]] =
     Commands.send(Commands.DeleteCoto(id))
 
   def repost(
       id: Id[Coto],
       dest: Id[Cotonoma]
-  ): Cmd.One[Either[ErrorJson, js.Tuple2[CotoJson, CotoJson]]] =
+  ): IO[Either[ErrorJson, js.Tuple2[CotoJson, CotoJson]]] =
     Commands.send(Commands.Repost(id, dest))
 
   def postSubcoto(
@@ -90,52 +93,54 @@ object CotoJson {
       input: CotoInput,
       postTo: Id[Cotonoma],
       order: Option[Int]
-  ): Cmd.One[Either[ErrorJson, js.Tuple2[CotoJson, ItoJson]]] =
+  ): IO[Either[ErrorJson, js.Tuple2[CotoJson, ItoJson]]] =
     Commands.send(Commands.PostSubcoto(sourceCotoId, input, postTo, order))
 }
 
 object CotoBackend {
-  def toModel(json: CotoJson): Coto =
-    Coto(
-      id = Id(json.uuid),
-      nodeId = Id(json.node_id),
-      postedInId = Nullable.toOption(json.posted_in_id).map(Id(_)),
-      postedById = Id(json.posted_by_id),
-      content = Nullable.toOption(json.content),
-      summary = Nullable.toOption(json.summary),
-      mediaBlob = (
-        Nullable.toOption(json.media_content),
-        Nullable.toOption(json.media_type)
-      ) match {
-        case (Some(content), Some(mediaType)) =>
-          Some((Browser.decodeBase64(content, mediaType), mediaType))
-        case _ => None
-      },
-      geolocation = (
-        Nullable.toOption(json.longitude),
-        Nullable.toOption(json.latitude)
-      ) match {
-        case (Some(longitude), Some(latitude)) =>
-          Some(Geolocation.fromLngLat((longitude, latitude)))
-        case _ => None
-      },
-      dateTimeRange = Nullable.toOption(json.datetime_start).map(start =>
-        DateTimeRange(start, Nullable.toOption(json.datetime_end))
-      ),
-      isCotonoma = json.is_cotonoma,
-      repostOfId = Nullable.toOption(json.repost_of_id).map(Id(_)),
-      repostedInIds = Nullable.toOption(json.reposted_in_ids)
-        .map(_.map(Id[Cotonoma](_)).toSeq),
-      createdAtUtcIso = json.created_at,
-      updatedAtUtcIso = json.updated_at
-    )
+  def toModel(json: CotoJson): IO[Coto] = {
+    val media = for {
+      content <- Nullable.toOption(json.media_content)
+      mediaType <- Nullable.toOption(json.media_type)
+    } yield (content, mediaType)
+    media.traverse { case (content, mediaType) =>
+      Browser.decodeBase64(content, mediaType).map(blob => (blob, mediaType))
+    }.map { mediaBlob =>
+      Coto(
+        id = Id(json.uuid),
+        nodeId = Id(json.node_id),
+        postedInId = Nullable.toOption(json.posted_in_id).map(Id(_)),
+        postedById = Id(json.posted_by_id),
+        content = Nullable.toOption(json.content),
+        summary = Nullable.toOption(json.summary),
+        mediaBlob = mediaBlob,
+        geolocation = (
+          Nullable.toOption(json.longitude),
+          Nullable.toOption(json.latitude)
+        ) match {
+          case (Some(longitude), Some(latitude)) =>
+            Some(Geolocation.fromLngLat((longitude, latitude)))
+          case _ => None
+        },
+        dateTimeRange = Nullable.toOption(json.datetime_start).map(start =>
+          DateTimeRange(start, Nullable.toOption(json.datetime_end))
+        ),
+        isCotonoma = json.is_cotonoma,
+        repostOfId = Nullable.toOption(json.repost_of_id).map(Id(_)),
+        repostedInIds = Nullable.toOption(json.reposted_in_ids)
+          .map(_.map(Id[Cotonoma](_)).toSeq),
+        createdAtUtcIso = json.created_at,
+        updatedAtUtcIso = json.updated_at
+      )
+    }
+  }
 
   def post(
       input: CotoInput,
       postTo: Id[Cotonoma]
-  ): Cmd.One[Either[ErrorJson, Coto]] =
+  ): IO[Either[ErrorJson, Coto]] =
     CotoJson.post(input, postTo)
-      .map(_.map(CotoBackend.toModel))
+      .flatMap(_.traverse(CotoBackend.toModel))
 
   def edit(
       id: Id[Coto],
@@ -144,30 +149,24 @@ object CotoBackend {
       mediaContent: Option[Option[(String, String)]],
       location: Option[Option[Geolocation]],
       timeRange: Option[Option[DateTimeRange]]
-  ): Cmd.One[Either[ErrorJson, Coto]] =
+  ): IO[Either[ErrorJson, Coto]] =
     CotoJson.edit(id, content, summary, mediaContent, location, timeRange)
-      .map(_.map(CotoBackend.toModel))
+      .flatMap(_.traverse(CotoBackend.toModel))
 
   def promote(
       id: Id[Coto]
-  ): Cmd.One[Either[ErrorJson, (Cotonoma, Coto)]] =
-    CotoJson.promote(id).map(
-      _.map(pair =>
-        (CotonomaBackend.toModel(pair._1), CotoBackend.toModel(pair._2))
-      )
-    )
+  ): IO[Either[ErrorJson, (Cotonoma, Coto)]] =
+    CotoJson.promote(id).flatMap(_.traverse(CotonomaBackend.decodePair))
 
-  def delete(id: Id[Coto]): Cmd.One[Either[ErrorJson, Id[Coto]]] =
+  def delete(id: Id[Coto]): IO[Either[ErrorJson, Id[Coto]]] =
     CotoJson.delete(id).map(_.map(Id(_)))
 
   def repost(
       id: Id[Coto],
       dest: Id[Cotonoma]
-  ): Cmd.One[Either[ErrorJson, (Coto, Coto)]] =
-    CotoJson.repost(id, dest).map(
-      _.map(pair =>
-        (CotoBackend.toModel(pair._1), CotoBackend.toModel(pair._2))
-      )
+  ): IO[Either[ErrorJson, (Coto, Coto)]] =
+    CotoJson.repost(id, dest).flatMap(
+      _.traverse(pair => (toModel(pair._1), toModel(pair._2)).tupled)
     )
 
   def postSubcoto(
@@ -175,8 +174,10 @@ object CotoBackend {
       input: CotoInput,
       postTo: Id[Cotonoma],
       order: Option[Int]
-  ): Cmd.One[Either[ErrorJson, (Coto, Ito)]] =
-    CotoJson.postSubcoto(sourceCotoId, input, postTo, order).map(
-      _.map(pair => (CotoBackend.toModel(pair._1), ItoBackend.toModel(pair._2)))
+  ): IO[Either[ErrorJson, (Coto, Ito)]] =
+    CotoJson.postSubcoto(sourceCotoId, input, postTo, order).flatMap(
+      _.traverse(pair =>
+        toModel(pair._1).map(coto => (coto, ItoBackend.toModel(pair._2)))
+      )
     )
 }

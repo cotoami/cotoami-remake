@@ -35,7 +35,7 @@ object NavCotonomas {
 
     def fetchMoreRecent(using
         context: Context
-    ): (Model, Cmd.One[AppMsg]) =
+    ): (Model, Cmd[AppMsg]) =
       if (loadingRecent)
         (this, Cmd.none)
       else
@@ -48,7 +48,7 @@ object NavCotonomas {
           )
           .getOrElse((this, Cmd.none))
 
-    def fetchSubs(using context: Context): (Model, Cmd.One[AppMsg]) =
+    def fetchSubs(using context: Context): (Model, Cmd[AppMsg]) =
       (
         copy(loadingSubs = true),
         context.repo.fetchSubCotonomas(0)
@@ -57,7 +57,7 @@ object NavCotonomas {
 
     def fetchMoreSubs(using
         context: Context
-    ): (Model, Cmd.One[AppMsg]) =
+    ): (Model, Cmd[AppMsg]) =
       if (loadingSubs)
         (this, Cmd.none)
       else
@@ -149,7 +149,7 @@ object NavCotonomas {
           a(
             className := "cotonoma home",
             title := s"${currentNode.name} home",
-            onClick := ((e) => {
+            onClick := (e => {
               e.preventDefault()
               dispatch(AppMsg.UnfocusCotonoma)
             })
@@ -253,7 +253,7 @@ object NavCotonomas {
         a(
           className := "cotonoma",
           title := cotonoma.name,
-          onClick := ((e) => {
+          onClick := (e => {
             e.preventDefault()
             dispatch(AppMsg.FocusCotonoma(cotonoma))
           })

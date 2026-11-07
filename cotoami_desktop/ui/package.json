@@ -39,7 +39,11 @@
   },
   "devDependencies": {
     "@scala-js/vite-plugin-scalajs": "^1.0.0",
+    "jsdom": "30.1.3",
     "sass": "^1.101.0",
     "vite": "^7.3.5"
+  },
+  "engines": {
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
   }
 }

@@ -29,7 +29,8 @@ object Msg {
 
   // Backend events
   case class BackendMessage(message: MessageJson) extends Msg
-  case class BackendChange(log: ChangelogEntryJson) extends Msg
+  case class BackendChange(result: Either[Throwable, ChangelogEntry])
+      extends Msg
   case class BackendEvent(event: LocalNodeEventJson) extends Msg
 
   // App init

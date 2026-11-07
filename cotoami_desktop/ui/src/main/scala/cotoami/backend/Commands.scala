@@ -3,15 +3,15 @@ package cotoami.backend
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => jso}
 
-import marubinotto.fui.Cmd
+import cats.effect.IO
 import marubinotto.libs.tauri
 
 import cotoami.models._
 
 object Commands {
 
-  def send[T](command: js.Object): Cmd.One[Either[ErrorJson, T]] =
-    tauri.invokeCommand(
+  def send[T](command: js.Object): IO[Either[ErrorJson, T]] =
+    tauri.invokeCommandIO(
       "node_command",
       js.Dynamic.literal(command = command)
     ).map((e: Either[ErrorJson, String]) =>
@@ -145,7 +145,7 @@ object Commands {
     jso(CotonomasByPrefix =
       jso(
         prefix = prefix,
-        nodes = nodes.map(_.map(_.uuid)).getOrElse((null))
+        nodes = nodes.map(_.map(_.uuid)).getOrElse(null)
       )
     )
 
@@ -153,7 +153,7 @@ object Commands {
     jso(CotonomasByPartial =
       jso(
         partial = partial,
-        nodes = nodes.map(_.map(_.uuid)).getOrElse((null))
+        nodes = nodes.map(_.map(_.uuid)).getOrElse(null)
       )
     )
 

@@ -1,5 +1,6 @@
 package cotoami.subparts
 
+import marubinotto.fui.toCmd
 import scala.util.chaining._
 
 import slinky.core.facade.ReactElement
@@ -39,21 +40,16 @@ object SectionTimeline {
 
   case class Model(
       cotoIds: PaginatedIds[Coto] = PaginatedIds(),
-
       // Coto/Cotonoma inputs waiting to be posted
       waitingPosts: WaitingPosts = WaitingPosts(),
-
       // Filter criteria for cotos in this timeline
       onlyCotonomas: Boolean = false,
       queryInput: String = "",
       queryInputKey: Int = 0,
-
       // To avoid rendering old results unintentionally
       fetchNumber: Int = 0,
-
       // To restore the scroll position when back to timeline
       scrollPos: Option[(Id[Cotonoma], Double)] = None,
-
       // State
       atLatest: Boolean = true,
       newPostsAvailable: Boolean = false,
@@ -134,7 +130,7 @@ object SectionTimeline {
         )
       }
 
-    def fetchMore(using context: Context): (Model, Cmd.One[AppMsg]) =
+    def fetchMore(using context: Context): (Model, Cmd[AppMsg]) =
       if (loading)
         (this, Cmd.none)
       else
@@ -275,7 +271,7 @@ object SectionTimeline {
         val focusedNodeId = context.repo.nodes.focusedId
         default.copy(
           _1 = model.copy(markingAsRead = true),
-          _3 = NodeBackend.markAsRead(focusedNodeId)
+          _3 = NodeBackend.markAsRead(focusedNodeId).toCmd
             .map(Msg.MarkedAsRead(focusedNodeId, _).into)
         )
       }
@@ -331,13 +327,13 @@ object SectionTimeline {
           toScope(nodeId, cotonomaId),
           onlyCotonomas,
           pageIndex
-        )
+        ).toCmd
       case _ =>
         PaginatedCotos.fetchRecent(
           toScope(nodeId, cotonomaId),
           onlyCotonomas,
           pageIndex
-        )
+        ).toCmd
     }).map(Msg.Fetched(fetchNumber, _).into)
 
   private def toScope(
@@ -448,7 +444,7 @@ object SectionTimeline {
           name := "query",
           key := model.queryInputKey.toString(),
           defaultValue := model.queryInput,
-          onChange := ((e) => dispatch(Msg.QueryInput(e.target.value))),
+          onChange := (e => dispatch(Msg.QueryInput(e.target.value))),
           onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart)),
           onCompositionEnd := (e =>
             dispatch(Msg.ImeCompositionEnd(e.target.value))
@@ -571,7 +567,7 @@ object SectionTimeline {
     coto.postedInId.flatMap(cotonomas.get).map(cotonoma =>
       a(
         className := "reposted-in",
-        onClick := ((e) => {
+        onClick := (e => {
           e.preventDefault()
           dispatch(AppMsg.FocusCotonoma(cotonoma))
         })

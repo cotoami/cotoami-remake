@@ -4,8 +4,8 @@ import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 import scala.util.chaining._
 
+import marubinotto.fui.toCmd
 import cats.effect.IO
-import cats.effect.std.Dispatcher
 
 import org.scalajs.dom
 import org.scalajs.dom.URL
@@ -23,12 +23,7 @@ import marubinotto.fui.{Browser, Cmd, Program, Sub}
 import marubinotto.libs.tauri
 
 import cotoami.{Context, Into, Model => CotoamiModel, Msg => AppMsg}
-import cotoami.backend.{
-  ChangelogEntryJson,
-  DatabaseInfo,
-  ErrorJson,
-  SystemInfoJson
-}
+import cotoami.backend.{ChangelogEntry, DatabaseInfo, ErrorJson, SystemInfoJson}
 import cotoami.models.{Cotonoma, I18n, Id, Node, UiState}
 import cotoami.repository.Root
 import cotoami.subparts.EditorCoto.CotoForm
@@ -93,7 +88,8 @@ object App {
     case class DatabaseOpened(result: Either[ErrorJson, DatabaseInfo])
         extends Msg
     case class ThemeChanged(theme: String) extends Msg
-    case class BackendChange(log: ChangelogEntryJson) extends Msg
+    case class BackendChange(result: Either[Throwable, ChangelogEntry])
+        extends Msg
     case class AppMsg(msg: cotoami.Msg) extends Msg
     case class CotonomaSelectMsg(msg: CotonomaSelect.Msg) extends Msg
   }
@@ -121,10 +117,10 @@ object App {
   def isCurrentWindow(url: URL): Boolean =
     propsFromUrl(url).nonEmpty
 
-  def run(container: dom.Element, dispatcher: Dispatcher[IO]): IO[Unit] =
+  def run(container: dom.Element): IO[Unit] =
     propsFromUrl(new URL(dom.window.location.href))
       .map(props =>
-        Browser.runProgram(
+        Browser.run(
           container,
           Program(
             init(props),
@@ -132,8 +128,7 @@ object App {
               view(props, model, dispatch),
             update,
             subscriptions
-          ),
-          dispatcher
+          )
         )
       )
       .getOrElse(IO(ReactDOMClient.createRoot(container).render(div())))
@@ -187,7 +182,7 @@ object App {
       value.flatMap(json =>
         decode[BrowserInitialState](json) match {
           case Right(state) => Some(state)
-          case Left(error) =>
+          case Left(error)  =>
             println(s"Invalid browser initial state: ${error.toString()}")
             None
         }
@@ -228,14 +223,14 @@ object App {
         pendingFocus = props.initialFocus,
         currentFocus = None
       ),
-      Cmd.Batch(
-        UiState.restore.map(Msg.UiStateRestored.apply),
-        SystemInfoJson.fetch().map(Msg.SystemInfoFetched.apply),
+      UiState.restore.map(Msg.UiStateRestored.apply) ++
+        SystemInfoJson.fetch().toCmd.map(Msg.SystemInfoFetched.apply) ++
         props.databaseFolder
-          .map(DatabaseInfo.openDatabase(_).map(Msg.DatabaseOpened.apply))
-          .getOrElse(Cmd.none),
+          .map(
+            DatabaseInfo.openDatabase(_).map(Msg.DatabaseOpened.apply).toCmd
+          )
+          .getOrElse(Cmd.none) ++
         flowInputCmd.map(Msg.AppMsg.apply)
-      )
     )
   }
 
@@ -296,7 +291,7 @@ object App {
           .getOrElse(uiState.getOrElse(UiState()))
         (
           model.copy(app = model.app.copy(uiState = Some(restored))),
-          Browser.setHtmlTheme(restored.theme)
+          Cmd.exec(Browser.setHtmlTheme(restored.theme))
         )
       }
 
@@ -313,10 +308,21 @@ object App {
 
       case Msg.ThemeChanged(theme) =>
         updateUiState(model, _.copy(theme = theme)).pipe { case (model, cmd) =>
-          (model, Browser.setHtmlTheme[Msg](theme) ++ cmd)
+          (model, Cmd.exec(Browser.setHtmlTheme(theme)) ++ cmd)
         }
 
-      case Msg.BackendChange(log) =>
+      case Msg.BackendChange(Left(error)) =>
+        (
+          model.copy(app =
+            model.app.error(
+              "Couldn't decode backend change.",
+              Some(error.toString)
+            )
+          ),
+          Browser.send(Msg.AppMsg(cotoami.Msg.ReloadRepository))
+        )
+
+      case Msg.BackendChange(Right(log)) =>
         Changelog.apply(log, model.app).pipe { case (app, cmd) =>
           (model.copy(app = app), cmd.map(Msg.AppMsg.apply))
         }
@@ -638,7 +644,7 @@ object App {
   }
 
   private def subscriptions(model: Model): Sub[Msg] =
-    tauri.listen[ChangelogEntryJson]("backend-change")
+    ChangelogEntry.subscription
       .map(Msg.BackendChange.apply)
       .combine(
         tauri.listen[BrowserThemeJson](ThemeEvent)

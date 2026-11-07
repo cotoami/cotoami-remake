@@ -1,8 +1,8 @@
 package cotoami.backend
 
+import cats.effect.IO
 import scala.scalajs.js
 
-import marubinotto.fui.Cmd
 import cotoami.models.{ChildNode, Id, Node}
 
 @js.native
@@ -15,13 +15,13 @@ trait ChildNodeJson extends js.Object {
 }
 
 object ChildNodeJson {
-  def fetch(id: Id[Node]): Cmd.One[Either[ErrorJson, ChildNodeJson]] =
+  def fetch(id: Id[Node]): IO[Either[ErrorJson, ChildNodeJson]] =
     Commands.send(Commands.ChildNode(id))
 
   def edit(
       id: Id[Node],
       values: ChildNodeInputJson
-  ): Cmd.One[Either[ErrorJson, ChildNodeJson]] =
+  ): IO[Either[ErrorJson, ChildNodeJson]] =
     Commands.send(Commands.EditChild(id, values))
 }
 
@@ -35,13 +35,13 @@ object ChildNodeBackend {
       _canPostCotonomas = json.can_post_cotonomas
     )
 
-  def fetch(id: Id[Node]): Cmd.One[Either[ErrorJson, ChildNode]] =
+  def fetch(id: Id[Node]): IO[Either[ErrorJson, ChildNode]] =
     ChildNodeJson.fetch(id).map(_.map(toModel))
 
   def edit(
       id: Id[Node],
       values: ChildNodeInputJson
-  ): Cmd.One[Either[ErrorJson, ChildNode]] =
+  ): IO[Either[ErrorJson, ChildNode]] =
     ChildNodeJson.edit(id, values).map(_.map(toModel))
 }
 

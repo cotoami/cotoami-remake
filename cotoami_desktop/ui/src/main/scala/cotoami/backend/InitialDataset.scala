@@ -1,20 +1,19 @@
 package cotoami.backend
 
+import cats.effect.IO
+import cats.syntax.all.*
+
 import scala.scalajs.js
 
-import marubinotto.fui.Cmd
 import marubinotto.libs.tauri
 
 import cotoami.models.{ActiveClient, Id, LocalNode, Node, ParentNode, Server}
 
-case class InitialDataset(json: InitialDatasetJson) {
+case class InitialDataset(
+    json: InitialDatasetJson,
+    nodes: Map[Id[Node], Node]
+) {
   def lastChangeNumber: Double = json.last_change_number
-
-  lazy val nodes: Map[Id[Node], Node] =
-    json.nodes
-      .map(NodeBackend.toModel)
-      .map(node => node.id -> node)
-      .toMap
 
   def localSettings: LocalNode = LocalNodeBackend.toModel(json.local_settings)
 
@@ -31,11 +30,18 @@ case class InitialDataset(json: InitialDatasetJson) {
 }
 
 object InitialDataset {
+  def decode(json: InitialDatasetJson): IO[InitialDataset] =
+    for {
+      nodes <- decodeArray(json.nodes)(NodeBackend.toModel).map(
+        _.map(node => node.id -> node).toMap
+      )
+    } yield InitialDataset(json, nodes)
+
   def switchSelfNodeTo(
       parentId: Option[Id[Node]]
-  ): Cmd.One[Either[ErrorJson, InitialDataset]] =
+  ): IO[Either[ErrorJson, InitialDataset]] =
     InitialDatasetJson.switchSelfNodeTo(parentId)
-      .map(_.map(InitialDataset(_)))
+      .flatMap(_.traverse(InitialDataset.decode))
 }
 
 @js.native
@@ -51,9 +57,9 @@ trait InitialDatasetJson extends js.Object {
 object InitialDatasetJson {
   def switchSelfNodeTo(
       parentId: Option[Id[Node]]
-  ): Cmd.One[Either[ErrorJson, InitialDatasetJson]] =
+  ): IO[Either[ErrorJson, InitialDatasetJson]] =
     tauri
-      .invokeCommand(
+      .invokeCommandIO(
         "operate_as",
         js.Dynamic.literal(
           parentId = parentId.map(_.uuid).getOrElse(null)

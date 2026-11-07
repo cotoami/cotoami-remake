@@ -1,5 +1,7 @@
 package cotoami.subparts
 
+import marubinotto.fui.toCmd
+
 import scala.util.chaining._
 import scala.scalajs.js
 import org.scalajs.dom
@@ -14,9 +16,9 @@ import slinky.web.SyntheticMouseEvent
 import marubinotto.fui.{Browser, Cmd}
 import marubinotto.Validation
 import marubinotto.components.{
-  MarkdownEditor,
   materialSymbol,
   toolButton,
+  MarkdownEditor,
   ScrollArea,
   SplitPane
 }
@@ -70,27 +72,25 @@ object EditorCoto {
           Validation.Result(errors)
         }
 
-      def scanMediaMetadata: Cmd.Batch[Msg] =
+      def scanMediaMetadata: Cmd[Msg] =
         mediaBlob.map(blob =>
-          Cmd.Batch(
-            Geolocation.fromExif(blob).map {
-              case Right(location) =>
-                Msg.ExifLocationDetected(Right(location))
-              case Left(t) => Msg.ExifLocationDetected(Left(t.toString))
-            },
+          Geolocation.fromExif(blob).map {
+            case Right(location) =>
+              Msg.ExifLocationDetected(Right(location))
+            case Left(t) => Msg.ExifLocationDetected(Left(t.toString))
+          } ++
             DateTimeRange.fromExif(blob).map {
               case Right(timeRange) =>
                 Msg.ExifDateTimeDetected(Right(timeRange))
               case Left(t) => Msg.ExifDateTimeDetected(Left(t.toString))
             }
-          )
-        ).getOrElse(Cmd.Batch())
+        ).getOrElse(Cmd.none)
 
-      def encodeMedia: (Model, Cmd.One[Msg]) =
+      def encodeMedia: (Model, Cmd[Msg]) =
         mediaBlob.map { blob =>
           (
             copy(encodingMedia = true),
-            Browser.encodeAsBase64(blob, true).map {
+            Browser.encodeAsBase64(blob, true).toCmd.map {
               case Right(base64) =>
                 Msg.MediaContentEncoded(Right((base64, blob.`type`)))
               case Left(_) =>
@@ -180,7 +180,7 @@ object EditorCoto {
             .pipe { case (model, encodeMedia) =>
               default.copy(
                 _1 = model,
-                _3 = model.scanMediaMetadata :+ encodeMedia
+                _3 = model.scanMediaMetadata ++ encodeMedia
               )
             }
 
@@ -330,9 +330,9 @@ object EditorCoto {
           form = form,
           summaryPlaceholder = context.i18n.text.EditorCoto_placeholder_summary,
           contentPlaceholder =
-            (if (form.isCotonoma)
-               context.i18n.text.EditorCoto_placeholder_cotonomaContent
-             else context.i18n.text.EditorCoto_placeholder_coto),
+            if (form.isCotonoma)
+              context.i18n.text.EditorCoto_placeholder_cotonomaContent
+            else context.i18n.text.EditorCoto_placeholder_coto,
           onCtrlEnter = onCtrlEnter,
           onFocus = onFocus,
           onBlur = onBlur,
@@ -626,7 +626,7 @@ object EditorCoto {
                 symbol = "image",
                 tip = Some("From Image"),
                 tipPlacement = "left",
-                onClick = (_ => dispatch(CotoForm.Msg.UseMediaDateTime))
+                onClick = _ => dispatch(CotoForm.Msg.UseMediaDateTime)
               )
             }
           ),
@@ -685,7 +685,7 @@ object EditorCoto {
                 symbol = "public",
                 tip = Some("From Map"),
                 tipPlacement = "left",
-                onClick = (_ => dispatch(CotoForm.Msg.UseGeomapLocation))
+                onClick = _ => dispatch(CotoForm.Msg.UseGeomapLocation)
               )
             },
             Option.when(form.isMediaLocationNotUsed) {
@@ -694,7 +694,7 @@ object EditorCoto {
                 symbol = "image",
                 tip = Some("From Image"),
                 tipPlacement = "left",
-                onClick = (_ => dispatch(CotoForm.Msg.UseMediaLocation))
+                onClick = _ => dispatch(CotoForm.Msg.UseMediaLocation)
               )
             }
           ),
@@ -744,7 +744,7 @@ object EditorCoto {
         case None           => !name.isEmpty()
       }
 
-      def validate(nodeId: Id[Node]): (Model, Cmd.One[Msg]) = {
+      def validate(nodeId: Id[Node]): (Model, Cmd[Msg]) = {
         val (validation, cmd) =
           if (edited)
             Cotonoma.validateName(name) match {
@@ -753,13 +753,17 @@ object EditorCoto {
                   // Now that the local validation has passed,
                   // wait for backend validation to be done.
                   Validation.Result.notYetValidated,
-                  CotonomaBackend.fetchByName(name, nodeId)
+                  CotonomaBackend.fetchByName(name, nodeId).toCmd
                     .map(Msg.CotonomaByName(name, _))
                 )
-              case errors => (Validation.Result(errors), Cmd.none)
+              case errors =>
+                (Validation.Result(errors), Cmd.none)
             }
           else
-            (Validation.Result.notYetValidated, Cmd.none)
+            (
+              Validation.Result.notYetValidated,
+              Cmd.none
+            )
 
         (copy(validation = validation), cmd)
       }
@@ -857,10 +861,10 @@ object EditorCoto {
       LocalDraftNameInput(
         model = model,
         placeholder =
-          (if (model.isNew)
-             context.i18n.text.EditorCoto_placeholder_newCotonomaName
-           else
-             context.i18n.text.EditorCoto_placeholder_cotonomaName),
+          if (model.isNew)
+            context.i18n.text.EditorCoto_placeholder_newCotonomaName
+          else
+            context.i18n.text.EditorCoto_placeholder_cotonomaName,
         onFocus = onFocus,
         onBlur = onBlur,
         onCtrlEnter = onCtrlEnter,

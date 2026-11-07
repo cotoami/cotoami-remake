@@ -1,5 +1,8 @@
 package cotoami.subparts.modals
 
+import marubinotto.fui.toCmd
+import cats.syntax.all.*
+
 import scala.util.chaining._
 import scala.scalajs.js
 import slinky.core.facade.ReactElement
@@ -31,7 +34,6 @@ object ModalWelcome {
 
   case class Model(
       appUpdate: Option[tauri.updater.Update],
-
       // New database
       databaseName: String = "",
       baseFolder: String = "",
@@ -39,12 +41,10 @@ object ModalWelcome {
       folderNameValidation: Validation.Result =
         Validation.Result.notYetValidated,
       newDatabaseFolder: Option[String] = None,
-
       // Open an existing database
       databaseFolder: String = "",
       databaseFolderValidation: Validation.Result =
         Validation.Result.notYetValidated,
-
       // Shared
       processing: Boolean = false,
       error: Option[String] = None
@@ -55,7 +55,7 @@ object ModalWelcome {
       else
         Validation.Result(Node.validateName(databaseName))
 
-    def validateNewFolder: Cmd.One[AppMsg] =
+    def validateNewFolder: Cmd[AppMsg] =
       if (!baseFolder.isBlank && !folderName.isBlank)
         tauri
           .invokeCommand(
@@ -69,7 +69,7 @@ object ModalWelcome {
       else
         Cmd.none
 
-    def validateDatabaseFolder: Cmd.One[AppMsg] =
+    def validateDatabaseFolder: Cmd[AppMsg] =
       if (!databaseFolder.isBlank)
         tauri
           .invokeCommand(
@@ -98,7 +98,7 @@ object ModalWelcome {
     ): (Model, Cmd[AppMsg]) =
       (
         copy(processing = true),
-        DatabaseInfo.openDatabase(folder, ownerPassword)
+        DatabaseInfo.openDatabase(folder, ownerPassword).toCmd
           .map(Msg.DatabaseOpened(folder, _).into)
       )
   }
@@ -217,7 +217,7 @@ object ModalWelcome {
             model.databaseName,
             model.baseFolder,
             model.folderName
-          ).map(
+          ).toCmd.map(
             Msg.DatabaseOpened(model.newDatabaseFolder.getOrElse(""), _).into
           )
         )
@@ -280,17 +280,19 @@ object ModalWelcome {
           if (e.code == "invalid-owner-password") {
             val targetNode = e.params.get("node")
               .map(_.asInstanceOf[NodeJson])
-              .map(NodeBackend.toModel)
+
             (
               model,
-              Modal.open(
-                Modal.InputPassword(
-                  password => Msg.OpenDatabaseIn(folder, Some(password)).into,
-                  context.i18n.text.ModalInputOwnerPassword_title,
-                  Some(context.i18n.text.ModalInputOwnerPassword_message),
-                  targetNode
-                )
-              )
+              targetNode.traverse(NodeBackend.toModel).map { decodedNode =>
+                Modal.Msg.OpenModal(
+                  Modal.InputPassword(
+                    password => Msg.OpenDatabaseIn(folder, Some(password)).into,
+                    context.i18n.text.ModalInputOwnerPassword_title,
+                    Some(context.i18n.text.ModalInputOwnerPassword_message),
+                    decodedNode
+                  )
+                ).into
+              }.toCmd
             )
           } else
             (
@@ -397,7 +399,6 @@ object ModalWelcome {
           inputErrors = Some(model.validateDatabaseName),
           onInput = input => dispatch(Msg.DatabaseNameInput(input))
         ),
-
         // Base folder
         field(
           name = context.i18n.text.ModalWelcome_new_baseFolder
@@ -411,7 +412,6 @@ object ModalWelcome {
             )(materialSymbol("folder"))
           )
         ),
-
         // Folder name
         fieldInput(
           name = context.i18n.text.ModalWelcome_new_folderName,
@@ -419,7 +419,6 @@ object ModalWelcome {
           inputErrors = Some(model.folderNameValidation),
           onInput = input => dispatch(Msg.FolderNameInput(input))
         ),
-
         // Create button
         div(className := "buttons")(
           button(
@@ -454,7 +453,6 @@ object ModalWelcome {
           ),
           Validation.sectionValidationError(model.databaseFolderValidation)
         ),
-
         // Open
         div(className := "buttons")(
           button(

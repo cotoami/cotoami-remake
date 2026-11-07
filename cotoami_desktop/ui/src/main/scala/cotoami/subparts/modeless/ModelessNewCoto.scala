@@ -1,5 +1,7 @@
 package cotoami.subparts.modeless
 
+import marubinotto.fui.toCmd
+
 import scala.util.chaining._
 
 import slinky.core.facade.{Fragment, ReactElement}
@@ -31,18 +33,20 @@ object ModelessNewCoto {
     def post(postTo: Cotonoma): (Model, Cmd.One[AppMsg]) =
       (
         copy(posting = true),
-        CotoBackend.post(cotoForm.toBackendInput, postTo.id)
+        CotoBackend.post(cotoForm.toBackendInput, postTo.id).toCmd
           .map(Msg.Posted(_).into)
       )
 
     def save: Cmd.One[AppMsg] =
-      Browser.setLocalStorage(
-        SectionFlowInput.DraftStorageKey,
-        cotoForm.contentInput
+      Cmd.exec(
+        Browser.setLocalStorage(
+          SectionFlowInput.DraftStorageKey,
+          cotoForm.contentInput
+        )
       )
 
     def restore: Cmd.One[AppMsg] =
-      Browser.getLocalStorage(SectionFlowInput.DraftStorageKey)
+      Browser.getLocalStorage(SectionFlowInput.DraftStorageKey).toCmd
         .map(Msg.ContentRestored(_).into)
   }
 
@@ -87,7 +91,7 @@ object ModelessNewCoto {
     Browser.send(Msg.Close.into)
 
   private def clearDraft: Cmd.One[AppMsg] =
-    Browser.removeLocalStorage(SectionFlowInput.DraftStorageKey)
+    Cmd.exec(Browser.removeLocalStorage(SectionFlowInput.DraftStorageKey))
 
   def update(msg: Msg, model: Option[Model])(using
       context: Context
@@ -142,7 +146,8 @@ object ModelessNewCoto {
         current.cotoForm.pipe { form =>
           if (form.contentInput.isBlank)
             default.copy(
-              _1 = Some(current.copy(cotoForm = form.copy(contentInput = content)))
+              _1 =
+                Some(current.copy(cotoForm = form.copy(contentInput = content)))
             )
           else
             default

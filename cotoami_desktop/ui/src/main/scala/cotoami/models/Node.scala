@@ -3,6 +3,7 @@ package cotoami.models
 import org.scalajs.dom
 import java.time.Instant
 
+import cats.effect.IO
 import marubinotto.fui.Browser
 import marubinotto.Validation
 
@@ -27,10 +28,10 @@ case class Node(
 
   lazy val iconUrl: String = dom.URL.createObjectURL(icon)
 
-  def setIcon(icon: String): Node = {
+  def setIcon(icon: dom.Blob): Node = {
     revokeIconUrl()
     copy(
-      icon = Node.decodeBase64Icon(icon),
+      icon = icon,
       version = version + 1
     )
   }
@@ -54,7 +55,7 @@ object Node {
 
   final val IconMimeType = "image/png"
 
-  def decodeBase64Icon(icon: String): dom.Blob =
+  def decodeBase64Icon(icon: String): IO[dom.Blob] =
     Browser.decodeBase64(icon, IconMimeType)
 
   def validateName(name: String): Seq[Validation.Error] =

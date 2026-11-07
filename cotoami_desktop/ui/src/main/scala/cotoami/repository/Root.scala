@@ -1,5 +1,6 @@
 package cotoami.repository
 
+import marubinotto.fui.toCmd
 import scala.util.chaining._
 import scala.util.{Failure, Success}
 import scala.collection.immutable.HashSet
@@ -18,13 +19,11 @@ import cotoami.backend._
 
 case class Root(
     lastChangeNumber: Double = 0,
-
     // Entities
     nodes: Nodes = Nodes(),
     cotonomas: Cotonomas = Cotonomas(),
     cotos: Cotos = Cotos(),
     itos: Itos = Itos(),
-
     // Processing state
     graphLoading: HashSet[Id[Coto]] = HashSet.empty,
     graphLoaded: HashSet[Id[Coto]] = HashSet.empty,
@@ -54,8 +53,8 @@ case class Root(
 
   def currentFocus: Option[(Node, Option[Cotonoma])] =
     (nodes.focused, cotonomas.focused) match {
-      case (None, None)       => None
-      case (Some(node), None) => Some((node, None))
+      case (None, None)        => None
+      case (Some(node), None)  => Some((node, None))
       case (_, Some(cotonoma)) =>
         nodes.get(cotonoma.nodeId) match {
           case Some(node) => Some((node, Some(cotonoma)))
@@ -70,8 +69,8 @@ case class Root(
 
   def inFocus(coto: Coto): Boolean =
     (nodes.focusedId, cotonomas.focusedId) match {
-      case (None, None)         => true
-      case (Some(nodeId), None) => coto.nodeId == nodeId
+      case (None, None)          => true
+      case (Some(nodeId), None)  => coto.nodeId == nodeId
       case (_, Some(cotonomaId)) =>
         coto.postedInIds.contains(cotonomaId) || (
           // if the coto is the current cotonoma itself
@@ -118,7 +117,9 @@ case class Root(
 
   def deleteCoto(id: Id[Coto]): Root =
     // Delete the reposts first if they exist
-    cotos.repostsOf(id).foldLeft(this)((acc, repost) => acc.deleteCoto(repost.id))
+    cotos.repostsOf(id).foldLeft(this)((acc, repost) =>
+      acc.deleteCoto(repost.id)
+    )
       // then, delete the coto (which could be a cotonoma)
       // and the itos to/from the coto.
       .modify(_.cotos).using(_.delete(id))
@@ -207,7 +208,7 @@ case class Root(
   def touchCotonoma(
       id: Id[Cotonoma],
       updatedAtUtcIso: String
-  ): (Root, Cmd.One[AppMsg]) = {
+  ): (Root, Cmd[AppMsg]) = {
     val repo = this.modify(_.cotonomas).using(_.touch(id, updatedAtUtcIso))
     repo.cotonomas.get(id)
       .map { cotonoma =>
@@ -226,13 +227,15 @@ case class Root(
         recent
     }
 
-  def refreshCurrentCotonoma: Cmd.One[AppMsg] =
-    currentCotonomaId.map(Root.fetchCotonomaDetails).getOrElse(Cmd.none)
+  def refreshCurrentCotonoma: Cmd[AppMsg] =
+    currentCotonomaId.map(Root.fetchCotonomaDetails).getOrElse(
+      Cmd.none
+    )
 
   def fetchRecentCotonomas(
       pageIndex: Double
   ): Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
-    CotonomaBackend.fetchRecent(nodes.focusedId, pageIndex)
+    CotonomaBackend.fetchRecent(nodes.focusedId, pageIndex).toCmd
 
   def fetchMoreRecentCotonomas
       : Option[Cmd.One[Either[ErrorJson, Page[Cotonoma]]]] =
@@ -240,12 +243,11 @@ case class Root(
 
   def fetchSubCotonomas(
       pageIndex: Double
-  ): Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
-    cotonomas.focusedId.map(CotonomaBackend.fetchSubs(_, pageIndex))
+  ): Cmd[Either[ErrorJson, Page[Cotonoma]]] =
+    cotonomas.focusedId.map(CotonomaBackend.fetchSubs(_, pageIndex).toCmd)
       .getOrElse(Cmd.none)
 
-  def fetchMoreSubCotonomas
-      : Option[Cmd.One[Either[ErrorJson, Page[Cotonoma]]]] =
+  def fetchMoreSubCotonomas: Option[Cmd[Either[ErrorJson, Page[Cotonoma]]]] =
     cotonomas.subIds.nextPageIndex.map(fetchSubCotonomas)
 
   /////////////////////////////////////////////////////////////////////////////
@@ -309,7 +311,7 @@ case class Root(
       itos.connected(cotonoma.cotoId, cotoId)
     ).getOrElse(false)
 
-  def pin(cotoId: Id[Coto]): (Root, Cmd.One[AppMsg]) =
+  def pin(cotoId: Id[Coto]): (Root, Cmd[AppMsg]) =
     currentCotonoma.map(cotonoma =>
       (
         this.modify(_.pinning).using(_ + cotoId),
@@ -319,17 +321,17 @@ case class Root(
           None,
           None,
           None
-        )
+        ).toCmd
           .map(Root.Msg.Pinned(cotoId, _).into)
       )
     ).getOrElse((this, Cmd.none))
 
-  def fetchGraph: Cmd.One[AppMsg] =
+  def fetchGraph: Cmd[AppMsg] =
     currentCotonomaId
       .map(Root.fetchGraphFromCotonoma)
       .getOrElse(Cmd.none)
 
-  def lazyFetchGraphFrom(cotoId: Id[Coto]): Cmd.One[AppMsg] =
+  def lazyFetchGraphFrom(cotoId: Id[Coto]): Cmd[AppMsg] =
     if (
       !alreadyLoadedGraphFrom(cotoId) &&
       (
@@ -365,10 +367,10 @@ case class Root(
   lazy val geolocationInFocus: Option[CenterOrBounds] =
     cotos.focused.flatMap(_.geolocation) match {
       case Some(cotoLocation) => Some(Left(cotoLocation))
-      case None =>
+      case None               =>
         focusedCotonoma.map(_._2).flatMap(_.geolocation) match {
           case Some(center) => Some(Left(center))
-          case None => {
+          case None         => {
             val cotos = this.cotos.geolocated.map(_._1).filter(inFocus)
             Coto.centerOrBoundsOf(cotos)
           }
@@ -569,7 +571,7 @@ object Root {
       case Msg.Reconnect(serverId, password) =>
         (
           model,
-          ServerNodeBackend.edit(serverId, None, Some(password), None)
+          ServerNodeBackend.edit(serverId, None, Some(password), None).toCmd
             .map(Msg.Reconnected(_).into)
         )
 
@@ -716,41 +718,43 @@ object Root {
     }
 
   def fetchNodeDetails(id: Id[Node]): Cmd.One[AppMsg] =
-    NodeDetails.fetch(id).map(Msg.NodeDetailsFetched(_).into)
+    NodeDetails.fetch(id).toCmd.map(Msg.NodeDetailsFetched(_).into)
 
   def fetchUpdateCotonoma(id: Id[Cotonoma]): Cmd.One[AppMsg] =
-    CotonomaBackend.fetch(id).map(Root.Msg.UpdatedCotonomaFetched(_).into)
+    CotonomaBackend.fetch(id).toCmd.map(Root.Msg.UpdatedCotonomaFetched(_).into)
 
   def fetchCotonomaDetails(id: Id[Cotonoma]): Cmd.One[AppMsg] =
-    CotonomaDetails.fetch(id).map(Msg.CotonomaDetailsFetched(_).into)
+    CotonomaDetails.fetch(id).toCmd.map(Msg.CotonomaDetailsFetched(_).into)
 
   def fetchCotoDetails(id: Id[Coto]): Cmd.One[AppMsg] =
-    CotoDetails.fetch(id).map(Msg.CotoDetailsFetched(_).into)
+    CotoDetails.fetch(id).toCmd.map(Msg.CotoDetailsFetched(_).into)
 
   def fetchIto(id: Id[Ito]): Cmd.One[AppMsg] =
-    ItoBackend.fetch(id).map(Root.Msg.ItoFetched(_).into)
+    ItoBackend.fetch(id).toCmd.map(Root.Msg.ItoFetched(_).into)
 
   def fetchGraphFromCoto(coto: Id[Coto]): Cmd.One[AppMsg] =
-    CotoGraph.fetchFromCoto(coto).map(Msg.CotoGraphFetched(_).into)
+    CotoGraph.fetchFromCoto(coto).toCmd.map(Msg.CotoGraphFetched(_).into)
 
   def fetchGraphFromCotonoma(cotonoma: Id[Cotonoma]): Cmd.One[AppMsg] =
-    CotoGraph.fetchFromCotonoma(cotonoma).map(Msg.CotoGraphFetched(_).into)
+    CotoGraph.fetchFromCotonoma(cotonoma).toCmd.map(
+      Msg.CotoGraphFetched(_).into
+    )
 
   def deleteCoto(id: Id[Coto]): Cmd.One[AppMsg] =
-    CotoBackend.delete(id).map(Msg.CotoDeleted(id, _).into)
+    CotoBackend.delete(id).toCmd.map(Msg.CotoDeleted(id, _).into)
 
   def changeOrder(ito: Ito, newOrder: Int): Cmd.One[AppMsg] =
-    ItoBackend.changeOrder(ito.id, newOrder)
+    ItoBackend.changeOrder(ito.id, newOrder).toCmd
       .map(Msg.OrderChanged(ito.sourceCotoId, _).into)
 
   def fetchSiblingItoGroup(
       cotoId: Id[Coto],
       nodeId: Id[Node]
   ): Cmd.One[AppMsg] =
-    ItoBackend.fetchSiblings(cotoId, Some(nodeId))
+    ItoBackend.fetchSiblings(cotoId, Some(nodeId)).toCmd
       .map(Msg.SiblingItoGroupFetched(cotoId, nodeId, _).into)
 
   def fetchOthersLastPostedAt: Cmd.One[AppMsg] =
-    NodeBackend.fetchOthersLastPostedAt
+    NodeBackend.fetchOthersLastPostedAt.toCmd
       .map(Msg.OthersLastPostedAtFetched(_).into)
 }

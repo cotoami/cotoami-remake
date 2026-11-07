@@ -1,5 +1,6 @@
 package cotoami.browser
 
+import marubinotto.fui.toCmd
 import scala.scalajs.js
 
 import slinky.core.facade.ReactElement
@@ -76,7 +77,7 @@ object CotonomaSelect {
         else
           (
             model.copy(query = query, loading = true, error = None),
-            CotonomaBackend.fetchByPartial(query, None)
+            CotonomaBackend.fetchByPartial(query, None).toCmd
               .map(Msg.CotonomasFetched(query, _)),
             None
           )
@@ -163,7 +164,7 @@ object CotonomaSelect {
                 .get(Id[Node](dest.targetNodeId))
                 .flatMap(_.rootCotonomaId)
                 .map(cotonomaId =>
-                  CotonomaBackend.post(dest.name, None, None, cotonomaId)
+                  CotonomaBackend.post(dest.name, None, None, cotonomaId).toCmd
                     .map(Msg.CotonomaCreated(_))
                 )
                 .getOrElse(Cmd.none)

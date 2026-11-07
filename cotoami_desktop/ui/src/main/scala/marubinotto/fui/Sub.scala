@@ -5,7 +5,8 @@ import scala.scalajs.js
 import org.scalajs.dom.EventTarget
 
 import cats.MonoidK
-import cats.effect.IO
+import cats.syntax.functor.*
+import cats.effect.{Clock, IO, Resource}
 import cats.effect.std.Dispatcher
 import cats.effect.std.Queue
 
@@ -24,7 +25,7 @@ sealed trait Sub[+Msg] {
 }
 
 object Sub {
-  implicit object MonoidKSub extends MonoidK[Sub] {
+  given MonoidKSub: MonoidK[Sub] with {
     def empty[Msg]: Sub[Msg] = Sub.Empty
     def combineK[Msg](sub1: Sub[Msg], sub2: Sub[Msg]): Sub[Msg] =
       sub1.combine(sub2)
@@ -57,23 +58,20 @@ object Sub {
     collect(sub).toMap
   }
 
-  def fromCallback[Msg](
+  /** Register callbacks for the lifetime of the stream, releasing acquired resources on exit. */
+  def fromResource[Msg](
       id: String
-  )(subscribe: (Msg => Unit) => IO[IO[Unit]]): Sub[Msg] =
+  )(subscribe: (Msg => Unit) => Resource[IO, Unit]): Sub[Msg] =
     Impl(
       id,
       Stream.resource(Dispatcher.parallel[IO]).flatMap { dispatcher =>
-        Stream.eval(Queue.unbounded[IO, Option[Msg]]).flatMap { queue =>
+        Stream.eval(Queue.unbounded[IO, Msg]).flatMap { queue =>
           val emit: Msg => Unit =
-            msg => dispatcher.unsafeRunAndForget(queue.offer(Some(msg)))
-          val release =
-            subscribe(emit).handleErrorWith(error => queue.offer(None) *> IO.raiseError(error))
+            msg => dispatcher.unsafeRunAndForget(queue.offer(msg))
 
           Stream
-            .bracket(release)(cleanup =>
-              cleanup.guarantee(queue.offer(None))
-            )
-            .flatMap(_ => Stream.fromQueueNoneTerminated(queue))
+            .resource(subscribe(emit))
+            .flatMap(_ => Stream.fromQueueUnterminated(queue))
         }
       }
     )
@@ -84,18 +82,18 @@ object Sub {
   def every(interval: FiniteDuration, id: String): Sub[Long] =
     Impl[Long](
       id,
-      Stream.awakeEvery[IO](interval).map(_ => System.currentTimeMillis())
+      Stream.awakeEvery[IO](interval).evalMap(_ => Clock[IO].realTime.map(_.toMillis))
     )
 
   def fromEvent[Event, Msg](name: String, target: EventTarget)(
       toMsg: Event => Option[Msg]
   ): Sub[Msg] =
-    fromCallback(name + target.hashCode) { dispatch =>
-      IO {
+    fromResource(name + target.hashCode) { dispatch =>
+      Resource.make(IO {
         val listener: js.Function1[Event, ?] =
           (e: Event) => toMsg(e).map(dispatch)
         target.addEventListener(name, listener)
-        IO(target.removeEventListener(name, listener))
-      }
+        listener
+      })(listener => IO(target.removeEventListener(name, listener))).void
     }
 }

@@ -1,9 +1,11 @@
 package cotoami.backend
 
+import cats.effect.IO
+import cats.syntax.all.*
+
 import scala.scalajs.js
 import java.time.Instant
 
-import marubinotto.fui.Cmd
 import marubinotto.facade.Nullable
 import cotoami.models.{ChildNode, Coto, Cotonoma, Node}
 
@@ -18,25 +20,32 @@ trait SessionTokenJson extends js.Object {
   val expires_at: String = js.native
 }
 
-case class ClientNodeSession(json: ClientNodeSessionJson) {
+case class ClientNodeSession(
+    json: ClientNodeSessionJson,
+    server: Node,
+    serverRoot: Option[(Cotonoma, Coto)]
+) {
   def token: Option[SessionToken] =
     Nullable.toOption(json.token).map(SessionToken.apply)
-  def server: Node = NodeBackend.toModel(json.server)
-  def serverRoot: Option[(Cotonoma, Coto)] =
-    Nullable.toOption(json.server_root).map(pair =>
-      (CotonomaBackend.toModel(pair._1), CotoBackend.toModel(pair._2))
-    )
   def childPrivileges: Option[ChildNode] =
     Nullable.toOption(json.child_privileges).map(ChildNodeBackend.toModel)
 }
 
 object ClientNodeSession {
+  def decode(json: ClientNodeSessionJson): IO[ClientNodeSession] =
+    for {
+      server <- NodeBackend.toModel(json.server)
+      serverRoot <- Nullable.toOption(json.server_root).traverse(
+        CotonomaBackend.decodePair
+      )
+    } yield ClientNodeSession(json, server, serverRoot)
+
   def logIntoServer(
       url: String,
       password: Option[String]
-  ): Cmd.One[Either[ErrorJson, ClientNodeSession]] =
+  ): IO[Either[ErrorJson, ClientNodeSession]] =
     ClientNodeSessionJson.logIntoServer(url, password)
-      .map(_.map(ClientNodeSession(_)))
+      .flatMap(_.traverse(ClientNodeSession.decode))
 }
 
 @js.native
@@ -52,6 +61,6 @@ object ClientNodeSessionJson {
   def logIntoServer(
       url: String,
       password: Option[String]
-  ): Cmd.One[Either[ErrorJson, ClientNodeSessionJson]] =
+  ): IO[Either[ErrorJson, ClientNodeSessionJson]] =
     Commands.send(Commands.TryLogIntoServer(url, password))
 }

@@ -1,5 +1,9 @@
 package cotoami.subparts
 
+import marubinotto.fui.toCmd
+
+import scala.concurrent.duration.DurationInt
+
 import scala.util.chaining._
 import scala.collection.immutable.TreeMap
 import scala.scalajs.js
@@ -41,22 +45,17 @@ object SectionGeomap {
   case class Model(
       remotePmtilesUrl: String,
       remotePmtilesAvailable: Option[Boolean] = None,
-
       // Center/Zoom
       center: Option[Geolocation] = None,
       zoom: Option[Double] = None,
-
       // Bounds
       currentBounds: Option[GeoBounds] = None,
       bounds: Option[GeoBounds] = None,
-
       // Focus
       focusedLocation: Option[Geolocation] = None,
-
       // Coto fetching
       fetchingCotosInFocus: Boolean = false,
       fetchingCotosInBounds: Boolean = false,
-
       // Actions
       _createMap: Action[Unit] = Action.default,
       _applyCenterZoom: Action[Unit] = Action.default,
@@ -74,13 +73,13 @@ object SectionGeomap {
         .getOrElse(Scope.All)
       (
         unfocus.closePopups.copy(fetchingCotosInFocus = true),
-        GeolocatedCotos.fetch(scope)
+        GeolocatedCotos.fetch(scope).toCmd
           .map(Msg.CotosInFocusFetched(_).into)
       )
     }
 
     def checkRemotePmtiles: Cmd.One[AppMsg] =
-      Browser.ajaxHead(remotePmtilesUrl)
+      Browser.ajaxHead(remotePmtilesUrl).toCmd
         .map(Msg.RemotePmtilesChecked(_).into)
 
     def recreateMap: Model =
@@ -132,12 +131,14 @@ object SectionGeomap {
     def fetchCotosInBounds(bounds: GeoBounds): (Model, Cmd.One[AppMsg]) =
       (
         copy(fetchingCotosInBounds = true),
-        GeolocatedCotos.inGeoBounds(bounds)
+        GeolocatedCotos.inGeoBounds(bounds).toCmd
           .map(Msg.CotosInBoundsFetched(_).into)
       )
 
-    def fetchCotosInCurrentBounds: (Model, Cmd.One[AppMsg]) =
-      currentBounds.map(fetchCotosInBounds).getOrElse((this, Cmd.none))
+    def fetchCotosInCurrentBounds: (Model, Cmd[AppMsg]) =
+      currentBounds.map(fetchCotosInBounds).getOrElse(
+        (this, Cmd.none)
+      )
   }
 
   def init: (Model, Cmd.One[AppMsg]) = {
@@ -232,7 +233,7 @@ object SectionGeomap {
         val (geomap, fetch) = model.fetchCotosInBounds(bounds)
         default.copy(
           _1 = geomap.copy(currentBounds = Some(bounds)),
-          _3 = fetch.debounce("SectionGeomap.fetch", 200)
+          _3 = fetch.debounce("SectionGeomap.fetch", 200.millis)
         )
       }
 

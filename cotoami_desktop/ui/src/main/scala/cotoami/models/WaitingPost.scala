@@ -4,20 +4,17 @@ import org.scalajs.dom
 import java.time.Instant
 import com.softwaremill.quicklens._
 
-import marubinotto.fui.Browser
-
 case class WaitingPost(
     postId: String,
     content: Option[String],
     summary: Option[String],
-    mediaContent: Option[(String, String)],
+    mediaBlob: Option[(dom.Blob, String)],
     isCotonoma: Boolean,
     postedIn: Cotonoma,
     error: Option[String] = None
 ) extends CotoContent {
-  val mediaUrl: Option[(String, String)] = this.mediaContent.map {
-    case (content, mimeType) =>
-      val blob = Browser.decodeBase64(content, mimeType)
+  val mediaUrl: Option[(String, String)] = this.mediaBlob.map {
+    case (blob, mimeType) =>
       (dom.URL.createObjectURL(blob), mimeType)
   }
 
@@ -37,14 +34,14 @@ object WaitingPost {
       postId: String,
       content: String,
       summary: Option[String],
-      mediaContent: Option[(String, String)],
+      mediaBlob: Option[(dom.Blob, String)],
       postedIn: Cotonoma
   ): WaitingPost =
     WaitingPost(
       postId,
       Some(content),
       summary,
-      mediaContent,
+      mediaBlob,
       false,
       postedIn
     )
@@ -74,7 +71,7 @@ case class WaitingPosts(posts: Seq[WaitingPost] = Seq.empty) {
       postId: String,
       content: String,
       summary: Option[String],
-      mediaContent: Option[(String, String)],
+      mediaBlob: Option[(dom.Blob, String)],
       postedIn: Cotonoma
   ): WaitingPosts =
     this.add(
@@ -82,7 +79,7 @@ case class WaitingPosts(posts: Seq[WaitingPost] = Seq.empty) {
         postId,
         content,
         summary,
-        mediaContent,
+        mediaBlob,
         postedIn
       )
     )

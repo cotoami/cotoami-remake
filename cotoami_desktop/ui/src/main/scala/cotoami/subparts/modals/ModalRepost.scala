@@ -1,5 +1,6 @@
 package cotoami.subparts.modals
 
+import marubinotto.fui.toCmd
 import scala.util.chaining._
 import scala.scalajs.js
 
@@ -94,7 +95,7 @@ object ModalRepost {
             _3 = CotonomaBackend.fetchByPartial(
               query,
               Some(model.targetNodeIds(context.repo))
-            ).map(Msg.CotonomasFetched(query, _).into)
+            ).toCmd.map(Msg.CotonomasFetched(query, _).into)
           )
 
       case Msg.CotonomasFetched(query, Right(cotonomas)) => {
@@ -152,7 +153,10 @@ object ModalRepost {
             default.copy(
               _1 = model.copy(reposting = true),
               _2 = context.repo.cotonomas.put(dest.cotonoma),
-              _3 = CotoBackend.repost(model.originalCoto.id, dest.cotonoma.id)
+              _3 = CotoBackend.repost(
+                model.originalCoto.id,
+                dest.cotonoma.id
+              ).toCmd
                 .map(Msg.Reposted(_).into)
             )
 
@@ -162,7 +166,7 @@ object ModalRepost {
               _3 = context.repo.nodes.get(Id(dest.targetNodeId))
                 .flatMap(_.rootCotonomaId)
                 .map(cotonomaId =>
-                  CotonomaBackend.post(dest.name, None, None, cotonomaId)
+                  CotonomaBackend.post(dest.name, None, None, cotonomaId).toCmd
                     .map(Msg.CotonomaCreated(_).into)
                 )
                 .getOrElse(Cmd.none)
@@ -174,7 +178,7 @@ object ModalRepost {
       case Msg.CotonomaCreated(Right((cotonoma, _))) =>
         default.copy(
           _2 = context.repo.cotonomas.put(cotonoma),
-          _3 = CotoBackend.repost(model.originalCoto.id, cotonoma.id)
+          _3 = CotoBackend.repost(model.originalCoto.id, cotonoma.id).toCmd
             .map(Msg.Reposted(_).into)
         )
 

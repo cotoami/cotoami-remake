@@ -1,22 +1,28 @@
 package cotoami.backend
 
+import cats.effect.IO
+import cats.syntax.all.*
+
 import scala.scalajs.js
 
-import marubinotto.fui.Cmd
 import marubinotto.facade.Nullable
 import cotoami.models.{Coto, Cotonoma, Id, Node}
 
-case class NodeDetails(json: NodeDetailsJson) {
-  def node: Node = NodeBackend.toModel(json.node)
-  def root: Option[(Cotonoma, Coto)] =
-    Nullable.toOption(json.root).map(pair =>
-      (CotonomaBackend.toModel(pair._1), CotoBackend.toModel(pair._2))
-    )
-}
+case class NodeDetails(
+    json: NodeDetailsJson,
+    node: Node,
+    root: Option[(Cotonoma, Coto)]
+)
 
 object NodeDetails {
-  def fetch(id: Id[Node]): Cmd.One[Either[ErrorJson, NodeDetails]] =
-    NodeDetailsJson.fetch(id).map(_.map(NodeDetails(_)))
+  def decode(json: NodeDetailsJson): IO[NodeDetails] =
+    for {
+      node <- NodeBackend.toModel(json.node)
+      root <- Nullable.toOption(json.root).traverse(CotonomaBackend.decodePair)
+    } yield NodeDetails(json, node, root)
+
+  def fetch(id: Id[Node]): IO[Either[ErrorJson, NodeDetails]] =
+    NodeDetailsJson.fetch(id).flatMap(_.traverse(NodeDetails.decode))
 }
 
 @js.native
@@ -26,6 +32,6 @@ trait NodeDetailsJson extends js.Object {
 }
 
 object NodeDetailsJson {
-  def fetch(id: Id[Node]): Cmd.One[Either[ErrorJson, NodeDetailsJson]] =
+  def fetch(id: Id[Node]): IO[Either[ErrorJson, NodeDetailsJson]] =
     Commands.send(Commands.NodeDetails(id))
 }

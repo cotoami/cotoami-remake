@@ -1,11 +1,10 @@
 package marubinotto.components
 
-import scala.util.{Failure, Success}
-import scala.concurrent._
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 import org.scalajs.dom
-import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
+
+import cats.effect.IO
 
 import slinky.core._
 
@@ -59,44 +58,38 @@ object FixedAspectCrop extends ExternalComponent {
   def position(x: Int, y: Int): Position =
     js.Dynamic.literal(x = x, y = y).asInstanceOf[Position]
 
-  def getCroppedImg(imageUrl: String, crop: Area): Future[dom.Blob] = {
-    val promise = Promise[dom.Blob]()
-    Browser.createImage(imageUrl).onComplete {
-      case Success(image) => {
+  def getCroppedImg(imageUrl: String, crop: Area): IO[dom.Blob] =
+    Browser.createImage(imageUrl).flatMap { image =>
+      IO {
         val canvas = dom.document.createElement("canvas")
           .asInstanceOf[dom.HTMLCanvasElement]
         val ctx = canvas.getContext("2d")
-        if (ctx != null) {
-          canvas.width = crop.width.toInt
-          canvas.height = crop.height.toInt
-
-          val ctx2d = ctx.asInstanceOf[dom.CanvasRenderingContext2D]
-          ctx2d.drawImage(
-            image,
-
-            // the cropped area in the image
-            crop.x,
-            crop.y,
-            crop.width,
-            crop.height,
-
-            // the target area in the canvas
-            0,
-            0,
-            crop.width,
-            crop.height
-          )
-
-          val canvas2 = canvas.asInstanceOf[ToBlob]
-          canvas2.toBlob(blob => promise.success(blob))
-        } else {
-          promise.failure(new RuntimeException("2D context is not supported."))
+        if (ctx == null)
+          throw new RuntimeException("2D context is not supported.")
+        canvas.width = crop.width.toInt
+        canvas.height = crop.height.toInt
+        ctx.asInstanceOf[dom.CanvasRenderingContext2D].drawImage(
+          image,
+          crop.x,
+          crop.y,
+          crop.width,
+          crop.height,
+          0,
+          0,
+          crop.width,
+          crop.height
+        )
+        canvas
+      }.flatMap { canvas =>
+        IO.async_[dom.Blob] { complete =>
+          canvas.asInstanceOf[ToBlob].toBlob { blob =>
+            if (blob == null)
+              complete(Left(new RuntimeException("Image encoding failed.")))
+            else complete(Right(blob))
+          }
         }
       }
-      case Failure(t) => promise.failure(t)
     }
-    promise.future
-  }
 
   // Workaround for `org.scalajs.dom.HTMLCanvasElement` not supporting the `toBlob` method as of v2.8.0.
   // https://javadoc.io/static/org.scala-js/scalajs-dom_sjs1_2.13/2.8.0/org/scalajs/dom/HTMLCanvasElement.html

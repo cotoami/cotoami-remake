@@ -18,39 +18,20 @@ object Appender extends LowPriorityAppender {
       override def split(out: B): (Unit, B) = ((), out)
     }
 
-  given tuple2Appender[A1, A2, B]: Appender[(A1, A2), B, (A1, A2, B)] with {
-      override def append(left: (A1, A2), right: B): (A1, A2, B) =
-        (left._1, left._2, right)
+  given emptyTupleAppender[B]: Appender[EmptyTuple, B, Tuple1[B]] with {
+    override def append(left: EmptyTuple, right: B): Tuple1[B] = Tuple1(right)
+    override def split(out: Tuple1[B]): (EmptyTuple, B) = (EmptyTuple, out._1)
+  }
 
-      override def split(out: (A1, A2, B)): ((A1, A2), B) =
-        ((out._1, out._2), out._3)
+  given tupleAppender[H, T <: Tuple, B, Out <: Tuple](using
+      tail: Appender[T, B, Out]
+  ): Appender[H *: T, B, H *: Out] with {
+    override def append(left: H *: T, right: B): H *: Out =
+      left.head *: tail.append(left.tail, right)
+
+    override def split(out: H *: Out): (H *: T, B) = {
+      val (init, last) = tail.split(out.tail)
+      (out.head *: init, last)
     }
-
-  given tuple3Appender[A1, A2, A3, B]
-      : Appender[(A1, A2, A3), B, (A1, A2, A3, B)] with {
-      override def append(
-          left: (A1, A2, A3),
-          right: B
-      ): (A1, A2, A3, B) =
-        (left._1, left._2, left._3, right)
-
-      override def split(
-          out: (A1, A2, A3, B)
-      ): ((A1, A2, A3), B) =
-        ((out._1, out._2, out._3), out._4)
-    }
-
-  given tuple4Appender[A1, A2, A3, A4, B]
-      : Appender[(A1, A2, A3, A4), B, (A1, A2, A3, A4, B)] with {
-      override def append(
-          left: (A1, A2, A3, A4),
-          right: B
-      ): (A1, A2, A3, A4, B) =
-        (left._1, left._2, left._3, left._4, right)
-
-      override def split(
-          out: (A1, A2, A3, A4, B)
-      ): ((A1, A2, A3, A4), B) =
-        ((out._1, out._2, out._3, out._4), out._5)
-    }
+  }
 }

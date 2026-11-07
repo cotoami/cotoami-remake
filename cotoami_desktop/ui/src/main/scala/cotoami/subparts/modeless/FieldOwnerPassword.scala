@@ -1,5 +1,6 @@
 package cotoami.subparts.modeless
 
+import marubinotto.fui.toCmd
 import scala.util.chaining._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
@@ -51,7 +52,7 @@ object FieldOwnerPassword {
       case Msg.ResetOwnerPassword =>
         (
           model.copy(resetting = true),
-          DatabaseInfo.newOwnerPassword
+          DatabaseInfo.newOwnerPassword.toCmd
             .map(Msg.OwnerPasswordReset(_).into)
         )
 

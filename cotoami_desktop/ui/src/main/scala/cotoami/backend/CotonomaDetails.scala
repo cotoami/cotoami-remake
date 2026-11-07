@@ -1,13 +1,14 @@
 package cotoami.backend
 
+import cats.effect.IO
+import cats.syntax.all.*
+
 import scala.scalajs.js
 
-import marubinotto.fui.Cmd
 import cotoami.models.{Coto, Cotonoma, Id, Page}
 
-case class CotonomaDetails(json: CotonomaDetailsJson) {
+case class CotonomaDetails(json: CotonomaDetailsJson, coto: Coto) {
   def cotonoma: Cotonoma = CotonomaBackend.toModel(json.cotonoma)
-  def coto: Coto = CotoBackend.toModel(json.coto)
   def supers: js.Array[Cotonoma] =
     json.supers.map(CotonomaBackend.toModel(_))
   def subs: Page[Cotonoma] =
@@ -16,8 +17,13 @@ case class CotonomaDetails(json: CotonomaDetailsJson) {
 }
 
 object CotonomaDetails {
-  def fetch(id: Id[Cotonoma]): Cmd.One[Either[ErrorJson, CotonomaDetails]] =
-    CotonomaDetailsJson.fetch(id).map(_.map(CotonomaDetails(_)))
+  def decode(json: CotonomaDetailsJson): IO[CotonomaDetails] =
+    for {
+      coto <- CotoBackend.toModel(json.coto)
+    } yield CotonomaDetails(json, coto)
+
+  def fetch(id: Id[Cotonoma]): IO[Either[ErrorJson, CotonomaDetails]] =
+    CotonomaDetailsJson.fetch(id).flatMap(_.traverse(CotonomaDetails.decode))
 }
 
 @js.native
@@ -32,6 +38,6 @@ trait CotonomaDetailsJson extends js.Object {
 object CotonomaDetailsJson {
   def fetch(
       id: Id[Cotonoma]
-  ): Cmd.One[Either[ErrorJson, CotonomaDetailsJson]] =
+  ): IO[Either[ErrorJson, CotonomaDetailsJson]] =
     Commands.send(Commands.CotonomaDetails(id))
 }

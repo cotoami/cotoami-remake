@@ -2,7 +2,7 @@ package cotoami.subparts.modals
 
 import scala.util.chaining._
 import scala.scalajs.js
-import cats.effect.IO
+import cats.effect.{IO, Resource}
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html
 import slinky.web.html._
@@ -86,29 +86,31 @@ object ModalAppUpdate {
   /////////////////////////////////////////////////////////////////////////////
 
   def progress(model: Model): Sub[AppMsg] =
-    Sub.fromCallback[AppMsg]("app-update-progress") { dispatch =>
-      IO {
-        model.appUpdate.downloadAndInstall(
-          event =>
-            event.event match {
-              case "Started" =>
-                event.data.foreach(
-                  _.contentLength.foreach(length =>
-                    dispatch(Msg.Started(length).into)
+    Sub.fromResource[AppMsg]("app-update-progress") { dispatch =>
+      Resource.make(
+        IO {
+          model.appUpdate.downloadAndInstall(
+            event =>
+              event.event match {
+                case "Started" =>
+                  event.data.foreach(
+                    _.contentLength.foreach(length =>
+                      dispatch(Msg.Started(length).into)
+                    )
                   )
-                )
-              case "Progress" =>
-                event.data.foreach(
-                  _.chunkLength.foreach(length =>
-                    dispatch(Msg.Progress(length).into)
+                case "Progress" =>
+                  event.data.foreach(
+                    _.chunkLength.foreach(length =>
+                      dispatch(Msg.Progress(length).into)
+                    )
                   )
-                )
-              case "Finished" => dispatch(Msg.Finished.into)
-            },
-          js.undefined
-        )
-        IO.fromFuture(IO(model.appUpdate.close().toFuture)).void
-      }
+                case "Finished" => dispatch(Msg.Finished.into)
+              },
+            js.undefined
+          )
+          ()
+        }
+      )(_ => IO.fromFuture(IO(model.appUpdate.close().toFuture)).void)
     }
 
   /////////////////////////////////////////////////////////////////////////////

@@ -1,56 +1,61 @@
 package marubinotto.fui
 
 import scala.util.{Failure, Success}
-import scala.concurrent._
+import scala.concurrent.*
 import scala.scalajs.js
-import scala.scalajs.js.JSStringOps._
+import scala.scalajs.js.JSStringOps.*
 import org.scalajs.dom
 import org.scalajs.dom.{Element, URL}
 
-import cats.effect.IO
-import cats.effect.std.Dispatcher
+import cats.effect.{IO, Resource}
+import cats.syntax.functor.*
 
-import io.circe._
-import io.circe.parser._
+import io.circe.*
+import io.circe.parser.*
 
 object Browser {
   // https://github.com/scala-js/scala-js-macrotask-executor
-  import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
+  import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits.*
 
   // https://www.scala-js.org/api/scalajs-library/1.12.0/scala/scalajs/js/Thenable$$Implicits$.html
-  import js.Thenable.Implicits._
+  import js.Thenable.Implicits.*
 
   private var listenersOnPushUrl: List[URL => Unit] = Nil
 
-  def runProgram[Model, Msg](
+  /** Run until canceled or the update loop fails, releasing all owned
+    * resources.
+    */
+  def run[Model, Msg](
       container: Element,
       program: Program[Model, Msg],
-      dispatcher: Dispatcher[IO]
+      onError: RuntimeError => IO[Unit] = RuntimeError.log
   ): IO[Unit] =
-    Runtime.make(container, program, dispatcher).map { runtime =>
-      listenersOnPushUrl = runtime.onPushUrl :: listenersOnPushUrl
+    mount(container, program, onError).use(
+      _.awaitTermination
+    )
+
+  /** Mount on acquisition and unmount on release. The caller owns the scope and
+    * fatal-error monitoring; a loop failure does not interrupt use. The
+    * returned Runtime exposes dispatch and awaitFailure.
+    */
+  def mount[Model, Msg](
+      container: Element,
+      program: Program[Model, Msg],
+      onError: RuntimeError => IO[Unit] = RuntimeError.log
+  ): Resource[IO, Runtime[Model, Msg]] =
+    Runtime.make(container, program, onError).flatMap { runtime =>
+      Resource.make(IO {
+        val listener: URL => Unit = runtime.onPushUrl
+        listenersOnPushUrl = listener :: listenersOnPushUrl
+        listener
+      })(listener =>
+        IO {
+          listenersOnPushUrl = listenersOnPushUrl.filterNot(_ eq listener)
+        }
+      ).as(runtime)
     }
 
-  def send[Msg](msg: Msg): Cmd.One[Msg] = Cmd(IO(Some(msg)))
-
-  def debounce[T](func: T => Unit, delay: Double): T => Unit = {
-    var timeoutId: Option[Int] = None
-    (t: T) => {
-      timeoutId.foreach(dom.window.clearTimeout)
-      timeoutId = Some(dom.window.setTimeout(() => func(t), delay))
-    }
-  }
-
-  def debounce[T1, T2](
-      func: (T1, T2) => Unit,
-      delay: Double
-  ): (T1, T2) => Unit = {
-    var timeoutId: Option[Int] = None
-    (t1: T1, t2: T2) => {
-      timeoutId.foreach(dom.window.clearTimeout)
-      timeoutId = Some(dom.window.setTimeout(() => func(t1, t2), delay))
-    }
-  }
+  def send[Msg](msg: Msg): Cmd.One[Msg] = IO.pure(msg).toCmd
 
   /** Change the URL, but do not trigger a page load. This will add a new entry
     * to the browser history.
@@ -58,140 +63,131 @@ object Browser {
     * @param notify
     *   whether or not to notify the url change via `onUrlChange`
     */
-  def pushUrl[Msg](url: String, notify: Boolean = true): Cmd.One[Msg] =
-    Cmd(IO {
+  def pushUrl(url: String, notify: Boolean = true): IO[Unit] =
+    IO {
       dom.window.history.pushState((), "", url)
       if (notify) {
         listenersOnPushUrl.foreach(_(new URL(dom.window.location.href)))
       }
-      None
-    })
+    }
 
   /** Change the URL, but do not trigger a page load. This will not add a new
     * entry to the browser history.
     */
-  def replaceUrl[Msg](url: String): Cmd.One[Msg] =
-    Cmd(IO {
+  def replaceUrl(url: String): IO[Unit] =
+    IO {
       dom.window.history.replaceState((), "", url)
-      None
-    })
+    }
 
-  def reload[Msg](): Cmd.One[Msg] =
-    Cmd(IO {
+  def reload(): IO[Unit] =
+    IO {
       dom.window.location.reload()
-      None
-    })
+    }
 
-  def ajaxGetJson(url: String): Cmd.One[Either[Throwable, Json]] =
-    Cmd(IO.async { cb =>
+  // The cancel token covers both the request and consumption of its body.
+  private def fetchResult[A](url: String, requestMethod: dom.HttpMethod)(
+      consume: dom.Response => Future[A]
+  ): IO[Either[Throwable, A]] =
+    IO.async { cb =>
       IO {
-        dom.fetch(url).flatMap(_.text()).onComplete {
-          // Returning a Right even when the process has failed so that
-          // the error can be handled as a Msg.
-          case Success(text) => {
-            val parseResult = parse(text)
-            cb(Right(Some(parseResult)))
+        val controller = new dom.AbortController()
+        var canceled = false
+        dom.fetch(
+          url,
+          new dom.RequestInit {
+            method = requestMethod
+            signal = controller.signal
           }
-          case Failure(t) => {
-            cb(Right(Some(Left(t))))
-          }
+        ).onComplete {
+          case Success(response) if !canceled =>
+            scala.util.Try(consume(response)) match {
+              case Success(result) =>
+                result.onComplete { outcome =>
+                  if (!canceled) cb(Right(outcome.toEither))
+                }
+              case Failure(error) => cb(Right(Left(error)))
+            }
+          case Failure(error) if !canceled => cb(Right(Left(error)))
+          case _                           => ()
         }
-        None // no finalizer on cancellation
+        Some(IO {
+          canceled = true
+          controller.abort()
+        })
       }
-    })
+    }
+
+  def ajaxGetJson(url: String): IO[Either[Throwable, Json]] =
+    fetchResult(url, dom.HttpMethod.GET)(_.text().toFuture)
+      .map(_.flatMap(parse(_)))
 
   def ajaxGet[Result](
       url: String,
       decoder: Decoder[Result]
-  ): Cmd.One[Either[Throwable, Result]] =
-    Cmd(IO.async { cb =>
-      IO {
-        implicit val resultDecoder = decoder
-        dom.fetch(url).flatMap(_.text()).onComplete {
-          // Returning a Right even when the process has failed so that
-          // the error can be handled as a Msg.
-          case Success(text) => {
-            val decoded = decode[Result](text)
-            cb(Right(Some(decoded)))
-          }
-          case Failure(t) => {
-            cb(Right(Some(Left(t))))
-          }
-        }
-        None // no finalizer on cancellation
-      }
-    })
+  ): IO[Either[Throwable, Result]] =
+    fetchResult(url, dom.HttpMethod.GET)(_.text().toFuture)
+      .map(_.flatMap(text => decode[Result](text)(using decoder)))
 
-  def ajaxHead(url: String): Cmd.One[Either[Throwable, dom.Response]] =
-    Cmd(IO.async { cb =>
-      IO {
-        dom.fetch(
-          url,
-          new dom.RequestInit {
-            method = dom.HttpMethod.HEAD
-          }
-        ).onComplete {
-          case Success(response) => {
-            cb(Right(Some(Right(response))))
-          }
-          case Failure(t) => {
-            cb(Right(Some(Left(t))))
-          }
-        }
-        None // no finalizer on cancellation
-      }
-    })
+  def ajaxHead(url: String): IO[Either[Throwable, dom.Response]] =
+    fetchResult(url, dom.HttpMethod.HEAD)(Future.successful)
 
-  def setHtmlTheme[Msg](theme: String): Cmd.One[Msg] =
-    Cmd(IO {
+  def setHtmlTheme(theme: String): IO[Unit] =
+    IO {
       dom.window.document.documentElement.setAttribute("data-theme", theme)
-      None
-    })
+    }
 
-  def setLocalStorage[Msg](key: String, value: String): Cmd.One[Msg] =
-    Cmd(IO {
+  def setLocalStorage(key: String, value: String): IO[Unit] =
+    IO {
       dom.window.localStorage.setItem(key, value)
-      None
-    })
+    }
 
-  def getLocalStorage(key: String): Cmd.One[Option[String]] =
-    Cmd(IO {
-      Some(Option(dom.window.localStorage.getItem(key)))
-    })
+  def getLocalStorage(key: String): IO[Option[String]] =
+    IO(Option(dom.window.localStorage.getItem(key)))
 
-  def removeLocalStorage[Msg](key: String): Cmd.One[Msg] =
-    Cmd(IO {
+  def removeLocalStorage(key: String): IO[Unit] =
+    IO {
       dom.window.localStorage.removeItem(key)
-      None
-    })
+    }
 
   def encodeAsBase64(
       blob: dom.Blob,
       removePadding: Boolean = false
-  ): Cmd.One[Either[dom.ProgressEvent, String]] =
-    Cmd(IO.async { cb =>
+  ): IO[Either[dom.ProgressEvent, String]] =
+    Resource.make(IO(new dom.FileReader()))(reader =>
       IO {
-        val reader = new dom.FileReader()
-        reader.onload = _ => {
-          val url = reader.result.asInstanceOf[String]
-          val base64 = url.substring(url.indexOf(',') + 1)
-          if (removePadding) {
-            val base64WithoutPadding = base64.replaceAll("=+$", "")
-            cb(Right(Some(Right(base64WithoutPadding))))
-          } else {
-            cb(Right(Some(Right(base64))))
-          }
-        }
-        reader.onerror = (e: dom.ProgressEvent) => {
-          cb(Right(Some(Left(e))))
-        }
-        reader.readAsDataURL(blob)
-
-        None // no finalizer on cancellation
+        reader.onload = null
+        reader.onerror = null
       }
-    })
+    ).use { reader =>
+      IO.async { cb =>
+        IO {
+          var canceled = false
+          reader.onload = _ =>
+            if (!canceled) {
+              val url = reader.result.asInstanceOf[String]
+              val base64 = url.substring(url.indexOf(',') + 1)
+              cb(
+                Right(
+                  Right(
+                    if (removePadding) base64.replaceAll("=+$", "") else base64
+                  )
+                )
+              )
+            }
+          reader.onerror =
+            (e: dom.ProgressEvent) => if (!canceled) cb(Right(Left(e)))
+          reader.readAsDataURL(blob)
+          Some(IO {
+            canceled = true
+            reader.onload = null
+            reader.onerror = null
+            reader.abort()
+          })
+        }
+      }
+    }
 
-  def decodeBase64(base64: String, contentType: String): dom.Blob = {
+  def decodeBase64(base64: String, contentType: String): IO[dom.Blob] = IO {
     val byteArray = js.typedarray.Uint8Array.from(
       // Window: atob()
       // decodes a string of data which has been encoded using Base64 encoding.
@@ -211,18 +207,18 @@ object Browser {
     )
   }
 
-  def getCurrentPosition: Cmd.One[Either[dom.PositionError, dom.Position]] =
-    Cmd(IO.async { cb =>
+  def getCurrentPosition: IO[Either[dom.PositionError, dom.Position]] =
+    IO.async { cb =>
       IO {
         dom.window.navigator.geolocation.getCurrentPosition(
-          position => cb(Right(Some(Right(position)))),
-          error => cb(Right(Some(Left(error))))
+          position => cb(Right(Right(position))),
+          error => cb(Right(Left(error)))
         )
         None
       }
-    })
+    }
 
-  def createImage(url: String): Future[dom.HTMLImageElement] = {
+  def createImage(url: String): IO[dom.HTMLImageElement] = IO.fromFuture(IO {
     val promise = Promise[dom.HTMLImageElement]()
 
     val image = new dom.Image()
@@ -240,5 +236,5 @@ object Browser {
     image.src = url
 
     promise.future
-  }
+  })
 }

@@ -1,5 +1,6 @@
 package cotoami.subparts.modeless
 
+import marubinotto.fui.toCmd
 import scala.util.chaining._
 import com.softwaremill.quicklens._
 import slinky.core.facade.ReactElement
@@ -10,7 +11,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Id, LocalNode, Node}
 import cotoami.repository.Nodes
 import cotoami.backend.{ErrorJson, LocalNodeBackend}
-import cotoami.subparts.forms.{FieldEdit, fieldEditable}
+import cotoami.subparts.forms.{fieldEditable, FieldEdit}
 
 object FieldImageMaxSize {
 
@@ -61,7 +62,7 @@ object FieldImageMaxSize {
       )
 
     private def setImageMaxSize(size: Option[Int]): Cmd[AppMsg] =
-      LocalNodeBackend.setImageMaxSize(size).map(Msg.Saved(_).into)
+      LocalNodeBackend.setImageMaxSize(size).toCmd.map(Msg.Saved(_).into)
 
     def reset(local: LocalNode): Model = {
       val originalValue = local.imageMaxSize.map(_.toString()).getOrElse("")

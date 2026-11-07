@@ -9,9 +9,9 @@ import scala.scalajs.js.Thenable.Implicits._
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import org.scalajs.dom.URL
 
-import cats.effect.IO
+import cats.effect.{IO, Resource}
 
-import marubinotto.fui.{Cmd, Sub}
+import marubinotto.fui.{toCmd, Cmd, Sub}
 
 package object tauri {
 
@@ -20,20 +20,25 @@ package object tauri {
   def invokeCommand[T, E <: js.Object](
       command: String,
       args: js.Object = js.Dynamic.literal()
-  ): Cmd.One[Either[E, T]] =
-    Cmd(IO.async { cb =>
+  ): Cmd.One[Either[E, T]] = invokeCommandIO[T, E](command, args).toCmd
+
+  def invokeCommandIO[T, E <: js.Object](
+      command: String,
+      args: js.Object = js.Dynamic.literal()
+  ): IO[Either[E, T]] =
+    IO.async { cb =>
       IO {
         core.invoke[T](command, args)
           // implicitly convert the Promise to a Future by
           // `scala.scalajs.js.Thenable.Implicits._`
           .onComplete {
             case Success(t) => {
-              cb(Right(Some(Right(t))))
+              cb(Right(Right(t)))
             }
             case Failure(ex: js.JavaScriptException) => {
               if (js.typeOf(ex.exception) == "object") {
                 val error = ex.exception.asInstanceOf[E]
-                cb(Right(Some(Left(error))))
+                cb(Right(Left(error)))
               } else {
                 // Tauri returns a string as an error when a system error occurred
                 // during command invocation (ex. args deserialization error).
@@ -47,19 +52,20 @@ package object tauri {
           }
         None
       }
-    })
+    }
 
   def listen[T](event: String, id: Option[String] = None): Sub[T] =
-    Sub.fromCallback[T](id.getOrElse(s"listen-${event}")) { dispatch =>
-      IO
-        .fromFuture(
-          IO(
-            tauri.event
-              .listen(event, (e: tauri.event.Event[T]) => dispatch(e.payload))
-              .toFuture
+    Sub.fromResource[T](id.getOrElse(s"listen-${event}")) { dispatch =>
+      Resource.make(
+        IO
+          .fromFuture(
+            IO(
+              tauri.event
+                .listen(event, (e: tauri.event.Event[T]) => dispatch(e.payload))
+                .toFuture
+            )
           )
-        )
-        .map(unlisten => IO(unlisten()))
+      )(unlisten => IO(unlisten())).map(_ => ())
     }
 
   def selectSingleDirectory(

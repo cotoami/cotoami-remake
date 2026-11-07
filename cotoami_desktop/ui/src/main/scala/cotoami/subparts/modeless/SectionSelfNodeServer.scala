@@ -1,5 +1,6 @@
 package cotoami.subparts.modeless
 
+import marubinotto.fui.toCmd
 import scala.util.chaining._
 import com.softwaremill.quicklens._
 import slinky.core.facade.ReactElement
@@ -42,7 +43,7 @@ object SectionSelfNodeServer {
           Model(nodeId, loading = true),
           Cmd.Batch(
             fetchClientCount,
-            LocalServer.fetch.map(Msg.SelfNodeServerFetched(_).into)
+            LocalServer.fetch.toCmd.map(Msg.SelfNodeServerFetched(_).into)
           )
         )
       else
@@ -93,7 +94,7 @@ object SectionSelfNodeServer {
       case Msg.EnableAnonymousRead(enable) =>
         default.copy(
           _1 = model.copy(enablingAnonymousRead = true),
-          _3 = LocalNodeBackend.enableAnonymousRead(enable)
+          _3 = LocalNodeBackend.enableAnonymousRead(enable).toCmd
             .map(Msg.AnonymousReadEnabled(_).into)
         )
 
@@ -113,7 +114,7 @@ object SectionSelfNodeServer {
   }
 
   def fetchClientCount: Cmd.One[AppMsg] =
-    ClientNodeBackend.fetchRecent(0, Some(1))
+    ClientNodeBackend.fetchRecent(0, Some(1)).toCmd
       .map(_.map(_.totalItems))
       .map(Msg.ClientCountFetched(_).into)
 

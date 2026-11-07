@@ -1,21 +1,34 @@
 package cotoami.backend
 
+import cats.effect.IO
+import cats.syntax.all.*
+
 import scala.scalajs.js
-import marubinotto.fui.Cmd
 
 import cotoami.models.{Coto, Id, Ito}
 
-case class CotoDetails(json: CotoDetailsJson) {
-  def coto: Coto = CotoBackend.toModel(json.coto)
+case class CotoDetails(
+    json: CotoDetailsJson,
+    coto: Coto,
+    incomingNeighbors: js.Array[Coto],
+    relatedData: CotosRelatedData
+) {
   def itos: js.Array[Ito] = json.itos.map(ItoBackend.toModel)
-  def incomingNeighbors: js.Array[Coto] =
-    json.incoming_neighbors.map(CotoBackend.toModel)
-  def relatedData: CotosRelatedData = CotosRelatedData(json.related_data)
+
 }
 
 object CotoDetails {
-  def fetch(id: Id[Coto]): Cmd.One[Either[ErrorJson, CotoDetails]] =
-    CotoDetailsJson.fetch(id).map(_.map(CotoDetails(_)))
+  def decode(json: CotoDetailsJson): IO[CotoDetails] =
+    for {
+      coto <- CotoBackend.toModel(json.coto)
+      incomingNeighbors <- decodeArray(json.incoming_neighbors)(
+        CotoBackend.toModel
+      )
+      relatedData <- CotosRelatedData.decode(json.related_data)
+    } yield CotoDetails(json, coto, incomingNeighbors, relatedData)
+
+  def fetch(id: Id[Coto]): IO[Either[ErrorJson, CotoDetails]] =
+    CotoDetailsJson.fetch(id).flatMap(_.traverse(CotoDetails.decode))
 }
 
 @js.native
@@ -29,6 +42,6 @@ trait CotoDetailsJson extends js.Object {
 object CotoDetailsJson {
   def fetch(
       id: Id[Coto]
-  ): Cmd.One[Either[ErrorJson, CotoDetailsJson]] =
+  ): IO[Either[ErrorJson, CotoDetailsJson]] =
     Commands.send(Commands.CotoDetails(id))
 }

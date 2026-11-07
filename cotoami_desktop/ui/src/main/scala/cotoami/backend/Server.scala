@@ -1,8 +1,8 @@
 package cotoami.backend
 
+import cats.effect.IO
 import scala.scalajs.js
 
-import marubinotto.fui.Cmd
 import marubinotto.facade.Nullable
 import cotoami.models.{Id, Node, Server, ServerNode}
 
@@ -19,7 +19,7 @@ object ServerJson {
       url: String,
       password: Option[String],
       clientRole: Option[String] = None
-  ): Cmd.One[Either[ErrorJson, ServerJson]] =
+  ): IO[Either[ErrorJson, ServerJson]] =
     Commands.send(Commands.AddServer(url, password, clientRole))
 }
 
@@ -36,7 +36,7 @@ object ServerBackend {
       url: String,
       password: Option[String],
       clientRole: Option[String] = None
-  ): Cmd.One[Either[ErrorJson, Server]] =
+  ): IO[Either[ErrorJson, Server]] =
     ServerJson.addServer(url, password, clientRole)
       .map(_.map(toModel))
 }
@@ -55,7 +55,7 @@ object ServerNodeJson {
       disabled: Option[Boolean],
       password: Option[String],
       url: Option[String]
-  ): Cmd.One[Either[ErrorJson, ServerNodeJson]] =
+  ): IO[Either[ErrorJson, ServerNodeJson]] =
     Commands.send(Commands.EditServer(id, disabled, password, url))
 }
 
@@ -73,7 +73,7 @@ object ServerNodeBackend {
       disabled: Option[Boolean],
       password: Option[String],
       url: Option[String]
-  ): Cmd.One[Either[ErrorJson, ServerNode]] =
+  ): IO[Either[ErrorJson, ServerNode]] =
     ServerNodeJson.edit(id, disabled, password, url).map(_.map(toModel))
 }
 
@@ -120,7 +120,7 @@ object NotConnectedBackend {
       )
       .getOrElse(
         Server.NotConnected.Disconnected(
-      Some(s"Invalid NotConnected JSON : ${js.JSON.stringify(json)}")
+          Some(s"Invalid NotConnected JSON : ${js.JSON.stringify(json)}")
         )
       )
   }

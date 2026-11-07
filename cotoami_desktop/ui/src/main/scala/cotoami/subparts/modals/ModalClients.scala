@@ -1,5 +1,6 @@
 package cotoami.subparts.modals
 
+import marubinotto.fui.toCmd
 import scala.util.chaining._
 import com.softwaremill.quicklens._
 
@@ -31,7 +32,7 @@ object ModalClients {
   ) {
     def fetchFirst: (Model, Cmd.One[AppMsg]) = fetch(0)
 
-    def fetchMore: (Model, Cmd.One[AppMsg]) =
+    def fetchMore: (Model, Cmd[AppMsg]) =
       if (loading)
         (this, Cmd.none)
       else
@@ -42,7 +43,7 @@ object ModalClients {
     private def fetch(pageIndex: Double): (Model, Cmd.One[AppMsg]) =
       (
         copy(loading = true),
-        ClientNodeBackend.fetchRecent(pageIndex)
+        ClientNodeBackend.fetchRecent(pageIndex).toCmd
           .map(Msg.Fetched(_).into)
       )
 
@@ -98,7 +99,7 @@ object ModalClients {
       case Msg.SetDisabled(id, disable) =>
         (
           model.modify(_.togglingDisabled).using(_ + id),
-          ClientNodeBackend.edit(id, Some(disable))
+          ClientNodeBackend.edit(id, Some(disable)).toCmd
             .map(Msg.ClientUpdated(id, _).into)
         )
 

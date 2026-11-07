@@ -2,7 +2,7 @@ package cotoami.updates
 
 import com.softwaremill.quicklens._
 
-import marubinotto.fui.{Browser, Cmd}
+import marubinotto.fui.Cmd
 import marubinotto.facade.Nullable
 
 import cotoami.{Model, Msg}
@@ -50,10 +50,9 @@ object LocalNodeEvent {
         if (disconnectedFromRemoteSelf) {
           // Switch back to the local node when disconnected from the
           // remote node on which the app is currently operating.
-          InitialDataset.switchSelfNodeTo(None).flatMap(_ match {
-            case Right(dataset) =>
-              Browser.send(Msg.SetInitialDataset(dataset))
-            case Left(_) => Cmd.none
+          Cmd.optional(InitialDataset.switchSelfNodeTo(None).map {
+            case Right(dataset) => Some(Msg.SetInitialDataset(dataset))
+            case _              => None
           })
         } else {
           notConnected match {

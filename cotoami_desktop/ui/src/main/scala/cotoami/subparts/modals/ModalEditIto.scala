@@ -1,5 +1,6 @@
 package cotoami.subparts.modals
 
+import marubinotto.fui.toCmd
 import scala.util.chaining._
 
 import slinky.web.html._
@@ -52,7 +53,7 @@ object ModalEditIto {
     def disconnect: (Model, Cmd.One[AppMsg]) =
       (
         copy(disconnecting = true),
-        ItoBackend.delete(original.id).map(Msg.Disconnected(_).into)
+        ItoBackend.delete(original.id).toCmd.map(Msg.Disconnected(_).into)
       )
 
     def readyToSave: Boolean = validate.validated && !disconnecting && !saving
@@ -60,7 +61,7 @@ object ModalEditIto {
     def save: (Model, Cmd.One[AppMsg]) =
       (
         copy(saving = true),
-        ItoBackend.edit(original.id, diffDescription, None)
+        ItoBackend.edit(original.id, diffDescription, None).toCmd
           .map(Msg.Saved(_).into)
       )
   }

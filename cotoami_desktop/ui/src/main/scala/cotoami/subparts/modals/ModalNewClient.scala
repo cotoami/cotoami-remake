@@ -1,5 +1,6 @@
 package cotoami.subparts.modals
 
+import marubinotto.fui.toCmd
 import scala.util.chaining._
 
 import com.softwaremill.quicklens._
@@ -39,7 +40,7 @@ object ModalNewClient {
   ) {
     def validateNodeId(
         localNodeId: Option[Id[Node]]
-    ): (Model, Cmd.One[AppMsg]) = {
+    ): (Model, Cmd[AppMsg]) = {
       val (validation, cmd) =
         if (nodeId.isEmpty())
           (Validation.Result.notYetValidated, Cmd.none)
@@ -48,10 +49,11 @@ object ModalNewClient {
             case Seq() =>
               (
                 Validation.Result.notYetValidated,
-                ClientNodeBackend.fetch(Id(nodeId))
+                ClientNodeBackend.fetch(Id(nodeId)).toCmd
                   .map(Msg.ClientNodeFetched(nodeId, _).into)
               )
-            case errors => (Validation.Result(errors), Cmd.none)
+            case errors =>
+              (Validation.Result(errors), Cmd.none)
           }
       (copy(nodeIdValidation = validation), cmd)
     }
@@ -134,7 +136,7 @@ object ModalNewClient {
           _3 = ClientNodeBackend.add(
             Id(model.nodeId),
             Some(model.childInput.toJson)
-          ).map(Msg.Registered(_).into)
+          ).toCmd.map(Msg.Registered(_).into)
         )
 
       case Msg.Registered(Right(client)) =>
@@ -185,9 +187,8 @@ object ModalNewClient {
           inputValue = model.nodeId,
           inputErrors = Option.when(!model.registered)(model.nodeIdValidation),
           readOnly = model.registered,
-          onInput = (input => dispatch(Msg.NodeIdInput(input)))
+          onInput = input => dispatch(Msg.NodeIdInput(input))
         ),
-
         // Privileges
         field(
           name = context.i18n.text.ChildPrivileges,
@@ -196,12 +197,11 @@ object ModalNewClient {
           PartsNode.inputChildPrivileges(
             values = model.childInput,
             disabled = model.registered,
-            onAsOwnerChange = (_ => dispatch(Msg.AsOwnerToggled)),
-            onCanEditItosChange = (_ => dispatch(Msg.CanEditItosToggled)),
-            onCanPostCotonomas = (_ => dispatch(Msg.CanPostCotonomasToggled))
+            onAsOwnerChange = _ => dispatch(Msg.AsOwnerToggled),
+            onCanEditItosChange = _ => dispatch(Msg.CanEditItosToggled),
+            onCanPostCotonomas = _ => dispatch(Msg.CanPostCotonomasToggled)
           )
         ),
-
         // Generated password
         Option.when(model.registered) {
           fieldInput(
@@ -210,7 +210,6 @@ object ModalNewClient {
             readOnly = true
           )
         },
-
         // Register
         div(className := "buttons")(
           if (model.registered)

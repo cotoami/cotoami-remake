@@ -1,5 +1,6 @@
 package cotoami
 
+import marubinotto.fui.toCmd
 import scala.util.chaining._
 import scala.scalajs.LinkingInfo
 import org.scalajs.dom
@@ -11,7 +12,6 @@ import slinky.hot
 import com.softwaremill.quicklens._
 
 import cats.effect.IO
-import cats.effect.std.Dispatcher
 import cats.effect.unsafe.implicits.global
 import cats.syntax.all._
 
@@ -42,33 +42,31 @@ object Main {
   def main(args: Array[String]): Unit =
     run.unsafeRunAndForget()
 
-  def run: IO[Unit] =
-    Dispatcher.parallel[IO].use { dispatcher =>
-      IO {
-        if (LinkingInfo.developmentMode) {
-          hot.initialize()
-        }
-      } *> {
-        val container = dom.document.getElementById("app")
-        val currentUrl = new URL(dom.window.location.href)
-        if (BrowserApp.isCurrentWindow(currentUrl)) {
-          BrowserApp.run(container, dispatcher)
-        } else {
-          Browser.runProgram(
-            container,
-            Program(
-              init,
-              (model: Model, dispatch: Msg => Unit) =>
-                view(model, msg => dispatch(msg.into)),
-              update,
-              subscriptions,
-              Some(Msg.UrlChanged.apply)
-            ),
-            dispatcher
+  def run: IO[Unit] = {
+    IO {
+      if (LinkingInfo.developmentMode) {
+        hot.initialize()
+      }
+    } *> {
+      val container = dom.document.getElementById("app")
+      val currentUrl = new URL(dom.window.location.href)
+      if (BrowserApp.isCurrentWindow(currentUrl)) {
+        BrowserApp.run(container)
+      } else {
+        Browser.run(
+          container,
+          Program(
+            init,
+            (model: Model, dispatch: Msg => Unit) =>
+              view(model, msg => dispatch(msg.into)),
+            update,
+            subscriptions,
+            Some(Msg.UrlChanged.apply)
           )
-        }
-      } *> IO.never
+        )
+      }
     }
+  }
 
   object DatabaseFolder {
     val SessionStorageKey = "DatabaseFolder"
@@ -78,9 +76,8 @@ object Main {
       None
     })
 
-    def restore: Cmd.One[Option[String]] = Cmd(IO {
-      Some(Option(dom.window.sessionStorage.getItem(SessionStorageKey)))
-    })
+    def restore: IO[Option[String]] =
+      IO(Option(dom.window.sessionStorage.getItem(SessionStorageKey)))
   }
 
   def init(url: URL): (Model, Cmd[Msg]) = {
@@ -88,17 +85,20 @@ object Main {
     val (geomap, geomapCmd) = SectionGeomap.init
     (
       Model(url = url, flowInput = flowInput, geomap = geomap),
-      Cmd.Batch(
-        showAppWindow,
-        UiState.restore.map(Msg.UiStateRestored.apply),
-        cotoami.backend.SystemInfoJson.fetch().map(Msg.SystemInfoFetched.apply),
-        DatabaseFolder.restore.flatMap(
-          _.map(DatabaseInfo.openDatabase(_).map(Msg.DatabaseOpened.apply))
-            .getOrElse(Modal.open(Modal.Welcome()))
-        ),
-        flowInputCmd,
+      showAppWindow ++
+        UiState.restore.map(Msg.UiStateRestored.apply) ++
+        cotoami.backend.SystemInfoJson.fetch().toCmd.map(
+          Msg.SystemInfoFetched.apply
+        ) ++
+        DatabaseFolder.restore.flatMap {
+          case Some(folder) =>
+            DatabaseInfo.openDatabase(folder).map(
+              Msg.DatabaseOpened.apply
+            )
+          case None => IO.pure(Modal.Msg.OpenModal(Modal.Welcome()).into)
+        }.toCmd ++
+        flowInputCmd ++
         geomapCmd
-      )
     )
   }
 
@@ -123,7 +123,13 @@ object Main {
           Cmd.none
         )
 
-      case Msg.BackendChange(log) => updates.Changelog.apply(log, model)
+      case Msg.BackendChange(Left(error)) =>
+        (
+          model.error("Couldn't decode backend change.", Some(error.toString)),
+          Browser.send(Msg.ReloadRepository)
+        )
+
+      case Msg.BackendChange(Right(log)) => updates.Changelog.apply(log, model)
 
       case Msg.BackendEvent(event) =>
         updates.LocalNodeEvent.handle(event, model)
@@ -147,8 +153,10 @@ object Main {
       case Msg.UiStateRestored(uiState) =>
         (
           model.modify(_.uiState).setTo(Some(uiState.getOrElse(UiState()))),
-          Browser.setHtmlTheme(
-            uiState.map(_.theme).getOrElse(UiState.DefaultTheme)
+          Cmd.exec(
+            Browser.setHtmlTheme(
+              uiState.map(_.theme).getOrElse(UiState.DefaultTheme)
+            )
           )
         )
 
@@ -167,16 +175,15 @@ object Main {
           .pipe { case (model, cmd) =>
             (
               model,
-              Cmd.Batch(
-                DatabaseFolder.save(info.folder),
-                connectToServers,
-                Root.fetchOthersLastPostedAt,
+              DatabaseFolder.save(info.folder) ++
+                connectToServers ++
+                Root.fetchOthersLastPostedAt ++
                 info.newOwnerPassword
                   .map(password =>
                     Modal.open(Modal.NewPassword.forOwner(password))
                   )
                   .getOrElse(Cmd.none)
-              ) ++ cmd
+                ++ cmd
             )
           }
 
@@ -196,10 +203,12 @@ object Main {
             .modify(_.repo).setTo(
               Root(dataset, model.repo.nodes.localId.get)
             ),
-          Cmd.Batch(
-            Browser.pushUrl(Route.index.url(())),
+          Cmd.exec(
+            IO.fromEither(Route.index.url(())).flatMap(url =>
+              Browser.pushUrl(url)
+            )
+          ) ++
             Root.fetchOthersLastPostedAt
-          )
         )
 
       case Msg.SetTheme(theme) =>
@@ -208,11 +217,9 @@ object Main {
           .pipe { case (model, cmd) =>
             (
               model,
-              Cmd.Batch(
-                cmd,
-                Browser.setHtmlTheme(theme),
+              cmd ++
+                Cmd.exec(Browser.setHtmlTheme(theme)) ++
                 BrowserApp.emitTheme(theme)
-              )
             )
           }
 
@@ -225,14 +232,24 @@ object Main {
       case Msg.SwapPane => updates.uiState(_.swapPane)(model)
 
       case Msg.FocusNode(id) =>
-        (model, Browser.pushUrl(Route.node.url(id)))
+        (
+          model,
+          Cmd.exec(
+            IO.fromEither(Route.node.url(id)).flatMap(url =>
+              Browser.pushUrl(url)
+            )
+          )
+        )
 
       case Msg.UnfocusNode => {
         val newUrl = model.repo.cotonomas.focused match {
           case None           => Route.index.url(())
           case Some(cotonoma) => Route.cotonoma.url(cotonoma.id)
         }
-        (model, Browser.pushUrl(newUrl))
+        (
+          model,
+          Cmd.exec(IO.fromEither(newUrl).flatMap(url => Browser.pushUrl(url)))
+        )
       }
 
       case Msg.FocusCotonoma(cotonoma) => {
@@ -248,7 +265,10 @@ object Main {
             else
               Route.cotonomaInNode.url((cotonoma.nodeId, cotonoma.id))
         }
-        (model, Browser.pushUrl(newUrl))
+        (
+          model,
+          Cmd.exec(IO.fromEither(newUrl).flatMap(url => Browser.pushUrl(url)))
+        )
       }
 
       case Msg.FocusedCotonomaDetailsFetched(Right(details)) =>
@@ -268,7 +288,10 @@ object Main {
           case None       => Route.index.url(())
           case Some(node) => Route.node.url(node.id)
         }
-        (model, Browser.pushUrl(newUrl))
+        (
+          model,
+          Cmd.exec(IO.fromEither(newUrl).flatMap(url => Browser.pushUrl(url)))
+        )
       }
 
       case Msg.FocusCoto(id, moveTo) => {
@@ -279,7 +302,9 @@ object Main {
           .pipe(DatabaseFocus.coto(id, moveTo))
           .pipe(
             // Change the URL, but prevent the current node/cotonoma from being reloaded.
-            addCmd(_ => Browser.pushUrl(newUrl.toString(), notify = false))
+            addCmd(_ =>
+              Cmd.exec(Browser.pushUrl(newUrl.toString(), notify = false))
+            )
           )
           .pipe(
             addCmd(_ => Browser.send(AppMain.Msg.SetPaneFlowOpen(true).into))
@@ -317,7 +342,7 @@ object Main {
                 case None => model
               }
             },
-          Browser.pushUrl(newUrl.toString(), notify = false)
+          Cmd.exec(Browser.pushUrl(newUrl.toString(), notify = false))
         )
       }
 
@@ -329,10 +354,9 @@ object Main {
           (
             model,
             if (!model.repo.cotos.anySelected)
-              Cmd.Batch(
-                Modal.close(classOf[Modal.Selection]),
+
+              Modal.close(classOf[Modal.Selection]) ++
                 Modal.close(classOf[Modal.NewIto])
-              )
             else
               Cmd.none
           )
@@ -342,7 +366,7 @@ object Main {
         (
           model.copy(repo = Root()),
           model.databaseFolder.map(
-            DatabaseInfo.openDatabase(_).map(Msg.DatabaseOpened.apply)
+            DatabaseInfo.openDatabase(_).map(Msg.DatabaseOpened.apply).toCmd
           ).getOrElse(Cmd.none)
         )
       }
@@ -440,14 +464,14 @@ object Main {
           case (dialog, cmd) =>
             prepareModelessPlacement(
               ModelessDialogOrder(
-                (submsg match {
+                submsg match {
                   case ModelessGeomap.Msg.Open =>
                     model
                       .modify(_.modeless.geomap).setTo(dialog)
                       .modify(_.uiState.each).using(_.closeMap)
                   case _ =>
                     model.modify(_.modeless.geomap).setTo(dialog)
-                }),
+                },
                 ModelessGeomap.DialogId,
                 ModelessGeomap.dialogOrderAction(submsg)
               ),
@@ -606,7 +630,7 @@ object Main {
       if (url.hash.isBlank())
         Cmd.none
       else {
-        CotoDetails.fetch(Id(url.hash.stripPrefix("#")))
+        CotoDetails.fetch(Id(url.hash.stripPrefix("#"))).toCmd
           .map(Msg.CotoFetchedOnDirectVisit(_))
       }
 
@@ -625,7 +649,14 @@ object Main {
             .pipe(addCmd(BrowserApp.emitDatabaseFocus))
             .pipe(addCmd(_ => focusCoto))
         else
-          (model, Browser.pushUrl(Route.index.url(())))
+          (
+            model,
+            Cmd.exec(
+              IO.fromEither(Route.index.url(())).flatMap(url =>
+                Browser.pushUrl(url)
+              )
+            )
+          )
 
       case Route.cotonoma(id) =>
         model
@@ -640,7 +671,14 @@ object Main {
           .pipe(addCmd(_ => focusCoto))
 
       case _ =>
-        (model, Browser.pushUrl(Route.index.url(())))
+        (
+          model,
+          Cmd.exec(
+            IO.fromEither(Route.index.url(())).flatMap(url =>
+              Browser.pushUrl(url)
+            )
+          )
+        )
     }
   }
 
@@ -656,7 +694,9 @@ object Main {
             uiState.paneOpened(PaneStock.PaneName) &&
             !uiState.paneOpened(PaneFlow.PaneName)
         )
-        .map(uiState => AppMain.update(AppMain.Msg.SetPaneFlowOpen(true))(uiState))
+        .map(uiState =>
+          AppMain.update(AppMain.Msg.SetPaneFlowOpen(true))(uiState)
+        )
         .map { case (uiState, unfoldCmd) =>
           (
             model.copy(uiState = Some(uiState)),
@@ -685,14 +725,14 @@ object Main {
       appUpdateProgress(model)
 
   private def listenToBackendMessages: Sub[Msg] =
-    (tauri.listen[MessageJson]("message")
-      .map(Msg.BackendMessage.apply): Sub[Msg])
+    tauri.listen[MessageJson]("message")
+      .map(Msg.BackendMessage.apply): Sub[Msg]
 
   private def listenToBackendChanges(model: Model): Sub[Msg] =
     if (model.modalStack.opened[Modal.ParentSync])
       Sub.Empty
     else
-      tauri.listen[ChangelogEntryJson]("backend-change")
+      ChangelogEntry.subscription
         .map(Msg.BackendChange.apply)
 
   private def listenToBackendEvents: Sub[Msg] =
@@ -706,15 +746,11 @@ object Main {
       tauri.listen[Unit](
         "main-window-close-requested",
         Some("main-window-close-requested-embedded-browser")
-      ).map(_ =>
-        Msg.PaneStockMsg(PaneStock.Msg.DetachNativeBrowser)
-      ) <+>
+      ).map(_ => Msg.PaneStockMsg(PaneStock.Msg.DetachNativeBrowser)) <+>
         tauri.listen[Unit](
           "main-window-reopened",
           Some("main-window-reopened-embedded-browser")
-        ).map(_ =>
-          Msg.PaneStockMsg(PaneStock.Msg.AttachNativeBrowser)
-        )
+        ).map(_ => Msg.PaneStockMsg(PaneStock.Msg.AttachNativeBrowser))
 
   private def embeddedBrowserDownloads(model: Model): Sub[Msg] =
     if (!model.stockBrowser.opened)
@@ -722,9 +758,7 @@ object Main {
     else
       BrowserDownloads
         .subscriptions(PaneStock.BrowserContentLabel)
-        .map(msg =>
-          Msg.PaneStockMsg(PaneStock.Msg.BrowserDownloadsMsg(msg))
-        )
+        .map(msg => Msg.PaneStockMsg(PaneStock.Msg.BrowserDownloadsMsg(msg)))
 
   private def appUpdateProgress(model: Model): Sub[Msg] =
     model.modalStack.get[Modal.AppUpdate]

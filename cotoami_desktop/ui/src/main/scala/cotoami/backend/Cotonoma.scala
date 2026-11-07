@@ -1,8 +1,9 @@
 package cotoami.backend
 
+import cats.effect.IO
+import cats.syntax.all.*
 import scala.scalajs.js
 
-import marubinotto.fui.Cmd
 import cotoami.models.{
   Coto,
   Cotonoma,
@@ -26,42 +27,42 @@ trait CotonomaJson extends js.Object {
 object CotonomaJson {
   def fetch(
       id: Id[Cotonoma]
-  ): Cmd.One[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
+  ): IO[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
     Commands.send(Commands.Cotonoma(id))
 
   def fetchByCotoId(
       id: Id[Coto]
-  ): Cmd.One[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
+  ): IO[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
     Commands.send(Commands.CotonomaByCotoId(id))
 
   def fetchByName(
       name: String,
       nodeId: Id[Node]
-  ): Cmd.One[Either[ErrorJson, CotonomaJson]] =
+  ): IO[Either[ErrorJson, CotonomaJson]] =
     Commands.send(Commands.CotonomaByName(name, nodeId))
 
   def fetchRecent(
       nodeId: Option[Id[Node]],
       pageIndex: Double
-  ): Cmd.One[Either[ErrorJson, PageJson[CotonomaJson]]] =
+  ): IO[Either[ErrorJson, PageJson[CotonomaJson]]] =
     Commands.send(Commands.RecentCotonomas(nodeId, pageIndex))
 
   def fetchSubs(
       id: Id[Cotonoma],
       pageIndex: Double
-  ): Cmd.One[Either[ErrorJson, PageJson[CotonomaJson]]] =
+  ): IO[Either[ErrorJson, PageJson[CotonomaJson]]] =
     Commands.send(Commands.SubCotonomas(id, pageIndex))
 
   def fetchByPrefix(
       prefix: String,
       nodes: Option[js.Array[Id[Node]]]
-  ): Cmd.One[Either[ErrorJson, js.Array[CotonomaJson]]] =
+  ): IO[Either[ErrorJson, js.Array[CotonomaJson]]] =
     Commands.send(Commands.CotonomasByPrefix(prefix, nodes))
 
   def fetchByPartial(
       partial: String,
       nodes: Option[js.Array[Id[Node]]]
-  ): Cmd.One[Either[ErrorJson, js.Array[CotonomaJson]]] =
+  ): IO[Either[ErrorJson, js.Array[CotonomaJson]]] =
     Commands.send(Commands.CotonomasByPartial(partial, nodes))
 
   def post(
@@ -69,17 +70,22 @@ object CotonomaJson {
       location: Option[Geolocation],
       timeRange: Option[DateTimeRange],
       postTo: Id[Cotonoma]
-  ): Cmd.One[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
+  ): IO[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
     Commands.send(Commands.PostCotonoma(name, location, timeRange, postTo))
 
   def rename(
       id: Id[Cotonoma],
       name: String
-  ): Cmd.One[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
+  ): IO[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
     Commands.send(Commands.RenameCotonoma(id, name))
 }
 
 object CotonomaBackend {
+  def decodePair(
+      pair: js.Tuple2[CotonomaJson, CotoJson]
+  ): IO[(Cotonoma, Coto)] =
+    CotoBackend.toModel(pair._2).map(coto => (toModel(pair._1), coto))
+
   def toModel(json: CotonomaJson): Cotonoma =
     Cotonoma(
       id = Id(json.uuid),
@@ -90,47 +96,47 @@ object CotonomaBackend {
       updatedAtUtcIso = json.updated_at
     )
 
-  def fetch(id: Id[Cotonoma]): Cmd.One[Either[ErrorJson, (Cotonoma, Coto)]] =
+  def fetch(id: Id[Cotonoma]): IO[Either[ErrorJson, (Cotonoma, Coto)]] =
     CotonomaJson.fetch(id)
-      .map(_.map(pair => (toModel(pair._1), CotoBackend.toModel(pair._2))))
+      .flatMap(_.traverse(decodePair))
 
   def fetchByCotoId(
       id: Id[Coto]
-  ): Cmd.One[Either[ErrorJson, (Cotonoma, Coto)]] =
+  ): IO[Either[ErrorJson, (Cotonoma, Coto)]] =
     CotonomaJson.fetchByCotoId(id)
-      .map(_.map(pair => (toModel(pair._1), CotoBackend.toModel(pair._2))))
+      .flatMap(_.traverse(decodePair))
 
   def fetchByName(
       name: String,
       nodeId: Id[Node]
-  ): Cmd.One[Either[ErrorJson, Cotonoma]] =
+  ): IO[Either[ErrorJson, Cotonoma]] =
     CotonomaJson.fetchByName(name, nodeId).map(_.map(toModel))
 
   def fetchRecent(
       nodeId: Option[Id[Node]],
       pageIndex: Double
-  ): Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
+  ): IO[Either[ErrorJson, Page[Cotonoma]]] =
     CotonomaJson.fetchRecent(nodeId, pageIndex)
       .map(_.map(PageBackend.toModel(_, toModel)))
 
   def fetchSubs(
       id: Id[Cotonoma],
       pageIndex: Double
-  ): Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
+  ): IO[Either[ErrorJson, Page[Cotonoma]]] =
     CotonomaJson.fetchSubs(id, pageIndex)
       .map(_.map(PageBackend.toModel(_, toModel)))
 
   def fetchByPrefix(
       prefix: String,
       nodes: Option[js.Array[Id[Node]]]
-  ): Cmd.One[Either[ErrorJson, js.Array[Cotonoma]]] =
+  ): IO[Either[ErrorJson, js.Array[Cotonoma]]] =
     CotonomaJson.fetchByPrefix(prefix, nodes)
       .map(_.map(_.map(toModel)))
 
   def fetchByPartial(
       partial: String,
       nodes: Option[js.Array[Id[Node]]]
-  ): Cmd.One[Either[ErrorJson, js.Array[Cotonoma]]] =
+  ): IO[Either[ErrorJson, js.Array[Cotonoma]]] =
     CotonomaJson.fetchByPartial(partial, nodes)
       .map(_.map(_.map(toModel)))
 
@@ -139,14 +145,14 @@ object CotonomaBackend {
       location: Option[Geolocation],
       timeRange: Option[DateTimeRange],
       postTo: Id[Cotonoma]
-  ): Cmd.One[Either[ErrorJson, (Cotonoma, Coto)]] =
+  ): IO[Either[ErrorJson, (Cotonoma, Coto)]] =
     CotonomaJson.post(name, location, timeRange, postTo)
-      .map(_.map(pair => (toModel(pair._1), CotoBackend.toModel(pair._2))))
+      .flatMap(_.traverse(decodePair))
 
   def rename(
       id: Id[Cotonoma],
       name: String
-  ): Cmd.One[Either[ErrorJson, (Cotonoma, Coto)]] =
+  ): IO[Either[ErrorJson, (Cotonoma, Coto)]] =
     CotonomaJson.rename(id, name)
-      .map(_.map(pair => (toModel(pair._1), CotoBackend.toModel(pair._2))))
+      .flatMap(_.traverse(decodePair))
 }

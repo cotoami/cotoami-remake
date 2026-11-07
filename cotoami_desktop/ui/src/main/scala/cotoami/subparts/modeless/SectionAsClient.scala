@@ -1,5 +1,6 @@
 package cotoami.subparts.modeless
 
+import marubinotto.fui.toCmd
 import scala.util.chaining._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
@@ -35,7 +36,7 @@ object SectionAsClient {
       if (!context.repo.nodes.isSelf(nodeId))
         (
           Model(nodeId, loading = true),
-          ClientNodeBackend.fetch(nodeId)
+          ClientNodeBackend.fetch(nodeId).toCmd
             .map(Msg.ClientNodeFetched(_).into)
         )
       else
@@ -81,7 +82,7 @@ object SectionAsClient {
       case Msg.ResetClientPassword(node) =>
         (
           model.copy(resettingPassword = true),
-          ClientNodeBackend.resetPassword(node.id)
+          ClientNodeBackend.resetPassword(node.id).toCmd
             .map(Msg.ClientPasswordReset(node, _).into)
         )
 

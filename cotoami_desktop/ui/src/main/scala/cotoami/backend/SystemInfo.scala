@@ -1,8 +1,8 @@
 package cotoami.backend
 
+import cats.effect.IO
 import scala.scalajs.js
 
-import marubinotto.fui.Cmd
 import marubinotto.facade.Nullable
 import marubinotto.libs.tauri
 
@@ -19,8 +19,8 @@ trait SystemInfoJson extends js.Object {
 }
 
 object SystemInfoJson {
-  def fetch(): Cmd.One[Either[Unit, SystemInfoJson]] =
-    tauri.invokeCommand("system_info")
+  def fetch(): IO[Either[Unit, SystemInfoJson]] =
+    tauri.invokeCommandIO("system_info")
 
   def debug(info: SystemInfoJson): String = {
     val recent_databases = info.recent_databases.map(x => (x.name, x.folder))
