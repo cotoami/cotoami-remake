@@ -175,23 +175,45 @@ object html {
   val onScroll = new EventAttr[[T] =>> SyntheticEvent[T, dom.Event]]("onScroll")
   val onSubmit = new EventAttr[[T] =>> SyntheticEvent[T, dom.Event]]("onSubmit")
   object ref {
+    // Weak keys preserve callback identity without retaining discarded closures.
+    // Separate caches prevent mixing the null-notification and cleanup contracts.
+    private val callbacks = js.Dynamic.newInstance(js.Dynamic.global.WeakMap)()
+    private val cleanupCallbacks =
+      js.Dynamic.newInstance(js.Dynamic.global.WeakMap)()
+    private def cached[F <: js.Function](
+        cache: js.Dynamic,
+        callback: AnyRef
+    )(create: => F): F = {
+      val key = callback.asInstanceOf[js.Any]
+      val existing = cache.get(key)
+      if (!js.isUndefined(existing)) existing.asInstanceOf[F]
+      else {
+        val adapted = create
+        cache.set(key, adapted)
+        adapted
+      }
+    }
     def :=[T <: dom.Element](value: DomRef[T]): AttrPair[T] =
       AttrPair("ref", value.raw)
     def :=[T <: dom.Element](callback: (T | Null) => Unit): AttrPair[T] =
       AttrPair(
         "ref",
-        ((node: T | Null) => callback(node)): js.Function1[T | Null, Unit]
+        cached(callbacks, callback) {
+          ((node: T | Null) => callback(node)): js.Function1[T | Null, Unit]
+        }
       )
     def cleanup[T <: dom.Element](callback: T => (() => Unit)): AttrPair[T] =
       AttrPair(
         "ref",
-        ((node: T | Null) => {
-          if (node == null) js.undefined
-          else {
-            val release = callback(node.asInstanceOf[T]);
-            (() => release()): js.Function0[Unit]
-          }
-        }): js.Function1[T | Null, js.UndefOr[js.Function0[Unit]]]
+        cached(cleanupCallbacks, callback) {
+          ((node: T | Null) => {
+            if (node == null) js.undefined
+            else {
+              val release = callback(node.asInstanceOf[T]);
+              (() => release()): js.Function0[Unit]
+            }
+          }): js.Function1[T | Null, js.UndefOr[js.Function0[Unit]]]
+        }
       )
   }
   object aria { def -(name: String): Attr[String] = new Attr("aria-" + name) }

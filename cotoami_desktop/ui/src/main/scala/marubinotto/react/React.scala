@@ -173,9 +173,15 @@ object Hooks {
   }
   def useRef[A](initial: A): ReactRef[A] =
     RawReact.useRef(initial.asInstanceOf[js.Any]).asInstanceOf[ReactRef[A]]
-  def useDomRef[A <: dom.Element](): DomRef[A] = new DomRef(
-    RawReact.useRef(null).asInstanceOf[ReactRef[A | Null]]
-  )
+  def useDomRef[A <: dom.Element](): DomRef[A] = {
+    val raw = RawReact.useRef(null).asInstanceOf[ReactRef[A | Null]]
+    val adapter = useRef(Option.empty[DomRef[A]])
+    adapter.current.getOrElse {
+      val created = new DomRef(raw)
+      adapter.current = Some(created)
+      created
+    }
+  }
   def useContext[A](context: Context[A]): A =
     RawReact.useContext(context.raw).asInstanceOf[A]
   def useCallback[A <: js.Function](callback: A, deps: Seq[Any]): A =

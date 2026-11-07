@@ -138,6 +138,81 @@ class ReactSpec extends AsyncFunSuite {
       assert(mountedRef.value.isEmpty)
     }
   }
+  test("DOM ref identity keeps effect dependencies stable across updates") {
+    mounted { (root, container) =>
+      var current: DomRef[dom.HTMLDivElement] = null
+      var setups = 0
+      var cleanups = 0
+      val component = FunctionalComponent[Int] { value =>
+        current = Hooks.useDomRef[dom.HTMLDivElement]()
+        Hooks.useLayoutEffect(
+          () => { setups += 1; () => { cleanups += 1 } },
+          Seq(current)
+        )
+        div(ref := current)(value)
+      }
+      Flush(() => root.render(component(1)))
+      val initial = current
+      Flush(() => root.render(component(2)))
+      assert(current eq initial)
+      assert(current.value.contains(container.firstElementChild))
+      assert(setups == 1)
+      assert(cleanups == 0)
+      Flush(() => root.render(ReactNode.empty))
+      assert(initial.value.isEmpty)
+      assert(cleanups == 1)
+      Flush(() => root.render(component(3)))
+      assert(!(current eq initial))
+      assert(setups == 2)
+    }
+  }
+  test("stable callback refs survive updates and changed callbacks detach") {
+    mounted { (root, _) =>
+      val events = scala.collection.mutable.ArrayBuffer.empty[String]
+      def callback(label: String): (dom.HTMLDivElement | Null) => Unit =
+        node => {
+          events += s"$label:${if (node == null) "detach" else "attach"}"; ()
+        }
+      val first = callback("first")
+      val second = callback("second")
+      val component = FunctionalComponent[(dom.HTMLDivElement | Null) => Unit] {
+        cb => div(ref := cb)
+      }
+      Flush(() => root.render(component(first)))
+      Flush(() => root.render(component(first)))
+      assert(events.toSeq == Seq("first:attach"))
+      Flush(() => root.render(component(second)))
+      assert(
+        events.toSeq == Seq("first:attach", "first:detach", "second:attach")
+      )
+      Flush(() => root.render(ReactNode.empty))
+      assert(events.last == "second:detach")
+    }
+  }
+  test("stable cleanup refs only clean up on replacement or unmount") {
+    mounted { (root, _) =>
+      val events = scala.collection.mutable.ArrayBuffer.empty[String]
+      def callback(label: String): dom.HTMLDivElement => (() => Unit) =
+        _ => {
+          events += s"$label:attach"
+          () => { events += s"$label:cleanup"; () }
+        }
+      val first = callback("first")
+      val second = callback("second")
+      val component = FunctionalComponent[dom.HTMLDivElement => (() => Unit)] {
+        cb => div(ref.cleanup(cb))
+      }
+      Flush(() => root.render(component(first)))
+      Flush(() => root.render(component(first)))
+      assert(events.toSeq == Seq("first:attach"))
+      Flush(() => root.render(component(second)))
+      assert(
+        events.toSeq == Seq("first:attach", "first:cleanup", "second:attach")
+      )
+      Flush(() => root.render(ReactNode.empty))
+      assert(events.last == "second:cleanup")
+    }
+  }
   test("function-valued state is stored without invoking it") {
     mounted { (root, _) =>
       var calls = 0

@@ -13,6 +13,22 @@ enum Nullable[+A] {
   case Null
 }
 object ValueEncoder {
+  // Nullable is covariant; explicitly constrain this union's payload so implicit
+  // search does not leave A undetermined while considering UndefOr recursively.
+  given optionalNullable[A](using
+      encoder: ValueEncoder[A]
+  ): ValueEncoder[js.UndefOr[Nullable[A]]] =
+    value =>
+      if (js.isUndefined(value)) js.undefined
+      else
+        value.asInstanceOf[Nullable[A]] match {
+          case Nullable.Null           => null
+          case Nullable.Value(defined) => encoder.encode(defined)
+        }
+  given [A](using encoder: ValueEncoder[A]): ValueEncoder[js.UndefOr[A]] =
+    value =>
+      if (js.isUndefined(value)) js.undefined
+      else encoder.encode(value.asInstanceOf[A])
   given ValueEncoder[String] = value => value
   given ValueEncoder[Boolean] = value => value
   given ValueEncoder[Int] = value => value
@@ -33,10 +49,6 @@ object ValueEncoder {
   }
   given [A](using encoder: ValueEncoder[A]): ValueEncoder[Seq[A]] =
     values => js.Array(values.map(encoder.encode)*)
-  given [A](using encoder: ValueEncoder[A]): ValueEncoder[js.UndefOr[A]] =
-    value =>
-      if (js.isUndefined(value)) js.undefined
-      else encoder.encode(value.asInstanceOf[A])
   given [R](using result: ValueEncoder[R]): ValueEncoder[() => R] =
     f => (() => result.encode(f())): js.Function0[js.Any]
   given [A, R](using
