@@ -1,8 +1,8 @@
 package cotoami.subparts
 
-import slinky.core.SyntheticEvent
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
+import marubinotto.react.SyntheticEvent
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
 
 import marubinotto.optionalClasses
 import marubinotto.components.toolButton
@@ -14,7 +14,7 @@ import cotoami.subparts.modeless.ModelessNodeProfile
 
 object PartsNode {
 
-  def imgNode(node: Node, additionalClasses: String = ""): ReactElement =
+  def imgNode(node: Node, additionalClasses: String = ""): ReactNode =
     img(
       className := s"node-icon ${additionalClasses}",
       alt := node.name,
@@ -23,7 +23,7 @@ object PartsNode {
 
   def spanNode(
       node: Node
-  )(using dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using dispatch: Into[AppMsg] => Unit): ReactNode =
     span(
       className := "node",
       onClick := (_ => dispatch(ModelessNodeProfile.Msg.Open(node.id)))
@@ -32,7 +32,7 @@ object PartsNode {
       span(className := "name")(node.name)
     )
 
-  def detailsConnectionStatus(status: ViewConnectionStatus): ReactElement =
+  def detailsConnectionStatus(status: ViewConnectionStatus): ReactNode =
     details(
       className := optionalClasses(
         Seq(
@@ -52,7 +52,7 @@ object PartsNode {
   def buttonSwitchNode(switchTo: Node, tipPlacement: String = "bottom")(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): Option[ReactElement] = {
+  ): Option[ReactNode] = {
     val repo = context.repo
     Option.when(
       !repo.nodes.isSelfRemote &&
@@ -98,14 +98,14 @@ object PartsNode {
       onAsOwnerChange: SyntheticEvent[?, ?] => Unit,
       onCanEditItosChange: SyntheticEvent[?, ?] => Unit,
       onCanPostCotonomas: SyntheticEvent[?, ?] => Unit
-  )(using context: Context): ReactElement =
+  )(using context: Context): ReactNode =
     Fragment(
       label(htmlFor := "as-owner")(
         input(
           `type` := "checkbox",
           id := "as-owner",
           checked := values.asOwner,
-          slinky.web.html.disabled := disabled,
+          marubinotto.react.html.disabled := disabled,
           onChange := onAsOwnerChange
         ),
         context.i18n.text.ChildPrivileges_asOwner
@@ -115,7 +115,7 @@ object PartsNode {
           `type` := "checkbox",
           id := "can-post-cotos",
           checked := true,
-          slinky.web.html.disabled := true
+          marubinotto.react.html.disabled := true
         ),
         context.i18n.text.ChildPrivileges_canPostCotos
       ),
@@ -124,7 +124,7 @@ object PartsNode {
           `type` := "checkbox",
           id := "can-edit-itos",
           checked := values.canEditItos,
-          slinky.web.html.disabled := disabled,
+          marubinotto.react.html.disabled := disabled,
           onChange := onCanEditItosChange
         ),
         context.i18n.text.ChildPrivileges_canEditItos
@@ -134,7 +134,7 @@ object PartsNode {
           `type` := "checkbox",
           id := "can-post-cotonomas",
           checked := values.canPostCotonomas,
-          slinky.web.html.disabled := disabled,
+          marubinotto.react.html.disabled := disabled,
           onChange := onCanPostCotonomas
         ),
         context.i18n.text.ChildPrivileges_canPostCotonomas

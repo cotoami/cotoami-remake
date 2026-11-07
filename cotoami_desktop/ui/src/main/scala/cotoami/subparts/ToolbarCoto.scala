@@ -1,7 +1,7 @@
 package cotoami.subparts
 
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.components.toolButton
 import cotoami.{Context, Into, Msg => AppMsg}
@@ -17,7 +17,7 @@ object ToolbarCoto {
   )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): Option[ReactElement] = {
+  ): Option[ReactNode] = {
     if (coto.isRepost) return None
 
     val repo = context.repo

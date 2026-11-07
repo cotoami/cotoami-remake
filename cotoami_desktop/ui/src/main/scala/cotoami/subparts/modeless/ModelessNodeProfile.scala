@@ -1,8 +1,8 @@
 package cotoami.subparts.modeless
 
 import scala.util.chaining._
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
 
 import marubinotto.optionalClasses
 import marubinotto.fui.{Browser, Cmd}
@@ -173,7 +173,7 @@ object ModelessNodeProfile {
   def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     ModelessDialogFrame(
       dialogClasses = Seq("modeless-node-profile" -> true),
       title = Fragment(
@@ -197,7 +197,7 @@ object ModelessNodeProfile {
   private def modelessContent(node: Node, model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement = {
+  ): ReactNode = {
     val rootCoto = context.repo.rootOf(model.nodeId).map(_._2)
     Fragment(
       divSidebar(node, model),
@@ -223,7 +223,7 @@ object ModelessNodeProfile {
   private def divSidebar(node: Node, model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     div(className := "sidebar")(
       section(
         className := optionalClasses(
@@ -263,7 +263,7 @@ object ModelessNodeProfile {
       privileges: Option[ChildNode]
   )(using
       context: Context
-  ): ReactElement =
+  ): ReactNode =
     section(className := "node-relationship")(
       div(className := "arrow")(materialSymbol("arrow_upward")),
       Option.when(isParent) {
@@ -279,14 +279,14 @@ object ModelessNodeProfile {
   private def sectionToolButtons(node: Node)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     section(className := "tool-buttons")(
       PartsNode.buttonSwitchNode(node, "left")
     )
 
   private def fieldId(node: Node)(using
       context: Context
-  ): ReactElement =
+  ): ReactNode =
     fieldInput(
       name = context.i18n.text.Id,
       classes = "node-id",
@@ -297,7 +297,7 @@ object ModelessNodeProfile {
   private def fieldName(node: Node, rootCoto: Option[Coto], model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     field(
       name = context.i18n.text.Name,
       classes = "node-name"
@@ -314,7 +314,7 @@ object ModelessNodeProfile {
   private def fieldDescription(rootCoto: Coto, model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     field(
       name = context.i18n.text.ModelessNodeProfile_description,
       classes = "node-description"
@@ -328,7 +328,7 @@ object ModelessNodeProfile {
   private def divEditRootCoto(rootCoto: Coto, model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     Option.when(model.isSelf) {
       div(className := "edit")(
         buttonEdit(

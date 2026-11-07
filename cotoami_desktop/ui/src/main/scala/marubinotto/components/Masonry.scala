@@ -4,10 +4,10 @@ import scala.scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.html
 
-import slinky.core._
-import slinky.core.facade.ReactElement
-import slinky.core.facade.Hooks._
-import slinky.web.html._
+import marubinotto.react._
+import marubinotto.react.ReactNode
+import marubinotto.react.Hooks._
+import marubinotto.react.html._
 
 object Masonry {
   case class RenderProps(
@@ -20,7 +20,7 @@ object Masonry {
       items: js.Array[scala.Any],
       itemKey: js.Function2[js.Any, Int, String] = (_, index) =>
         index.toString(),
-      render: RenderProps => ReactElement,
+      render: RenderProps => ReactNode,
       columnWidth: Int = 240,
       columnGutter: Option[Int] = Some(0),
       rowGutter: Option[Int] = None,
@@ -31,7 +31,7 @@ object Masonry {
       items: js.Array[scala.Any],
       itemKey: js.Function2[js.Any, Int, String] = (_, index) =>
         index.toString(),
-      render: RenderProps => ReactElement,
+      render: RenderProps => ReactNode,
       columnWidth: Int = 240,
       columnGutter: Option[Int] = Some(0),
       rowGutter: Option[Int] = None,
@@ -67,7 +67,7 @@ object Masonry {
     LayoutState(1, 0, 0, Vector.empty, ready = false)
 
   val component = FunctionalComponent[Props] { props =>
-    val rootRef = useRef[html.Div](null)
+    val rootRef = useDomRef[html.Div]()
     val (containerWidth, setContainerWidth) = useState(0.0)
     val (measurementVersion, setMeasurementVersion) = useState(0)
     val (layout, setLayout) = useState(EmptyLayout)
@@ -79,12 +79,12 @@ object Masonry {
 
     useEffect(
       () => {
-        val root = rootRef.current
+        val root = rootRef.value.orNull
         if (root == null) () => ()
         else {
           val updateWidth = () => {
             val width = root.clientWidth.toDouble
-            setContainerWidth(current =>
+            setContainerWidth.update(current =>
               if ((current - width).abs < 0.5) current else width
             )
           }
@@ -101,11 +101,11 @@ object Masonry {
 
     useEffect(
       () => {
-        val root = rootRef.current
+        val root = rootRef.value.orNull
         if (root == null) () => ()
         else {
           val refreshLayout = () =>
-            setMeasurementVersion(current => current + 1)
+            setMeasurementVersion.update(current => current + 1)
 
           refreshLayout()
 
@@ -128,7 +128,7 @@ object Masonry {
 
     useEffect(
       () => {
-        val root = rootRef.current
+        val root = rootRef.value.orNull
         if (root == null || containerWidth <= 0) ()
         else {
           val heights = Array.fill(props.items.length)(0.0)

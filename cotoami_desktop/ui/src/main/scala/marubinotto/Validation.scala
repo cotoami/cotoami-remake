@@ -3,9 +3,9 @@ package marubinotto
 import java.net.{URI, URISyntaxException}
 import com.softwaremill.quicklens._
 
-import slinky.core.AttrPair
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.AttrPair
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 object Validation {
   case class Error(
@@ -139,7 +139,7 @@ object Validation {
          "true")
   }
 
-  def sectionValidationError(result: Validation.Result): ReactElement =
+  def sectionValidationError(result: Validation.Result): ReactNode =
     result.firstError.map(e =>
       section(className := "validation-error")(
         e.defaultMessage

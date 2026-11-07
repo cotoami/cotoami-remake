@@ -2,8 +2,8 @@ package cotoami.subparts
 
 import scala.util.chaining._
 import scala.reflect.{classTag, ClassTag}
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 import com.softwaremill.quicklens._
 
 import marubinotto.fui.{Browser, Cmd}
@@ -61,7 +61,7 @@ object Modal {
 
   case class Confirm(model: ModalConfirm.Model) extends Modal
   object Confirm {
-    def apply(message: ReactElement, msgOnConfirm: Into[AppMsg]): Confirm =
+    def apply(message: ReactNode, msgOnConfirm: Into[AppMsg]): Confirm =
       Confirm(ModalConfirm.Model(message, msgOnConfirm.into))
   }
 
@@ -389,10 +389,10 @@ object Modal {
       closeButton: Option[(Class[M], Into[AppMsg] => Unit)] = None,
       error: Option[String] = None,
       bodyClasses: String = ""
-  )(title: ReactElement*)(body: ReactElement*): ReactElement =
+  )(title: ReactNode*)(body: ReactNode*): ReactNode =
     dialog(
       className := dialogClasses,
-      slinky.web.html.open := true,
+      marubinotto.react.html.open := true,
       data - "tauri-drag-region" := "default"
     )(
       article()(
@@ -410,12 +410,12 @@ object Modal {
       )
     )
 
-  def spanTitleIcon(iconName: String): ReactElement =
+  def spanTitleIcon(iconName: String): ReactNode =
     span(className := "title-icon")(materialSymbol(iconName))
 
   def apply(
       model: AppModel
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     model.modalStack.top.flatMap {
       case Confirm(modal) => Some(ModalConfirm(modal))
 

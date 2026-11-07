@@ -10,10 +10,10 @@ import org.scalajs.dom
 import org.scalajs.dom.html
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
-import slinky.core._
-import slinky.core.facade.Hooks._
-import slinky.core.facade.{ReactElement, ReactRef}
-import slinky.web.html._
+import marubinotto.react._
+import marubinotto.react.Hooks._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.optionalClasses
 import marubinotto.components.{
@@ -112,14 +112,14 @@ object BrowserShell {
       mode: Mode,
       layoutKey: String,
       text: Text,
-      timeline: Option[ReactElement],
-      cotonomaSelect: Option[ReactElement],
+      timeline: Option[ReactNode],
+      cotonomaSelect: Option[ReactNode],
       trail: (
           String,
           () => Unit,
           BrowserTrail.NavigationRequest => Unit
-      ) => ReactElement,
-      downloads: (() => Unit) => ReactElement,
+      ) => ReactNode,
+      downloads: (() => Unit) => ReactNode,
       downloadsVisible: Boolean,
       downloadsBusy: Boolean,
       downloadsOpenRequest: Int,
@@ -273,36 +273,36 @@ object BrowserShell {
       useRef(Option.empty[PendingScrollRestore])
     val editingRef = useRef(false)
     val windowTitleRef = useRef(windowTitle(initialUrl, props.title))
-    val toolbarRef = useRef[html.Element](null)
-    val webviewSlotRef = useRef[html.Element](null)
+    val toolbarRef = useDomRef[html.Element]()
+    val webviewSlotRef = useDomRef[html.Element]()
     val windowViewportInsetTopRef = useRef(0.0)
     val (toolbarHeight, setToolbarHeightRaw) = useState(ToolbarHeight)
     val currentTheme = props.app.uiState.map(_.theme).getOrElse("dark")
     val standalone = props.mode == Mode.Standalone
 
     def setActualUrl(url: String): Unit =
-      setActualUrlRaw(_ => url)
+      setActualUrlRaw.update(_ => url)
 
     def setDraftUrl(url: String): Unit =
-      setDraftUrlRaw(_ => url)
+      setDraftUrlRaw.update(_ => url)
 
     def setTitle(title: Option[String]): Unit =
-      setTitleRaw(_ => title)
+      setTitleRaw.update(_ => title)
 
     def setLoading(value: Boolean): Unit =
-      setLoadingRaw(_ => value)
+      setLoadingRaw.update(_ => value)
 
     def setCanGoBack(value: Boolean): Unit =
-      setCanGoBackRaw(_ => value)
+      setCanGoBackRaw.update(_ => value)
 
     def setCanGoForward(value: Boolean): Unit =
-      setCanGoForwardRaw(_ => value)
+      setCanGoForwardRaw.update(_ => value)
 
     def setError(value: Option[String]): Unit =
-      setErrorRaw(_ => value)
+      setErrorRaw.update(_ => value)
 
     def setSelectionState(value: Option[SelectionState]): Unit =
-      setSelectionStateRaw(_ => value)
+      setSelectionStateRaw.update(_ => value)
 
     def setContentClipOverlay(
         visible: Boolean,
@@ -339,18 +339,18 @@ object BrowserShell {
     }
 
     def setTrailOpen(value: Boolean): Unit =
-      setTrailOpenRaw(_ => value)
+      setTrailOpenRaw.update(_ => value)
 
     def setDownloadsOpen(value: Boolean): Unit =
-      setDownloadsOpenRaw(_ => value)
+      setDownloadsOpenRaw.update(_ => value)
 
     def setToolbarHeight(height: Double): Unit =
-      setToolbarHeightRaw(current =>
+      setToolbarHeightRaw.update(current =>
         if ((current - height).abs < 0.5) current else height
       )
 
     def currentToolbarHeight: Double =
-      Option(toolbarRef.current)
+      Option(toolbarRef.value.orNull)
         .map(_.getBoundingClientRect().height)
         .filter(_ > 0)
         .getOrElse(toolbarHeight)
@@ -377,7 +377,7 @@ object BrowserShell {
     def browserBoundsArgs: js.Object = {
       val measuredToolbarHeight = currentToolbarHeight
       val slotBounds =
-        Option(webviewSlotRef.current).map(_.getBoundingClientRect())
+        Option(webviewSlotRef.value.orNull).map(_.getBoundingClientRect())
       jso(
         contentLabel = props.contentLabel,
         x = slotBounds.map(_.left).getOrElse(0.0),
@@ -627,7 +627,7 @@ object BrowserShell {
 
     useEffect(
       () => {
-        val toolbar = toolbarRef.current
+        val toolbar = toolbarRef.value.orNull
         if (toolbar == null) () => ()
         else {
           val updateToolbarHeight = () => {
@@ -1003,7 +1003,7 @@ object BrowserShell {
 
     useEffect(
       () => {
-        val slot = webviewSlotRef.current
+        val slot = webviewSlotRef.value.orNull
         if (slot == null) () => ()
         else {
           var resizeAnimationFrameId: Option[Int] = None
@@ -1217,7 +1217,7 @@ object BrowserShell {
                 editingRef.current = false
                 setDraftUrl(actualUrl)
               }),
-              onChange := (e => setDraftUrl(e.target.value))
+              onChange := (e => setDraftUrl(e.currentTarget.value))
             ),
             button(
               className := "browser-action go",

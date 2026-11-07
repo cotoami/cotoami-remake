@@ -8,9 +8,9 @@ import scala.scalajs.js.timers.{clearTimeout, setTimeout, SetTimeoutHandle}
 import org.scalajs.dom
 import org.scalajs.dom.document.createElement
 
-import slinky.core._
-import slinky.core.facade.Hooks._
-import slinky.web.html._
+import marubinotto.react._
+import marubinotto.react.Hooks._
+import marubinotto.react.html._
 
 import marubinotto.Action
 import marubinotto.libs.geomap.maplibre
@@ -274,7 +274,7 @@ object MapLibre {
     // fitBounds
     useEffect(
       () => {
-        props.bounds.map(bounds =>
+        props.bounds.foreach(bounds =>
           mapRef.current.foreach(
             _.fitBounds(
               bounds,

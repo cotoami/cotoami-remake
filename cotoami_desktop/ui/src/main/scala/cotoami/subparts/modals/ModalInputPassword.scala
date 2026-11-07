@@ -2,8 +2,8 @@ package cotoami.subparts.modals
 
 import scala.util.chaining._
 
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
 
 import marubinotto.fui.{Browser, Cmd}
 import cotoami.{Into, Msg => AppMsg}
@@ -64,7 +64,7 @@ object ModalInputPassword {
 
   def apply(
       model: Model
-  )(using dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using dispatch: Into[AppMsg] => Unit): ReactNode = {
     val modalType = classOf[Modal.InputPassword]
     Modal.view(
       dialogClasses = "input-password",
@@ -85,7 +85,7 @@ object ModalInputPassword {
         input(
           `type` := "password",
           value := model.passwordInput,
-          onChange := (e => dispatch(Msg.PasswordInput(e.target.value)))
+          onChange := (e => dispatch(Msg.PasswordInput(e.currentTarget.value)))
         )
       ),
       div(className := "buttons")(

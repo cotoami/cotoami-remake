@@ -3,21 +3,21 @@ package marubinotto
 import scala.scalajs.js
 import org.scalajs.dom
 
-import slinky.core._
-import slinky.core.facade.ReactElement
-import slinky.core.facade.Hooks._
-import slinky.web.SyntheticMouseEvent
-import slinky.web.html._
+import marubinotto.react._
+import marubinotto.react.ReactNode
+import marubinotto.react.Hooks._
+import marubinotto.react.SyntheticMouseEvent
+import marubinotto.react.html._
 
 package object components {
 
-  def materialSymbol(name: String, classNames: String = ""): ReactElement =
+  def materialSymbol(name: String, classNames: String = ""): ReactNode =
     span(className := s"material-symbols ${classNames}")(name)
 
   def materialSymbolFilled(
       name: String,
       classNames: String = ""
-  ): ReactElement =
+  ): ReactNode =
     span(className := s"material-symbols font-fill ${classNames}")(name)
 
   def toolButton(
@@ -27,13 +27,13 @@ package object components {
       classes: String = "",
       disabled: Boolean = false,
       onClick: SyntheticMouseEvent[?] => Unit = (_ => ())
-  ): ReactElement =
+  ): ReactNode =
     button(
       className := s"default tool ${classes}",
       data - "tooltip" := tip,
       data - "placement" := tipPlacement,
-      slinky.web.html.disabled := disabled,
-      slinky.web.html.onClick := onClick,
+      marubinotto.react.html.disabled := disabled,
+      marubinotto.react.html.onClick := onClick,
       onMouseOver := (_.stopPropagation())
     )(
       materialSymbol(symbol)
@@ -47,7 +47,7 @@ package object components {
       classes: String = "",
       disabled: Boolean = false,
       onClick: SyntheticMouseEvent[?] => Unit = (_ => ())
-  ): ReactElement =
+  ): ReactNode =
     ShiftToolButton.component(
       ShiftToolButton.Props(
         symbol = symbol,
@@ -69,7 +69,7 @@ package object components {
       onFoldClick: () => Unit,
       onUnfoldClick: () => Unit,
       direction: CollapseDirection = CollapseDirection.ToLeft
-  ): ReactElement =
+  ): ReactNode =
     div(className := "pane-toggle")(
       button(
         className := "fold default",
@@ -113,9 +113,9 @@ package object components {
       val (shiftPressed, setShiftPressed) = useState(false)
 
       val handleKeyDown: js.Function1[dom.KeyboardEvent, Unit] =
-        (e: dom.KeyboardEvent) => setShiftPressed(_ => e.shiftKey)
+        (e: dom.KeyboardEvent) => setShiftPressed.update(_ => e.shiftKey)
       val handleKeyUp: js.Function1[dom.KeyboardEvent, Unit] =
-        (e: dom.KeyboardEvent) => setShiftPressed(_ => e.shiftKey)
+        (e: dom.KeyboardEvent) => setShiftPressed.update(_ => e.shiftKey)
 
       useEffect(
         () => {
@@ -136,16 +136,16 @@ package object components {
         className := s"default tool ${props.classes}",
         data - "tooltip" := props.shiftTip.filter(_ => hovered && shiftPressed).getOrElse(props.tip),
         data - "placement" := props.tipPlacement,
-        slinky.web.html.disabled := props.disabled,
-        slinky.web.html.onClick := props.onClick,
+        marubinotto.react.html.disabled := props.disabled,
+        marubinotto.react.html.onClick := props.onClick,
         onMouseEnter := (e => {
-          setHovered(_ => true)
-          setShiftPressed(_ => e.shiftKey)
+          setHovered.update(_ => true)
+          setShiftPressed.update(_ => e.shiftKey)
         }),
-        onMouseMove := (e => setShiftPressed(_ => e.shiftKey)),
+        onMouseMove := (e => setShiftPressed.update(_ => e.shiftKey)),
         onMouseLeave := (_ => {
-          setHovered(_ => false)
-          setShiftPressed(_ => false)
+          setHovered.update(_ => false)
+          setShiftPressed.update(_ => false)
         }),
         onMouseOver := (_.stopPropagation())
       )(

@@ -7,8 +7,19 @@ import org.scalajs.dom
 // https://react-dropzone.js.org/
 @js.native
 @JSImport("react-dropzone", JSImport.Namespace)
-object reactDropzone extends js.Object {
-  def useDropzone(options: Options): Dropzone = js.native
+private object ReactDropzoneModule extends js.Object
+
+object reactDropzone {
+  // Vite exposes the ESM named export; Node loads this version's CommonJS
+  // bundle under `default`, without statically detecting its named exports.
+  private lazy val hook: js.Function1[Options, Dropzone] = {
+    val module = ReactDropzoneModule.asInstanceOf[js.Dynamic]
+    val exported =
+      if (js.typeOf(module.useDropzone) == "function") module.useDropzone
+      else module.default.useDropzone
+    exported.asInstanceOf[js.Function1[Options, Dropzone]]
+  }
+  def useDropzone(options: Options): Dropzone = hook(options)
 
   // https://react-dropzone.js.org/#src
   trait Options extends js.Object {

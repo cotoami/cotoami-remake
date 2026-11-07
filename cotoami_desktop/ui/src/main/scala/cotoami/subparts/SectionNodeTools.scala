@@ -1,8 +1,8 @@
 package cotoami.subparts
 
 import marubinotto.fui.toCmd
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
 
 import marubinotto.fui.Cmd
 import marubinotto.components.toolButton
@@ -61,7 +61,7 @@ object SectionNodeTools {
   def apply(
       node: Node,
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode = {
     val repo = context.repo
     val status = repo.nodes.parentStatus(node.id)
     val statusView = status.map(ViewConnectionStatus(_))

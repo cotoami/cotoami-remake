@@ -1,7 +1,7 @@
 package cotoami.subparts
 
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
 
 import marubinotto.optionalClasses
 import marubinotto.components.{materialSymbol, materialSymbolFilled, toolButton}
@@ -16,7 +16,7 @@ object NavNodes {
   def apply(
       model: Model,
       uiState: UiState
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode = {
     val nodes = model.repo.nodes
     nav(
       className := optionalClasses(
@@ -89,7 +89,7 @@ object NavNodes {
 
   private def buttonSwitchBack(
       nodes: Nodes
-  )(using dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using dispatch: Into[AppMsg] => Unit): ReactNode =
     (nodes.isSelfRemote, nodes.self, nodes.local) match {
       case (true, Some(selfNode), Some(localNode)) =>
         Some(
@@ -119,7 +119,7 @@ object NavNodes {
       node: Node,
       anyUnreadPosts: Boolean,
       nodes: Nodes
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode = {
     val status = nodes.parentStatus(node.id)
       .flatMap(ViewConnectionStatus(_).onlyIfNotConnected)
     val tooltip =

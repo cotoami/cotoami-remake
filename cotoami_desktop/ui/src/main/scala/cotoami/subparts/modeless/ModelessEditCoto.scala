@@ -2,8 +2,8 @@ package cotoami.subparts.modeless
 
 import scala.util.chaining._
 
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
 
 import marubinotto.Validation
 import cats.effect.IO
@@ -202,7 +202,7 @@ object ModelessEditCoto {
   def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     ModelessDialogFrame(
       dialogClasses = Seq(
         "modeless-edit-coto" -> true,
@@ -254,7 +254,7 @@ object ModelessEditCoto {
 
   private def dialogTitle(
       original: Coto
-  )(using context: Context): ReactElement =
+  )(using context: Context): ReactNode =
     if (original.isCotonoma)
       if (context.repo.isNodeRoot(original.id))
         Fragment(

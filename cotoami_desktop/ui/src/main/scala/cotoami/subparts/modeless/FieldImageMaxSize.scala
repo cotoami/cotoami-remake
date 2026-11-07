@@ -3,8 +3,8 @@ package cotoami.subparts.modeless
 import marubinotto.fui.toCmd
 import scala.util.chaining._
 import com.softwaremill.quicklens._
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
@@ -134,7 +134,7 @@ object FieldImageMaxSize {
   def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     Option.when(model.isSelf) {
       fieldImageMaxSize(model)
     }
@@ -142,7 +142,7 @@ object FieldImageMaxSize {
   private def fieldImageMaxSize(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     fieldEditable(
       name = context.i18n.text.FieldImageMaxSize,
       classes = "image-max-size",
@@ -163,7 +163,7 @@ object FieldImageMaxSize {
         value := model.input,
         aria - "invalid" :=
           (if (model.changed) model.value.isLeft.toString() else ""),
-        onChange := (e => dispatch(Msg.Input(e.target.value)))
+        onChange := (e => dispatch(Msg.Input(e.currentTarget.value)))
       )
     )
 }

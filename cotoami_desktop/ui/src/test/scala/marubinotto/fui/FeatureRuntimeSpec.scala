@@ -8,7 +8,7 @@ import org.scalajs.dom
 import org.scalatest.funsuite.AsyncFunSuite
 import scala.concurrent.duration.*
 import scala.scalajs.js
-import slinky.web.html.div
+import marubinotto.react.html.div
 
 class FeatureRuntimeSpec extends AsyncFunSuite {
   override implicit def executionContext: scala.concurrent.ExecutionContext =

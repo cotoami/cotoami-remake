@@ -3,10 +3,10 @@ package cotoami.subparts
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => jso}
 
-import slinky.core._
-import slinky.core.facade.{Fragment, React, ReactElement}
-import slinky.core.facade.Hooks._
-import slinky.web.html._
+import marubinotto.react._
+import marubinotto.react.{Fragment, React, ReactNode}
+import marubinotto.react.Hooks._
+import marubinotto.react.html._
 
 import marubinotto.optionalClasses
 import marubinotto.libs.lowlight
@@ -25,8 +25,8 @@ object PartsCoto {
       coto: Coto,
       dispatch: Into[AppMsg] => Unit,
       classes: Seq[(String, Boolean)] = Seq.empty
-  )(children: ReactElement*)(using context: Context): ReactElement =
-    slinky.web.html.article(
+  )(children: ReactNode*)(using context: Context): ReactNode =
+    marubinotto.react.html.article(
       className := optionalClasses(
         Seq(
           ("coto", true),
@@ -40,7 +40,7 @@ object PartsCoto {
 
   def addressAuthor(
       coto: Coto
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     address(className := "author")(
       context.repo.nodes.get(coto.postedById).map(PartsNode.spanNode)
     )
@@ -51,14 +51,14 @@ object PartsCoto {
   )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): Option[ReactElement] =
+  ): Option[ReactNode] =
     Option.when(Some(coto.postedById) != context.repo.nodes.selfId) {
       addressAuthor(coto)
     }
 
   def divAttributes(
       coto: Coto
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     div(className := "attributes")(
       ulOtherCotonomas(coto),
       buttonDateTimeRange(coto),
@@ -83,7 +83,7 @@ object PartsCoto {
 
   private def ulOtherCotonomas(
       coto: Coto
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     ul(className := "other-cotonomas")(
       coto.postedInIds
         .filter(id =>
@@ -112,7 +112,7 @@ object PartsCoto {
   def divContent(
       coto: Coto,
       collapsibleContentOpened: Boolean = false
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     div(className := "content")(
       context.repo.cotonomas.asCotonoma(coto) match {
         case Some(cotonoma) =>
@@ -131,7 +131,7 @@ object PartsCoto {
 
   def sectionCotonomaLinkLabel(
       cotonoma: Cotonoma
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(className := "cotonoma-label")(
       a(
         className := "cotonoma",
@@ -148,13 +148,13 @@ object PartsCoto {
 
   def sectionCotonomaLabel(
       cotonoma: Cotonoma
-  )(using context: Context): ReactElement =
+  )(using context: Context): ReactNode =
     sectionCotonomaLabel(cotonoma.name, cotonoma.nodeId)
 
   def sectionCotonomaLabel(
       cotonomaName: String,
       nodeId: Id[Node]
-  )(using context: Context): ReactElement =
+  )(using context: Context): ReactNode =
     section(className := "cotonoma-label")(
       span(className := "cotonoma")(
         context.repo.nodes.get(nodeId).map(PartsNode.imgNode(_)),
@@ -165,7 +165,7 @@ object PartsCoto {
   def divContentPreview(
       coto: Coto,
       collapsibleContentOpened: Boolean = false
-  )(using context: Context): ReactElement =
+  )(using context: Context): ReactNode =
     div(className := "content")(
       context.repo.cotonomas.asCotonoma(coto) match {
         case Some(cotonoma) =>
@@ -180,7 +180,7 @@ object PartsCoto {
 
   def divWaitingPostContent(
       post: WaitingPost
-  )(using context: Context): ReactElement =
+  )(using context: Context): ReactNode =
     div(className := "content")(
       post.nameAsCotonoma
         .map(sectionCotonomaLabel(_, post.postedIn.nodeId))
@@ -191,7 +191,7 @@ object PartsCoto {
       cotoContent: CotoContent,
       collapsibleContentOpened: Boolean,
       onBrowserUrl: Option[String => Unit] = None
-  )(using context: Context): ReactElement =
+  )(using context: Context): ReactNode =
     section(className := "coto-content")(
       cotoContent.mediaUrl.map(sectionMediaContent),
       cotoContent.summary.map(summary => {
@@ -202,7 +202,7 @@ object PartsCoto {
             onBrowserUrl
           ),
           opened = collapsibleContentOpened
-        ): ReactElement
+        ): ReactNode
       }).getOrElse(
         sectionTextContent(
           cotoContent.content,
@@ -213,7 +213,7 @@ object PartsCoto {
 
   def sectionCotonomaContent(cotoContent: CotoContent)(using
       context: Context
-  ): Option[ReactElement] =
+  ): Option[ReactNode] =
     Option.when(
       cotoContent.content.map(!_.isBlank()).getOrElse(false) ||
         cotoContent.mediaUrl.isDefined
@@ -227,13 +227,13 @@ object PartsCoto {
   object CollapsibleContent {
     case class Props(
         summary: String,
-        details: ReactElement,
+        details: ReactNode,
         opened: Boolean = false
     )
 
     def apply(
         summary: String,
-        details: ReactElement,
+        details: ReactNode,
         opened: Boolean = false
     ) =
       component(Props(summary, details, opened))
@@ -272,13 +272,13 @@ object PartsCoto {
 
   def sectionTextContent(content: Option[String])(using
       context: Context
-  ): ReactElement =
+  ): ReactNode =
     sectionTextContent(content, None)
 
   private def sectionTextContent(
       content: Option[String],
       onBrowserUrl: Option[String => Unit]
-  )(using context: Context): ReactElement =
+  )(using context: Context): ReactNode =
     section(className := "text-content")(
       Markdown(
         remarkPlugins = Seq(
@@ -309,7 +309,7 @@ object PartsCoto {
       context: Context
   ) = js.Dynamic
     .literal(
-      a = ((props: MarkdownAnchorProps) => {
+      a = React.component((props: MarkdownAnchorProps) => {
         val href = props.href.getOrElse("")
         val anchorProps = js.Dynamic.literal(
           href = props.href,
@@ -345,13 +345,13 @@ object PartsCoto {
         React.createElement(
           "a",
           anchorProps.asInstanceOf[js.Dictionary[js.Any]],
-          props.children.asInstanceOf[ReactElement]
+          ReactNode.fromJs(props.children)
         )
-      }): js.Function1[MarkdownAnchorProps, ReactElement]
+      })
     )
     .asInstanceOf[js.Object]
 
-  def sectionMediaContent(urlAndType: (String, String)): ReactElement = {
+  def sectionMediaContent(urlAndType: (String, String)): ReactNode = {
     val (url, mediaType) = urlAndType
     section(className := "media-content")(
       if (mediaType.startsWith("image/")) {
@@ -375,7 +375,7 @@ object PartsCoto {
   )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): Option[ReactElement] =
+  ): Option[ReactNode] =
     Option.when(!parents.isEmpty) {
       ul(className := "parents")(
         parents.map { case (parent, ito) =>
@@ -404,7 +404,7 @@ object PartsCoto {
   )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): Option[ReactElement] =
+  ): Option[ReactNode] =
     Option.when(context.repo.itos.anyFrom(coto.id)) {
       div(className := "has-details")(
         toolButton(
@@ -420,7 +420,7 @@ object PartsCoto {
 
   def articleFooter(
       coto: Coto
-  )(using context: Context): ReactElement =
+  )(using context: Context): ReactNode =
     footer()(
       time(
         className := "posted-at",
@@ -438,7 +438,7 @@ object PartsCoto {
   )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): Option[ReactElement] =
+  ): Option[ReactNode] =
     coto.geolocation.map { location =>
       val focused = context.geomap.isFocusing(location)
       button(
@@ -467,7 +467,7 @@ object PartsCoto {
       coto: Coto
   )(using
       context: Context
-  ): Option[ReactElement] =
+  ): Option[ReactNode] =
     coto.dateTimeRange.map(range =>
       button(
         className := "time-range default",

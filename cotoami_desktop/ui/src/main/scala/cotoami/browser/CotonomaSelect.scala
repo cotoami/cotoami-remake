@@ -3,8 +3,8 @@ package cotoami.browser
 import marubinotto.fui.toCmd
 import scala.scalajs.js
 
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.components.materialSymbol
 import marubinotto.fui.Cmd
@@ -208,7 +208,7 @@ object CotonomaSelect {
       model: Model,
       app: CotoamiModel,
       dispatch: Msg => Unit
-  ): ReactElement = {
+  ): ReactNode = {
     given Context = app
     val focused =
       model.selected

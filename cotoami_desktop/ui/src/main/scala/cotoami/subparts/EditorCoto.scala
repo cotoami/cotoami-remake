@@ -7,11 +7,11 @@ import scala.scalajs.js
 import org.scalajs.dom
 import com.softwaremill.quicklens._
 
-import slinky.core._
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.core.facade.Hooks._
-import slinky.web.html._
-import slinky.web.SyntheticMouseEvent
+import marubinotto.react._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.Hooks._
+import marubinotto.react.html._
+import marubinotto.react.SyntheticMouseEvent
 
 import marubinotto.fui.{Browser, Cmd}
 import marubinotto.Validation
@@ -272,7 +272,7 @@ object EditorCoto {
     )(using
         context: Context,
         dispatch: Msg => Unit
-    ): ReactElement = {
+    ): ReactNode = {
       val editor = Fragment(
         sectionEditorOrPreview(
           form,
@@ -304,7 +304,7 @@ object EditorCoto {
         onBlur: Option[() => Unit] = None,
         enableImageInput: Boolean = true,
         showLineNumbers: Boolean = true
-    )(using context: Context, dispatch: Msg => Unit): ReactElement =
+    )(using context: Context, dispatch: Msg => Unit): ReactNode =
       if (form.inPreview)
         sectionPreview(form)
       else
@@ -324,7 +324,7 @@ object EditorCoto {
         onBlur: Option[() => Unit] = None,
         enableImageInput: Boolean = true,
         showLineNumbers: Boolean = true
-    )(using context: Context, dispatch: Msg => Unit): ReactElement =
+    )(using context: Context, dispatch: Msg => Unit): ReactNode =
       section(className := "coto-editor fill")(
         LocalDraftTextInputs(
           form = form,
@@ -350,7 +350,7 @@ object EditorCoto {
         }
       )
 
-    def sectionPreview(form: Model)(using context: Context): ReactElement =
+    def sectionPreview(form: Model)(using context: Context): ReactNode =
       section(className := "coto-preview fill")(
         ScrollArea()(
           Option.when(!form.isCotonoma) {
@@ -503,7 +503,7 @@ object EditorCoto {
               placeholder := props.summaryPlaceholder,
               value := summaryDraft,
               onFocus := (_ => props.onFocus.foreach(_())),
-              onChange := (e => setSummaryDraft(e.target.value)),
+              onChange := (e => setSummaryDraft(e.currentTarget.value)),
               onBlur := (_ => {
                 flushDraft()
                 props.onBlur.foreach(_())
@@ -547,7 +547,7 @@ object EditorCoto {
 
     def buttonPreview(
         form: Model
-    )(using context: Context, dispatch: Msg => Unit): ReactElement =
+    )(using context: Context, dispatch: Msg => Unit): ReactNode =
       button(
         className := "preview contrast outline",
         disabled := !form.validate.validated,
@@ -562,7 +562,7 @@ object EditorCoto {
     def sectionMediaPreview(
         form: Model,
         enableDelete: Boolean = true
-    )(using dispatch: Msg => Unit): Option[ReactElement] =
+    )(using dispatch: Msg => Unit): Option[ReactNode] =
       form.mediaBlob.map { blob =>
         val url = dom.URL.createObjectURL(blob)
         section(className := "media-preview fill")(
@@ -584,7 +584,7 @@ object EditorCoto {
         )
       }
 
-    def sectionValidationError(form: Model): ReactElement =
+    def sectionValidationError(form: Model): ReactNode =
       Validation.sectionValidationError(form.validate)
 
     def ulAttributes(
@@ -592,7 +592,7 @@ object EditorCoto {
     )(using
         context: Context,
         dispatch: CotoForm.Msg => Unit
-    ): Option[ReactElement] =
+    ): Option[ReactNode] =
       Seq(
         liAttributeDateTimeRange(form),
         liAttributeGeolocation(form)
@@ -605,7 +605,7 @@ object EditorCoto {
     private def liAttributeDateTimeRange(form: Model)(using
         context: Context,
         dispatch: CotoForm.Msg => Unit
-    ): Option[ReactElement] =
+    ): Option[ReactNode] =
       Option.when(
         form.dateTimeRange.isDefined || form.mediaDateTime.isDefined
       ) {
@@ -641,7 +641,7 @@ object EditorCoto {
     )(using
         context: Context,
         dispatch: CotoForm.Msg => Unit
-    ): Option[ReactElement] = {
+    ): Option[ReactNode] = {
       val geomapOpened = context.uiState.map(_.geomapOpened).getOrElse(false)
       Option.when(
         geomapOpened ||
@@ -666,7 +666,7 @@ object EditorCoto {
                     span(className := "label")("latitude:"),
                     span(className := "value latitude")(location.latitude)
                   )
-                ): ReactElement
+                ): ReactNode
               )
               .getOrElse(
                 Option.when(
@@ -707,7 +707,7 @@ object EditorCoto {
 
     private def divAttributeDelete(
         onClick: SyntheticMouseEvent[?] => Unit
-    )(using context: Context): ReactElement =
+    )(using context: Context): ReactNode =
       div(className := "attribute-delete")(
         toolButton(
           symbol = "close",
@@ -857,7 +857,7 @@ object EditorCoto {
         onFocus: Option[() => Unit] = None,
         onBlur: Option[() => Unit] = None,
         onCtrlEnter: Option[() => Unit] = None
-    )(using context: Context, dispatch: Msg => Unit): ReactElement =
+    )(using context: Context, dispatch: Msg => Unit): ReactNode =
       LocalDraftNameInput(
         model = model,
         placeholder =
@@ -972,12 +972,12 @@ object EditorCoto {
           placeholder := props.placeholder,
           value := nameDraft,
           Validation.ariaInvalid(props.model.validation),
-          slinky.web.html.onFocus := props.onFocus,
-          slinky.web.html.onBlur := (_ => {
+          marubinotto.react.html.onFocus := props.onFocus,
+          marubinotto.react.html.onBlur := (_ => {
             flushDraft()
             props.onBlur.map(_())
           }),
-          onChange := (e => setNameDraft(e.target.value)),
+          onChange := (e => setNameDraft(e.currentTarget.value)),
           onCompositionStart := (_ => {
             setImeActive(true)
             props.onDraftCommitted(Msg.ImeCompositionStart)

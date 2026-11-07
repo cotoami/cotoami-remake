@@ -2,8 +2,8 @@ package cotoami.subparts
 
 import scala.util.chaining._
 
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.optionalClasses
 import marubinotto.fui.Cmd
@@ -135,7 +135,7 @@ object NavCotonomas {
 
   def apply(model: Model, nodeTools: SectionNodeTools.Model)(
       currentNode: Node
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode = {
     val repo = context.repo
     val recentCotonomas = context.repo.recentCotonomas
     nav(className := "cotonomas header-and-body fill")(
@@ -180,7 +180,7 @@ object NavCotonomas {
   private def sectionCurrent(
       focusedCotonoma: Cotonoma,
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode = {
     val repo = context.repo
     val superCotonomas = repo.superCotonomas
     section(className := "current")(
@@ -229,7 +229,7 @@ object NavCotonomas {
 
   private def sectionRecent(
       cotonomas: Seq[Cotonoma]
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(className := "recent")(
       h2()(context.i18n.text.NavCotonomas_recent),
       ul()(cotonomas.map(liCotonoma)*)
@@ -237,7 +237,7 @@ object NavCotonomas {
 
   private def liCotonoma(
       cotonoma: Cotonoma
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     li(
       className := optionalClasses(
         Seq(

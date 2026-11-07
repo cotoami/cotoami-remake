@@ -1,8 +1,8 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.fui.Cmd
 import marubinotto.components.{toolButton, Flipped, Flipper, ScrollArea}
@@ -55,7 +55,7 @@ object ModalSelection {
   def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement = {
+  ): ReactNode = {
     val cotos = context.repo.cotos
     Modal.view(
       dialogClasses = "selection",
@@ -73,7 +73,7 @@ object ModalSelection {
           cotos.selected.map(coto =>
             Flipped(key = coto.id.uuid, flipId = coto.id.uuid)(
               articleCoto(coto)
-            ): ReactElement
+            ): ReactNode
           )
         )
       ),
@@ -92,7 +92,7 @@ object ModalSelection {
   private def articleCoto(coto: Coto)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     article(className := "coto")(
       header()(
         toolButton(

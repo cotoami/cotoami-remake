@@ -4,11 +4,11 @@ import scala.scalajs.js
 import org.scalajs.dom
 
 import marubinotto.optionalClasses
-import slinky.core._
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.core.facade.Hooks._
-import slinky.web.SyntheticKeyboardEvent
-import slinky.web.html._
+import marubinotto.react._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.Hooks._
+import marubinotto.react.SyntheticKeyboardEvent
+import marubinotto.react.html._
 
 object MarkdownEditor {
   private final val IndentUnit = "    "
@@ -68,7 +68,7 @@ object MarkdownEditor {
       onCompositionEnd: () => Unit = () => (),
       onKeyDown: SyntheticKeyboardEvent[dom.HTMLTextAreaElement] => Unit =
         _ => ()
-  ): ReactElement =
+  ): ReactNode =
     component(
       Props(
         value = value,
@@ -83,11 +83,11 @@ object MarkdownEditor {
     )
 
   val component = FunctionalComponent[Props] { props =>
-    val textareaRef = useRef[dom.HTMLTextAreaElement](null)
-    val highlightRef = useRef[dom.HTMLPreElement](null)
-    val lineNumbersRef = useRef[dom.HTMLDivElement](null)
-    val editorSurfaceRef = useRef[dom.HTMLDivElement](null)
-    val measureRef = useRef[dom.HTMLDivElement](null)
+    val textareaRef = useDomRef[dom.HTMLTextAreaElement]()
+    val highlightRef = useDomRef[dom.HTMLPreElement]()
+    val lineNumbersRef = useDomRef[dom.HTMLDivElement]()
+    val editorSurfaceRef = useDomRef[dom.HTMLDivElement]()
+    val measureRef = useDomRef[dom.HTMLDivElement]()
     val pendingSelectionRef = useRef(Option.empty[(Int, Int)])
     val imeComposingRef = useRef(false)
     val compositionEndTimerRef = useRef(Option.empty[Int])
@@ -95,9 +95,9 @@ object MarkdownEditor {
     val (measureVersion, setMeasureVersion) = useState(0)
 
     def syncScroll(): Unit = {
-      val textarea = textareaRef.current
-      val highlight = highlightRef.current
-      val lineNumbers = lineNumbersRef.current
+      val textarea = textareaRef.value.orNull
+      val highlight = highlightRef.value.orNull
+      val lineNumbers = lineNumbersRef.value.orNull
 
       def scaledScrollTop(
           source: dom.HTMLElement,
@@ -140,7 +140,7 @@ object MarkdownEditor {
     useEffect(
       () => {
         pendingSelectionRef.current.foreach { (start, end) =>
-          val textarea = textareaRef.current
+          val textarea = textareaRef.value.orNull
           if (textarea != null) {
             textarea.setSelectionRange(start, end)
             pendingSelectionRef.current = None
@@ -156,7 +156,7 @@ object MarkdownEditor {
 
     useEffect(
       () => {
-        val measureRoot = measureRef.current
+        val measureRoot = measureRef.value.orNull
         if (measureRoot != null) {
           val measured =
             (0 until measureRoot.children.length).map { i =>
@@ -173,11 +173,11 @@ object MarkdownEditor {
     )
     useEffect(
       () => {
-        val editorSurface = editorSurfaceRef.current
+        val editorSurface = editorSurfaceRef.value.orNull
         if (editorSurface == null) () => ()
         else {
           val observer = new dom.ResizeObserver((_, _) =>
-            setMeasureVersion(current => current + 1)
+            setMeasureVersion.update(current => current + 1)
           )
           observer.observe(editorSurface)
           () => observer.disconnect()
@@ -238,7 +238,7 @@ object MarkdownEditor {
     def handleEditorKeyDown(
         e: SyntheticKeyboardEvent[dom.HTMLTextAreaElement]
     ): Unit = {
-      val textarea = textareaRef.current
+      val textarea = textareaRef.value.orNull
       if (textarea == null) {
         props.onKeyDown(e)
         return
@@ -320,7 +320,7 @@ object MarkdownEditor {
             imeComposingRef.current = false
             props.onBlur()
           }),
-          onChange := (e => props.onChange(e.target.value)),
+          onChange := (e => props.onChange(e.currentTarget.value)),
           onCompositionStart := (_ => handleCompositionStart()),
           onCompositionEnd := (_ => handleCompositionEnd()),
           onKeyDown := (e => handleEditorKeyDown(e)),
@@ -333,20 +333,20 @@ object MarkdownEditor {
   private def renderLine(
       lineTokens: Seq[Token],
       lineIndex: Int
-  ): Seq[ReactElement] =
+  ): Seq[ReactNode] =
     renderTokens(lineTokens, lineIndex, s"line-empty-$lineIndex")
 
   private def renderMeasureLine(
       lineTokens: Seq[Token],
       lineIndex: Int
-  ): Seq[ReactElement] =
+  ): Seq[ReactNode] =
     renderTokens(lineTokens, lineIndex, s"measure-empty-$lineIndex")
 
   private def renderTokens(
       lineTokens: Seq[Token],
       lineIndex: Int,
       emptyKey: String
-  ): Seq[ReactElement] =
+  ): Seq[ReactNode] =
     if (lineTokens.forall(_.text.isEmpty))
       // Trailing blank lines must still occupy visual height in both the
       // highlight and measure layers. Otherwise line numbers advance while the

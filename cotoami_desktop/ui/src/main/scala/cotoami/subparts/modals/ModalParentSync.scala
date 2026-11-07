@@ -2,9 +2,9 @@ package cotoami.subparts.modals
 
 import scala.util.chaining._
 import scala.annotation.unused
-import slinky.core.facade.ReactElement
-import slinky.web.html
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html
+import marubinotto.react.html._
 
 import marubinotto.fui.{Browser, Cmd}
 import marubinotto.facade.Nullable
@@ -53,7 +53,7 @@ object ModalParentSync {
   def apply(
       @unused _model: Model,
       parentSync: ParentSync
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     Modal.view(
       dialogClasses = "parent-sync"
     )(
@@ -70,7 +70,7 @@ object ModalParentSync {
 
   private def sectionSyncing(
       parentSync: ParentSync
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(className := "syncing")(
       h2()("Syncing"),
       ul()(
@@ -92,7 +92,7 @@ object ModalParentSync {
 
   private def sectionSynced(
       parentSync: ParentSync
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(className := "synced")(
       h2()("Synced"),
       ul()(
@@ -126,7 +126,7 @@ object ModalParentSync {
 
   private def spanNode(
       id: Id[Node]
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     context.repo.nodes.get(id).map(PartsNode.spanNode)
       .getOrElse(
         span(className := "node not-found")(

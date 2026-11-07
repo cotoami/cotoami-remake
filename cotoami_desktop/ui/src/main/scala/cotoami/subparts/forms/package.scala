@@ -1,9 +1,9 @@
 package cotoami.subparts
 
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html
-import slinky.web.html._
-import slinky.web.SyntheticMouseEvent
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html
+import marubinotto.react.html._
+import marubinotto.react.SyntheticMouseEvent
 
 import cotoami.Context
 import marubinotto.{optionalClasses, Validation}
@@ -14,7 +14,7 @@ package object forms {
   def buttonEdit(
       onClick: SyntheticMouseEvent[?] => Unit,
       disabled: Boolean = false
-  )(using context: Context): ReactElement =
+  )(using context: Context): ReactNode =
     toolButton(
       classes = "edit",
       symbol = "edit",
@@ -26,7 +26,7 @@ package object forms {
   def field(
       name: String,
       classes: String = ""
-  )(fieldContent: ReactElement*): ReactElement =
+  )(fieldContent: ReactNode*): ReactNode =
     div(className := s"field ${classes}")(
       section(className := "field-name")(name),
       section(className := "field-content")(
@@ -43,7 +43,7 @@ package object forms {
       readOnly: Boolean = false,
       inputErrors: Option[Validation.Result] = None,
       onInput: (String => Unit) = (_ => ())
-  ): ReactElement =
+  ): ReactNode =
     field(
       name = name,
       classes = classes
@@ -58,7 +58,7 @@ package object forms {
         ),
         // Use onChange instead of onInput to suppress the React 'use defaultValue' warning
         // (onChange is almost the same as onInput in React)
-        onChange := (e => onInput(e.target.value))
+        onChange := (e => onInput(e.currentTarget.value))
       ),
       inputErrors.map(Validation.sectionValidationError)
     )
@@ -67,9 +67,9 @@ package object forms {
       name: String,
       classes: String = "",
       edit: FieldEdit
-  )(fieldContent: ReactElement*)(using
+  )(fieldContent: ReactNode*)(using
       context: Context
-  ): ReactElement =
+  ): ReactNode =
     div(className := s"field ${classes}")(
       section(className := "field-name")(name),
       section(
@@ -98,7 +98,7 @@ package object forms {
 
   private def viewFieldEdit(
       model: FieldEdit
-  )(using context: Context): ReactElement =
+  )(using context: Context): ReactNode =
     Option.when(!model.disabled) {
       Fragment(
         div(className := "edit")(

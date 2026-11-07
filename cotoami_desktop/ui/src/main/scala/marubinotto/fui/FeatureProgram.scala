@@ -1,7 +1,7 @@
 package marubinotto.fui
 
 import org.scalajs.dom.URL
-import slinky.core.facade.ReactElement
+import marubinotto.react.ReactNode
 
 /** Browser adapter for a composed feature; use .program with Browser/Runtime.
   */
@@ -30,7 +30,7 @@ object FeatureProgram {
   def apply[M, E](
       init: URL => Transition[M, E, Nothing],
       update: (E, M) => Transition[M, E, Nothing],
-      view: (M, E => Unit) => ReactElement,
+      view: (M, E => Unit) => ReactNode,
       subscriptions: M => Sub[E] = (_: M) => Sub.Empty,
       onUrlChange: Option[URL => E] = None
   ): FeatureProgram[M, E] = {

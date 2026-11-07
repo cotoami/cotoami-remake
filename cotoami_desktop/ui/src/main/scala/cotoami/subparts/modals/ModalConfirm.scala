@@ -1,8 +1,8 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
 
 import marubinotto.fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
@@ -15,7 +15,7 @@ object ModalConfirm {
   /////////////////////////////////////////////////////////////////////////////
 
   case class Model(
-      message: ReactElement,
+      message: ReactNode,
       msgOnConfirm: AppMsg
   )
 
@@ -50,7 +50,7 @@ object ModalConfirm {
 
   def apply(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode = {
     val modalType = classOf[Modal.Confirm]
     Modal.view(
       dialogClasses = "confirm",

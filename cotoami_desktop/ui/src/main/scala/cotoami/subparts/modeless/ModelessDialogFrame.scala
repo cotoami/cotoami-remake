@@ -4,11 +4,11 @@ import scala.scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.html
 
-import slinky.core._
-import slinky.core.facade.{Fragment, ReactElement, ReactRef}
-import slinky.core.facade.Hooks._
-import slinky.web.SyntheticMouseEvent
-import slinky.web.html._
+import marubinotto.react._
+import marubinotto.react.{Fragment, ReactNode, DomRef}
+import marubinotto.react.Hooks._
+import marubinotto.react.SyntheticMouseEvent
+import marubinotto.react.html._
 
 import marubinotto.optionalClasses
 
@@ -91,10 +91,10 @@ object ModelessDialogFrame {
       case _ => viewportBounds
     }
 
-  private def panelBoundsOf(panelRef: ReactRef[html.Div]): PanelBounds =
+  private def panelBoundsOf(panelRef: DomRef[html.Div]): PanelBounds =
     PanelBounds(
-      width = Option(panelRef.current).map(_.offsetWidth.toDouble).getOrElse(0.0),
-      height = Option(panelRef.current).map(_.offsetHeight.toDouble).getOrElse(0.0)
+      width = Option(panelRef.value.orNull).map(_.offsetWidth.toDouble).getOrElse(0.0),
+      height = Option(panelRef.value.orNull).map(_.offsetHeight.toDouble).getOrElse(0.0)
     )
 
   private def clampPosition(
@@ -110,8 +110,8 @@ object ModelessDialogFrame {
     )
   }
 
-  private def minimumSizeOf(panelRef: ReactRef[html.Div]): MinimumSize =
-    Option(panelRef.current).map { panel =>
+  private def minimumSizeOf(panelRef: DomRef[html.Div]): MinimumSize =
+    Option(panelRef.value.orNull).map { panel =>
       val style = dom.window.getComputedStyle(panel)
       MinimumSize(
         width = style.minWidth.stripSuffix("px").toDoubleOption.getOrElse(0.0),
@@ -196,7 +196,7 @@ object ModelessDialogFrame {
 
   case class Props(
       dialogClasses: Seq[(String, Boolean)],
-      title: ReactElement,
+      title: ReactNode,
       onClose: () => Unit,
       onFocus: () => Unit,
       zIndex: Int,
@@ -206,13 +206,13 @@ object ModelessDialogFrame {
       initialHeight: String = Defaults.Height,
       placementBounds: () => PlacementBounds = () => viewportBounds,
       error: Option[String] = None
-  )(children: ReactElement*) {
-    def body: Seq[ReactElement] = children
+  )(children: ReactNode*) {
+    def body: Seq[ReactNode] = children
   }
 
   def apply(
       dialogClasses: Seq[(String, Boolean)],
-      title: ReactElement,
+      title: ReactNode,
       onClose: () => Unit,
       onFocus: () => Unit,
       zIndex: Int,
@@ -221,7 +221,7 @@ object ModelessDialogFrame {
       initialWidth: String = Defaults.Width,
       initialHeight: String = Defaults.Height,
       error: Option[String] = None
-  )(children: ReactElement*)(using context: Context): ReactElement =
+  )(children: ReactNode*)(using context: Context): ReactNode =
     component(
       Props(
         dialogClasses,
@@ -239,7 +239,7 @@ object ModelessDialogFrame {
     )
 
   private val component = FunctionalComponent[Props] { props =>
-    val panelRef = useRef[html.Div](null)
+    val panelRef = useDomRef[html.Div]()
     val dragRef = useRef(Option.empty[DragState])
     val resizeRef = useRef(Option.empty[ResizeState])
     val (position, setPosition) =
@@ -255,12 +255,12 @@ object ModelessDialogFrame {
         resizeRef.current.foreach { resize =>
           val (newPosition, newSize) =
             resizedRect(resize, e.clientX, e.clientY, currentPlacementBounds)
-          setPosition(_ => Some(newPosition))
-          setSize(_ => Some(newSize))
+          setPosition.update(_ => Some(newPosition))
+          setSize.update(_ => Some(newSize))
         }
         Option.when(resizeRef.current.isEmpty) {
           dragRef.current.foreach { drag =>
-            setPosition(
+            setPosition.update(
               _.map(_ =>
                 clampPosition(
                   Position(
@@ -311,9 +311,9 @@ object ModelessDialogFrame {
         if (position.isEmpty) {
           val bounds = panelBoundsOf(panelRef)
           if (bounds.width > 0.0 && bounds.height > 0.0) {
-            setPosition(_ => Some(centerPosition(bounds, props.placementBounds())))
+            setPosition.update(_ => Some(centerPosition(bounds, props.placementBounds())))
             Option.when(props.lockMeasuredSize) {
-              setSize(_ => Some(bounds))
+              setSize.update(_ => Some(bounds))
             }
           }
         }
@@ -330,7 +330,7 @@ object ModelessDialogFrame {
             if (currentSize.width > 0.0 && currentSize.height > 0.0) {
               val placement = props.placementBounds()
               Option.when(props.lockMeasuredSize) {
-                setSize(_ => Some(currentSize))
+                setSize.update(_ => Some(currentSize))
               }
               position.foreach { currentPosition =>
                 val clampedPosition =
@@ -339,11 +339,11 @@ object ModelessDialogFrame {
                   if (props.resizable)
                     clampSize(clampedPosition, currentSize, minimum, placement)
                   else currentSize
-                setPosition(_ =>
+                setPosition.update(_ =>
                   Some(clampPosition(clampedPosition, clampedSize, placement))
                 )
                 Option.when(props.lockMeasuredSize) {
-                  setSize(_ => Some(clampedSize))
+                  setSize.update(_ => Some(clampedSize))
                 }
               }
             }

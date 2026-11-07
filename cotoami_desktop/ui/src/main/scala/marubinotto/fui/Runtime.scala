@@ -8,11 +8,11 @@ import org.scalajs.dom.{Element, Event, URL}
 import cats.effect.{Deferred, FiberIO, IO, Ref, Resource}
 import cats.effect.std.{Dispatcher, Mutex, Queue, Supervisor}
 import cats.syntax.all.*
-import slinky.core.facade.ReactElement
-import slinky.web.ReactDOMClient
+import marubinotto.react.ReactNode
+import marubinotto.react.ReactDOMClient
 
 class Runtime[Model, Msg] private (
-    render: ReactElement => Unit,
+    render: ReactNode => Unit,
     val program: Program[Model, Msg],
     dispatcher: Dispatcher[IO],
     queue: Queue[IO, Msg],

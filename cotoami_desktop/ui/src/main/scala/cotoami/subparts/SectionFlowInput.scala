@@ -6,8 +6,8 @@ import scala.annotation.unused
 import scala.scalajs.js
 
 import org.scalajs.dom
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
 
 import com.softwaremill.quicklens._
 
@@ -409,7 +409,7 @@ object SectionFlowInput {
       editorHeight: Int,
       onEditorHeightChanged: Int => Unit,
       options: Options = Options()
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode = {
     def finishInteraction(): Unit =
       dom.window.setTimeout(() => dispatch(Msg.InteractionEnd), 0)
 
@@ -475,8 +475,8 @@ object SectionFlowInput {
       model: Model,
       currentCotonoma: Cotonoma,
       options: Options
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    slinky.web.html.header()(
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
+    marubinotto.react.html.header()(
       Option.when(options.showPostTo) {
         section(
           className := "posting-to",
@@ -531,7 +531,7 @@ object SectionFlowInput {
       editorHeight: Int,
       onEditorHeightChanged: Int => Unit,
       options: Options
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     SplitPane(
       vertical = false,
       initialPrimarySize = editorHeight,
@@ -578,7 +578,7 @@ object SectionFlowInput {
   private def formCotonoma(
       form: CotonomaForm.Model,
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     Fragment(
       div(className := "cotonoma-form")(
         CotonomaForm.inputName(
@@ -601,7 +601,7 @@ object SectionFlowInput {
 
   private def buttonClear(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     button(
       className := "clear contrast outline",
       disabled := model.posting || !model.hasContents,
@@ -612,7 +612,7 @@ object SectionFlowInput {
 
   private def buttonPost(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     button(
       className := "post",
       disabled := !model.readyToPost,
@@ -626,7 +626,7 @@ object SectionFlowInput {
   private def buttonOpenNewCotoModal(
       model: Model,
       classes: String
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     button(
       className := classes,
       title := context.i18n.text.ModelessNewCoto_title,

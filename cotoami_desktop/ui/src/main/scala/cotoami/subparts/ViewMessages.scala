@@ -2,10 +2,10 @@ package cotoami.subparts
 
 import org.scalajs.dom.html
 
-import slinky.core._
-import slinky.core.facade.ReactElement
-import slinky.core.facade.Hooks._
-import slinky.web.html._
+import marubinotto.react._
+import marubinotto.react.ReactNode
+import marubinotto.react.Hooks._
+import marubinotto.react.html._
 
 import marubinotto.fui.Cmd
 import marubinotto.components.{materialSymbol, ScrollArea}
@@ -48,7 +48,7 @@ object ViewMessages {
 
   def apply(model: Model)(using
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     Option.when(model.open) {
       section(className := "system-messages")(
         header(className := "tools")(
@@ -70,10 +70,10 @@ object ViewMessages {
       component(Props(entries))
 
     val component = FunctionalComponent[Props] { props =>
-      val bottomRef = useRef[html.Div](null)
+      val bottomRef = useDomRef[html.Div]()
 
       useEffect(() => {
-        bottomRef.current.scrollIntoView(false)
+        bottomRef.value.orNull.scrollIntoView(false)
       })
 
       section(className := "entries")(

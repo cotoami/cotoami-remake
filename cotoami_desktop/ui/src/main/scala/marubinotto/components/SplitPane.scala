@@ -4,11 +4,11 @@ import scala.scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.html
 
-import slinky.core._
-import slinky.core.facade.{React, ReactElement, SetStateHookCallback}
-import slinky.core.facade.Hooks._
-import slinky.web.html._
-import slinky.web.SyntheticMouseEvent
+import marubinotto.react._
+import marubinotto.react.{React, ReactNode, SetStateHookCallback}
+import marubinotto.react.Hooks._
+import marubinotto.react.html._
+import marubinotto.react.SyntheticMouseEvent
 
 import marubinotto.optionalClasses
 import marubinotto.Action
@@ -74,7 +74,7 @@ object SplitPane {
     val (primarySize, setPrimarySize) = useState(props.initialPrimarySize)
     val (moving, setMoving) = useState(false)
 
-    val splitPaneRef = useRef[html.Div](null)
+    val splitPaneRef = useDomRef[html.Div]()
     val separatorPosRef = useRef(Double.NaN)
 
     // To allow the callbacks to access the up-to-date state.primarySize
@@ -124,11 +124,11 @@ object SplitPane {
             separatorPosRef.current = cursorPos
 
             // keep it from resizing beyond the borders of the SplitPane
-            if (splitPaneRef.current != null) {
+            if (splitPaneRef.value.orNull != null) {
               val splitPaneSize = if (props.vertical) {
-                splitPaneRef.current.clientWidth
+                splitPaneRef.value.orNull.clientWidth
               } else {
-                splitPaneRef.current.clientHeight
+                splitPaneRef.value.orNull.clientHeight
               }
               newSize = newSize.max(0).min(splitPaneSize)
             }
@@ -216,27 +216,27 @@ object SplitPane {
     case class Props(
         className: Option[String] = None,
         onClick: Option[() => Unit] = None
-    )(children: ReactElement*) {
-      def getChildren: Seq[ReactElement] = children
+    )(children: ReactNode*) {
+      def getChildren: Seq[ReactNode] = children
     }
 
     def apply(
         className: Option[String] = None,
         onClick: Option[() => Unit] = None
-    )(children: ReactElement*) =
+    )(children: ReactNode*) =
       component(Props(className, onClick)(children*))
 
     val component = FunctionalComponent[Props] { props =>
-      val primaryRef = useRef[html.Div](null)
+      val primaryRef = useDomRef[html.Div]()
       val Context(vertical, reverse, primarySize, setPrimarySize) =
         useContext(splitPaneContext)
 
       useEffect(
         () => {
           if (vertical) {
-            primaryRef.current.style.width = s"${primarySize}px"
+            primaryRef.value.orNull.style.width = s"${primarySize}px"
           } else {
-            primaryRef.current.style.height = s"${primarySize}px"
+            primaryRef.value.orNull.style.height = s"${primarySize}px"
           }
         },
         Seq(primarySize)
@@ -273,14 +273,14 @@ object SplitPane {
     case class Props(
         className: Option[String] = None,
         onClick: Option[() => Unit] = None
-    )(children: ReactElement*) {
-      def getChildren: Seq[ReactElement] = children
+    )(children: ReactNode*) {
+      def getChildren: Seq[ReactNode] = children
     }
 
     def apply(
         className: Option[String] = None,
         onClick: Option[() => Unit] = None
-    )(children: ReactElement*) =
+    )(children: ReactNode*) =
       component(Props(className, onClick)(children*))
 
     val component = FunctionalComponent[Props] { props =>

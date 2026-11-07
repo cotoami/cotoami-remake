@@ -1,7 +1,7 @@
 package cotoami.subparts.modeless
 
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
 
 import marubinotto.components.materialSymbol
 import marubinotto.fui.{Browser, Cmd}
@@ -93,7 +93,7 @@ object ModelessCoto {
   def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement = {
+  ): ReactNode = {
     val coto = context.repo.cotos.get(model.cotoId).getOrElse(model.coto)
     val id = dialogId(model.instanceId)
     ModelessDialogFrame(
@@ -113,7 +113,7 @@ object ModelessCoto {
     )
   }
 
-  private def dialogTitle(coto: Coto)(using context: Context): ReactElement =
+  private def dialogTitle(coto: Coto)(using context: Context): ReactNode =
     if (coto.isCotonoma)
       if (context.repo.isNodeRoot(coto.id))
         Fragment(

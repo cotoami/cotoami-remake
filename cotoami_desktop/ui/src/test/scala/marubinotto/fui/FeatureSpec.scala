@@ -2,7 +2,7 @@ package marubinotto.fui
 
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalajs.dom.URL
-import slinky.web.html.div
+import marubinotto.react.html.div
 
 object FeatureExamples {
   object Counter extends Feature[Int, Unit, Int, Int, Int] {
@@ -77,7 +77,7 @@ class FeatureSpec extends AnyFunSuite {
   test("withoutContext preserves transitions, rendering and dispatch") {
     val initial = Transition(2, Browser.send(3), List("initialized"))
     val changed = Transition(5, Browser.send(4), List("updated"))
-    val rendered: slinky.core.facade.ReactElement = div("counter")
+    val rendered: marubinotto.react.ReactNode = div("counter")
     var received = 0
     val counter = Feature.withoutContext[Int, Int, Int, String](
       init = input => { assert(input == 2); initial },

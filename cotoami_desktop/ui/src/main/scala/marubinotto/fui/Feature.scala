@@ -1,6 +1,6 @@
 package marubinotto.fui
 
-import slinky.core.facade.ReactElement
+import marubinotto.react.ReactNode
 
 /** A pure state transition. Outputs are delivered to the owner in list order.
   */
@@ -38,7 +38,7 @@ trait Feature[Input, Context, Model, Msg, Out] { self =>
       model: Model,
       context: Context
   ): Transition[Model, Msg, Out]
-  def view(model: Model, context: Context, dispatch: Msg => Unit): ReactElement
+  def view(model: Model, context: Context, dispatch: Msg => Unit): ReactNode
 
   /** Adapt the caller's context without capturing a context value in state. */
   final def mapContextFrom[C](
@@ -63,7 +63,7 @@ trait Feature[Input, Context, Model, Msg, Out] { self =>
     update(msg, model, unit(()))
   final def view(model: Model, dispatch: Msg => Unit)(using
       unit: Unit =:= Context
-  ): ReactElement =
+  ): ReactNode =
     view(model, unit(()), dispatch)
 
   private[fui] def childFeatureGroups: Set[FeatureSlots[?]] = Set.empty
@@ -94,7 +94,7 @@ object Feature {
   def withoutContext[I, M, E, O](
       init: I => Transition[M, E, O],
       update: (E, M) => Transition[M, E, O],
-      view: (M, E => Unit) => ReactElement
+      view: (M, E => Unit) => ReactNode
   ): Feature[I, Unit, M, E, O] = {
     val initialize = init
     val reduce = update
@@ -195,9 +195,9 @@ trait FeatureBinding[Context, Model, Msg, Out] {
       model: Model,
       child: features.Slot[?, ?, ?, ?],
       dispatch: Msg => Unit,
-      empty: => ReactElement,
+      empty: => ReactNode,
       context: Context
-  ): ReactElement =
+  ): ReactNode =
     features.view(
       state(model),
       child,
@@ -218,10 +218,10 @@ trait FeatureBinding[Context, Model, Msg, Out] {
       model: Model,
       child: features.Slot[?, ?, ?, ?],
       dispatch: Msg => Unit,
-      empty: => ReactElement
+      empty: => ReactNode
   )(using
       unit: Unit =:= Context
-  ): ReactElement = view(model, child, dispatch, empty, unit(()))
+  ): ReactNode = view(model, child, dispatch, empty, unit(()))
 
   private[fui] final def route(msg: Msg, model: Model)(using
       unit: Unit =:= Context

@@ -2,8 +2,8 @@ package cotoami.subparts.modals
 
 import marubinotto.fui.toCmd
 import scala.util.chaining._
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.fui.Cmd
 import marubinotto.Validation
@@ -171,7 +171,7 @@ object ModalIncorporate {
   def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     Modal.view(
       dialogClasses = "incorporate",
       closeButton = Some((classOf[Modal.Incorporate], dispatch)),
@@ -187,7 +187,7 @@ object ModalIncorporate {
 
   private def sectionConnect(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(className := "connect")(
       form()(
         // Node URL
@@ -224,7 +224,7 @@ object ModalIncorporate {
   private def sectionIncorporate(
       model: Model,
       nodeSession: ClientNodeSession
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(className := "incorporate")(
       // Node preview
       section(className := "node-preview")(
@@ -253,7 +253,7 @@ object ModalIncorporate {
 
   private def sectionChildPrivileges(
       nodeSession: ClientNodeSession
-  )(using context: Context): ReactElement =
+  )(using context: Context): ReactNode =
     section(className := "child-privileges")(
       s"${context.i18n.text.ChildPrivileges}: ",
       span(className := "privileges")(

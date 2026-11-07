@@ -3,8 +3,8 @@ package cotoami.subparts.modals
 import marubinotto.fui.toCmd
 import scala.util.chaining._
 
-import slinky.web.html._
-import slinky.core.facade.{Fragment, ReactElement}
+import marubinotto.react.html._
+import marubinotto.react.{Fragment, ReactNode}
 
 import marubinotto.fui.Cmd
 import marubinotto.Validation
@@ -128,7 +128,7 @@ object ModalEditIto {
 
   def apply(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     Modal.view(
       dialogClasses = "edit-ito",
       closeButton = Some((classOf[Modal.EditIto], dispatch)),
@@ -182,7 +182,7 @@ object ModalEditIto {
 
   private def sectionIto(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(className := "ito")(
       div(className := "ito-icon")(
         materialSymbol("arrow_downward")
@@ -194,7 +194,7 @@ object ModalEditIto {
       )
     )
 
-  private def articleCoto(coto: Coto)(using context: Context): ReactElement =
+  private def articleCoto(coto: Coto)(using context: Context): ReactNode =
     article(className := "coto embedded")(
       div(className := "body")(
         ScrollArea()(

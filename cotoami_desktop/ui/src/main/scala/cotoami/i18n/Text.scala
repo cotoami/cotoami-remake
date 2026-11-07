@@ -1,6 +1,6 @@
 package cotoami.i18n
 
-import slinky.core.facade.ReactElement
+import marubinotto.react.ReactNode
 
 trait Text {
   val Coto: String
@@ -77,7 +77,7 @@ trait Text {
   val ChildPrivileges_readOnly: String
 
   val ConfirmDeleteCoto: String
-  def ConfirmDeleteOthersCoto(someoneElse: ReactElement): ReactElement
+  def ConfirmDeleteOthersCoto(someoneElse: ReactNode): ReactNode
   val ConfirmDeleteCotonoma: String
 
   val NavNodes_allNodes: String
@@ -122,14 +122,14 @@ trait Text {
   val ModalWelcome_open_folder: String
   val ModalWelcome_open_selectFolder: String
   val ModalWelcome_open_open: String
-  def ModalWelcome_update_message(newVersion: String): ReactElement
+  def ModalWelcome_update_message(newVersion: String): ReactNode
   val ModalWelcome_update_updateNow: String
 
   val ModalAppUpdate_title: String
   def ModalAppUpdate_message(
       newVersion: String,
       currentVersion: String
-  ): ReactElement
+  ): ReactNode
   val ModalAppUpdate_restart: String
 
   val ModalInputOwnerPassword_title: String
@@ -212,7 +212,7 @@ trait Text {
   val ModalSwitchNode_message: String
 
   val ModalNodeIcon_title: String
-  val ModalNodeIcon_inputImage: ReactElement
+  val ModalNodeIcon_inputImage: ReactNode
 
   val ModelessGeomap_title: String
   val ModelessNewCoto_title: String

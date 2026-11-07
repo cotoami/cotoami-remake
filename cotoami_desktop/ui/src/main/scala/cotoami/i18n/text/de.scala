@@ -1,7 +1,7 @@
 package cotoami.i18n.text
 
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
 
 import cotoami.i18n.Text
 
@@ -83,7 +83,7 @@ object de extends Text {
   val ChildPrivileges_readOnly = "Nur lesen"
 
   val ConfirmDeleteCoto = "Sind Sie sicher, dass Sie das Coto löschen möchten?"
-  def ConfirmDeleteOthersCoto(someoneElse: ReactElement): ReactElement =
+  def ConfirmDeleteOthersCoto(someoneElse: ReactNode): ReactNode =
     span(className := "delete-others-coto")(
       "Als Eigentümer sind Sie dabei, ein Coto zu löschen, das gepostet wurde von:",
       someoneElse

@@ -3,10 +3,10 @@ package cotoami.subparts
 import scala.scalajs.js
 import org.scalajs.dom
 
-import slinky.core._
-import slinky.core.facade.{React, ReactElement}
-import slinky.core.facade.Hooks._
-import slinky.web.html._
+import marubinotto.react._
+import marubinotto.react.{React, ReactNode}
+import marubinotto.react.Hooks._
+import marubinotto.react.html._
 
 import marubinotto.optionalClasses
 import marubinotto.libs.reactDropzone._
@@ -14,13 +14,13 @@ import marubinotto.libs.reactDropzone._
 object InputFile {
   case class Props(
       accept: js.Dictionary[js.Array[String]],
-      message: ReactElement,
+      message: ReactNode,
       onSelect: dom.Blob => Unit
   )
 
   def apply(
       accept: js.Dictionary[js.Array[String]],
-      message: ReactElement,
+      message: ReactNode,
       onSelect: dom.Blob => Unit
   ) =
     component(Props(accept, message, onSelect))

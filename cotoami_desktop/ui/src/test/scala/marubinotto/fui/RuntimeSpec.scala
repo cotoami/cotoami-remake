@@ -8,7 +8,7 @@ import cats.syntax.all.*
 import cats.effect.unsafe.implicits.global
 import org.scalajs.dom
 import org.scalatest.funsuite.AsyncFunSuite
-import slinky.web.html.div
+import marubinotto.react.html.div
 
 @js.native
 @JSImport("jsdom", "JSDOM")

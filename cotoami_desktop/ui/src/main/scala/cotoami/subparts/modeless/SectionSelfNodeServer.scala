@@ -3,8 +3,8 @@ package cotoami.subparts.modeless
 import marubinotto.fui.toCmd
 import scala.util.chaining._
 import com.softwaremill.quicklens._
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
@@ -127,7 +127,7 @@ object SectionSelfNodeServer {
   )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     Option.when(context.repo.nodes.isSelf(model.nodeId)) {
       model.selfNodeServer.flatMap(_.activeConfig)
         .map(sectionSelfNodeServer(_, model))
@@ -137,14 +137,14 @@ object SectionSelfNodeServer {
               className := "field-group self-node-server",
               aria - "busy" := model.loading.toString()
             )()
-          }: ReactElement
+          }: ReactNode
         )
     }
 
   private def sectionSelfNodeServer(config: ServerConfig, model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     section(className := "field-group self-node-server")(
       h2()(context.i18n.text.SelfNodeServer_title),
       fieldServerUrl(config),
@@ -154,7 +154,7 @@ object SectionSelfNodeServer {
 
   private def fieldServerUrl(config: ServerConfig)(using
       context: Context
-  ): ReactElement =
+  ): ReactNode =
     fieldInput(
       name = context.i18n.text.SelfNodeServer_url,
       classes = "self-node-server-url",
@@ -165,7 +165,7 @@ object SectionSelfNodeServer {
   private def fieldClientNodes(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     field(
       name = context.i18n.text.SelfNodeServer_clientNodes,
       classes = "client-nodes"
@@ -178,7 +178,7 @@ object SectionSelfNodeServer {
 
   private def fieldAnonymousRead(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode = {
     val anonymousReadEnabled =
       context.repo.nodes.selfSettings
         .map(_.anonymousReadEnabled)

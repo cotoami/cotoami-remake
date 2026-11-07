@@ -1,7 +1,7 @@
 package cotoami.subparts
 
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.components.{toolButton, ScrollArea}
 import cotoami.{Into, Msg => AppMsg}
@@ -14,7 +14,7 @@ object SectionCotoDetails {
   def apply(
       coto: Coto,
       onNavigate: Coto => Into[AppMsg] = coto => AppMsg.FocusCoto(coto.id)
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(className := "coto-details fill")(
       ScrollArea()(
         articleMainCoto(coto, onNavigate),
@@ -28,7 +28,7 @@ object SectionCotoDetails {
   )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     PartsCoto.article(coto, dispatch, Seq(("main-coto", true)))(
       ToolbarCoto(coto),
       PartsCoto.ulParents(
@@ -48,7 +48,7 @@ object SectionCotoDetails {
   private def sectionSubCotos(
       subCotos: Siblings,
       onNavigate: Coto => Into[AppMsg]
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     PartsIto.sectionSiblings(subCotos, "sub-cotos") { case (ito, coto, order) =>
       val repo = context.repo
       val addSubCotoTo =
@@ -95,7 +95,7 @@ object SectionCotoDetails {
   )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): Option[ReactElement] =
+  ): Option[ReactNode] =
     Option.when(context.repo.itos.anyFrom(coto.id)) {
       div(className := "has-outgoing-itos")(
         toolButton(
@@ -116,7 +116,7 @@ object SectionCotoDetails {
   )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     div(className := "insert-sub-coto")(
       toolButton(
         symbol = "add_circle",

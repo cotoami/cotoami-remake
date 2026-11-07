@@ -4,8 +4,8 @@ import marubinotto.fui.toCmd
 import scala.util.chaining._
 import com.softwaremill.quicklens._
 
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.optionalClasses
 import marubinotto.fui.Cmd
@@ -125,7 +125,7 @@ object ModalClients {
   def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     Modal.view(
       dialogClasses = "clients",
       closeButton = Some((classOf[Modal.Clients], dispatch)),
@@ -155,7 +155,7 @@ object ModalClients {
   private def sectionClientNodes(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     model.clients(context.repo.nodes) match {
       case Seq() =>
         section(className := "client-nodes empty")(
@@ -197,7 +197,7 @@ object ModalClients {
   private def divClientRow(client: Client, model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement = {
+  ): ReactNode = {
     val isLocal = Some(client.node.id) == context.repo.nodes.localId
     div(key := client.node.id.uuid, className := "row client")(
       div(

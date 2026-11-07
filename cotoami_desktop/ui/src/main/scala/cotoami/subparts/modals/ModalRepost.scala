@@ -4,8 +4,8 @@ import marubinotto.fui.toCmd
 import scala.util.chaining._
 import scala.scalajs.js
 
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.fui.Cmd
 import marubinotto.components.{materialSymbol, ScrollArea}
@@ -224,7 +224,7 @@ object ModalRepost {
   def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     Modal.view(
       dialogClasses = "repost",
       closeButton = Some((classOf[Modal.Repost], dispatch)),
@@ -271,7 +271,7 @@ object ModalRepost {
 
   private def articleCoto(
       coto: Coto
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     article(className := "coto embedded")(
       header()(
         PartsCoto.addressRemoteAuthor(coto)
@@ -285,7 +285,7 @@ object ModalRepost {
 
   private def sectionAlreadyPostedIn(model: Model)(using
       context: Context
-  ): ReactElement =
+  ): ReactNode =
     section(className := "already-posted-in")(
       h2()(s"${context.i18n.text.ModalRepost_alreadyPostedIn}:"),
       ScrollArea()(
@@ -304,7 +304,7 @@ object ModalRepost {
   private def spanRootCotonomaMark(
       cotonoma: Cotonoma,
       nodes: Nodes
-  )(using context: Context): ReactElement =
+  )(using context: Context): ReactNode =
     Option.when(nodes.isNodeRoot(cotonoma)) {
       span(className := "root-mark")(s"(${context.i18n.text.ModalRepost_root})")
     }

@@ -5,8 +5,8 @@ import scala.scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.HTMLElement
 
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import cats.effect.IO
 import com.softwaremill.quicklens._
@@ -199,7 +199,7 @@ object SectionTraversals {
   )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): Option[ReactElement] =
+  ): Option[ReactNode] =
     Option.when(!model.traversals.isEmpty) {
       section(className := "traversals")(
         model.traversals.zipWithIndex.map(sectionTraversal)*
@@ -208,7 +208,7 @@ object SectionTraversals {
 
   private def sectionTraversal(
       traversal: (Traversal, Int)
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(key := traversal._1.id, className := "traversal header-and-body")(
       header(className := "tools")(
         button(
@@ -257,7 +257,7 @@ object SectionTraversals {
   private def divParents(
       parents: Seq[(Coto, Ito)],
       traversalIndex: Int
-  )(using dispatch: Into[AppMsg] => Unit): Option[ReactElement] =
+  )(using dispatch: Into[AppMsg] => Unit): Option[ReactNode] =
     Option.when(!parents.isEmpty) {
       div(className := "parents")(
         ul(className := "traverse-to-parents")(
@@ -281,7 +281,7 @@ object SectionTraversals {
   private def divTraversalSteps(
       startCoto: Coto,
       traversal: (Traversal, Int)
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     ScrollArea(
       className = Some("traversal-steps"),
       scrollableClassName = Some("scrollable-traversal")
@@ -294,7 +294,7 @@ object SectionTraversals {
       divTraversalStep(startCoto, None, traversal),
       // traversal steps
       traversal._1.steps.zipWithIndex.foldLeft(
-        (Seq.empty[ReactElement], false)
+        (Seq.empty[ReactNode], false)
       ) { case ((divSteps, break), (step, index)) =>
         if (break)
           (divSteps, true)
@@ -310,7 +310,7 @@ object SectionTraversals {
       coto: Coto,
       stepIndex: Option[Int],
       traversal: (Traversal, Int)
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode = {
     val subCotos = context.repo.childrenOf(coto.id)
     val subCotosCount = subCotos.map(_.count).getOrElse(0)
     val noVisibleSubCotos = subCotosCount == 0 ||
@@ -365,7 +365,7 @@ object SectionTraversals {
       subCotos: Siblings,
       stepIndex: Option[Int],
       traversal: (Traversal, Int)
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     PartsIto.sectionSiblings(subCotos, "sub-cotos") { case (ito, coto, order) =>
       val traversed = traversal._1.traversed(stepIndex, coto.id)
       div(
@@ -388,7 +388,7 @@ object SectionTraversals {
       ito: Ito,
       coto: Coto,
       order: OrderContext
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     PartsCoto.article(
       coto,
       dispatch,

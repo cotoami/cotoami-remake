@@ -5,10 +5,10 @@ import scala.util.chaining._
 import scala.scalajs.js
 import org.scalajs.dom
 
-import slinky.core._
-import slinky.core.facade.ReactElement
-import slinky.core.facade.Hooks._
-import slinky.web.html._
+import marubinotto.react._
+import marubinotto.react.ReactNode
+import marubinotto.react.Hooks._
+import marubinotto.react.html._
 
 import marubinotto.fui.{toCmd, Browser, Cmd}
 import marubinotto.components.FixedAspectCrop
@@ -122,7 +122,7 @@ object ModalNodeIcon {
 
   def apply(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     Modal.view(
       dialogClasses = "image",
       closeButton = Some((classOf[Modal.NodeIcon], dispatch)),
@@ -143,7 +143,7 @@ object ModalNodeIcon {
   private def divPreview(
       imageUrl: String,
       model: Model
-  )(using dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using dispatch: Into[AppMsg] => Unit): ReactNode =
     div(className := "preview")(
       SectionCrop(
         imageUrl = imageUrl,

@@ -1,7 +1,7 @@
 package cotoami.browser
 
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.subparts.{SectionFlowInput, SectionTimeline}
@@ -12,8 +12,8 @@ object CotoTimeline {
   final val DefaultEditorHeight = 180
 
   case class Parts(
-      timeline: Option[ReactElement],
-      cotonomaSelect: Option[ReactElement]
+      timeline: Option[ReactNode],
+      cotonomaSelect: Option[ReactNode]
   )
 
   def apply(

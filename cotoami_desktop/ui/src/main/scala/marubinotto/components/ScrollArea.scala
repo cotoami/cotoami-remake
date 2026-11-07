@@ -5,9 +5,9 @@ import scala.scalajs.js.annotation.JSImport
 import org.scalajs.dom
 import org.scalajs.dom.html
 
-import slinky.core._
-import slinky.core.facade.{ReactElement, ReactRef}
-import slinky.core.facade.Hooks._
+import marubinotto.react._
+import marubinotto.react.{ReactNode, DomRef}
+import marubinotto.react.Hooks._
 
 object ScrollArea {
   case class Props(
@@ -26,14 +26,9 @@ object ScrollArea {
 
       // scrollTop will be set to the given value during init and when the value has changed
       setScrollTop: Option[Double] = None
-  )(children: ReactElement*) {
-    // While @react converts `children: ReactElement*` into a curried parameter of `ScrollArea.apply`,
-    // the varargs makes default `Props` values unusable, which is inconvenient.
-    // https://github.com/shadaj/slinky/issues/245
-    // https://github.com/shadaj/slinky/blob/v0.7.4/core/src/main/scala-2/slinky/core/annotations/react.scala#L43
-    //
-    // Putting the `children` in the secondary parameters seems to work without this limitation.
-    def getChildren: Seq[ReactElement] = children
+  )(children: ReactNode*) {
+    // Keep children separate so optional props retain their default arguments.
+    def getChildren: Seq[ReactNode] = children
   }
 
   def apply(
@@ -48,7 +43,7 @@ object ScrollArea {
       onScrollTopChange: Option[Double => Unit] = None,
       onUnmounted: Option[Double => Unit] = None,
       setScrollTop: Option[Double] = None
-  )(children: ReactElement*) =
+  )(children: ReactNode*) =
     component(
       Props(
         className,
@@ -70,7 +65,7 @@ object ScrollArea {
   val DefaultScrollToRightMaxFrames = 30
 
   val component = FunctionalComponent[Props] { props =>
-    val scrollableNodeRef = useRef[html.Div](null)
+    val scrollableNodeRef = useDomRef[html.Div]()
     val bottomThreshold =
       props.bottomThreshold.getOrElse(DefaultBottomThreshold)
 
@@ -95,7 +90,7 @@ object ScrollArea {
     useEffect(
       () => {
         props.setScrollTop.foreach { scrollTop =>
-          scrollableNodeRef.current.scrollTop = scrollTop
+          scrollableNodeRef.value.orNull.scrollTop = scrollTop
           props.onScrollTopChange.map(_(scrollTop))
         }
       },
@@ -106,7 +101,7 @@ object ScrollArea {
     useEffect(
       () => {
         props.scrollToTopWhen.foreach { _ =>
-          val scrollable = scrollableNodeRef.current
+          val scrollable = scrollableNodeRef.value.orNull
           scrollable
             .asInstanceOf[js.Dynamic]
             .scrollTo(
@@ -122,7 +117,7 @@ object ScrollArea {
     useEffect(
       () => {
         props.scrollToRightWhen.foreach { _ =>
-          val scrollable = scrollableNodeRef.current
+          val scrollable = scrollableNodeRef.value.orNull
           var frameCount = 0
           var stableFrames = 0
           var lastTarget = -1.0
@@ -160,7 +155,7 @@ object ScrollArea {
     // Register onScroll
     useEffect(
       () => {
-        val scrollable = scrollableNodeRef.current
+        val scrollable = scrollableNodeRef.value.orNull
         scrollable.addEventListener("scroll", onScroll)
         () => {
           scrollable.removeEventListener("scroll", onScroll)
@@ -172,7 +167,7 @@ object ScrollArea {
     // onUnmounted
     useEffect(
       () => {
-        val scrollable = scrollableNodeRef.current
+        val scrollable = scrollableNodeRef.value.orNull
         () => {
           props.onUnmounted.map(_(scrollable.scrollTop))
         }
@@ -207,19 +202,19 @@ object SimpleBar extends ExternalComponent {
       className: String,
       autoHide: Boolean,
       scrollableNodeProps: ScrollableNodeProps
-  )
+  ) derives PropsEncoder
 
   case class ScrollableNodeProps(
       id: Option[String] = None,
       className: Option[String] = None,
-      ref: Option[ReactRef[html.Div]] = None
-  )
+      ref: Option[DomRef[html.Div]] = None
+  ) derives PropsEncoder
 
   def apply(
       className: String,
       autoHide: Boolean,
       scrollableNodeProps: ScrollableNodeProps
-  )(children: ReactElement*) =
+  )(children: ReactNode*) =
     super.apply(Props(className, autoHide, scrollableNodeProps))(children*)
 
   override val component = SimpleBarReact

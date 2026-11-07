@@ -2,8 +2,8 @@ package cotoami.subparts.modals
 
 import scala.util.chaining._
 
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
 
 import marubinotto.optionalClasses
 import marubinotto.fui.Cmd
@@ -134,7 +134,7 @@ object ModalPromote {
   def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     Modal.view(
       dialogClasses = optionalClasses(
         Seq(
@@ -189,7 +189,7 @@ object ModalPromote {
   private def divCotoForm(form: CotoForm.Model)(using
       context: Context,
       dispatch: CotoForm.Msg => Unit
-  ): ReactElement = {
+  ): ReactNode = {
     val editor = Fragment(
       CotoForm.sectionEditorOrPreview(
         form = form,

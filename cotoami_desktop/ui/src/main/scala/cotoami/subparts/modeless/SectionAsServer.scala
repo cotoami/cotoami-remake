@@ -1,7 +1,7 @@
 package cotoami.subparts.modeless
 
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import cotoami.Context
 import cotoami.models.Server
@@ -10,7 +10,7 @@ import cotoami.subparts.{PartsNode, ViewConnectionStatus}
 
 object SectionAsServer {
 
-  def apply(server: Server)(using context: Context): ReactElement =
+  def apply(server: Server)(using context: Context): ReactNode =
     section(className := "field-group as-server")(
       h2()(context.i18n.text.AsServer_title),
       fieldUrl(server),
@@ -19,7 +19,7 @@ object SectionAsServer {
 
   private def fieldUrl(
       server: Server
-  )(using context: Context): ReactElement =
+  )(using context: Context): ReactNode =
     field(
       name = context.i18n.text.AsServer_url,
       classes = "server-url"
@@ -36,7 +36,7 @@ object SectionAsServer {
 
   private def fieldConnection(
       server: Server
-  )(using context: Context): ReactElement =
+  )(using context: Context): ReactNode =
     field(
       name = context.i18n.text.AsServer_connection,
       classes = "server-connection"

@@ -1,7 +1,7 @@
 package cotoami.subparts
 
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.components.materialSymbol
 import cotoami.Context
@@ -10,7 +10,7 @@ import cotoami.models.Server.NotConnected
 
 case class ViewConnectionStatus(
     className: String,
-    icon: ReactElement,
+    icon: ReactNode,
     title: String,
     message: Option[String]
 ) {

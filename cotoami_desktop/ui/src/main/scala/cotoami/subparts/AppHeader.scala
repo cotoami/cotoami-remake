@@ -1,7 +1,7 @@
 package cotoami.subparts
 
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
 
 import marubinotto.optionalClasses
 import marubinotto.components.{materialSymbol, shiftToolButton, toolButton}
@@ -16,7 +16,7 @@ object AppHeader {
 
   def apply(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     header(
       data - "tauri-drag-region" := "default",
       data - "os" := model.systemInfo.map(_.os).getOrElse("")
@@ -36,7 +36,7 @@ object AppHeader {
 
   private def sectionCurrentFocus(
       focus: (Node, Option[Cotonoma])
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode = {
     val (node, cotonoma) = focus
     section(
       className := optionalClasses(
@@ -71,7 +71,7 @@ object AppHeader {
 
   private def fragmentCurrentCotonoma(
       cotonoma: Cotonoma
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     Fragment(
       materialSymbol("chevron_right", "arrow"),
       h1(className := "current-cotonoma")(cotonoma.name),
@@ -90,7 +90,7 @@ object AppHeader {
   private def buttonDeleteCotonoma(cotonoma: Cotonoma)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     toolButton(
       classes = "delete-cotonoma",
       symbol = "delete",
@@ -108,7 +108,7 @@ object AppHeader {
 
   private def divSearch(
       search: PaneSearch.Model
-  )(using dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using dispatch: Into[AppMsg] => Unit): ReactNode = {
     import PaneSearch.Msg._
     div(className := "search")(
       input(
@@ -116,9 +116,9 @@ object AppHeader {
         name := "query",
         key := search.queryInputKey.toString(),
         defaultValue := search.queryInput,
-        onChange := (e => dispatch(QueryInput(e.target.value))),
+        onChange := (e => dispatch(QueryInput(e.currentTarget.value))),
         onCompositionStart := (_ => dispatch(ImeCompositionStart)),
-        onCompositionEnd := (e => dispatch(ImeCompositionEnd(e.target.value)))
+        onCompositionEnd := (e => dispatch(ImeCompositionEnd(e.currentTarget.value)))
       ),
       Option.when(!search.queryInput.isBlank) {
         button(
@@ -131,7 +131,7 @@ object AppHeader {
 
   private def divToolButtons(
       uiState: UiState
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     div(className := "tool-buttons")(
       Option.when(!context.repo.cotos.selectedIds.isEmpty) {
         button(
@@ -189,12 +189,12 @@ object AppHeader {
   private def buttonGeomap(uiState: UiState)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     GeomapButton(uiState)
 
   private def buttonNodeProfile(
       node: Node
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     button(
       className := "node-profile default",
       title := context.i18n.text.ModelessNodeProfile_title,
@@ -207,7 +207,7 @@ object AppHeader {
     def apply(uiState: UiState)(using
         context: Context,
         dispatch: Into[AppMsg] => Unit
-    ): ReactElement = {
+    ): ReactNode = {
       val canOpenModelessGeomap = context.modeless.geomap.isEmpty
       shiftToolButton(
         classes = optionalClasses(

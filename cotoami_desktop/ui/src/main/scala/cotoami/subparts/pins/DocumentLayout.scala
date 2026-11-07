@@ -4,10 +4,10 @@ import org.scalajs.dom
 import org.scalajs.dom.html
 import org.scalajs.dom.HTMLElement
 
-import slinky.core._
-import slinky.core.facade.{ReactElement, ReactRef}
-import slinky.core.facade.Hooks._
-import slinky.web.html._
+import marubinotto.react._
+import marubinotto.react.{ReactNode, DomRef}
+import marubinotto.react.Hooks._
+import marubinotto.react.html._
 
 import marubinotto.components.ScrollArea
 
@@ -37,8 +37,8 @@ object DocumentLayout {
     given Context = props.context
     given (Into[AppMsg] => Unit) = props.dispatch
 
-    val rootRef = useRef[html.Div](null)
-    val tocRef = useRef[html.Div](null)
+    val rootRef = useDomRef[html.Element]()
+    val tocRef = useDomRef[html.Div]()
 
     useEffect(
       () => {
@@ -53,13 +53,13 @@ object DocumentLayout {
           }
 
         // Initialize the TOC height
-        tocRef.current.style.height = tocHeight(viewport.offsetHeight)
+        tocRef.value.orNull.style.height = tocHeight(viewport.offsetHeight)
 
         // Resize the TOC height according to the viewport size
         val resizeObserver = new dom.ResizeObserver((entries, _) => {
           entries.foreach(entry => {
-            if (tocRef.current != null) {
-              tocRef.current.style.height = tocHeight(entry.contentRect.height)
+            if (tocRef.value.orNull != null) {
+              tocRef.value.orNull.style.height = tocHeight(entry.contentRect.height)
             }
           })
         })
@@ -86,7 +86,7 @@ object DocumentLayout {
             root = viewport
           }
         )
-        rootRef.current.querySelectorAll("section.pin")
+        rootRef.value.orNull.querySelectorAll("section.pin")
           .foreach(intersectionObserver.observe)
 
         () => {
@@ -113,8 +113,8 @@ object DocumentLayout {
 
   private def divToc(
       pins: Siblings,
-      tocRef: ReactRef[dom.HTMLDivElement]
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+      tocRef: DomRef[dom.HTMLDivElement]
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     div(className := "toc", ref := tocRef)(
       ScrollArea()(
         PartsIto.sectionSiblings(pins) { case (ito, coto, _) =>

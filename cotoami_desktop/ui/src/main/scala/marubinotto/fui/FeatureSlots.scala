@@ -1,7 +1,7 @@
 package marubinotto.fui
 
-import slinky.core.FunctionalComponent
-import slinky.core.facade.ReactElement
+import marubinotto.react.FunctionalComponent
+import marubinotto.react.ReactNode
 
 /** Typed logical slots for child features, independent of DOM placement.
   * Each slot holds at most one active instance of its registered feature.
@@ -74,14 +74,14 @@ abstract class FeatureSlots[Context] {
         generation: Long,
         dispatch: Event => Unit,
         context: Context
-    ): ReactElement
+    ): ReactNode
   }
 
   final class Slot[I, M, E, O] private[FeatureSlots] (
       feature: Feature[I, Context, M, E, O]
   ) {
     child =>
-    private case class ViewProps(content: ReactElement)
+    private case class ViewProps(content: ReactNode)
     private val viewId = FeatureSlots.allocateViewId()
 
     // The component type identifies this child; its key identifies the visit.
@@ -179,9 +179,9 @@ abstract class FeatureSlots[Context] {
       state: State,
       child: Slot[?, ?, ?, ?],
       dispatch: Event => Unit,
-      empty: => ReactElement,
+      empty: => ReactNode,
       context: Context
-  ): ReactElement =
+  ): ReactNode =
     state.entries.get(child).fold(empty)(
       _.view(state.generations(child), dispatch, context)
     )
@@ -252,10 +252,10 @@ abstract class FeatureSlots[Context] {
       state: State,
       child: Slot[?, ?, ?, ?],
       dispatch: Event => Unit,
-      empty: => ReactElement
+      empty: => ReactNode
   )(using
       unit: Unit =:= Context
-  ): ReactElement = view(state, child, dispatch, empty, unit(()))
+  ): ReactNode = view(state, child, dispatch, empty, unit(()))
 
   private[fui] final def update(event: Event, state: State)(using
       unit: Unit =:= Context

@@ -3,8 +3,8 @@ package marubinotto.components
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 
-import slinky.core._
-import slinky.core.facade.ReactElement
+import marubinotto.react._
+import marubinotto.react.ReactNode
 
 import marubinotto.facade.Nullable
 
@@ -15,17 +15,17 @@ object Select extends ExternalComponent {
       placeholder: Option[String] = None,
       inputValue: js.UndefOr[String] = js.undefined,
       defaultValue: Option[SelectOption] = None,
-      value: Option[SelectOption] = None,
+      value: Option[marubinotto.react.Nullable[SelectOption]] = None,
       onInputChange: Option[(String, InputActionMeta) => String] = None,
-      formatOptionLabel: Option[SelectOption => ReactElement] = None,
+      formatOptionLabel: Option[SelectOption => ReactNode] = None,
       isLoading: Boolean = false,
-      noOptionsMessage: Option[NoOptionsMessageArg => ReactElement] = None,
+      noOptionsMessage: Option[NoOptionsMessageArg => ReactNode] = None,
       isSearchable: Boolean = true,
       isClearable: Boolean = false,
       autoFocus: Boolean = false,
       menuPlacement: String = "auto", // "auto" / "bottom" / "top"
       onChange: Option[(Nullable[SelectOption], ActionMeta) => Unit] = None
-  )
+  ) derives PropsEncoder
 
   def apply(
       className: String,
@@ -33,11 +33,11 @@ object Select extends ExternalComponent {
       placeholder: Option[String] = None,
       inputValue: js.UndefOr[String] = js.undefined,
       defaultValue: Option[SelectOption] = None,
-      value: Option[SelectOption] = None,
+      value: Option[marubinotto.react.Nullable[SelectOption]] = None,
       onInputChange: Option[(String, InputActionMeta) => String] = None,
-      formatOptionLabel: Option[SelectOption => ReactElement] = None,
+      formatOptionLabel: Option[SelectOption => ReactNode] = None,
       isLoading: Boolean = false,
-      noOptionsMessage: Option[NoOptionsMessageArg => ReactElement] = None,
+      noOptionsMessage: Option[NoOptionsMessageArg => ReactNode] = None,
       isSearchable: Boolean = true,
       isClearable: Boolean = false,
       autoFocus: Boolean = false,

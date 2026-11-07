@@ -10,9 +10,9 @@ import cats.effect.IO
 import org.scalajs.dom
 import org.scalajs.dom.URL
 
-import slinky.core.facade.ReactElement
-import slinky.web.ReactDOMClient
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.ReactDOMClient
+import marubinotto.react.html._
 
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto._
@@ -553,7 +553,7 @@ object App {
       props: Props,
       model: Model,
       dispatch: Msg => Unit
-  ): ReactElement = {
+  ): ReactNode = {
     val uiState = model.app.uiState.getOrElse(UiState())
     val timelineOpened = uiState.paneOpened(BrowserShell.TimelinePaneName)
     val timelineWidth = uiState.paneSizes.getOrElse(

@@ -10,8 +10,8 @@ import scala.scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.document.createElement
 import com.softwaremill.quicklens._
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.optionalClasses
 import marubinotto.Action
@@ -332,7 +332,7 @@ object SectionGeomap {
 
   def apply(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     model.remotePmtilesAvailable.map(remotePmtiles =>
       div(className := "maplibre-map geomap-shell")(
         MapLibre(
@@ -387,7 +387,7 @@ object SectionGeomap {
 
   private def buttonPostCoto(
       location: Geolocation
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     toolButton(
       classes = "default post-coto-from-geomap overlay",
       symbol = "edit",

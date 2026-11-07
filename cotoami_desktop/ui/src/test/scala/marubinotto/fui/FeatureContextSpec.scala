@@ -1,7 +1,7 @@
 package marubinotto.fui
 
 import org.scalatest.funsuite.AnyFunSuite
-import slinky.web.html.div
+import marubinotto.react.html.div
 
 class FeatureContextSpec extends AnyFunSuite {
   private class Fixture {

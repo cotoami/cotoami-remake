@@ -2,8 +2,8 @@ package cotoami.subparts.modeless
 
 import scala.annotation.unused
 
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
 
 import marubinotto.components.materialSymbol
 import marubinotto.fui.{Browser, Cmd}
@@ -51,7 +51,7 @@ object ModelessGeomap {
   def apply(@unused model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     ModelessDialogFrame(
       dialogClasses = Seq("modeless-geomap" -> true),
       title = dialogTitle,
@@ -64,7 +64,7 @@ object ModelessGeomap {
       SectionGeomap(context.geomap)
     )
 
-  private def dialogTitle(using context: Context): ReactElement =
+  private def dialogTitle(using context: Context): ReactNode =
     context.repo.cotonomas.focused.flatMap(cotonoma =>
       context.repo.nodes.get(cotonoma.nodeId).map(node => (cotonoma, node))
     ) match {

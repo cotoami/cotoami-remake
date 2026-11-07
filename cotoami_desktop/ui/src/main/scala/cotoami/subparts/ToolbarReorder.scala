@@ -1,7 +1,7 @@
 package cotoami.subparts
 
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.components.toolButton
 import cotoami.{Context, Into, Msg => AppMsg}
@@ -16,7 +16,7 @@ object ToolbarReorder {
   )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): Option[ReactElement] =
+  ): Option[ReactNode] =
     Option.when(context.repo.nodes.canEditItosIn(ito.nodeId)) {
       val reordering = context.repo.reordering.contains(ito.sourceCotoId)
       section(className := "reorder-toolbar")(

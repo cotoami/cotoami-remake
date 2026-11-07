@@ -40,9 +40,12 @@ $ yarn run build
 
 ## Scalafui sources and tests
 
-`src/main/scala/marubinotto/{fui,router}` and their tests are vendored from
+`src/main/scala/marubinotto/{fui,router,react}` and their tests are vendored from
 [scalafui](https://github.com/marubinotto/scalafui), commit
 `799fb2900bc5637491bc312967f576ce5839009c`.
+The `fui` and new `react` sources and tests additionally include the Scala 3 /
+React 19 facade migration from the sibling scalafui checkout. These packages
+must be synchronized together, including their tests.
 The source files are kept unchanged from upstream; application compatibility
 code lives outside those packages. Feature APIs are included but the application
 continues to use `Program`.
@@ -50,3 +53,10 @@ continues to use `Program`.
 Install the JavaScript dependencies with `yarn`, then run `sbt test`.
 The upstream browser/runtime tests use jsdom and run serially because they
 install temporary browser globals.
+
+
+The UI uses `marubinotto.react` with React / React DOM 19.3.1. External component
+props derive `PropsEncoder`; omitted optional props and explicit null are
+separate values. See the Scalafui README for the facade API and interop rules.
+Development changes reload the page and reset application state; Fast Refresh
+is not part of this migration.

@@ -6,7 +6,7 @@ import org.scalajs.dom
 
 import cats.effect.IO
 
-import slinky.core._
+import marubinotto.react._
 
 import marubinotto.fui.Browser
 
@@ -18,7 +18,7 @@ object FixedAspectCrop extends ExternalComponent {
       aspect: Option[Double] = None,
       onMediaLoaded: Option[() => Unit] = None,
       onCropComplete: Option[(Area, Area) => Unit] = None
-  )
+  ) derives PropsEncoder
 
   def apply(
       image: String,

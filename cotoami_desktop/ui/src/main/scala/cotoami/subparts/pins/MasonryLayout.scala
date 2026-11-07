@@ -2,8 +2,8 @@ package cotoami.subparts.pins
 
 import scala.scalajs.js.JSConverters._
 
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.optionalClasses
 import marubinotto.components.Masonry
@@ -21,7 +21,7 @@ object MasonryLayout {
       pins: Siblings,
       cotonomaId: Id[Cotonoma],
       columnWidth: Int
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(className := "pinned-cotos siblings masonry-layout")(
       div(className := "column-width-slider")(
         input(
@@ -30,7 +30,7 @@ object MasonryLayout {
           max := MaxColumnWidth.toString(),
           value := columnWidth.toString(),
           onChange := (e => {
-            e.target.value.toIntOption.foreach(width =>
+            e.currentTarget.value.toIntOption.foreach(width =>
               dispatch(SectionPins.Msg.SetMasonryColumnWidth(cotonomaId, width))
             )
           })

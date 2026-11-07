@@ -2,8 +2,8 @@ package cotoami.subparts.modals
 
 import scala.util.chaining._
 import com.softwaremill.quicklens._
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.fui.Cmd
 import cats.effect.IO
@@ -140,7 +140,7 @@ object ModalNewIto {
   def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement = {
+  ): ReactNode = {
     val coto = context.repo.cotos.get(model.cotoId)
     Modal.view(
       dialogClasses = "new-ito",
@@ -194,7 +194,7 @@ object ModalNewIto {
 
   private def sectionIto(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(className := "ito")(
       div(className := "ito-icon")(
         materialSymbol("arrow_downward")
@@ -211,7 +211,7 @@ object ModalNewIto {
   private def articleCoto(coto: Coto)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     article(className := "coto embedded")(
       header()(
         PartsCoto.addressRemoteAuthor(coto)
@@ -226,7 +226,7 @@ object ModalNewIto {
   private def divSelection(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement = {
+  ): ReactNode = {
     val count = context.repo.cotos.selectedIds.size
     div(className := "selection")(
       if (count == 1)

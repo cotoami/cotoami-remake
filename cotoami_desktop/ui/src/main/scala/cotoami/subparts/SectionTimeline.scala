@@ -3,8 +3,8 @@ package cotoami.subparts
 import marubinotto.fui.toCmd
 import scala.util.chaining._
 
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 import com.softwaremill.quicklens._
 
 import marubinotto.fui._
@@ -359,7 +359,7 @@ object SectionTimeline {
   )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): Option[ReactElement] = {
+  ): Option[ReactNode] = {
     val cotos = model.cotos
     context.repo.currentCotonomaId.flatMap(cotonomaId =>
       Option.when(
@@ -375,7 +375,7 @@ object SectionTimeline {
       cotos: Seq[Coto],
       currentCotonomaId: Id[Cotonoma],
       options: Options
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(className := "timeline header-and-body")(
       headerTools(model),
       div(className := "coto-flow body")(
@@ -402,7 +402,7 @@ object SectionTimeline {
               cotos.map { coto =>
                 Flipped(key = coto.id.uuid, flipId = coto.id.uuid)(
                   sectionPost(coto, options)
-                ): ReactElement
+                ): ReactNode
               } :+
               div(
                 className := "more",
@@ -425,7 +425,7 @@ object SectionTimeline {
 
   private def headerTools(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     header(className := "tools")(
       Option.when(
         context.repo.cotonomas.focusedId.isEmpty &&
@@ -444,10 +444,10 @@ object SectionTimeline {
           name := "query",
           key := model.queryInputKey.toString(),
           defaultValue := model.queryInput,
-          onChange := (e => dispatch(Msg.QueryInput(e.target.value))),
+          onChange := (e => dispatch(Msg.QueryInput(e.currentTarget.value))),
           onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart)),
           onCompositionEnd := (e =>
-            dispatch(Msg.ImeCompositionEnd(e.target.value))
+            dispatch(Msg.ImeCompositionEnd(e.currentTarget.value))
           )
         ),
         Option.when(!model.queryInput.isBlank) {
@@ -461,7 +461,7 @@ object SectionTimeline {
 
   private def sectionWaitingPost(
       post: WaitingPost
-  )(using context: Context): ReactElement =
+  )(using context: Context): ReactNode =
     section(
       className := "waiting-post flow-entry",
       key := post.postId,
@@ -478,7 +478,7 @@ object SectionTimeline {
   private def sectionPost(
       post: Coto,
       options: Options
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode = {
     section(className := "post flow-entry")(
       context.repo.cotos.getOriginal(post)
         .map(articleCoto(_, post, options))
@@ -488,7 +488,7 @@ object SectionTimeline {
   private def articleCoto(coto: Coto, post: Coto, options: Options)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement = {
+  ): ReactNode = {
     val repo = context.repo
     PartsCoto.article(coto, dispatch)(
       Option.when(repo.nodes.unread(post))(
@@ -525,7 +525,7 @@ object SectionTimeline {
   private def sectionRepostHeader(coto: Coto)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): Option[ReactElement] =
+  ): Option[ReactNode] =
     Option.when(coto.repostOfId.isDefined) {
       val repo = context.repo
       section(className := "repost-header")(
@@ -563,7 +563,7 @@ object SectionTimeline {
   private def repostedIn(
       coto: Coto,
       cotonomas: Cotonomas
-  )(using dispatch: Into[AppMsg] => Unit): Option[ReactElement] =
+  )(using dispatch: Into[AppMsg] => Unit): Option[ReactNode] =
     coto.postedInId.flatMap(cotonomas.get).map(cotonoma =>
       a(
         className := "reposted-in",
@@ -576,7 +576,7 @@ object SectionTimeline {
 
   private def reposter(coto: Coto, nodes: Nodes)(using
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     address(className := "reposter")(
       nodes.get(coto.postedById).map(PartsNode.spanNode)
     )

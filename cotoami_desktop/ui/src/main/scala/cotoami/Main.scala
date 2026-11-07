@@ -2,12 +2,10 @@ package cotoami
 
 import marubinotto.fui.toCmd
 import scala.util.chaining._
-import scala.scalajs.LinkingInfo
 import org.scalajs.dom
 import org.scalajs.dom.URL
 
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.hot
+import marubinotto.react.{Fragment, ReactNode}
 
 import com.softwaremill.quicklens._
 
@@ -43,11 +41,7 @@ object Main {
     run.unsafeRunAndForget()
 
   def run: IO[Unit] = {
-    IO {
-      if (LinkingInfo.developmentMode) {
-        hot.initialize()
-      }
-    } *> {
+    IO.defer {
       val container = dom.document.getElementById("app")
       val currentUrl = new URL(dom.window.location.href)
       if (BrowserApp.isCurrentWindow(currentUrl)) {
@@ -765,7 +759,7 @@ object Main {
       .map { case Modal.AppUpdate(modal) => ModalAppUpdate.progress(modal) }
       .getOrElse(Sub.Empty)
 
-  def view(model: Model, dispatch: Into[Msg] => Unit): ReactElement = {
+  def view(model: Model, dispatch: Into[Msg] => Unit): ReactNode = {
     given Context = model
     given (Into[Msg] => Unit) = dispatch
     Fragment(

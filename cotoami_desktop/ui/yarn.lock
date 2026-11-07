@@ -1751,13 +1751,12 @@ __metadata:
     jsdom: "npm:30.1.3"
     maplibre-gl: "npm:^4.5.1"
     pmtiles: "npm:^4.3.0"
-    react: "npm:18.3.1"
-    react-dom: "npm:18.3.1"
+    react: "npm:19.3.1"
+    react-dom: "npm:19.3.1"
     react-dropzone: "npm:14.2.3"
     react-easy-crop: "npm:5.0.7"
     react-flip-toolkit: "npm:^7.2.4"
     react-markdown: "npm:^9.0.1"
-    react-proxy: "npm:1.1.8"
     react-select: "npm:5.10.2"
     rehype-external-links: "npm:^3.0.0"
     rehype-highlight: "npm:^7.0.2"
@@ -2889,7 +2888,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:^4.17.21, lodash@npm:^4.6.1":
+"lodash@npm:^4.17.21":
   version: 4.17.21
   resolution: "lodash@npm:4.17.21"
   checksum: 10c0/d8cbea072bb08655bb4c989da418994b073a608dffa608b09ac04b43a791b12aeae7cd7ad919aa4c925f33b48490b5cfe6c1f71d827956071dae2e7bb3a6b74c
@@ -2903,7 +2902,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"loose-envify@npm:^1.1.0, loose-envify@npm:^1.4.0":
+"loose-envify@npm:^1.4.0":
   version: 1.4.0
   resolution: "loose-envify@npm:1.4.0"
   dependencies:
@@ -3973,22 +3972,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-deep-force-update@npm:^1.0.0":
-  version: 1.1.2
-  resolution: "react-deep-force-update@npm:1.1.2"
-  checksum: 10c0/dc166e957e6e5d773acbb96a1d2f34665ae336bf56618a51a43ee1934d99ce15bf763a6f5763e2082134ce7fd08d60ea7d3ce839de2594ed9526d7ebc9c54981
-  languageName: node
-  linkType: hard
-
-"react-dom@npm:18.3.1":
-  version: 18.3.1
-  resolution: "react-dom@npm:18.3.1"
+"react-dom@npm:19.3.1":
+  version: 19.3.1
+  resolution: "react-dom@npm:19.3.1"
   dependencies:
-    loose-envify: "npm:^1.1.0"
-    scheduler: "npm:^0.23.2"
+    scheduler: "npm:^0.28.0"
   peerDependencies:
-    react: ^18.3.1
-  checksum: 10c0/a752496c1941f958f2e8ac56239172296fcddce1365ce45222d04a1947e0cc5547df3e8447f855a81d6d39f008d7c32eab43db3712077f09e3f67c4874973e85
+    react: ^19.3.1
+  checksum: 10c0/382700916313b2ebc46acee80642f300bb8601eac6a9e7fefade5b8b30e66b05bf3aaa56a3c964589fcd578d27b486e847470c2697d879264e766661ff49fac7
   languageName: node
   linkType: hard
 
@@ -4059,16 +4050,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-proxy@npm:1.1.8":
-  version: 1.1.8
-  resolution: "react-proxy@npm:1.1.8"
-  dependencies:
-    lodash: "npm:^4.6.1"
-    react-deep-force-update: "npm:^1.0.0"
-  checksum: 10c0/632e05d064d486c11e442f6c1c9558ea71661d9167f62ce2b7ef36fc5f0795a786a063cdfc05047fa8876b334b395d8dae155556120269fc2a3ef1c9e7dd6c76
-  languageName: node
-  linkType: hard
-
 "react-select@npm:5.10.2":
   version: 5.10.2
   resolution: "react-select@npm:5.10.2"
@@ -4104,12 +4085,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:18.3.1":
-  version: 18.3.1
-  resolution: "react@npm:18.3.1"
-  dependencies:
-    loose-envify: "npm:^1.1.0"
-  checksum: 10c0/283e8c5efcf37802c9d1ce767f302dd569dd97a70d9bb8c7be79a789b9902451e0d16334b05d73299b20f048cbc3c7d288bbbde10b701fa194e2089c237dbea3
+"react@npm:19.3.1":
+  version: 19.3.1
+  resolution: "react@npm:19.3.1"
+  checksum: 10c0/f0ed036d1223562c09c8347858ca712733ea6e27a30db709ee9c3f3f176d3e9e767afce735d59956addf3d030102e256bba82dea635fc1bdb0e01107e98fef10
   languageName: node
   linkType: hard
 
@@ -4475,12 +4454,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"scheduler@npm:^0.23.2":
-  version: 0.23.2
-  resolution: "scheduler@npm:0.23.2"
-  dependencies:
-    loose-envify: "npm:^1.1.0"
-  checksum: 10c0/26383305e249651d4c58e6705d5f8425f153211aef95f15161c151f7b8de885f24751b377e4a0b3dd42cce09aad3f87a61dab7636859c0d89b7daf1a1e2a5c78
+"scheduler@npm:^0.28.0":
+  version: 0.28.0
+  resolution: "scheduler@npm:0.28.0"
+  checksum: 10c0/783c8e5ce89d41273a02ed6dc0e3d24bd60e05c9e8f7e3adfc6c82e7c69935500d90e343f1ee26d592fc7504e8a2532573c6368def3e93bfe812391fa53efaf4
   languageName: node
   linkType: hard
 

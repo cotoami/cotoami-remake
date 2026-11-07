@@ -1,7 +1,7 @@
 package cotoami.subparts
 
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
 
 import marubinotto.optionalClasses
 import marubinotto.components.SplitPane
@@ -13,7 +13,7 @@ object AppBody {
 
   def apply(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     div(
       id := "app-body",
       className := optionalClasses(
@@ -32,7 +32,7 @@ object AppBody {
   private def content(
       model: Model,
       uiState: UiState
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     Fragment(
       NavNodes(model, uiState),
       SplitPane(

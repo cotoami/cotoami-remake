@@ -3,9 +3,9 @@ package cotoami.subparts.modals
 import scala.util.chaining._
 import scala.scalajs.js
 import cats.effect.{IO, Resource}
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html
-import slinky.web.html._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html
+import marubinotto.react.html._
 
 import marubinotto.fui.{Cmd, Sub}
 import marubinotto.libs.tauri
@@ -119,7 +119,7 @@ object ModalAppUpdate {
 
   def apply(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode = {
     Modal.view(
       dialogClasses = "app-update",
       closeButton = Some((classOf[Modal.AppUpdate], dispatch))

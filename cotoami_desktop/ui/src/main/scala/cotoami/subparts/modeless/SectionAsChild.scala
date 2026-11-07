@@ -3,8 +3,8 @@ package cotoami.subparts.modeless
 import marubinotto.fui.toCmd
 import scala.util.chaining._
 import com.softwaremill.quicklens._
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.fui.Cmd
 
@@ -138,7 +138,7 @@ object SectionAsChild {
 
   def apply(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     model.child.map { _ =>
       section(className := "field-group as-child")(
         h2()(context.i18n.text.AsChild_title),
@@ -156,7 +156,7 @@ object SectionAsChild {
   private def fieldChildPrivileges(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     fieldEditable(
       name = context.i18n.text.ChildPrivileges,
       classes = "privileges",

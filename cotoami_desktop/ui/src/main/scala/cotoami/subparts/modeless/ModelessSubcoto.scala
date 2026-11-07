@@ -3,8 +3,8 @@ package cotoami.subparts.modeless
 import marubinotto.fui.toCmd
 import scala.util.chaining._
 
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
 
 import marubinotto.fui.{Browser, Cmd}
 import marubinotto.components.{materialSymbol, ScrollArea}
@@ -182,7 +182,7 @@ object ModelessSubcoto {
   def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement = {
+  ): ReactNode = {
     val sourceCoto = context.repo.cotos.get(model.sourceCotoId)
     ModelessDialogFrame(
       dialogClasses = Seq(
@@ -226,7 +226,7 @@ object ModelessSubcoto {
   private def articleCoto(coto: Coto)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     article(className := "coto embedded")(
       header()(
         PartsCoto.addressRemoteAuthor(coto)
@@ -240,7 +240,7 @@ object ModelessSubcoto {
 
   private def sectionPost(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(className := "post")(
       div(className := "post-to")(
         div(className := "label")(s"${context.i18n.text.PostTo}:"),

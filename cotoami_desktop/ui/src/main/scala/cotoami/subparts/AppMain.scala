@@ -2,8 +2,8 @@ package cotoami.subparts
 
 import scala.util.chaining._
 
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.optionalClasses
 import marubinotto.fui.Cmd
@@ -112,10 +112,10 @@ object AppMain {
   def apply(
       model: Model,
       uiState: UiState
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode = {
     val flowOpened = uiState.paneOpened(PaneFlow.PaneName)
     val stockOpened = uiState.paneOpened(PaneStock.PaneName)
-    slinky.web.html.main(className := "fill")(
+    marubinotto.react.html.main(className := "fill")(
       SplitPane(
         vertical = true,
         reverse = uiState.reverseMainPanes,
@@ -182,13 +182,13 @@ object AppMain {
     uiState.paneOpened(PaneFlow.PaneName).toString() ++
       uiState.paneOpened(PaneStock.PaneName).toString()
 
-  private def flowPaneToggle(using dispatch: AppMsg => Unit): ReactElement =
+  private def flowPaneToggle(using dispatch: AppMsg => Unit): ReactNode =
     paneToggle(
       onFoldClick = () => dispatch(Msg.SetPaneFlowOpen(false).into),
       onUnfoldClick = () => dispatch(Msg.SetPaneFlowOpen(true).into)
     )
 
-  private def stockPaneToggle(using dispatch: AppMsg => Unit): ReactElement =
+  private def stockPaneToggle(using dispatch: AppMsg => Unit): ReactNode =
     paneToggle(
       onFoldClick = () => dispatch(Msg.SetPaneStockOpen(false).into),
       onUnfoldClick = () => dispatch(Msg.SetPaneStockOpen(true).into)

@@ -3,8 +3,8 @@ package cotoami.subparts.modals
 import marubinotto.fui.toCmd
 
 import scala.util.chaining._
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.fui.{Browser, Cmd}
 import marubinotto.components.materialSymbol
@@ -89,7 +89,7 @@ object ModalSwitchNode {
 
   def apply(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode = {
     val modalType = classOf[Modal.SwitchNode]
     Modal.view(
       dialogClasses = "switch-node",
@@ -124,7 +124,7 @@ object ModalSwitchNode {
   private def sectionNode(node: Node, elementClasses: String)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     section(className := elementClasses)(
       PartsNode.spanNode(node),
       Option.when(context.repo.nodes.isLocal(node.id)) {

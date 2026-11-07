@@ -4,8 +4,8 @@ import marubinotto.fui.toCmd
 
 import scala.util.chaining._
 
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
 
 import marubinotto.fui.{Browser, Cmd}
 import marubinotto.components.materialSymbol
@@ -183,7 +183,7 @@ object ModelessNewCoto {
   def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     ModelessDialogFrame(
       dialogClasses = Seq(
         "modeless-new-coto" -> true,
@@ -225,7 +225,7 @@ object ModelessNewCoto {
 
   private def sectionPostTo(cotonoma: Cotonoma)(using
       context: Context
-  ): ReactElement =
+  ): ReactNode =
     section(className := "post-to")(
       span(className := "label")(s"${context.i18n.text.PostTo}:"),
       span(className := "name")(cotonoma.name)

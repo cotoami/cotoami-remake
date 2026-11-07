@@ -3,8 +3,8 @@ package cotoami.browser
 import org.scalajs.dom
 import org.scalajs.dom.URL
 
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto._
@@ -149,7 +149,7 @@ object BrowserTrail {
       onClose: () => Unit,
       onNavigate: NavigationRequest => Unit,
       dispatch: Msg => Unit
-  ): ReactElement = {
+  ): ReactNode = {
     val currentEntry = model.entryForUrl(currentUrl)
 
     def trailEntry(
@@ -157,7 +157,7 @@ object BrowserTrail {
         level: Int,
         displayUrl: String,
         entryKey: Option[String] = None
-    ): ReactElement = {
+    ): ReactNode = {
       val current = currentEntry.exists(_.url == entry.url)
       val canDelete =
         !current && !(level == 1 && currentEntry.exists(_.origin == entry.origin))
@@ -226,7 +226,7 @@ object BrowserTrail {
       }
     }
 
-    def trailList: ReactElement = {
+    def trailList: ReactNode = {
       val groups = model.groups
       div(className := "browser-trail-menu")(
         if (groups.isEmpty)

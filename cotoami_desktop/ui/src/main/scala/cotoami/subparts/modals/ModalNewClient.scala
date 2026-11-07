@@ -4,8 +4,8 @@ import marubinotto.fui.toCmd
 import scala.util.chaining._
 
 import com.softwaremill.quicklens._
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.fui.{Browser, Cmd}
 import marubinotto.Validation
@@ -164,7 +164,7 @@ object ModalNewClient {
   def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     Modal.view(
       dialogClasses = "new-client",
       closeButton = Some((classOf[Modal.NewClient], dispatch)),

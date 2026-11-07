@@ -1,8 +1,8 @@
 package cotoami
 
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
-import slinky.web.SyntheticKeyboardEvent
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
+import marubinotto.react.SyntheticKeyboardEvent
 
 import cotoami.{Msg => AppMsg}
 import cotoami.repository.Nodes
@@ -11,7 +11,7 @@ package object subparts {
 
   def paneToggle(
       paneName: String
-  )(using dispatch: AppMsg => Unit): ReactElement =
+  )(using dispatch: AppMsg => Unit): ReactNode =
     marubinotto.components.paneToggle(
       onFoldClick = () => dispatch(AppMsg.SetPaneOpen(paneName, false)),
       onUnfoldClick = () => dispatch(AppMsg.SetPaneOpen(paneName, true))
@@ -27,7 +27,7 @@ package object subparts {
       nodes: Nodes
   )(using
       context: Context
-  ): ReactElement = {
+  ): ReactNode = {
     val connecting = nodes.activeClients.count
     section(className := "client-nodes-count")(
       Option.when(connecting > 0) {

@@ -3,21 +3,21 @@ package marubinotto.components
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 
-import slinky.core._
-import slinky.core.facade.ReactElement
+import marubinotto.react._
+import marubinotto.react.ReactNode
 
 object Flipper extends ExternalComponent {
   case class Props(
       element: String,
       className: String,
       flipKey: String
-  )
+  ) derives PropsEncoder
 
   def apply(
       element: String,
       className: String,
       flipKey: String
-  )(children: ReactElement*) =
+  )(children: ReactNode*) =
     super.apply(Props(element, className, flipKey))(children*)
 
   override val component = ReactFlipToolkit.Flipper
@@ -26,12 +26,12 @@ object Flipper extends ExternalComponent {
 object Flipped extends ExternalComponent {
   case class Props(
       flipId: String
-  )
+  ) derives PropsEncoder
 
   def apply(
       key: String,
       flipId: String
-  )(children: ReactElement*) =
+  )(children: ReactNode*) =
     super.apply(Props(flipId)).withKey(key).apply(children*)
 
   override val component = ReactFlipToolkit.Flipped

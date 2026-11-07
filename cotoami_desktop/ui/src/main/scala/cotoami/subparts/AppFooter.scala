@@ -1,7 +1,7 @@
 package cotoami.subparts
 
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.components.materialSymbol
 import cotoami.{Into, Model, Msg => AppMsg}
@@ -10,7 +10,7 @@ object AppFooter {
 
   def apply(
       model: Model
-  )(using dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using dispatch: Into[AppMsg] => Unit): ReactNode =
     footer(
       div(className := "browser-nav")(
         div(className := "path")(model.path)

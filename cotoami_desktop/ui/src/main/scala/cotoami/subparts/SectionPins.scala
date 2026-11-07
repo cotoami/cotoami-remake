@@ -7,8 +7,8 @@ import org.scalajs.dom.HTMLElement
 
 import cats.effect.IO
 
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
 
 import marubinotto.optionalClasses
 import marubinotto.fui.Cmd
@@ -117,7 +117,7 @@ object SectionPins {
   )(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): Option[ReactElement] = {
+  ): Option[ReactNode] = {
     (context.repo.pins, context.repo.currentCotonomaPair) match {
       case (Some(pins), Some(cotonoma)) =>
         Some(sectionPins(pins, uiState, cotonoma))
@@ -129,7 +129,7 @@ object SectionPins {
       pins: Siblings,
       uiState: UiState,
       currentCotonoma: (Cotonoma, Coto)
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode = {
     val (cotonoma, cotonomaCoto) = currentCotonoma
     val layout = uiState.pinsLayout(cotonoma.id).getOrElse(Layout.Document)
     section(
@@ -182,8 +182,8 @@ object SectionPins {
       cotonoma: Cotonoma,
       cotonomaCoto: Coto,
       layout: Layout
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    slinky.web.html.header()(
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
+    marubinotto.react.html.header()(
       ToolbarCoto(cotonomaCoto),
       section(className := "title")(
         span(
@@ -222,7 +222,7 @@ object SectionPins {
   private def sectionSuperCotonomas()(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement = {
+  ): ReactNode = {
     val (ofFocused, ofPinned) = context.repo.superCotonomasOfStock
     Option.when(!ofFocused.isEmpty || !ofPinned.isEmpty) {
       section(className := "super-cotonomas")(
@@ -238,7 +238,7 @@ object SectionPins {
 
   private def liSuperCotonoma(
       cotonoma: Cotonoma
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     li(key := cotonoma.id.uuid)(
       a(
         className := "cotonoma",
@@ -254,7 +254,7 @@ object SectionPins {
 
   private def sectionCotonomaContent(
       cotonomaCoto: Coto
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     PartsCoto.sectionCotonomaContent(cotonomaCoto).map(
       div(
         className := "cotonoma-content",
@@ -268,7 +268,7 @@ object SectionPins {
       currentLayout: Layout,
       symbol: String,
       tip: String
-  )(using dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using dispatch: Into[AppMsg] => Unit): ReactNode = {
     val selected = layout.name == currentLayout.name
     toolButton(
       symbol = symbol,

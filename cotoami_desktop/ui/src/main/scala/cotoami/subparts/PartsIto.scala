@@ -1,7 +1,7 @@
 package cotoami.subparts
 
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.optionalClasses
 import marubinotto.Validation
@@ -14,7 +14,7 @@ object PartsIto {
 
   def buttonPin(
       ito: Ito
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode = {
     val canEditPin = context.repo.nodes.canEdit(ito)
     div(
       className := optionalClasses(
@@ -60,7 +60,7 @@ object PartsIto {
 
   def buttonSubcotoIto(
       ito: Ito
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode = {
     val canEditIto = context.repo.nodes.canEdit(ito)
     div(
       className := optionalClasses(
@@ -108,7 +108,7 @@ object PartsIto {
       description: String,
       validation: Validation.Result,
       onChange: String => Unit
-  )(using context: Context): ReactElement =
+  )(using context: Context): ReactNode =
     div(className := "description")(
       input(
         className := "description",
@@ -116,22 +116,22 @@ object PartsIto {
         placeholder := context.i18n.text.Ito_description_placeholder,
         value := description,
         Validation.ariaInvalid(validation),
-        slinky.web.html.onChange := (e => onChange(e.target.value))
+        marubinotto.react.html.onChange := (e => onChange(e.currentTarget.value))
       ),
       Validation.sectionValidationError(validation)
     )
 
   def sectionSiblings(siblings: Siblings, classes: String = "")(
-      renderSibling: (Ito, Coto, OrderContext) => ReactElement
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+      renderSibling: (Ito, Coto, OrderContext) => ReactNode
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(className := s"siblings ${classes}")(
       siblings.groupsInOrder.map(sectionSiblingGroup(_, renderSibling))*
     )
 
   def sectionSiblingGroup(
       group: SiblingGroup,
-      renderSibling: (Ito, Coto, OrderContext) => ReactElement
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+      renderSibling: (Ito, Coto, OrderContext) => ReactNode
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(
       className := optionalClasses(
         Seq(

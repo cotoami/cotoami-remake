@@ -5,8 +5,8 @@ import scala.concurrent.duration.DurationInt
 
 import scala.util.chaining._
 
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 import com.softwaremill.quicklens._
 
 import marubinotto.fui.Cmd
@@ -195,7 +195,7 @@ object PaneSearch {
 
   def apply(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(className := "search header-and-body fill")(
       header()(
         span(className := "title")(
@@ -220,7 +220,7 @@ object PaneSearch {
 
   private def sectionCoto(
       coto: Coto
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode = {
     val repo = context.repo
     section(className := "coto flow-entry")(
       PartsCoto.article(coto, dispatch)(

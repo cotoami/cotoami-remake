@@ -5,8 +5,8 @@ import com.softwaremill.quicklens._
 import org.scalajs.dom
 import org.scalajs.dom.HTMLElement
 
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
 
 import marubinotto.optionalClasses
 import marubinotto.fui.{Browser, Cmd}
@@ -312,7 +312,7 @@ object PaneStock {
   def apply(
       model: Model,
       uiState: UiState
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(id := PaneId, className := "stock fill")(
       if (uiState.mapOpened)
         SplitPane(
@@ -339,7 +339,7 @@ object PaneStock {
   private def stockMainContent(
       model: Model,
       uiState: UiState
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     if (model.stockBrowser.opened)
       embeddedBrowser(model, uiState)
     else
@@ -348,7 +348,7 @@ object PaneStock {
   private def embeddedBrowser(
       model: Model,
       uiState: UiState
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     BrowserShell.component(
       BrowserShell.Props(
         contentLabel = BrowserContentLabel,
@@ -414,7 +414,7 @@ object PaneStock {
   private def divMap(model: Model, uiState: UiState)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     div(className := "map fill")(
       Option.when(uiState.geomapOpened) {
         SectionGeomap(model.geomap)
@@ -448,7 +448,7 @@ object PaneStock {
   private def sectionCotoGraph(
       model: Model,
       uiState: UiState
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode = {
     val sectionTraversals = SectionTraversals(model.traversals)
     val contents = Fragment(
       SectionPins(uiState),

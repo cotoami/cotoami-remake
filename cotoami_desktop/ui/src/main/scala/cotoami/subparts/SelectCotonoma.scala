@@ -2,8 +2,8 @@ package cotoami.subparts
 
 import scala.scalajs.js
 
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.facade.Nullable
 import marubinotto.components.Select
@@ -41,7 +41,7 @@ object SelectCotonoma {
       placeholder: Option[String] = None,
       inputValue: js.UndefOr[String] = js.undefined,
       defaultValue: Option[CotonomaOption] = None,
-      value: Option[CotonomaOption] = None,
+      value: js.UndefOr[Option[CotonomaOption]] = js.undefined,
       onInputChange: Option[(String, Select.InputActionMeta) => String] = None,
       allowNewCotonomas: Boolean = false,
       showRootMark: Boolean = false,
@@ -49,20 +49,26 @@ object SelectCotonoma {
       currentCotonomaId: Option[Id[Cotonoma]] = None,
       currentMarkLabel: Option[String] = None,
       isLoading: Boolean = false,
-      noOptionsMessage: Option[Select.NoOptionsMessageArg => ReactElement] =
-        None,
+      noOptionsMessage: Option[Select.NoOptionsMessageArg => ReactNode] = None,
       isSearchable: Boolean = true,
       isClearable: Boolean = false,
       autoFocus: Boolean = false,
       menuPlacement: String = "auto",
       onChange: Option[(Option[CotonomaOption], Select.ActionMeta) => Unit] =
         None
-  )(using context: Context): ReactElement = {
+  )(using context: Context): ReactNode = {
     val filteredOptions = filterNewCotonomas(options, allowNewCotonomas)
-    val filteredDefaultValue = filterNewCotonoma(defaultValue, allowNewCotonomas)
-    val filteredValue = filterNewCotonoma(value, allowNewCotonomas)
+    val filteredDefaultValue =
+      filterNewCotonoma(defaultValue, allowNewCotonomas)
+    val filteredValue = value.toOption.map(selected =>
+      filterNewCotonoma(selected, allowNewCotonomas)
+        .fold[marubinotto.react.Nullable[Select.SelectOption]](
+          marubinotto.react.Nullable.Null
+        )(marubinotto.react.Nullable.Value(_))
+    )
     Select(
-      className = Seq("cotonoma-select", className).filter(_.nonEmpty).mkString(" "),
+      className =
+        Seq("cotonoma-select", className).filter(_.nonEmpty).mkString(" "),
       options = filteredOptions,
       placeholder = placeholder,
       inputValue = inputValue,
@@ -102,10 +108,11 @@ object SelectCotonoma {
       allowNewCotonomas: Boolean
   ): Seq[CotonomaOption] =
     if (allowNewCotonomas) options
-    else options.filter {
-      case _: NewCotonoma => false
-      case _              => true
-    }
+    else
+      options.filter {
+        case _: NewCotonoma => false
+        case _              => true
+      }
 
   private def filterNewCotonoma(
       option: Option[CotonomaOption],
@@ -122,13 +129,17 @@ object SelectCotonoma {
       rootMarkLabel: Option[String],
       currentCotonomaId: Option[Id[Cotonoma]],
       currentMarkLabel: Option[String]
-  )(using context: Context): ReactElement =
+  )(using context: Context): ReactNode =
     option match {
       case option: ExistingCotonoma =>
         div(className := "existing-cotonoma")(
-          context.repo.nodes.get(option.cotonoma.nodeId).map(PartsNode.imgNode(_)),
+          context.repo.nodes.get(option.cotonoma.nodeId).map(
+            PartsNode.imgNode(_)
+          ),
           span(className := "cotonoma-name")(option.cotonoma.name),
-          Option.when(showRootMark && context.repo.nodes.isNodeRoot(option.cotonoma)) {
+          Option.when(
+            showRootMark && context.repo.nodes.isNodeRoot(option.cotonoma)
+          ) {
             span(className := "root-mark")(
               rootMarkLabel.map(label => s"(${label})").getOrElse("")
             )
@@ -145,7 +156,9 @@ object SelectCotonoma {
           span(className := "description")(
             s"${context.i18n.text.SelectCotonoma_newCotonoma}:"
           ),
-          context.repo.nodes.get(Id[Node](option.targetNodeId)).map(PartsNode.imgNode(_)),
+          context.repo.nodes.get(Id[Node](option.targetNodeId)).map(
+            PartsNode.imgNode(_)
+          ),
           span(className := "cotonoma-name")(option.name)
         )
     }

@@ -1,15 +1,16 @@
 package marubinotto.fui
 
 import cats.effect.{IO, Resource}
+import scala.concurrent.duration.*
 import cats.effect.unsafe.implicits.global
 import org.scalajs.dom
 import org.scalatest.funsuite.AsyncFunSuite
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
-import slinky.core.FunctionalComponent
-import slinky.core.facade.{Hooks, ReactElement}
-import slinky.web.ReactDOMClient
-import slinky.web.html.div
+import marubinotto.react.FunctionalComponent
+import marubinotto.react.{Hooks, ReactNode}
+import marubinotto.react.ReactDOMClient
+import marubinotto.react.html.div
 
 @js.native
 @JSImport("react-dom", "flushSync")
@@ -33,7 +34,7 @@ class ChildFeatureViewSpec extends AsyncFunSuite {
     globals.document = env.window.document
     (env, previousWindow, previousDocument)
   }) { case (env, previousWindow, previousDocument) =>
-    IO {
+    IO.sleep(20.millis) *> IO {
       env.window.close()
       val globals = js.Dynamic.global.globalThis
       globals.window = previousWindow
@@ -70,7 +71,7 @@ class ChildFeatureViewSpec extends AsyncFunSuite {
           context: Unit
       ): Transition[Int, Int, Nothing] =
         Transition(model + msg)
-      def view(model: Int, context: Unit, dispatch: Int => Unit): ReactElement =
+      def view(model: Int, context: Unit, dispatch: Int => Unit): ReactNode =
         component(Props(model, dispatch))
     }
     object Children extends FeatureSlots[Unit] {

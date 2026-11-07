@@ -6,8 +6,8 @@ import scala.util.chaining._
 
 import cats.effect.{IO, Resource}
 
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.components.materialSymbol
 import marubinotto.fui.{Cmd, Sub}
@@ -207,8 +207,8 @@ object BrowserDownloads {
       deleteTitle: String,
       onClose: () => Unit,
       dispatch: Msg => Unit
-  ): ReactElement = {
-    def downloadEntry(entry: Entry): ReactElement = {
+  ): ReactNode = {
+    def downloadEntry(entry: Entry): ReactNode = {
       val canOpen = entry.status == Status.Finished
       li(
         className := s"browser-trail-entry browser-download-entry ${entry.status.toString.toLowerCase}",

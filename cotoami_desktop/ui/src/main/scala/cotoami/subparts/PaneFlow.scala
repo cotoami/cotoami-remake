@@ -2,8 +2,8 @@ package cotoami.subparts
 
 import org.scalajs.dom
 import org.scalajs.dom.HTMLElement
-import slinky.core.facade.{Fragment, ReactElement}
-import slinky.web.html._
+import marubinotto.react.{Fragment, ReactNode}
+import marubinotto.react.html._
 
 import marubinotto.components.toolButton
 import cotoami.{Context, Into, Model, Msg => AppMsg}
@@ -29,7 +29,7 @@ object PaneFlow {
   def apply(
       model: Model,
       uiState: UiState
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(id := PaneId, className := "flow fill")(
       model.repo.cotos.focused.map(focusedCoto(_))
         .getOrElse(timeline(model, uiState))
@@ -38,7 +38,7 @@ object PaneFlow {
   private def timeline(
       model: Model,
       uiState: UiState
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     Fragment(
       (model.repo.currentCotonoma, model.repo.canPostCoto) match {
         case (Some(cotonoma), true) =>
@@ -61,7 +61,7 @@ object PaneFlow {
 
   private def focusedCoto(
       coto: Coto
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(className := "focused-coto header-and-body")(
       header(
         toolButton(

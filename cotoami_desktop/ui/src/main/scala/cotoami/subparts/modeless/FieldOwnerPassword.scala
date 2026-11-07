@@ -2,8 +2,8 @@ package cotoami.subparts.modeless
 
 import marubinotto.fui.toCmd
 import scala.util.chaining._
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
@@ -79,7 +79,7 @@ object FieldOwnerPassword {
   def apply(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     Option.when(model.isSelf && model.isLocal) {
       fieldOwnerPassword(model)
     }
@@ -87,7 +87,7 @@ object FieldOwnerPassword {
   private def fieldOwnerPassword(model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     field(
       name = context.i18n.text.FieldOwnerPassword,
       classes = "owner-password"

@@ -2,8 +2,8 @@ package cotoami.subparts.modeless
 
 import marubinotto.fui.toCmd
 import scala.util.chaining._
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
@@ -108,7 +108,7 @@ object SectionAsClient {
 
   def apply(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     model.client.map { client =>
       section(className := "field-group as-client")(
         h2()(context.i18n.text.AsClient_title),
@@ -128,7 +128,7 @@ object SectionAsClient {
   private def fieldPassword(client: Client, model: Model)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     field(
       name = context.i18n.text.Password,
       classes = "password"
@@ -156,7 +156,7 @@ object SectionAsClient {
 
   private def fieldLastLogin(client: Client)(using
       context: Context
-  ): ReactElement =
+  ): ReactNode =
     fieldInput(
       name = context.i18n.text.AsClient_lastLogin,
       classes = "last-login",
@@ -168,7 +168,7 @@ object SectionAsClient {
 
   private def fieldRemoteAddress(active: ActiveClient)(using
       context: Context
-  ): ReactElement =
+  ): ReactNode =
     fieldInput(
       name = context.i18n.text.AsClient_remoteAddress,
       classes = "remote-address",

@@ -5,7 +5,6 @@ val scala3Version = "3.7.4"
 ThisBuild / scalaVersion := scala3Version
 
 val circeVersion = "0.14.17"
-val slinkyVersion = "0.7.5"
 
 lazy val cotoami = project
   .in(file("."))
@@ -20,6 +19,7 @@ lazy val cotoami = project
       "utf-8",
       "-deprecation",
       "-feature",
+      "-language:implicitConversions",
       "-Wunused:all"
     ),
 
@@ -38,8 +38,6 @@ lazy val cotoami = project
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "2.8.1",
       "org.scala-js" %%% "scala-js-macrotask-executor" % "1.1.1",
-      "me.shadaj" %%% "slinky-web" % slinkyVersion,
-      "me.shadaj" %%% "slinky-hot" % slinkyVersion,
       "io.circe" %%% "circe-core" % circeVersion,
       "io.circe" %%% "circe-generic" % circeVersion,
       "io.circe" %%% "circe-parser" % circeVersion,

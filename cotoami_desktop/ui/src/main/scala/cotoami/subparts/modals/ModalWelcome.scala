@@ -5,8 +5,8 @@ import cats.syntax.all.*
 
 import scala.util.chaining._
 import scala.scalajs.js
-import slinky.core.facade.ReactElement
-import slinky.web.html._
+import marubinotto.react.ReactNode
+import marubinotto.react.html._
 
 import marubinotto.fui._
 import marubinotto.libs.tauri
@@ -315,7 +315,7 @@ object ModalWelcome {
   def apply(
       model: Model,
       recentDatabases: Seq[DatabaseOpenedJson]
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     Modal.view(
       dialogClasses = "welcome",
       error = model.error
@@ -340,7 +340,7 @@ object ModalWelcome {
   private def sectionAppUpdate(appUpdate: tauri.updater.Update)(using
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactNode =
     section(className := "app-update")(
       materialSymbol("info"),
       div(className := "message")(
@@ -357,7 +357,7 @@ object ModalWelcome {
   private def sectionRecent(
       model: Model,
       databases: Seq[DatabaseOpenedJson]
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     Option.when(!databases.isEmpty) {
       section(className := "recent-databases")(
         h2()(context.i18n.text.ModalWelcome_recent),
@@ -388,7 +388,7 @@ object ModalWelcome {
 
   private def sectionNewDatabase(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(className := "new-database")(
       h2()(context.i18n.text.ModalWelcome_new),
       form()(
@@ -435,7 +435,7 @@ object ModalWelcome {
 
   private def sectionOpenDatabase(
       model: Model
-  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(using context: Context, dispatch: Into[AppMsg] => Unit): ReactNode =
     section(className := "open-database")(
       h2()(context.i18n.text.ModalWelcome_open),
       form()(
