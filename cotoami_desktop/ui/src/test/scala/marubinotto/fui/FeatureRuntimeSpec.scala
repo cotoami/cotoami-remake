@@ -35,9 +35,12 @@ class FeatureRuntimeSpec extends AsyncFunSuite {
   private class App(
       command: Int => Cmd[Int],
       subscription: Int => Sub[Int] = _ => Sub.Empty,
-      closeOnInit: Boolean = false
+      closeOnInit: Boolean = false,
+      featureSubscriptions: Boolean = false
   ) {
     val leaf = new Feature[Int, Unit, Int, Int, Unit] {
+      override def subscriptions(model: Int, context: Unit): Sub[Int] =
+        if (featureSubscriptions) subscription(model) else Sub.Empty
       def init(input: Int, context: Unit) =
         Transition(input, command(input), if (closeOnInit) List(()) else Nil)
       def update(
@@ -82,7 +85,7 @@ class FeatureRuntimeSpec extends AsyncFunSuite {
         },
       (_, _) => div("features"),
       subscriptions = model =>
-        Content.leaf.model(model.content).fold[Sub[Msg]](Sub.Empty) { value =>
+        if (featureSubscriptions) Sub.Empty else Content.leaf.model(model.content).fold[Sub[Msg]](Sub.Empty) { value =>
           // App owns the source and captures this visit's destination.
           val address = model.content
           subscription(value).map(msg =>
@@ -290,6 +293,76 @@ class FeatureRuntimeSpec extends AsyncFunSuite {
             _ <- emit.offer(100) *> IO.sleep(20.millis)
             current <- app.snapshot(runtime)
           } yield assert(app.Content.leaf.model(current.content).contains(3))
+        }
+      } yield succeed
+    }.timeout(5.seconds).unsafeToFuture()
+  }
+
+  test("Feature subscriptions retain streams on update, isolate siblings and reconnect on replacement") {
+    environment.use { _ =>
+      for {
+        started <- Queue.unbounded[IO, Int]
+        stopped <- Queue.unbounded[IO, Int]
+        callbacks <- Queue.unbounded[IO, Int => Unit]
+        app = new App(
+          _ => Cmd.none,
+          value => Sub.fromResource[Int]("same") { emit =>
+            Resource.make(started.offer(value) *> callbacks.offer(emit))(
+              _ => stopped.offer(value)
+            )
+          },
+          featureSubscriptions = true
+        )
+        _ <- Browser.mount(dom.document.getElementById("app"), app.program).use { runtime =>
+          for {
+            first <- started.take
+            old <- callbacks.take
+            _ <- IO(old(2))
+            updated <- app.snapshot(runtime)
+            // Callback dispatch is asynchronous; await delivery via snapshots.
+            _ <- IO.sleep(20.millis)
+            delivered <- app.snapshot(runtime)
+            unchanged <- started.tryTake
+            stale = app.Msg.ChildEvent(app.Content.leaf.event(delivered.content, 100).get)
+            _ <- IO(runtime.dispatch(app.Msg.OpenPeer))
+            peer <- started.take
+            peerEmit <- callbacks.take
+            _ <- IO(runtime.dispatch(app.Msg.Replace))
+            ended <- stopped.take
+            replacement <- started.take
+            fresh <- callbacks.take
+            _ <- IO { runtime.dispatch(stale); fresh(4); peerEmit(5) }
+            _ <- IO.sleep(20.millis)
+            current <- app.snapshot(runtime)
+            _ <- IO(runtime.dispatch(app.Msg.Close))
+            closed <- stopped.take
+          } yield {
+            assert(first == 1 && peer == 10 && replacement == 3)
+            assert(ended == 1 && closed == 3 && unchanged.isEmpty)
+            assert(app.Content.leaf.model(updated.content).isDefined)
+            assert(app.Content.leaf.model(delivered.content).contains(3))
+            assert(app.Content.leaf.model(current.content).contains(7))
+            assert(app.Content.peer.model(current.content).contains(15))
+          }
+        }
+        remaining <- stopped.take
+      } yield assert(remaining == 10)
+    }.timeout(5.seconds).unsafeToFuture()
+  }
+
+  test("debounce waits with the same local key survive sibling opening and instance replacement") {
+    environment.use { _ =>
+      for {
+        fired <- Queue.unbounded[IO, Int]
+        app = new App(i => Cmd.exec(fired.offer(i)).debounce("same", 100.millis))
+        _ <- Browser.mount(dom.document.getElementById("app"), app.program).use { runtime =>
+          for {
+            _ <- IO { runtime.dispatch(app.Msg.OpenPeer); runtime.dispatch(app.Msg.Replace) }
+            _ <- app.snapshot(runtime)
+            a <- fired.take
+            b <- fired.take
+            c <- fired.take
+          } yield assert(List(a, b, c).sorted == List(1, 3, 10))
         }
       } yield succeed
     }.timeout(5.seconds).unsafeToFuture()

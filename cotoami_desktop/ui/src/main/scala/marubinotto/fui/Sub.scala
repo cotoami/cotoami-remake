@@ -13,6 +13,13 @@ import cats.effect.std.Queue
 import fs2.Stream
 
 sealed trait Sub[+Msg] {
+  /** Transform identifiers without changing streams or messages. */
+  final def mapIds(f: String => String): Sub[Msg] = this match {
+    case Sub.Empty => Sub.Empty
+    case Sub.Combined(left, right) => Sub.Combined(left.mapIds(f), right.mapIds(f))
+    case Sub.Impl(id, stream) => Sub.Impl(f(id), stream)
+  }
+
   def map[OtherMsg](f: Msg => OtherMsg): Sub[OtherMsg]
 
   final def combine[LubMsg >: Msg](other: Sub[LubMsg]): Sub[LubMsg] =

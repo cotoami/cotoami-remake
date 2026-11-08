@@ -64,6 +64,7 @@ abstract class FeatureSlots[Context] {
 
   // Type erasure stays here. Child identity is checked before payload/model casts.
   private trait Entry {
+    def subscriptions(generation: Long, context: Context): Sub[Event]
     def model: Any
     def update(
         event: Event,
@@ -123,11 +124,17 @@ abstract class FeatureSlots[Context] {
           state.generations.updated(child, generation),
           state.entries.updated(child, entry(change.model))
         ),
-        change.cmd.map(msg => new Event(generation, child, msg)),
+        change.cmd
+          .mapDebounceKeys(FeatureSlots.InstanceScope(viewId, generation).encode)
+          .map(msg => new Event(generation, child, msg)),
         change.outputs.map(out => new Output(child, out))
       )
 
     private def entry(value: M): Entry = new Entry {
+      def subscriptions(generation: Long, context: Context): Sub[Event] =
+        feature.subscriptions(value, context)
+          .mapIds(FeatureSlots.InstanceScope(viewId, generation).encode)
+          .map(msg => new Event(generation, child, msg))
       def model: Any = value
       def update(event: Event, state: State, context: Context) =
         transition(
@@ -147,6 +154,15 @@ abstract class FeatureSlots[Context] {
         ).withKey(s"$viewId:$generation")
     }
   }
+
+  /** Collect sources from active instances, independently of view placement. */
+  final def subscriptions(state: State, context: Context): Sub[Event] =
+    state.entries.foldLeft[Sub[Event]](Sub.Empty) { case (acc, (child, entry)) =>
+      acc.combine(entry.subscriptions(state.generations(child), context))
+    }
+
+  final def subscriptions(state: State)(using unit: Unit =:= Context): Sub[Event] =
+    subscriptions(state, unit(()))
 
   final def slot[I, M, E, O](
       feature: Feature[I, Context, M, E, O]
@@ -185,6 +201,31 @@ abstract class FeatureSlots[Context] {
     state.entries.get(child).fold(empty)(
       _.view(state.generations(child), dispatch, context)
     )
+
+  /** Bind with the default policy: all children may coexist. */
+  final def bind[C, M, E, O](
+      state: M => State,
+      replace: (M, State) => M,
+      wrap: Event => E,
+      extract: E => Option[Event],
+      context: (M, C) => Context,
+      onOutput: (Output, M, C) => Transition[M, E, O]
+  ): FeatureBinding[C, M, E, O] { val features: FeatureSlots.this.type } =
+    bind[C, M, E, O](
+      policy(), state, replace, wrap, extract, context, onOutput
+    )
+
+  /** Bind without external context, allowing all children to coexist. */
+  final def bind[M, E, O](
+      state: M => State,
+      replace: (M, State) => M,
+      wrap: Event => E,
+      extract: E => Option[Event],
+      onOutput: (Output, M) => Transition[M, E, O]
+  )(using
+      unit: Unit =:= Context
+  ): FeatureBinding[Unit, M, E, O] { val features: FeatureSlots.this.type } =
+    bind[M, E, O](policy(), state, replace, wrap, extract, onOutput)
 
   /** Project fresh child context from the parent's current model and context.
     */
@@ -278,6 +319,11 @@ abstract class FeatureSlots[Context] {
 }
 
 object FeatureSlots {
+  private case class InstanceScope(slotId: Long, generation: Long) {
+    def encode(key: String): String =
+      s"@feature:$slotId:$generation:${key.length}:$key"
+  }
+
   // Allocated at registration, not during pure state transitions or rendering.
   // Shared across groups so their children can also be rendered as siblings.
   private var lastViewId = 0L

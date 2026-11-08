@@ -63,7 +63,19 @@ class FeatureSlotsSpec extends AnyFunSuite {
   test(
     "default policy keeps differently typed children independent through one binding"
   ) {
-    val connected = binding(Children.policy())
+    val connected = Children.bind[Model, Msg, Nothing](
+      state = _.children,
+      replace = (model, children) => model.copy(children = children),
+      wrap = Msg.ChildEvent.apply,
+      extract = { case Msg.ChildEvent(event) => Some(event) },
+      onOutput = (output, model) => output match {
+        case Children.a.output(value) =>
+          Transition(model.copy(log = model.log :+ s"a:$value"))
+        case Children.text.output(value) =>
+          Transition(model.copy(log = model.log :+ s"text:$value"))
+        case _ => Transition.unchanged(model)
+      }
+    )
     val first = connected.init(Model(), Children.a, 1).model
     val second = connected.init(first, Children.b, 10).model
     val both = connected.init(second, Children.text, "hello").model

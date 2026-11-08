@@ -42,10 +42,8 @@ $ yarn run build
 
 `src/main/scala/marubinotto/{fui,router,react}` and their tests are vendored from
 [scalafui](https://github.com/marubinotto/scalafui), commit
-`799fb2900bc5637491bc312967f576ce5839009c`.
-The `fui` and new `react` sources and tests additionally include the Scala 3 /
-React 19 facade migration from the sibling scalafui checkout. These packages
-must be synchronized together, including their tests.
+`6806f83938bdcf70973abe23277cfcd3d73980be`.
+These packages must be synchronized together, including their tests.
 The source files are kept unchanged from upstream; application compatibility
 code lives outside those packages. Feature APIs are included but the application
 continues to use `Program`.

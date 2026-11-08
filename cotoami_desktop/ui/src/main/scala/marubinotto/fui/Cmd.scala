@@ -10,6 +10,7 @@ extension [A](io: IO[A]) {
 }
 
 sealed trait Cmd[+Msg] extends Any {
+  def mapDebounceKeys(f: String => String): Cmd[Msg]
   def map[OtherMsg](f: Msg => OtherMsg): Cmd[OtherMsg]
   def ++[LubMsg >: Msg](that: Cmd[LubMsg]): Cmd[LubMsg]
 }
@@ -27,6 +28,9 @@ object Cmd {
 
   case class One[+Msg](io: IO[Option[Msg]], debounce: Option[Debounce] = None)
       extends Cmd[Msg] {
+    override def mapDebounceKeys(f: String => String): One[Msg] =
+      copy(debounce = debounce.map(value => value.copy(key = f(value.key))))
+
     override def map[OtherMsg](f: Msg => OtherMsg): One[OtherMsg] =
       One(io.map(_.map(f)), debounce)
 
@@ -51,6 +55,9 @@ object Cmd {
       Batch.fromSeq(cmds :+ one)
     def +:[LubMsg >: Msg](one: One[LubMsg]): Batch[LubMsg] =
       Batch.fromSeq(one +: cmds)
+
+    override def mapDebounceKeys(f: String => String): Batch[Msg] =
+      Batch.fromSeq(cmds.map(_.mapDebounceKeys(f)))
 
     override def map[OtherMsg](f: Msg => OtherMsg): Batch[OtherMsg] =
       Batch.fromSeq(cmds.map(_.map(f)))

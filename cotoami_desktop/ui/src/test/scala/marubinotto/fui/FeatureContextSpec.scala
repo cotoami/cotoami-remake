@@ -49,7 +49,6 @@ class FeatureContextSpec extends AnyFunSuite {
     )
     case class Msg(event: Children.Event)
     val binding = Children.bind[Context, Model, Msg, Nothing](
-      Children.policy(),
       _.children,
       (m, s) => m.copy(children = s),
       Msg.apply,
@@ -103,6 +102,7 @@ class FeatureContextSpec extends AnyFunSuite {
     val withLabel =
       binding.init(next, Children.label, (), Context(0, "label")).model
     assert(Children.label.model(withLabel.children).contains("label"))
+    assert(Children.count.model(withLabel.children).contains(41))
   }
 
   test(

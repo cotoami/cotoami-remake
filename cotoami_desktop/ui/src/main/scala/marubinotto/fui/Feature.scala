@@ -40,6 +40,12 @@ trait Feature[Input, Context, Model, Msg, Out] { self =>
   ): Transition[Model, Msg, Out]
   def view(model: Model, context: Context, dispatch: Msg => Unit): ReactNode
 
+  /** Declare sources for this instance; unchanged IDs retain their existing streams. */
+  def subscriptions(model: Model, context: Context): Sub[Msg] = Sub.Empty
+
+  final def subscriptions(model: Model)(using unit: Unit =:= Context): Sub[Msg] =
+    subscriptions(model, unit(()))
+
   /** Adapt the caller's context without capturing a context value in state. */
   final def mapContextFrom[C](
       project: C => Context
@@ -50,6 +56,8 @@ trait Feature[Input, Context, Model, Msg, Out] { self =>
         self.update(msg, model, project(context))
       def view(model: Model, context: C, dispatch: Msg => Unit) =
         self.view(model, project(context), dispatch)
+      override def subscriptions(model: Model, context: C): Sub[Msg] =
+        self.subscriptions(model, project(context))
       override private[fui] def childFeatureGroups = self.childFeatureGroups
     }
 
@@ -83,6 +91,8 @@ trait Feature[Input, Context, Model, Msg, Out] { self =>
         )
       def view(model: Model, context: Context, dispatch: Msg => Unit) =
         self.view(model, context, dispatch)
+      override def subscriptions(model: Model, context: Context): Sub[Msg] =
+        self.subscriptions(model, context).combine(child.subscriptions(model, context))
       override private[fui] def childFeatureGroups =
         self.childFeatureGroups + child.features
     }
@@ -94,12 +104,15 @@ object Feature {
   def withoutContext[I, M, E, O](
       init: I => Transition[M, E, O],
       update: (E, M) => Transition[M, E, O],
-      view: (M, E => Unit) => ReactNode
+      view: (M, E => Unit) => ReactNode,
+      subscriptions: M => Sub[E] = (_: M) => Sub.Empty
   ): Feature[I, Unit, M, E, O] = {
     val initialize = init
     val reduce = update
     val render = view
+    val subscribe = subscriptions
     new Feature[I, Unit, M, E, O] {
+      override def subscriptions(model: M, context: Unit): Sub[E] = subscribe(model)
       def init(input: I, context: Unit) = initialize(input)
       def update(msg: E, model: M, context: Unit) = reduce(msg, model)
       def view(model: M, context: Unit, dispatch: E => Unit) =
@@ -127,6 +140,12 @@ trait FeatureBinding[Context, Model, Msg, Out] {
       model: Model,
       context: Context
   ): Transition[Model, Msg, Out]
+
+  final def subscriptions(model: Model, context: Context): Sub[Msg] =
+    features.subscriptions(state(model), childContext(model, context)).map(wrap)
+
+  final def subscriptions(model: Model)(using unit: Unit =:= Context): Sub[Msg] =
+    subscriptions(model, unit(()))
 
   /** Read the active slot's model without evaluating its context. */
   final def model[I, M, E, O](
