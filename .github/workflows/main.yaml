@@ -20,11 +20,17 @@ jobs:
         with:
           toolchain: 1.92.0
           target: wasm32-unknown-unknown
+          cache-workspaces: |
+            cotoami_node
+            cotoami_desktop/tauri
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '24.15.0'
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Setup JDK
         uses: actions/setup-java@v4
