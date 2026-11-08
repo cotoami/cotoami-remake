@@ -1,3 +1,6 @@
+// Configure MapLibre before Scala.js creates any maps.
+import './maplibre.js'
+
 // Execute the main method of the Scala.js application.
 import 'scalajs:main.js'
 
