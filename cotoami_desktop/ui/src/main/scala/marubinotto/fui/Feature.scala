@@ -242,6 +242,54 @@ trait FeatureBinding[Context, Model, Msg, Out] {
       unit: Unit =:= Context
   ): ReactNode = view(model, child, dispatch, empty, unit(()))
 
+  final def model[K, I, M, E, O](
+      parent: Model, child: features.CollectionSlot[K, I, M, E, O], key: K
+  ): Option[M] = child.model(state(parent), key)
+
+  final def isActive[K](parent: Model, child: features.CollectionSlot[K, ?, ?, ?, ?], key: K): Boolean =
+    child.model(state(parent), key).isDefined
+
+  final def init[K, I, M, E, O](
+      model: Model, child: features.CollectionSlot[K, I, M, E, O], key: K,
+      input: I, context: Context
+  ): Transition[Model, Msg, Out] =
+    lift(model, context, features.init(state(model), child, key, input, childContext(model, context)))
+
+  final def init[K, I, M, E, O](
+      model: Model, child: features.CollectionSlot[K, I, M, E, O], key: K, input: I
+  )(using unit: Unit =:= Context): Transition[Model, Msg, Out] =
+    init(model, child, key, input, unit(()))
+
+  final def remove[K](
+      model: Model, child: features.CollectionSlot[K, ?, ?, ?, ?], key: K
+  ): Transition[Model, Msg, Out] =
+    Transition(replace(model, features.remove(state(model), child, key)))
+
+  final def clear[K](
+      model: Model, child: features.CollectionSlot[K, ?, ?, ?, ?]
+  ): Transition[Model, Msg, Out] =
+    Transition(replace(model, features.clear(state(model), child)))
+
+  final def message[K, I, M, E, O](
+      model: Model, child: features.CollectionSlot[K, I, M, E, O], key: K, msg: E
+  ): Option[Msg] = child.event(state(model), key, msg).map(wrap)
+
+  final def send[K, I, M, E, O](
+      model: Model, child: features.CollectionSlot[K, I, M, E, O], key: K, msg: E
+  ): Cmd[Msg] = message(model, child, key, msg).fold[Cmd[Msg]](Cmd.none)(Browser.send(_))
+
+  final def view[K](
+      model: Model, child: features.CollectionSlot[K, ?, ?, ?, ?], key: K,
+      dispatch: Msg => Unit, empty: => ReactNode, context: Context
+  ): ReactNode = features.view(
+    state(model), child, key, event => dispatch(wrap(event)), empty, childContext(model, context)
+  )
+
+  final def view[K](
+      model: Model, child: features.CollectionSlot[K, ?, ?, ?, ?], key: K,
+      dispatch: Msg => Unit, empty: => ReactNode
+  )(using unit: Unit =:= Context): ReactNode = view(model, child, key, dispatch, empty, unit(()))
+
   private[fui] final def route(msg: Msg, model: Model)(using
       unit: Unit =:= Context
   ): Option[Transition[Model, Msg, Out]] =

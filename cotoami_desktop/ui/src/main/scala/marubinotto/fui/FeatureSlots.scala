@@ -1,17 +1,19 @@
 package marubinotto.fui
 
+import scala.collection.immutable.VectorMap
+
 import marubinotto.react.FunctionalComponent
 import marubinotto.react.ReactNode
 
 /** Typed logical slots for child features, independent of DOM placement.
-  * Each slot holds at most one active instance of its registered feature.
+  * A slot holds one instance; a collection slot holds instances identified by keys.
   * Coexistence rules are supplied separately at binding time.
   */
 abstract class FeatureSlots[Context] {
   type ContextValue = Context
   final class State private[FeatureSlots] (
       private[FeatureSlots] val generations: Map[AnyRef, Long],
-      private[FeatureSlots] val entries: Map[AnyRef, Entry]
+      private[FeatureSlots] val entries: VectorMap[AnyRef, Entry]
   )
   final class Event private[FeatureSlots] (
       private[FeatureSlots] val generation: Long,
@@ -26,7 +28,7 @@ abstract class FeatureSlots[Context] {
   /** Initial state only. remove/clear retain generation history on existing
     * states.
     */
-  val empty: State = new State(Map.empty, Map.empty)
+  val empty: State = new State(Map.empty, VectorMap.empty)
 
   final class Exclusive private[FeatureSlots] (
       private[FeatureSlots] val members: Set[AnyRef]
@@ -110,37 +112,40 @@ abstract class FeatureSlots[Context] {
         input: I,
         generation: Long,
         state: State,
-        context: Context
+        context: Context,
+        address: AnyRef = child
     ) =
-      transition(feature.init(input, context), generation, state)
+      transition(feature.init(input, context), generation, state, address)
 
     private def transition(
         change: Transition[M, E, O],
         generation: Long,
-        state: State
+        state: State,
+        address: AnyRef
     ): Transition[State, Event, Output] =
       Transition(
         new State(
-          state.generations.updated(child, generation),
-          state.entries.updated(child, entry(change.model))
+          state.generations.updated(address, generation),
+          state.entries.updated(address, entry(change.model, address))
         ),
         change.cmd
           .mapDebounceKeys(FeatureSlots.InstanceScope(viewId, generation).encode)
-          .map(msg => new Event(generation, child, msg)),
-        change.outputs.map(out => new Output(child, out))
+          .map(msg => new Event(generation, address, msg)),
+        change.outputs.map(out => new Output(address, out))
       )
 
-    private def entry(value: M): Entry = new Entry {
+    private def entry(value: M, address: AnyRef): Entry = new Entry {
       def subscriptions(generation: Long, context: Context): Sub[Event] =
         feature.subscriptions(value, context)
           .mapIds(FeatureSlots.InstanceScope(viewId, generation).encode)
-          .map(msg => new Event(generation, child, msg))
+          .map(msg => new Event(generation, address, msg))
       def model: Any = value
       def update(event: Event, state: State, context: Context) =
         transition(
           feature.update(event.message.asInstanceOf[E], value, context),
           event.generation,
-          state
+          state,
+          address
         )
       def view(generation: Long, dispatch: Event => Unit, context: Context) =
         boundary(
@@ -148,12 +153,93 @@ abstract class FeatureSlots[Context] {
             feature.view(
               value,
               context,
-              msg => dispatch(new Event(generation, child, msg))
+              msg => dispatch(new Event(generation, address, msg))
             )
           )
         ).withKey(s"$viewId:$generation")
     }
   }
+
+  private case class CollectionAddress(collection: AnyRef, key: Any)
+
+  /** A registered family of instances. Keys must have stable equality/hashCode.
+    * Collections coexist with every slot and cannot join exclusive groups.
+    */
+  final class CollectionSlot[K, I, M, E, O] private[FeatureSlots] (
+      feature: Feature[I, Context, M, E, O]
+  ) { collection =>
+    private[FeatureSlots] val definition = new Slot(feature)
+    private[FeatureSlots] def address(key: K): AnyRef = CollectionAddress(collection, key)
+
+    def model(state: State, key: K): Option[M] =
+      state.entries.get(address(key)).map(_.model.asInstanceOf[M])
+
+    def event(state: State, key: K, msg: E): Option[Event] = {
+      val destination = address(key)
+      state.entries.get(destination).map(_ =>
+        new Event(state.generations(destination), destination, msg)
+      )
+    }
+
+    /** Active keys in insertion order; reinitializing an active key keeps its position. */
+    def keys(state: State): Vector[K] =
+      state.entries.keysIterator.collect {
+        case CollectionAddress(owner, key) if owner eq collection => key.asInstanceOf[K]
+      }.toVector
+
+    object output {
+      def unapply(out: Output): Option[(K, O)] = out.child match {
+        case CollectionAddress(owner, key) if owner eq collection =>
+          Some((key.asInstanceOf[K], out.value.asInstanceOf[O]))
+        case _ => None
+      }
+    }
+  }
+
+  final class CollectionSlotBuilder[K] private[FeatureSlots] () {
+    def apply[I, M, E, O](feature: Feature[I, Context, M, E, O]): CollectionSlot[K, I, M, E, O] =
+      new CollectionSlot(feature)
+  }
+
+  final def collectionSlot[K]: CollectionSlotBuilder[K] = new CollectionSlotBuilder[K]()
+
+  /** Every initialization gets a fresh family-wide generation, including after clear.
+    * This avoids retaining a generation tombstone for each removed key.
+    */
+  final def init[K, I, M, E, O](
+      state: State, child: CollectionSlot[K, I, M, E, O], key: K,
+      input: I, context: Context
+  ): Transition[State, Event, Output] = {
+    val generation = Math.addExact(state.generations.getOrElse(child, 0L), 1L)
+    val prepared = new State(state.generations.updated(child, generation), state.entries)
+    child.definition.initialize(input, generation, prepared, context, child.address(key))
+  }
+
+  final def init[K, I, M, E, O](
+      state: State, child: CollectionSlot[K, I, M, E, O], key: K, input: I
+  )(using unit: Unit =:= Context): Transition[State, Event, Output] =
+    init(state, child, key, input, unit(()))
+
+  final def remove[K](state: State, child: CollectionSlot[K, ?, ?, ?, ?], key: K): State = {
+    val address = child.address(key)
+    new State(state.generations - address, state.entries - address)
+  }
+
+  final def clear[K](state: State, child: CollectionSlot[K, ?, ?, ?, ?]): State =
+    child.keys(state).foldLeft(state)((current, key) => remove(current, child, key))
+
+  final def view[K](
+      state: State, child: CollectionSlot[K, ?, ?, ?, ?], key: K,
+      dispatch: Event => Unit, empty: => ReactNode, context: Context
+  ): ReactNode = {
+    val address = child.address(key)
+    state.entries.get(address).fold(empty)(_.view(state.generations(address), dispatch, context))
+  }
+
+  final def view[K](
+      state: State, child: CollectionSlot[K, ?, ?, ?, ?], key: K,
+      dispatch: Event => Unit, empty: => ReactNode
+  )(using unit: Unit =:= Context): ReactNode = view(state, child, key, dispatch, empty, unit(()))
 
   /** Collect sources from active instances, independently of view placement. */
   final def subscriptions(state: State, context: Context): Sub[Event] =
@@ -189,7 +275,10 @@ abstract class FeatureSlots[Context] {
   final def remove(state: State, child: Slot[?, ?, ?, ?]): State =
     new State(state.generations, state.entries - child)
 
-  final def clear(state: State): State = new State(state.generations, Map.empty)
+  final def clear(state: State): State = new State(
+    state.generations.filterNot { case (address, _) => address.isInstanceOf[CollectionAddress] },
+    VectorMap.empty
+  )
 
   final def view(
       state: State,

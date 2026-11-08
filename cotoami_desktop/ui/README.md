@@ -42,7 +42,7 @@ $ yarn run build
 
 `src/main/scala/marubinotto/{fui,router,react}` and their tests are vendored from
 [scalafui](https://github.com/marubinotto/scalafui), commit
-`6806f83938bdcf70973abe23277cfcd3d73980be`.
+`3fb578bb967f32e16ea63e35f06eac8f592cb9a1`.
 These packages must be synchronized together, including their tests.
 The source files are kept unchanged from upstream; application compatibility
 code lives outside those packages. Feature APIs are included but the application
